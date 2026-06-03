@@ -90,7 +90,7 @@ export to_specimen_dict, from_specimen_dict!
 export register_right_feedback!, register_wrong_feedback!
 export get_activation_mode, get_novelty_score
 export set_observation_threshold!, get_observation_threshold
-export get_strain_energy, is_hippocampal_warrant_active
+export get_strain_energy, is_hippocampal_warrant_active, dampen_strain!
 export STRAIN_NOVELTY_WEIGHT, STRAIN_QUALITY_WEIGHT, STRAIN_THRESHOLD, STRAIN_FLOOR, STRAIN_CEILING
 export MLP_TRANSFORM_FUZZY, MLP_TRANSFORM_SOLID
 export phase_mix_hidden!
@@ -1804,6 +1804,31 @@ function is_hippocampal_warrant_active()::Bool
     st = _state()
     lock(st.lock) do
         return st.hippocampal_warrant_active
+    end
+end
+
+"""
+    dampen_strain!(factor::Float64=0.5)
+
+GRUG v7.51: Reduce strain energy by a dampening factor. Called when the user
+provides an /answer or /antiAnswer — resolving the structural deficit that
+caused the strain. The factor multiplies the current strain (0.5 = halve it).
+Also re-evaluates hippocampal_warrant_active since strain may now be below threshold.
+
+This is the "resolve" step in the hippocampal cycle:
+  strain → ask question → user answers → dampen strain → strain resolved
+"""
+function dampen_strain!(factor::Float64=0.5)
+    if factor < 0.0 || factor > 1.0
+        error("!!! FATAL: dampen_strain! factor must be in [0.0, 1.0], got $factor !!!")
+    end
+    st = _state()
+    lock(st.lock) do
+        old_strain = st.strain_energy
+        st.strain_energy = clamp(old_strain * (1.0 - factor), STRAIN_FLOOR, STRAIN_CEILING)
+        # Re-evaluate warrant: if strain dropped below threshold, warrant deactivates.
+        st.hippocampal_warrant_active = st.strain_energy >= STRAIN_THRESHOLD && st.adjustments_enabled
+        return (old=old_strain, new=st.strain_energy)
     end
 end
 

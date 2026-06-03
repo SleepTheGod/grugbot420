@@ -336,6 +336,14 @@ const MESSAGE_HISTORY_LOCK = ReentrantLock()  # GRUG: Lock for phagy forensics r
 const LAST_SELECTED_MSG_IDS = Ref(Set{Int}())
 const LAST_SELECTED_MSG_LOCK = ReentrantLock()
 
+# GRUG v7.51: Pending hippocampal ask-question state.
+# When the cave is empty or confidence is very low, the system asks a question.
+# This stores the mission text that caused the question so /answer and /antiAnswer
+# can reference it. Cleared when either command fires. The lock is for thread
+# safety since maybe_run_idle and process_mission run on different tasks.
+const _HIPPOCAMPAL_PENDING_ASK      = Ref("")          # mission text that caused the question
+const _HIPPOCAMPAL_PENDING_ASK_LOCK = ReentrantLock()
+
 # GRUG FIX 3.1: Strict Role Validation!
 # Grug no let random strangers paint on memory wall.
 #
@@ -2372,6 +2380,8 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             "alert"
         elseif primary_vote.action in ["explain", "clarify", "describe", "define", "elaborate"]
             "explain"
+        elseif primary_vote.action in ["inquire", "ask", "question", "wonder"]
+            "ask"
         else
             "reason"
         end
@@ -2964,6 +2974,102 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     return String(take!(payload_io))
 end
 
+# ==============================================================================
+# GRUG v7.51: HIPPOCAMPAL ASK-QUESTION MECHANISM
+# ==============================================================================
+# When the cave is empty (no specimens match) or confidence is very low,
+# the system should ASK A COHERENT QUESTION about the misunderstood input.
+# This is the missing piece of the hippocampal cycle:
+#
+#   strain → ask question → user answers (/answer or /antiAnswer) → strain resolved
+#
+# The old code just printed "Cave is silent" and returned. No question. No
+# prompt for /answer. The user had no idea that /answer even existed.
+#
+# This function builds a question from the raw mission text using the same
+# AIML infrastructure (skeletons, voice, memory) but without needing a Vote
+# or node — because the whole point is there IS no matching node.
+#
+# It also stores the mission text in _HIPPOCAMPAL_PENDING_ASK so that
+# /answer and /antiAnswer can reference what caused the question.
+# ==============================================================================
+
+"""
+    generate_ask_question(mission_text::String; reason::String="empty_cave")::String
+
+GRUG v7.51: Generate a coherent question about input the system doesn't understand.
+Called when the cave is empty (no specimens) or confidence is very low.
+Uses the "ask" skeleton pool to frame the question, then appends a /answer prompt.
+
+`reason` is either "empty_cave" (no specimens at all) or "low_confidence"
+(specimens existed but confidence was too low to be useful).
+"""
+function generate_ask_question(mission_text::String; reason::String="empty_cave")::String
+    if strip(mission_text) == ""
+        error("!!! FATAL: generate_ask_question got empty mission text! !!!")
+    end
+
+    # GRUG: Store the mission text so /answer and /antiAnswer can reference it.
+    lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+        _HIPPOCAMPAL_PENDING_ASK[] = mission_text
+    end
+
+    # GRUG: Pick a question skeleton from the "ask" pool.
+    ask_pool = get(_ACTION_SKELETON_POOLS, "ask", String["I don't understand \"{MISSION}\" — what is that about?"])
+    skeleton = rand(ask_pool)
+
+    # GRUG: Substitute {MISSION} with the user's input text.
+    # Truncate to 80 chars so the question doesn't become a wall.
+    mission_display = length(mission_text) > 80 ? mission_text[1:77] * "..." : mission_text
+    question_text = replace(skeleton, "{MISSION}" => mission_display)
+
+    # GRUG: Pull recent memory context (same as generate_aiml_payload).
+    # The question is more coherent when it knows what was just discussed.
+    memory_ctx = extract_aiml_memory_context()
+    memory_hint = ""
+    if !isempty(memory_ctx.pinned) || !isempty(memory_ctx.full)
+        # GRUG: Don't dump the whole memory — just a hint that we have context.
+        memory_hint = " (I do remember our recent conversation.)"
+    end
+
+    # GRUG: Build the reason preamble — different framing for empty cave vs low confidence.
+    reason_preamble = if reason == "empty_cave"
+        "⚡ Nothing in the cave matches this input."
+    else
+        "⚡ The cave has weak signal on this input — I'm not confident."
+    end
+
+    # GRUG: Assemble the full question output.
+    # 1. Reason preamble (why we're asking)
+    # 2. The question itself (from skeleton)
+    # 3. Memory hint (if we have context)
+    # 4. /answer prompt (tell the user what to do)
+    strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
+    output = "$(reason_preamble)$memory_hint\n" *
+             "🤔 $question_text\n" *
+             "   → Use /answer <explanation> to teach me about this, or /antiAnswer <text> to suppress it. (strain=$strain_now)"
+
+    # GRUG: Write a SelfObserver entry so the subconscious knows we asked.
+    try
+        SelfObserver.observe!(
+            _MLP_OBSERVER_STORE,
+            next_runtime_id("hippo_ask"),
+            :meta,
+            Dict{String, Any}(
+                "event"       => "ask_question",
+                "reason"      => reason,
+                "mission"     => mission_text,
+                "strain"      => strain_now,
+                "warrant"     => EphemeralMLP.is_hippocampal_warrant_active(),
+            )
+        )
+    catch e
+        @warn "[MAIN v7.51] SelfObserver observe! for ask-question failed (non-fatal): $e"
+    end
+
+    return output
+end
+
 # GRUG: Family of brain actions. Command must take all vote states now!
 reason_family = ["reason", "analyze", "ponder", "calculate"]
 for act in reason_family
@@ -3039,6 +3145,25 @@ for act in warning_family
 
         # GRUG: Warnings are urgent! Keep throttle HOT like survival!
         reset_throttle!(node, 1.0)
+
+        return generated_text
+    end
+end
+
+# GRUG v7.51: Family of ASK actions — hippocampal question generation.
+# These fire when the system needs to ask a coherent question about input
+# it doesn't understand. The "ask" family uses the ask skeleton pool and
+# generates a question + /answer prompt instead of a standard response.
+# Note: the empty-cave path calls generate_ask_question() directly (no node
+# to fire through COMMANDS). This family exists so that nodes whose action
+# is "inquire"/"ask"/"question" also produce questions through the AIML pipeline.
+ask_family = ["inquire", "ask", "question", "wonder"]
+for act in ask_family
+    COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
+        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+
+        # GRUG: Questions are exploratory — medium throttle, not urgent.
+        reset_throttle!(node, 0.5)
 
         return generated_text
     end
@@ -3178,6 +3303,9 @@ Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /answer <text>                      (resolve strain with user structure)
          : /antiAnswer <text>                  (suppress strain-causing input)
          : /listVerbs                          (show all verb classes + synonyms)
+Hippo    : When cave is empty, system asks a question. Use /answer or
+         : /antiAnswer to resolve. This completes the hippocampal cycle:
+         : strain → ask → you answer → strain resolved.
 Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
          : /nameLobe <lobe_id> <name>          (give a lobe a human-readable name)
          : /connectLobes <id_a> <id_b>         (connect two lobes)
@@ -3253,6 +3381,11 @@ const HELP_MSG = """
 ║  /answer <text>            Resolve strain with structure      ║
 ║  /antiAnswer <text>        Suppress strain-causing input      ║
 ║  /listVerbs                 Show verb registry               ║
+║                                                              ║
+║  HIPPOCAMPAL ASK-CYCLE                                      ║
+║  Empty cave → system asks question → /answer resolves strain ║
+║  /answer <text>            Teach system about unknown input  ║
+║  /antiAnswer <text>        Suppress strain-causing pattern   ║
 ║                                                              ║
 ║  LOBES & TABLES                                              ║
 ║  /newLobe <id> <subject>    Create new subject partition     ║
@@ -3549,6 +3682,21 @@ const _ACTION_SKELETON_POOLS = Dict{String, Vector{String}}(
     ],
     "prose" => [
         "{JOIN}",                           # prose actions stand alone
+    ],
+    # GRUG v7.51: ASK skeleton pool — question-shaped templates for the
+    # hippocampal ask-question mechanism. When the cave is empty or
+    # confidence is very low, the system uses these to ask a coherent
+    # question about the misunderstood input. The {MISSION} placeholder
+    # carries the raw user input; the system doesn't pretend to know.
+    "ask" => [
+        "I don't have a frame for \"{MISSION}\" — what is that about?",
+        "The cave echoes on \"{MISSION}\" and I can't resolve it. Can you tell me what you mean?",
+        "\"{MISSION}\" — nothing fires. What should I know about this?",
+        "I'm drawing a blank on \"{MISSION}\". What is it?",
+        "No structure catches \"{MISSION}\". Help me out — what are you getting at?",
+        "The cave is dark on \"{MISSION}\". What does that mean to you?",
+        "I've got nothing for \"{MISSION}\". Can you break it down for me?",
+        "That lands in silence: \"{MISSION}\". What is it?",
     ],
 )
 
@@ -4082,7 +4230,13 @@ function process_mission(mission_text::String)
     end
 
     if isempty(all_specimens)
-        println("--> No valid specimens found for this input. Cave is silent.")
+        # GRUG v7.51: ASK QUESTION instead of silent return!
+        # The old code just printed "Cave is silent" and returned. Now the system
+        # asks a coherent question about the input it doesn't understand, and prompts
+        # the user to use /answer or /antiAnswer. This is the hippocampal ask step:
+        # strain → ask question → user answers → strain resolved.
+        ask_output = generate_ask_question(mission_text; reason="empty_cave")
+        println("\n🤖 AIML Ask Question:\n$ask_output")
         return
     end
 
@@ -8509,6 +8663,11 @@ elseif !isnothing(m_right)
             # directly resolves the structural deficit and lowers strain energy.
             # The node is tagged with growth_source="hippocampal_answer" so we can
             # track which nodes came from user-provided structure vs autogrowth.
+            #
+            # GRUG v7.51: Now also DAMPENS STRAIN and CLEARS the pending ask.
+            # When the system asked a question and the user answered, the strain
+            # that caused the question is being resolved. Dampen it. Also clear
+            # _HIPPOCAMPAL_PENDING_ASK so the next empty-cave event can set a new one.
             elseif !isnothing(m_answer)
                 ans_raw = String(strip(m_answer.captures[1]))
                 if isempty(ans_raw)
@@ -8518,20 +8677,50 @@ elseif !isnothing(m_right)
                     if !immune_gate("/answer", ans_raw; is_critical=false)
                         println("⛔ /answer blocked by immune system.")
                     else
+                        # GRUG v7.51: Dampen strain — the user is resolving the deficit.
+                        dampen_result = try
+                            EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
+                        catch e
+                            @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
+                            nothing
+                        end
+
+                        # GRUG v7.51: Clear the pending ask — question has been answered.
+                        pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            old = _HIPPOCAMPAL_PENDING_ASK[]
+                            _HIPPOCAMPAL_PENDING_ASK[] = ""
+                            old
+                        end
+
                         # GRUG: Create a regular node from the user's answer.
-                        # Pattern = the answer text, action = "say^1" (basic response).
+                        # Pattern = the answer text, action = "reason^1" (standard response action).
                         # Tag it with hippocampal metadata so we know where it came from.
                         ans_data = Dict{String,Any}(
                             "growth_source"     => "hippocampal_answer",
                             "hippocampal_born"  => string(round(time(), digits=3)),
                             "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
+                            # GRUG v7.51: AIML requires system_prompt in every node's json_data.
+                            # Answer nodes get a simple voice: "I learned this from a question."
+                            "system_prompt"     => "Grug. I learned this from a question. I reason about what I was taught.",
+                            "voice_register"    => "plain",
+                            "frame_hints"       => ["plain", "exploratory"],
                         )
-                        ans_id = create_node(lowercase(strip(ans_raw)), "say^1", ans_data, String[])
+                        # GRUG v7.51: If there was a pending ask, tag the answer with what it resolved.
+                        if !isempty(pending_ask_text)
+                            ans_data["resolved_ask"] = pending_ask_text
+                        end
+                        ans_id = create_node(lowercase(strip(ans_raw)), "reason^1", ans_data, String[])
                         lobe_tag = let l = Lobe.find_lobe_for_node(ans_id)
                             isnothing(l) ? " (no lobe)" : " (lobe: $l)"
                         end
                         strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
-                        println("🧠 Answer node created: id=$ans_id pattern='$(lowercase(strip(ans_raw)))'$lobe_tag | strain was $(ans_data["strain_at_creation"]), now $strain_now")
+                        strain_msg = if dampen_result !== nothing
+                            "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
+                        else
+                            "strain now $strain_now"
+                        end
+                        resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
+                        println("🧠 Answer node created: id=$ans_id pattern='$(lowercase(strip(ans_raw)))'$lobe_tag | $strain_msg$resolve_msg")
                     end
                 end
 
@@ -8540,6 +8729,9 @@ elseif !isnothing(m_right)
             # WRONG or should be SUPPRESSED, the anti-answer creates an anti-match node.
             # This drains confidence from matching votes, suppressing the strain-causing
             # pattern. The anti-answer is the structural negation — "this is not valid input."
+            #
+            # GRUG v7.51: Also DAMPENS STRAIN and CLEARS the pending ask.
+            # Same as /answer — the user is resolving the strain event.
             elseif !isnothing(m_antianswer)
                 anti_raw = String(strip(m_antianswer.captures[1]))
                 if isempty(anti_raw)
@@ -8549,6 +8741,21 @@ elseif !isnothing(m_right)
                     if !immune_gate("/antiAnswer", anti_raw; is_critical=false)
                         println("⛔ /antiAnswer blocked by immune system.")
                     else
+                        # GRUG v7.51: Dampen strain — the user is resolving the deficit.
+                        dampen_result = try
+                            EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
+                        catch e
+                            @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
+                            nothing
+                        end
+
+                        # GRUG v7.51: Clear the pending ask — question has been anti-answered.
+                        pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            old = _HIPPOCAMPAL_PENDING_ASK[]
+                            _HIPPOCAMPAL_PENDING_ASK[] = ""
+                            old
+                        end
+
                         # GRUG: Create an anti-match node that drains confidence.
                         # Same mechanism as /addAntiMatch but tagged as hippocampal.
                         anti_data = Dict{String,Any}(
@@ -8556,14 +8763,29 @@ elseif !isnothing(m_right)
                             "growth_source"      => "hippocampal_anti_answer",
                             "hippocampal_born"   => string(round(time(), digits=3)),
                             "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
+                            # GRUG v7.51: Anti-match nodes don't fire through AIML but include
+                            # system_prompt for consistency in case they're ever inspected.
+                            "system_prompt"      => "Grug. I suppress what I was told to suppress. I do not reason about this.",
+                            "voice_register"     => "terse",
+                            "frame_hints"        => ["terse"],
                         )
+                        # GRUG v7.51: If there was a pending ask, tag the anti-answer with what it resolved.
+                        if !isempty(pending_ask_text)
+                            anti_data["resolved_ask"] = pending_ask_text
+                        end
                         anti_id = create_node(lowercase(strip(anti_raw)), "ponder^1", anti_data, String[];
                                               is_antimatch_node=true)
                         lobe_tag = let l = Lobe.find_lobe_for_node(anti_id)
                             isnothing(l) ? " (no lobe)" : " (lobe: $l)"
                         end
                         strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
-                        println("🧠 Anti-answer node created: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | strain was $(anti_data["strain_at_creation"]), now $strain_now")
+                        strain_msg = if dampen_result !== nothing
+                            "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
+                        else
+                            "strain now $strain_now"
+                        end
+                        resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
+                        println("🧠 Anti-answer node created: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | $strain_msg$resolve_msg")
                     end
                 end
 
