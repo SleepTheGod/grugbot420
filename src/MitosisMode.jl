@@ -1124,8 +1124,11 @@ function run_mitosis!(;
                     connector = ""
                     is_crystal = false
                     # GRUG: Handle both struct and dict access patterns
+                    # GRUG v8.0: Also handle CascadeBridge (seam_tokens + partner_id)
                     try
-                        if hasproperty(att, :pattern)
+                        if hasproperty(att, :seam_tokens)     # GRUG v8.0: CascadeBridge
+                            connector = join(att.seam_tokens, " ")
+                        elseif hasproperty(att, :pattern)
                             connector = att.pattern
                         elseif hasproperty(att, :connector)
                             connector = att.connector

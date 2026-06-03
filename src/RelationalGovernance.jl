@@ -209,43 +209,50 @@ function observe_co_firing!(fired_node_ids::Vector{String};
     sorted_ids = sort(fired_node_ids)
     n = length(sorted_ids)
 
+    # GRUG v8.0 FIX: Compute token overlaps OUTSIDE CO_ACC_LOCK!
+    # Old code called token_overlap_fn inside lock(CO_ACC_LOCK), but
+    # token_overlap_fn acquires NODE_LOCK. That creates CO_ACC_LOCK → NODE_LOCK
+    # nesting. While no current code path does NODE_LOCK → CO_ACC_LOCK, the
+    # nested pattern is a deadlock risk if any future code adds that ordering.
+    # Fix: pre-compute all overlaps (read-only under NODE_LOCK), then do
+    # the CO_ACC mutation in a separate lock block with no nesting.
+    eligible_pairs = Tuple{String, String, Float64}[]  # (id_a, id_b, overlap)
+    for i in 1:(n-1)
+        for j in (i+1):n
+            id_a = sorted_ids[i]
+            id_b = sorted_ids[j]
+            overlap = token_overlap_fn(id_a, id_b)
+            if overlap >= MIN_OVERLAP_FOR_TRACKING
+                push!(eligible_pairs, (id_a, id_b, overlap))
+            end
+        end
+    end
+
+    # GRUG v8.0: Now mutate CO_ACC under CO_ACC_LOCK only — no NODE_LOCK nesting.
     lock(CO_ACC_LOCK) do
-        for i in 1:(n-1)
-            for j in (i+1):n
-                id_a = sorted_ids[i]
-                id_b = sorted_ids[j]
-
-                # GRUG: Check token overlap BEFORE tracking. If these nodes
-                # share no meaningful tokens, skip the pair. Prevents the
-                # accumulator from filling with coincidental co-firings.
-                overlap = token_overlap_fn(id_a, id_b)
-                if overlap < MIN_OVERLAP_FOR_TRACKING
-                    continue
-                end
-
-                key = (id_a, id_b)
-                if haskey(CO_ACC, key)
-                    CO_ACC[key] += CO_FIRE_INCREMENT
-                else
-                    # GRUG: New pair. Check if accumulator is full.
-                    if length(CO_ACC) >= CO_ACC_MAX_PAIRS
-                        # GRUG: Evict the weakest pair to make room.
-                        # Find the pair with the lowest intensity.
-                        min_key = nothing
-                        min_val = Inf
-                        for (k, v) in CO_ACC
-                            if v < min_val
-                                min_val = v
-                                min_key = k
-                            end
-                        end
-                        if !isnothing(min_key)
-                            delete!(CO_ACC, min_key)
+        for (id_a, id_b, _overlap) in eligible_pairs
+            key = (id_a, id_b)
+            if haskey(CO_ACC, key)
+                CO_ACC[key] += CO_FIRE_INCREMENT
+            else
+                # GRUG: New pair. Check if accumulator is full.
+                if length(CO_ACC) >= CO_ACC_MAX_PAIRS
+                    # GRUG: Evict the weakest pair to make room.
+                    # Find the pair with the lowest intensity.
+                    min_key = nothing
+                    min_val = Inf
+                    for (k, v) in CO_ACC
+                        if v < min_val
+                            min_val = v
+                            min_key = k
                         end
                     end
-                    CO_ACC[key] = CO_FIRE_INCREMENT
-                    new_pairs += 1
+                    if !isnothing(min_key)
+                        delete!(CO_ACC, min_key)
+                    end
                 end
+                CO_ACC[key] = CO_FIRE_INCREMENT
+                new_pairs += 1
             end
         end
     end
@@ -479,34 +486,58 @@ function run_relational_governance!(;
         )
     end
 
-    # GRUG: STEP 3 — Try to auto-attach the best candidate.
-    (attached, id_a, id_b, connector, intensity) = _auto_attach_best_candidate!(;
-        attach_fn = attach_fn,
-        token_overlap_fn = token_overlap_fn,
-        node_map_ref = node_map_ref,
-        node_lock_ref = node_lock_ref,
-    )
-
-    # GRUG: Immune gate check on the connector pattern.
-    if attached
-        json_text = JSON.json(Dict("pattern" => connector, "nodes" => [id_a, id_b]))
-        if !immune_gate_fn(connector, json_text)
-            # GRUG: Immune system rejected this attachment. Detach it.
-            # This is rare but the immune system has final say.
-            try
-                # GRUG: We can't easily detach here since we don't have
-                # detach_fn. Instead, log it as a rejection and mark the
-                # pair so it won't be retried (already removed from acc).
-                attached = false
-            catch
-                # GRUG: Best effort. The attachment might stick but it'll
-                # be logged as immune-rejected for human review.
-            end
-        end
-    end
+    # GRUG v8.0: STEP 3 — AUTO-ATTACH DISABLED.
+    # The auto-attach strategy needs rethinking. The current approach of
+    # blindly attaching the highest-intensity co-firing pair is too aggressive.
+    # A better strategy is needed — the user will work this out in due time.
+    # Accumulator still accumulates and decays normally. The data is preserved.
+    # When a better strategy is ready, uncomment the block below.
+    #
+    # (attached, id_a, id_b, connector, intensity) = _auto_attach_best_candidate!(;
+    #     attach_fn = attach_fn,
+    #     token_overlap_fn = token_overlap_fn,
+    #     node_map_ref = node_map_ref,
+    #     node_lock_ref = node_lock_ref,
+    # )
+    #
+    # # GRUG: Immune gate check on the connector pattern.
+    # if attached
+    #     json_text = JSON.json(Dict("pattern" => connector, "nodes" => [id_a, id_b]))
+    #     if !immune_gate_fn(connector, json_text)
+    #         # GRUG: Immune system rejected this attachment. Detach it.
+    #         # This is rare but the immune system has final say.
+    #         try
+    #             # GRUG: We can't easily detach here since we don't have
+    #             # detach_fn. Instead, log it as a rejection and mark the
+    #             # pair so it won't be retried (already removed from acc).
+    #             attached = false
+    #         catch
+    #             # GRUG: Best effort. The attachment might stick but it'll
+    #             # be logged as immune-rejected for human review.
+    #         end
+    #     end
+    # end
+    attached = false
+    id_a = ""; id_b = ""; connector = ""; intensity = 0.0
 
     t_elapsed = (time_ns() - t_start) / 1.0e6
 
+    # GRUG v8.0: Auto-attach disabled — return diagnostic info without attempting attachment.
+    # Accumulator still accumulates and decays. Pairs above threshold are tracked.
+    # When auto-attach is re-enabled, restore the STEP 3 block above and remove this return.
+    return RelationalGovStats(
+        "auto_attach_disabled",
+        pairs_tracked,
+        pairs_above,
+        0,
+        t_elapsed,
+        "Auto-attach DISABLED (v8.0). Accumulator has $(pairs_above) pairs above threshold ($(AUTO_ATTACH_THRESHOLD)). Decayed $(pairs_decayed), evicted $(pairs_evicted). Strategy pending rework."
+    )
+
+    # GRUG v8.0: DEAD CODE below — kept for when auto-attach is re-enabled.
+    # Restore: uncomment STEP 3 block above, remove the early return above,
+    # and uncomment this if/else block.
+    #= 
     if attached
         # GRUG: Log the event
         lock(GOV_LOG_LOCK) do
@@ -543,6 +574,7 @@ function run_relational_governance!(;
             notes * " Decayed $(pairs_decayed), evicted $(pairs_evicted)."
         )
     end
+    =#
 end
 
 # ==============================================================================

@@ -1894,68 +1894,96 @@ function attachment_grave_sweep!(
     items_changed  = 0
     notes          = ""
 
-    # GRUG: Pass 1 — find target nodes in attachment_map that are grave
+    # GRUG v8.0: attachment_map is now BRIDGE_MAP (Dict{String, Vector{CascadeBridge}}).
+    # CascadeBridge uses .partner_id instead of .node_id.
+    # Bidirectional: when we remove a bridge from A's list, we must also remove
+    # the reverse entry from B's list to keep BRIDGE_MAP consistent.
+
+    # GRUG: Pass 1 — find bridge-holding nodes that are grave
     grave_targets = String[]
     lock(attachment_lock) do
-        for (target_id, _attached) in attachment_map
+        for (node_id, _bridges) in attachment_map
             items_examined += 1
             lock(node_lock) do
-                if haskey(node_map, target_id) && node_map[target_id].is_grave
-                    push!(grave_targets, target_id)
+                if haskey(node_map, node_id) && node_map[node_id].is_grave
+                    push!(grave_targets, node_id)
                 end
             end
         end
     end
 
-    # GRUG: Pass 2 — find alive targets with grave attached-nodes
-    grave_attached = Tuple{String, Int}[]  # (target_id, count_of_grave_attached)
+    # GRUG: Pass 2 — find alive nodes with grave partner bridges
+    grave_partners = Tuple{String, Vector{String}}[]  # (node_id, [partner_ids_that_are_grave])
     lock(attachment_lock) do
-        for (target_id, attached_vec) in attachment_map
-            skip_target = lock(node_lock) do
-                haskey(node_map, target_id) && node_map[target_id].is_grave
+        for (node_id, bridge_vec) in attachment_map
+            skip_node = lock(node_lock) do
+                haskey(node_map, node_id) && node_map[node_id].is_grave
             end
-            skip_target && continue  # already counted above
-            grave_count = 0
-            for att in attached_vec
+            skip_node && continue  # already counted in Pass 1
+            grave_partner_ids = String[]
+            for br in bridge_vec
                 lock(node_lock) do
-                    if haskey(node_map, att.node_id) && node_map[att.node_id].is_grave
-                        grave_count += 1
+                    # GRUG v8.0: CascadeBridge uses .partner_id
+                    pid = getfield(br, :partner_id)
+                    if haskey(node_map, pid) && node_map[pid].is_grave
+                        push!(grave_partner_ids, pid)
                     end
                 end
             end
-            if grave_count > 0
-                push!(grave_attached, (target_id, grave_count))
+            if !isempty(grave_partner_ids)
+                push!(grave_partners, (node_id, grave_partner_ids))
             end
         end
     end
 
-    # GRUG: Apply — remove grave target entries entirely
+    # GRUG: Apply — remove grave node entries entirely (and their reverse entries)
     applied = 0
-    for target_id in grave_targets
+    for node_id in grave_targets
         applied >= ATTACHMENT_GRAVE_SWEEP_MAX && break
         lock(attachment_lock) do
-            if haskey(attachment_map, target_id)
-                delete!(attachment_map, target_id)
+            if haskey(attachment_map, node_id)
+                # GRUG v8.0: Before deleting, remove reverse entries from each partner
+                for br in attachment_map[node_id]
+                    pid = getfield(br, :partner_id)
+                    if haskey(attachment_map, pid)
+                        filter!(b -> getfield(b, :partner_id) != node_id, attachment_map[pid])
+                        # GRUG: If partner's bridge list is now empty, remove the key
+                        if isempty(attachment_map[pid])
+                            delete!(attachment_map, pid)
+                        end
+                    end
+                end
+                delete!(attachment_map, node_id)
                 items_changed += 1
                 applied += 1
             end
         end
     end
 
-    # GRUG: Apply — filter out grave attached-nodes from alive targets
-    for (target_id, _gc) in grave_attached
+    # GRUG: Apply — filter out grave-partner bridges from alive nodes (bidirectional)
+    for (node_id, grave_pids) in grave_partners
         applied >= ATTACHMENT_GRAVE_SWEEP_MAX && break
-        has_key = lock(attachment_lock) do; haskey(attachment_map, target_id); end
+        has_key = lock(attachment_lock) do; haskey(attachment_map, node_id); end
         has_key || continue
         lock(attachment_lock) do
-            old_vec = attachment_map[target_id]
-            lock(node_lock) do
-                filter!(att -> !(haskey(node_map, att.node_id) && node_map[att.node_id].is_grave), old_vec)
+            for gpid in grave_pids
+                # Remove the bridge to grave partner from this node's list
+                filter!(b -> getfield(b, :partner_id) != gpid, attachment_map[node_id])
+                # GRUG v8.0: Also remove the reverse entry from the grave partner's list
+                if haskey(attachment_map, gpid)
+                    filter!(b -> getfield(b, :partner_id) != node_id, attachment_map[gpid])
+                    if isempty(attachment_map[gpid])
+                        delete!(attachment_map, gpid)
+                    end
+                end
+                items_changed += 1
             end
-            attachment_map[target_id] = old_vec
-            items_changed += 1
-            applied += 1
+            # GRUG: If this node's bridge list is now empty, remove the key
+            if isempty(attachment_map[node_id])
+                delete!(attachment_map, node_id)
+            end
         end
+        applied += 1
     end
 
     elapsed_ms = (time() - t0) * 1000

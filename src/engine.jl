@@ -2181,7 +2181,11 @@ function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
                         unmatched_tail::Vector{String}=String[])::Vector{Tuple{String, Float64, String}}
     fired = Tuple{String, Float64, String}[]
 
-    bridges = lock(() -> get(BRIDGE_MAP, source_id, CascadeBridge[]), BRIDGE_LOCK)
+    # GRUG v8.0 FIX: Copy the bridge vector under BRIDGE_LOCK so we have an
+    # immutable snapshot. Without copy, we hold a reference to the live vector
+    # inside BRIDGE_MAP — another task could push!/filter! it after we release
+    # BRIDGE_LOCK, causing a concurrent modification race during NODE_LOCK iteration.
+    bridges = lock(() -> copy(get(BRIDGE_MAP, source_id, CascadeBridge[])), BRIDGE_LOCK)
     if isempty(bridges)
         return fired
     end
@@ -2284,27 +2288,41 @@ Shows bidirectional bridges with provenance, seam tokens, and crystalize status.
 """
 function get_bridge_summary()::String
     lines = String[]
-    lock(BRIDGE_LOCK) do
+    # GRUG v8.0 FIX: Acquire locks in consistent order (BRIDGE_LOCK → NODE_LOCK is wrong,
+    # can deadlock against bridge_nodes! which does NODE_LOCK → BRIDGE_LOCK).
+    # Fix: snapshot bridge data under BRIDGE_LOCK, then read nodes under NODE_LOCK separately.
+    bridge_data = lock(BRIDGE_LOCK) do
         if isempty(BRIDGE_MAP)
-            push!(lines, "[BRIDGE MAP EMPTY]")
-            return
+            return Tuple{String, Vector{CascadeBridge}}[]
         end
-        push!(lines, "=== BRIDGE MAP ($(length(BRIDGE_MAP)) nodes with bridges) ===")
-        # GRUG: Deduplicate — each bridge A↔B appears under both A and B.
-        # Show it once under A (sorted by node ID). Mark B's entry as "see A".
-        shown_pairs = Set{Tuple{String,String}}()
-        for (node_id, bridges) in sort(collect(BRIDGE_MAP), by=x->x[1])
-            push!(lines, "  🌉 $node_id ($(length(bridges))/$MAX_BRIDGES bridges):")
+        collect(BRIDGE_MAP)
+    end
+    if isempty(bridge_data)
+        return "[BRIDGE MAP EMPTY]"
+    end
+    push!(lines, "=== BRIDGE MAP ($(length(bridge_data)) nodes with bridges) ===")
+    # GRUG: Read partner status under NODE_LOCK only
+    partner_status_map = Dict{String, String}()
+    lock(NODE_LOCK) do
+        for (node_id, bridges) in bridge_data
             for br in bridges
-                partner_status = lock(() -> begin
+                if !haskey(partner_status_map, br.partner_id)
                     n = get(NODE_MAP, br.partner_id, nothing)
-                    isnothing(n) ? "[MISSING]" : (n.is_grave ? "[GRAVE]" : "[ALIVE str=$(round(n.strength, digits=1))]")
-                end, NODE_LOCK)
-                crystal_tag = br.is_crystalized ? " 💎[CRYSTAL:$(br.crystal_origin)]" : ""
-                cross_tag = br.source_lobe != "" ? " [from_lobe=$(br.source_lobe)]" : ""
-                seam_preview = isempty(br.seam_tokens) ? "(dynamic)" : "\"$(join(br.seam_tokens[1:min(5, length(br.seam_tokens))], " "))$(length(br.seam_tokens) > 5 ? "..." : "")\""
-                push!(lines, "      ↔ $(br.partner_id) $partner_status$crystal_tag$cross_tag | base_conf=$(round(br.base_confidence, digits=3)) | seam=$seam_preview")
+                    partner_status_map[br.partner_id] = isnothing(n) ? "[MISSING]" : (n.is_grave ? "[GRAVE]" : "[ALIVE str=$(round(n.strength, digits=1))]")
+                end
             end
+        end
+    end
+    # GRUG: Now format output without holding any lock (using snapshots)
+    shown_pairs = Set{Tuple{String,String}}()
+    for (node_id, bridges) in sort(bridge_data, by=x->x[1])
+        push!(lines, "  🌉 $node_id ($(length(bridges))/$MAX_BRIDGES bridges):")
+        for br in bridges
+            partner_status = get(partner_status_map, br.partner_id, "[UNKNOWN]")
+            crystal_tag = br.is_crystalized ? " 💎[CRYSTAL:$(br.crystal_origin)]" : ""
+            cross_tag = br.source_lobe != "" ? " [from_lobe=$(br.source_lobe)]" : ""
+            seam_preview = isempty(br.seam_tokens) ? "(dynamic)" : "\"$(join(br.seam_tokens[1:min(5, length(br.seam_tokens))], " "))$(length(br.seam_tokens) > 5 ? "..." : "")\""
+            push!(lines, "      ↔ $(br.partner_id) $partner_status$crystal_tag$cross_tag | base_conf=$(round(br.base_confidence, digits=3)) | seam=$seam_preview")
         end
     end
     return join(lines, "\n")
@@ -2526,45 +2544,82 @@ Called from the idle / phagy sweep loop. Cheap to run — O(bridges).
 function auto_crystalize_sweep!()::Tuple{Int, Int}
     crystallized = 0
     revoked = 0
-    lock(BRIDGE_LOCK) do
+    # GRUG v8.0 FIX: Lock ordering must be NODE_LOCK → BRIDGE_LOCK (same as bridge_nodes!).
+    # Previously this held BRIDGE_LOCK while acquiring NODE_LOCK (line 2532), which
+    # could deadlock against bridge_nodes! holding NODE_LOCK and waiting for BRIDGE_LOCK.
+    # Fix: snapshot all bridge data under BRIDGE_LOCK first, then read nodes under NODE_LOCK,
+    # then apply mutations under BRIDGE_LOCK. No nested locks.
+    
+    # Step 1: Snapshot bridge entries under BRIDGE_LOCK
+    bridge_snapshots = lock(BRIDGE_LOCK) do
+        snapshots = Tuple{String, CascadeBridge, String}[]  # (node_id, bridge, partner_id)
         for (node_id, bridges) in BRIDGE_MAP
             for br in bridges
-                partner = lock(() -> get(NODE_MAP, br.partner_id, nothing), NODE_LOCK)
-                isnothing(partner) && continue
-                partner.is_grave && continue
-
-                if br.is_crystalized && br.crystal_origin == :auto
-                    if partner.strength < CRYSTAL_AUTO_REVOKE_FLOOR
-                        br.is_crystalized = false
-                        br.crystal_origin = :none
-                        # GRUG: Also decrystalize the partner side (bidirectional)
-                        partner_bridges = get(BRIDGE_MAP, br.partner_id, CascadeBridge[])
-                        for pbr in partner_bridges
-                            if pbr.partner_id == node_id && pbr.crystal_origin == :auto
-                                pbr.is_crystalized = false
-                                pbr.crystal_origin = :none
-                            end
-                        end
-                        revoked += 1
-                    end
-                elseif !br.is_crystalized
-                    if partner.strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
-                       _semantic_truth_score(partner) >= CRYSTAL_AUTO_SEMANTIC_FLOOR
-                        br.is_crystalized = true
-                        br.crystal_origin = :auto
-                        # GRUG: Also crystalize the partner side (bidirectional)
-                        partner_bridges = get(BRIDGE_MAP, br.partner_id, CascadeBridge[])
-                        for pbr in partner_bridges
-                            if pbr.partner_id == node_id && !pbr.is_crystalized
-                                pbr.is_crystalized = true
-                                pbr.crystal_origin = :auto
-                            end
-                        end
-                        crystallized += 1
-                    end
-                end
-                # :user marks are sticky — never auto-touched.
+                push!(snapshots, (node_id, br, br.partner_id))
             end
+        end
+        snapshots
+    end
+    
+    # Step 2: Read partner node data under NODE_LOCK (no BRIDGE_LOCK held)
+    partner_data = Dict{String, Tuple{Bool, Float64, Float64}}()  # partner_id => (is_grave, strength, semantic_truth)
+    lock(NODE_LOCK) do
+        for (_node_id, _br, partner_id) in bridge_snapshots
+            if !haskey(partner_data, partner_id)
+                partner = get(NODE_MAP, partner_id, nothing)
+                if isnothing(partner)
+                    partner_data[partner_id] = (true, 0.0, 0.0)  # treat missing as grave
+                else
+                    partner_data[partner_id] = (partner.is_grave, partner.strength, _semantic_truth_score(partner))
+                end
+            end
+        end
+    end
+    
+    # Step 3: Apply mutations under BRIDGE_LOCK only (no NODE_LOCK held)
+    lock(BRIDGE_LOCK) do
+        for (node_id, br, partner_id) in bridge_snapshots
+            # Re-verify the bridge still exists (could have been unbridged between steps)
+            current_bridges = get(BRIDGE_MAP, node_id, CascadeBridge[])
+            if !(br in current_bridges)
+                continue
+            end
+            
+            pd = get(partner_data, partner_id, (true, 0.0, 0.0))
+            partner_is_grave, partner_strength, partner_semantic = pd
+            partner_is_grave && continue
+
+            if br.is_crystalized && br.crystal_origin == :auto
+                if partner_strength < CRYSTAL_AUTO_REVOKE_FLOOR
+                    br.is_crystalized = false
+                    br.crystal_origin = :none
+                    # GRUG: Also decrystalize the partner side (bidirectional)
+                    partner_bridges = get(BRIDGE_MAP, partner_id, CascadeBridge[])
+                    for pbr in partner_bridges
+                        if pbr.partner_id == node_id && pbr.crystal_origin == :auto
+                            pbr.is_crystalized = false
+                            pbr.crystal_origin = :none
+                        end
+                    end
+                    revoked += 1
+                end
+            elseif !br.is_crystalized
+                if partner_strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
+                   partner_semantic >= CRYSTAL_AUTO_SEMANTIC_FLOOR
+                    br.is_crystalized = true
+                    br.crystal_origin = :auto
+                    # GRUG: Also crystalize the partner side (bidirectional)
+                    partner_bridges = get(BRIDGE_MAP, partner_id, CascadeBridge[])
+                    for pbr in partner_bridges
+                        if pbr.partner_id == node_id && !pbr.is_crystalized
+                            pbr.is_crystalized = true
+                            pbr.crystal_origin = :auto
+                        end
+                    end
+                    crystallized += 1
+                end
+            end
+            # :user marks are sticky — never auto-touched.
         end
     end
     return (crystallized, revoked)

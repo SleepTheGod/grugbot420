@@ -6704,7 +6704,8 @@ function load_specimen_from_file!(filepath::String)::String
     allowed_keys = Set(["nodes", "hopfield_cache", "rules", "message_history",
                         "lobes", "node_to_lobe_idx", "lobe_tables",
                         "verb_registry", "thesaurus_seeds", "inhibitions",
-                        "arousal", "eye_state", "id_counters", "last_voters", "brainstem", "attachments",
+                        "arousal", "eye_state", "id_counters", "last_voters", "brainstem",
+                        "bridges", "attachments",      # GRUG v8.0: bridges (bidirectional) + attachments (backward compat)
                         "trajectory", "temporal_coherence", "morph_cooldowns", "immune_system", "aiml_system", "_meta",
                         "chatter_groups", "chatter_cooldowns",
                         "sigil_table", "automaton_rules", "last_contributor_votes", "node_to_group_idx", "tonal_judge_knobs",
@@ -6726,7 +6727,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # GRUG: Type checks for critical array sections
-    for k in ["nodes", "hopfield_cache", "rules", "message_history", "lobes", "lobe_tables", "inhibitions", "temporal_coherence"]
+    for k in ["nodes", "hopfield_cache", "rules", "message_history", "lobes", "lobe_tables", "inhibitions", "temporal_coherence", "bridges", "attachments"]
         if haskey(specimen, k) && !isa(specimen[k], AbstractVector)
             push!(validation_errors, "'$k' must be an array")
         end
@@ -7439,7 +7440,6 @@ function load_specimen_from_file!(filepath::String)::String
         end
         counts["bridges"] = n_bridges
         println("  🌉 Bridges restored from v7.x format ($n_bridges)")
-    end
     end
 
     # ── 4.14b CHATTER GROUPS (v7.19) ────────────────────────
@@ -8667,8 +8667,8 @@ function maybe_run_idle()
                 chatter_node_cooldown_lock = CHATTER_NODE_COOLDOWN_LOCK,
                 morph_cooldown_map         = ChatterMode.MORPH_COOLDOWN_MAP,
                 morph_cooldown_lock        = ChatterMode.MORPH_COOLDOWN_LOCK,
-                bridge_map                  = BRIDGE_MAP,
-                bridge_lock                 = BRIDGE_LOCK,
+                attachment_map             = BRIDGE_MAP,      # GRUG v8.0: BRIDGE_MAP passed as attachment_map (PhagyMode kwarg name)
+                attachment_lock            = BRIDGE_LOCK,     # GRUG v8.0: BRIDGE_LOCK passed as attachment_lock (PhagyMode kwarg name)
                 group_map                  = GROUP_MAP,
                 group_lock                 = GROUP_LOCK,
                 node_to_group              = NODE_TO_GROUP,
