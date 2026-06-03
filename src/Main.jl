@@ -5584,6 +5584,13 @@ function _decomposer_config_to_dict(config::InputDecomposer.DecomposerConfig)::D
     )
 end
 
+
+# GRUG: Helper for serializing LobeOrchestrator.LAST_LOBE_SCORES tuples.
+# Each tuple is (lobe_id::String, base_avg::Float64, top_avg::Float64, score::Float64, hard_count::Int).
+function _lls_item_to_dict(t::Tuple{String, Float64, Float64, Float64, Int})::Dict{String,Any}
+    return Dict{String,Any}("lobe_id"=>t[1], "base_avg"=>t[2], "top_avg"=>t[3], "score"=>t[4], "hard_count"=>t[5])
+end
+
 function save_specimen_to_file!(filepath::String)::String
     if strip(filepath) == ""
         error("!!! FATAL: /saveSpecimen got empty filepath! Grug cannot write to invisible air! !!!")
@@ -6384,6 +6391,101 @@ function save_specimen_to_file!(filepath::String)::String
     catch e
         @warn "[MAIN] save_specimen: FAILED to serialize chatter residuals: $e"
     end
+
+    # ── 40. FAN-OUT CONFIG ──────────────────────────────────────────────────────
+    # GRUG: Fan-out creates shadow answer nodes. If we don't persist these
+    # settings, a specimen reloaded with fan-out disabled loses all shadow
+    # behavior, and one reloaded with a different max_shadows changes behavior.
+    try
+        specimen["fanout_config"] = Dict{String,Any}(
+            "enabled"      => _FANOUT_ENABLED[],
+            "max_shadows"  => _FANOUT_MAX_SHADOWS[],
+            "modes"        => collect(_FANOUT_MODES)
+        )
+        println("  🪭  Fan-out config saved (enabled=$(_FANOUT_ENABLED[]), max=$(_FANOUT_MAX_SHADOWS[]), modes=$(length(_FANOUT_MODES)))")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize fan-out config: $e"
+    end
+
+    # ── 41. HIPPOCAMPAL PENDING ASK ──────────────────────────────────────────────
+    # GRUG: If grug asked the user a question and is waiting for an answer,
+    # the pending ask text must survive reload. Otherwise grug forgets it
+    # asked and the answer lands in a vacuum.
+    try
+        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+            specimen["hippocampal_pending_ask"] = Dict{String,Any}(
+                "pending_text" => _HIPPOCAMPAL_PENDING_ASK[]
+            )
+        end
+        println("  🧠  Hippocampal pending ask saved")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize hippocampal pending ask: $e"
+    end
+
+    # ── 42. ADMIN SESSION ────────────────────────────────────────────────────────
+    # GRUG: Admin session state (login status + timestamps). On reload the
+    # session is always reset to logged-out for safety — but we save it so
+    # the load function can detect an active session and warn about it.
+    try
+        specimen["admin_session"] = Dict{String,Any}(
+            "is_logged_in"  => ADMIN_SESSION[].is_logged_in,
+            "login_time"    => ADMIN_SESSION[].login_time,
+            "last_activity" => ADMIN_SESSION[].last_activity
+        )
+        println("  🔐  Admin session saved")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize admin session: $e"
+    end
+
+    # ── 43. LOBE ORCHESTRATOR LAST STATE ─────────────────────────────────────────
+    # GRUG: LAST_LOBE_SCORES/WINNER/PASSTHROUGH drive the next-cycle scoring
+    # bias. Without these, reload loses the momentum of which lobe was winning
+    # and the first post-reload cycle scores naively.
+    try
+        _lls = LobeOrchestrator.LAST_LOBE_SCORES[]
+        specimen["lobe_orch_last"] = Dict{String,Any}(
+            "scores"      => [_lls_item_to_dict(t) for t in _lls],
+            "winner"      => LobeOrchestrator.LAST_WINNER[],
+            "passthrough" => LobeOrchestrator.LAST_PASSTHROUGH[]
+        )
+        println("  🎭  Lobe orchestrator last state saved (winner=$(LobeOrchestrator.LAST_WINNER[]))")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize lobe orchestrator last state: $e"
+    end
+
+    # ── 44. CHATTER CURSOR ───────────────────────────────────────────────────────
+    # GRUG: The chatter cursor tracks how far through CHATTER_LOG the residual
+    # scanner has read. Without persisting it, reload re-mines all old swaps.
+    try
+        specimen["chatter_cursor"] = Dict{String,Any}(
+            "cursor" => ChatterMode.CHATTER_CURSOR[]
+        )
+        println("  🔖  Chatter cursor saved (pos=$(ChatterMode.CHATTER_CURSOR[]))")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize chatter cursor: $e"
+    end
+
+    # ── 45. ANSWER MODE CONFIG ───────────────────────────────────────────────────
+    # GRUG: _ANSWER_MODE_CONFIG defines how each answer mode maps to action,
+    # voice, frame, prompt. Custom modes added at runtime would be lost.
+    # We save the whole dict so reload preserves any customizations.
+    try
+        specimen["answer_mode_config"] = _ANSWER_MODE_CONFIG
+        println("  📋  Answer mode config saved ($(length(_ANSWER_MODE_CONFIG)) modes)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize answer mode config: $e"
+    end
+
+    # ── 46. PHAGY RULES REF ──────────────────────────────────────────────────────
+    # GRUG: PHAGY_RULES_REF holds the live orchestration rules for the rule
+    # pruner automaton. Without these, reload loses all dynamically-added
+    # rules and the pruner has nothing to work on.
+    try
+        specimen["phagy_rules_ref"] = PHAGY_RULES_REF[]
+        println("  🦠  Phagy rules ref saved ($(length(PHAGY_RULES_REF[])) rules)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize phagy rules ref: $e"
+    end
     # ── SERIALIZE ────────────────────────────────────────────────────
     # GRUG: Convert to JSON string. If filepath ends in .gz, gzip compress.
     # If .json (or anything else), write plain JSON — no gzip needed, works
@@ -6571,7 +6673,10 @@ function load_specimen_from_file!(filepath::String)::String
                         "vote_orchestrator_knobs", "mitosis_config", "growth_config", "phagy_config",
                         "chatter_config", "immune_config",
                         "scanner_config", "action_tone_knobs",
-                        "co_activation", "input_ledger", "chatter_residuals"])
+                        "co_activation", "input_ledger", "chatter_residuals",
+                        "fanout_config", "hippocampal_pending_ask", "admin_session",
+                        "lobe_orch_last", "chatter_cursor", "answer_mode_config",
+                        "phagy_rules_ref"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -6593,7 +6698,9 @@ function load_specimen_from_file!(filepath::String)::String
              "brainstem_config", "engine_config", "lobe_orchestrator_knobs",
              "vote_orchestrator_knobs", "mitosis_config", "growth_config", "phagy_config",
              "chatter_config", "immune_config",
-             "scanner_config", "action_tone_knobs"]
+             "scanner_config", "action_tone_knobs",
+             "fanout_config", "hippocampal_pending_ask", "admin_session",
+             "lobe_orch_last", "chatter_cursor", "answer_mode_config"]
         if haskey(specimen, k) && !isa(specimen[k], Dict)
             push!(validation_errors, "'$k' must be an object")
         end
@@ -7954,6 +8061,180 @@ function load_specimen_from_file!(filepath::String)::String
     catch e
         @warn "[MAIN] load_specimen: failed to restore chatter residuals: $e"
         println("  ⚠️  Chatter residuals: FAILED to load (starting fresh)")
+    end
+
+
+    # ── 4.40 FAN-OUT CONFIG ──────────────────────────────────────────────────────
+    # GRUG: Restore fan-out settings. If missing (old specimen), defaults apply.
+    # Fan-out enabled + max_shadows + mode set are all runtime-tunable.
+    try
+        if haskey(specimen, "fanout_config")
+            _focfg = specimen["fanout_config"]
+            if isa(_focfg, Dict)
+                if haskey(_focfg, "enabled")
+                    _FANOUT_ENABLED[] = Bool(_focfg["enabled"])
+                end
+                if haskey(_focfg, "max_shadows")
+                    _FANOUT_MAX_SHADOWS[] = Int(_focfg["max_shadows"])
+                end
+                if haskey(_focfg, "modes")
+                    empty!(_FANOUT_MODES)
+                    for m in _focfg["modes"]
+                        push!(_FANOUT_MODES, String(m))
+                    end
+                end
+                println("  🪭  Fan-out config loaded (enabled=$(_FANOUT_ENABLED[]), max=$(_FANOUT_MAX_SHADOWS[]), modes=$(length(_FANOUT_MODES)))")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore fan-out config: $e"
+        println("  ⚠️  Fan-out config: FAILED to load (using defaults)")
+    end
+
+    # ── 4.41 HIPPOCAMPAL PENDING ASK ──────────────────────────────────────────────
+    # GRUG: Restore the pending ask text. If grug was waiting for an answer
+    # when the specimen was saved, it still remembers the question on reload.
+    try
+        if haskey(specimen, "hippocampal_pending_ask")
+            _hpa = specimen["hippocampal_pending_ask"]
+            if isa(_hpa, Dict) && haskey(_hpa, "pending_text")
+                lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                    _HIPPOCAMPAL_PENDING_ASK[] = String(_hpa["pending_text"])
+                end
+                if !isempty(_HIPPOCAMPAL_PENDING_ASK[])
+                    _hpa_text = _HIPPOCAMPAL_PENDING_ASK[]
+                    _hpa_preview = length(_hpa_text) > 40 ? _hpa_text[1:40] : _hpa_text
+                    println("  🧠  Hippocampal pending ask restored: '$(_hpa_preview)'")
+                else
+                    println("  🧠  Hippocampal pending ask: empty (no pending question)")
+                end
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore hippocampal pending ask: $e"
+    end
+
+    # ── 4.42 ADMIN SESSION ────────────────────────────────────────────────────────
+    # GRUG: Admin session is ALWAYS reset to logged-out on reload for safety.
+    # An active session at save time means the specimen was saved mid-admin;
+    # we warn but do NOT restore the session. Login must be explicit.
+    try
+        if haskey(specimen, "admin_session")
+            _as = specimen["admin_session"]
+            if isa(_as, Dict) && get(_as, "is_logged_in", false)
+                ADMIN_SESSION[] = AdminSession(false, 0.0, 0.0)
+                println("  🔐  Admin session: SAVED while logged in — session reset for safety (use /login)")
+            else
+                println("  🔐  Admin session: not logged in (clean)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to check admin session: $e"
+    end
+
+    # ── 4.43 LOBE ORCHESTRATOR LAST STATE ─────────────────────────────────────────
+    # GRUG: Restore last lobe scoring state so the first post-reload cycle
+    # has continuity with the pre-save cycle. Without this, the orchestrator
+    # starts with empty scores and the first cycle scores naively.
+    try
+        if haskey(specimen, "lobe_orch_last")
+            _lol = specimen["lobe_orch_last"]
+            if isa(_lol, Dict)
+                if haskey(_lol, "scores") && isa(_lol["scores"], AbstractVector)
+                    _restored_scores = Tuple{String, Float64, Float64, Float64, Int}[]
+                    for s in _lol["scores"]
+                        if isa(s, Dict)
+                            push!(_restored_scores, (
+                                String(get(s, "lobe_id", "")),
+                                Float64(get(s, "base_avg", 0.0)),
+                                Float64(get(s, "top_avg", 0.0)),
+                                Float64(get(s, "score", 0.0)),
+                                Int(get(s, "hard_count", 0))
+                            ))
+                        end
+                    end
+                    LobeOrchestrator.LAST_LOBE_SCORES[] = _restored_scores
+                end
+                if haskey(_lol, "winner")
+                    LobeOrchestrator.LAST_WINNER[] = String(_lol["winner"])
+                end
+                if haskey(_lol, "passthrough") && isa(_lol["passthrough"], AbstractVector)
+                    LobeOrchestrator.LAST_PASSTHROUGH[] = [String(p) for p in _lol["passthrough"]]
+                end
+                println("  🎭  Lobe orchestrator last state loaded (winner=$(LobeOrchestrator.LAST_WINNER[]), scores=$(length(LobeOrchestrator.LAST_LOBE_SCORES[])))")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore lobe orchestrator last state: $e"
+        println("  ⚠️  Lobe orchestrator last state: FAILED to load (starting fresh)")
+    end
+
+    # ── 4.44 CHATTER CURSOR ───────────────────────────────────────────────────────
+    # GRUG: Restore chatter cursor position. Without this, reload re-mines
+    # all old swaps from the beginning of CHATTER_LOG.
+    try
+        if haskey(specimen, "chatter_cursor")
+            _cc = specimen["chatter_cursor"]
+            if isa(_cc, Dict) && haskey(_cc, "cursor")
+                ChatterMode.CHATTER_CURSOR[] = Int(_cc["cursor"])
+                println("  🔖  Chatter cursor loaded (pos=$(ChatterMode.CHATTER_CURSOR[]))")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore chatter cursor: $e"
+    end
+
+    # ── 4.45 ANSWER MODE CONFIG ───────────────────────────────────────────────────
+    # GRUG: Restore answer mode config. If the specimen had custom modes or
+    # modified voice/frame/prompt for standard modes, those survive reload.
+    # Missing keys in saved modes fall back to current code defaults.
+    try
+        if haskey(specimen, "answer_mode_config")
+            _amc = specimen["answer_mode_config"]
+            if isa(_amc, Dict)
+                for (mode_name, mode_cfg) in _amc
+                    if haskey(_ANSWER_MODE_CONFIG, mode_name)
+                        # Merge: saved values override code defaults
+                        _existing = _ANSWER_MODE_CONFIG[mode_name]
+                        if isa(mode_cfg, Dict) && isa(_existing, Dict)
+                            for (k, v) in mode_cfg
+                                _existing[k] = v
+                            end
+                        elseif isempty(_existing) && !isempty(mode_cfg)
+                            # Code default is empty (handled specially), but saved
+                            # had data — restore it
+                            if isa(mode_cfg, Dict)
+                                _ANSWER_MODE_CONFIG[mode_name] = Dict{String,Any}(mode_cfg)
+                            end
+                        end
+                    else
+                        # New mode that doesn't exist in code defaults — add it
+                        if isa(mode_cfg, Dict)
+                            _ANSWER_MODE_CONFIG[mode_name] = Dict{String,Any}(mode_cfg)
+                        end
+                    end
+                end
+                println("  📋  Answer mode config loaded ($(length(_ANSWER_MODE_CONFIG)) modes)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore answer mode config: $e"
+        println("  ⚠️  Answer mode config: FAILED to load (using code defaults)")
+    end
+
+    # ── 4.46 PHAGY RULES REF ──────────────────────────────────────────────────────
+    # GRUG: Restore the live orchestration rules for the rule pruner automaton.
+    # Without these, reload loses all dynamically-added rules.
+    try
+        if haskey(specimen, "phagy_rules_ref")
+            _pr = specimen["phagy_rules_ref"]
+            if isa(_pr, AbstractVector)
+                PHAGY_RULES_REF[] = Vector(_pr)
+                println("  🦠  Phagy rules ref loaded ($(length(PHAGY_RULES_REF[])) rules)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore phagy rules ref: $e"
     end
 
     # PHASE 5: BUILD SUMMARY SCROLL
