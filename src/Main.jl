@@ -162,6 +162,7 @@ end
 using Base64: base64decode
 using SHA: sha256
 using JSON
+using Statistics: mean
 
 # ==============================================================================
 # MEMORY CAVE (PIN AWARENESS LAYER)
@@ -5855,6 +5856,7 @@ function save_specimen_to_file!(filepath::String)::String
                 "chatter_count"    => grp.chatter_count,
                 "has_grave_slot"   => grp.has_grave_slot,
                 "max_occupancy"    => grp.max_occupancy,
+                "is_time_node_group" => grp.is_time_node_group,
             ))
         end
     end
@@ -7246,7 +7248,8 @@ function load_specimen_from_file!(filepath::String)::String
                     grave_slot = Bool(get(gentry, "has_grave_slot", false))
 
                     max_occ = Int(get(gentry, "max_occupancy", GROUP_MAX_OCCUPANCY))
-                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, max_occ)
+                    is_tng = Bool(get(gentry, "is_time_node_group", false))
+                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, max_occ, is_tng)
                     GROUP_MAP[gid] = grp
                     for m in members
                         NODE_TO_GROUP[m] = gid
