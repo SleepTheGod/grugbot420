@@ -3047,7 +3047,7 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
     strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
     output = "$(reason_preamble)$memory_hint\n" *
              "🤔 $question_text\n" *
-             "   → Use /answer [@lobe_id] <explanation> to teach me (optionally into a lobe), or /antiAnswer [@lobe_id] <text> to suppress it. (strain=$strain_now)"
+             "   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=$strain_now)"
 
     # GRUG: Write a SelfObserver entry so the subconscious knows we asked.
     try
@@ -3068,6 +3068,152 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
     end
 
     return output
+end
+
+# ==============================================================================
+# GRUG v7.52: ANSWER MODE SYSTEM
+# ==============================================================================
+# The old /answer just dumped text into a single reason^1 node. But answers
+# come in many shapes: math needs different metadata, multi-part answers need
+# multiple linked nodes, procedural answers need sequential chains, relational
+# answers need pre-seeded triples. The answer mode system lets the user pick
+# the RIGHT shape for their answer instead of squeezing everything into one
+# flat node.
+#
+# Syntax: /answer [@lobe_id] [:mode] <content>
+#
+# Modes:
+#   :reason   — default. Single reason^1 node. "I reason about what I was taught."
+#   :explain  — single explain^1 node. "I explain what I was taught."
+#   :define   — single define^1 node (explain family). "I define what I was taught."
+#   :alert    — single alert^1 node. "I warn about what I was taught."
+#   :comfort  — single comfort^1 node. "I acknowledge what I was taught."
+#   :math     — single reason^1 node with arithmetic-ready metadata.
+#              Voice "terse", noun_anchors for math terms, imperative frame.
+#   :multi    — pipe-delimited multi-node: "part1 | part2 | part3"
+#              Each part becomes a separate node, all in the same lobe.
+#              Nodes auto-linked into a group.
+#              Each part can optionally have its own :action prefix.
+#   :relate   — triple-seeded node: "subject | relation | object"
+#              Creates a node with required_relations pre-seeded.
+#   :proc     — semicolon-delimited procedural chain: "step1; step2; step3"
+#              Creates linked nodes with drop_table chain.
+#              Good for "how to do X" answers.
+#   :json     — raw JSON passthrough to grow_nodes_from_packet.
+#              Full power-user mode. Same format as /grow body.
+#
+# If no :mode specified, defaults to :reason (backward compatible).
+# ==============================================================================
+
+const _VALID_ANSWER_MODES = [
+    "reason", "explain", "define", "alert", "comfort",
+    "math", "multi", "relate", "proc", "json",
+]
+
+# GRUG: Map answer mode → action family name + system_prompt voice.
+const _ANSWER_MODE_CONFIG = Dict{String, Dict{String, Any}}(
+    "reason"  => Dict("action" => "reason^1",  "voice" => "plain",       "frame" => ["plain", "exploratory"],   "prompt" => "Grug. I learned this from a question. I reason about what I was taught."),
+    "explain" => Dict("action" => "explain^1", "voice" => "explanatory", "frame" => ["exploratory", "plain"],   "prompt" => "Grug. I learned this from a question. I explain what I was taught clearly."),
+    "define"  => Dict("action" => "define^1",  "voice" => "terse",       "frame" => ["imperative", "plain"],    "prompt" => "Grug. I learned this from a question. I define what I was taught precisely."),
+    "alert"   => Dict("action" => "alert^1",   "voice" => "terse",       "frame" => ["imperative", "terse"],    "prompt" => "Grug. I learned this from a question. I warn about what I was told to watch for."),
+    "comfort" => Dict("action" => "comfort^1", "voice" => "warm",        "frame" => ["warm", "de-escalating"],  "prompt" => "Grug. I learned this from a question. I acknowledge what I was taught with care."),
+    "math"    => Dict("action" => "reason^1",  "voice" => "terse",       "frame" => ["imperative", "plain"],    "prompt" => "Grug. I compute. I give answers. Numbers are my language. I reason about mathematical truths I was taught."),
+    "multi"   => Dict(),   # handled specially — multi-node
+    "relate"  => Dict(),   # handled specially — triple-seeded
+    "proc"    => Dict(),   # handled specially — procedural chain
+    "json"    => Dict(),   # handled specially — raw JSON passthrough
+)
+
+"""
+    _parse_multi_parts(content::String) -> Vector{Tuple{String, String}}
+
+GRUG: Parse pipe-delimited multi-answer content. Each part can optionally
+have a :action prefix. Returns vector of (action, text) tuples.
+
+Examples:
+  "part1 | part2 | part3"
+    → [("reason^1", "part1"), ("reason^1", "part2"), ("reason^1", "part3")]
+  ":explain part1 | :alert part2 | part3"
+    → [("explain^1", "part1"), ("alert^1", "part2"), ("reason^1", "part3")]
+"""
+function _parse_multi_parts(content::String)::Vector{Tuple{String, String}}
+    raw_parts = split(content, "|")
+    result = Tuple{String, String}[]
+    for part in raw_parts
+        trimmed = strip(String(part))
+        isempty(trimmed) && continue
+        # GRUG: Check for per-part :action prefix
+        m = match(r"^:(\w+)\s+(.+)$", trimmed)
+        if !isnothing(m)
+            action_name = lowercase(String(m.captures[1]))
+            part_text   = String(strip(m.captures[2]))
+            # GRUG: Validate action exists in COMMANDS
+            if haskey(COMMANDS, action_name)
+                push!(result, ("$(action_name)^1", part_text))
+            else
+                @warn "[MAIN] /answer :multi — unknown action ':$action_name', falling back to :reason for this part"
+                push!(result, ("reason^1", part_text))
+            end
+        else
+            push!(result, ("reason^1", trimmed))
+        end
+    end
+    return result
+end
+
+"""
+    _create_answer_node(pattern_text, action_packet, ans_data, target_lobe; is_antimatch=false)
+
+GRUG: Shared helper that creates an answer node and assigns it to a lobe.
+Returns (node_id, lobe_tag_string).
+"""
+function _create_answer_node(pattern_text::AbstractString, action_packet::AbstractString,
+                             ans_data::Dict{String,Any},
+                             target_lobe::Union{AbstractString,Nothing};
+                             is_antimatch::Bool=false)::Tuple{String, String}
+    nid = create_node(lowercase(strip(pattern_text)), action_packet, ans_data, String[];
+                      is_antimatch_node=is_antimatch)
+
+    if !isnothing(target_lobe)
+        try
+            Lobe.add_node_to_lobe!(target_lobe, nid)
+        catch e
+            @warn "[MAIN] /answer: failed to assign node $nid to lobe '$target_lobe': $e"
+        end
+    end
+
+    lobe_tag = let l = Lobe.find_lobe_for_node(nid)
+        isnothing(l) ? " (no lobe)" : " (lobe: $l)"
+    end
+    return (nid, lobe_tag)
+end
+
+"""
+    _base_answer_data(mode::String; pending_ask_text::String="", is_anti::Bool=false) -> Dict{String,Any}
+
+GRUG: Build the base json_data dict for an answer node. Includes hippocampal
+metadata, strain tracking, and mode-appropriate voice config.
+"""
+function _base_answer_data(mode::String; pending_ask_text::String="",
+                           is_anti::Bool=false)::Dict{String,Any}
+    cfg = get(_ANSWER_MODE_CONFIG, mode, _ANSWER_MODE_CONFIG["reason"])
+    source_tag = is_anti ? "hippocampal_anti_answer" : "hippocampal_answer"
+
+    data = Dict{String,Any}(
+        "growth_source"      => source_tag,
+        "hippocampal_born"   => string(round(time(), digits=3)),
+        "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
+        "answer_mode"        => mode,
+        "system_prompt"      => get(cfg, "prompt", "Grug. I learned this from a question. I reason about what I was taught."),
+        "voice_register"     => get(cfg, "voice", "plain"),
+        "frame_hints"        => get(cfg, "frame", ["plain", "exploratory"]),
+    )
+
+    if !isempty(pending_ask_text)
+        data["resolved_ask"] = pending_ask_text
+    end
+
+    return data
 end
 
 # GRUG: Family of brain actions. Command must take all vote states now!
@@ -3300,13 +3446,18 @@ Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addSynonym <canonical> <alias>     (normalize alias->canonical)
          : /addSeedSynonym <canonical> <syn1 syn2 ...>  (thesaurus seed group)
          : /addAntiMatch <pattern> [NONJITTER]  (anti-match confidence drain node)
-         : /answer [@lobe_id] <text>           (resolve strain with user structure)
-         : /antiAnswer [@lobe_id] <text>       (suppress strain-causing input)
+         : /answer [@lobe_id] [:mode] <text>   (resolve strain — mode shapes the answer)
+         : /antiAnswer [@lobe_id] [:mode] <text> (suppress strain — modes: alert, multi, json)
          : /listVerbs                          (show all verb classes + synonyms)
 Hippo    : When cave is empty, system asks a question. Use /answer or
-         : /antiAnswer to resolve. Optionally target a lobe with @lobe_id:
-         :   /answer @physics energy is conserved   → puts answer in "physics" lobe
-         :   /answer energy is conserved             → no lobe (unassigned)
+         : /antiAnswer to resolve. Modes shape how answers are stored:
+         :   /answer @physics :explain energy is conserved
+         :   /answer :math 2+2=4        /answer :multi part1 | part2
+         :   /answer :relate fire | burns | wood
+         :   /answer :proc step1; step2; step3
+         :   /answer :json {...}        /answer energy is conserved
+         : Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json
+         : /antiAnswer modes: alert (default), multi, json
          : strain → ask → you answer → strain resolved.
 Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
          : /nameLobe <lobe_id> <name>          (give a lobe a human-readable name)
@@ -3380,14 +3531,25 @@ const HELP_MSG = """
 ║  /addSynonym <canon> <alias> Register synonym normalization  ║
 ║  /addSeedSynonym <can> <syns> Register thesaurus seed group   ║
 ║  /addAntiMatch <pattern>    Anti-match confidence drain node  ║
-║  /answer [@lobe] <text>   Resolve strain, optionally into lobe  ║
-║  /antiAnswer [@lobe] <text> Suppress strain, optionally into lobe ║
+║  /answer [@lobe] [:mode] <text>   Resolve strain with mode-shaped answer  ║
+║  /antiAnswer [@lobe] [:mode] <text> Suppress strain (modes: alert/multi/json) ║
 ║  /listVerbs                 Show verb registry               ║
 ║                                                              ║
 ║  HIPPOCAMPAL ASK-CYCLE                                      ║
 ║  Empty cave → system asks question → /answer resolves strain ║
-║  /answer [@lobe] <text>   Teach system, optionally into lobe ║
-║  /antiAnswer [@lobe] <text> Suppress strain, optionally into lobe ║
+║  /answer [@lobe] [:mode] <text>   Teach system with answer   ║
+║    :reason  (default) single reason node                    ║
+║    :explain deep explanatory node                           ║
+║    :define  terse definition node                           ║
+║    :alert   imperative warning node                         ║
+║    :comfort warm acknowledgment node                        ║
+║    :math    arithmetic-ready node (noun_anchors)            ║
+║    :multi   pipe-delimited multi-node (part1 | part2)       ║
+║    :relate  triple-seeded (subj | rel | obj)                ║
+║    :proc    procedural chain (step1; step2; step3)          ║
+║    :json    raw JSON passthrough to grow_nodes_from_packet  ║
+║  /antiAnswer [@lobe] [:mode] <text> Suppress strain         ║
+║    :alert (default) / :multi / :json                        ║
 ║                                                              ║
 ║  LOBES & TABLES                                              ║
 ║  /newLobe <id> <subject>    Create new subject partition     ║
@@ -7800,8 +7962,8 @@ function run_cli()
             m_addsynonym  = match(r"^/addSynonym\s+(\S+)\s+(\S+)\s*$",     line)
             m_addseedsyn  = match(r"^/addSeedSynonym\s+(\S+)\s+(.+)$",      line)
             m_addantimatch= match(r"^/addAntiMatch\s+(.+)$",                 line)
-            m_answer      = match(r"^/answer(?:\s+@(\S+))?\s+(.+)$",                       line)  # GRUG v7.51: optional @lobe_id
-            m_antianswer  = match(r"^/antiAnswer(?:\s+@(\S+))?\s+(.+)$",                   line)  # GRUG v7.51: optional @lobe_id
+            m_answer      = match(r"^/answer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$",            line)  # GRUG v7.52: @lobe_id + :mode
+            m_antianswer  = match(r"^/antiAnswer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$",          line)  # GRUG v7.52: @lobe_id + :mode
             m_listverbs   = match(r"^/listVerbs\s*$",                        line)
             # GRUG: Lobe management commands
             m_newlobe     = match(r"^/newLobe\s+(\S+)\s+(.+)$",               line)
@@ -8659,35 +8821,53 @@ elseif !isnothing(m_right)
                     end
                 end
 
-            # GRUG v7.50: /answer <text> — user provides structure that resolves strain.
-            # The system hurts from novel input it can't handle. The user gives it
-            # an answer — a node that handles what was causing the strain. This
-            # directly resolves the structural deficit and lowers strain energy.
-            # The node is tagged with growth_source="hippocampal_answer" so we can
-            # track which nodes came from user-provided structure vs autogrowth.
+            # GRUG v7.52: /answer [@lobe_id] [:mode] <content>
+            # The hippocampal answer mechanism. When the system encounters input it
+            # can't handle (empty cave / strain), it asks a question. The user answers.
+            # The answer resolves the structural deficit and lowers strain.
             #
-            # GRUG v7.51: Now also DAMPENS STRAIN and CLEARS the pending ask.
-            # When the system asked a question and the user answered, the strain
-            # that caused the question is being resolved. Dampen it. Also clear
-            # _HIPPOCAMPAL_PENDING_ASK so the next empty-cave event can set a new one.
+            # Modes let the user pick the RIGHT shape for their answer:
+            #   :reason   — default. Single reason^1 node.
+            #   :explain  — single explain^1 node. Good for teaching concepts.
+            #   :define   — single define^1 node. Precise definitions.
+            #   :alert    — single alert^1 node. Warnings/watchdogs.
+            #   :comfort  — single comfort^1 node. Empathic answers.
+            #   :math     — arithmetic-ready node. terse voice, noun_anchors.
+            #   :multi    — pipe-delimited multi-node. "part1 | part2 | part3"
+            #   :relate   — triple-seeded. "subject | relation | object"
+            #   :proc     — procedural chain. "step1; step2; step3"
+            #   :json     — raw JSON passthrough to grow_nodes_from_packet.
+            #
+            # All modes also DAMPEN STRAIN and CLEAR the pending ask.
             elseif !isnothing(m_answer)
-                # GRUG v7.51: /answer [@lobe_id] <text>
-                # Optional @lobe_id targets the answer to a specific lobe.
-                #   /answer @physics energy is conserved in closed systems
-                #   /answer the sky is blue because of rayleigh scattering   (no lobe)
                 ans_lobe_raw = m_answer.captures[1]  # may be Nothing if no @lobe_id
-                ans_raw      = String(strip(m_answer.captures[2]))
-                if isempty(ans_raw)
-                    println("!!! FATAL: /answer needs text. Example: /answer @physics energy is conserved, or /answer the sky is blue !!!")
+                ans_mode_raw = m_answer.captures[2]  # may be Nothing if no :mode
+                ans_content  = String(strip(m_answer.captures[3]))
+
+                # GRUG: Resolve mode — default to :reason if not specified.
+                ans_mode = if !isnothing(ans_mode_raw)
+                    mode_candidate = lowercase(String(ans_mode_raw))
+                    if mode_candidate ∉ _VALID_ANSWER_MODES
+                        println("⚠  /answer: unknown mode ':$mode_candidate'. Valid modes: $(join(_VALID_ANSWER_MODES, ", ")). Falling back to :reason.")
+                        "reason"
+                    else
+                        mode_candidate
+                    end
                 else
-                    # GRUG v7.51: Validate lobe if specified.
+                    "reason"
+                end
+
+                if isempty(ans_content)
+                    println("!!! FATAL: /answer needs content. Example: /answer @physics :explain energy is conserved !!!")
+                else
+                    # GRUG v7.52: Validate lobe if specified.
                     target_lobe_ans = if !isnothing(ans_lobe_raw)
                         lobe_candidate = String(ans_lobe_raw)
                         if !haskey(Lobe.LOBE_REGISTRY, lobe_candidate)
                             println("⚠  /answer: lobe '@$lobe_candidate' does not exist. Use /newLobe first, or omit @lobe_id. Answer NOT created.")
                             nothing  # signal: abort
                         elseif Lobe.lobe_is_full(lobe_candidate)
-                            println("!!! LOBE FULL: Lobe '$lobe_candidate' has reached its node cap. Answer NOT created. Use /newLobe to add a new lobe. !!!")
+                            println("!!! LOBE FULL: Lobe '$lobe_candidate' has reached its node cap. Answer NOT created. !!!")
                             nothing  # signal: abort
                         else
                             lobe_candidate
@@ -8696,59 +8876,25 @@ elseif !isnothing(m_right)
                         nothing  # no lobe targeting
                     end
                     if target_lobe_ans !== nothing || isnothing(ans_lobe_raw)
-                        # Either a valid lobe was found, or no lobe was specified.
-                        # (If ans_lobe_raw was set but invalid, target_lobe_ans is nothing AND
-                        #  ans_lobe_raw is NOT nothing — skip this block via the else branch.)
                         # GRUG: IMMUNE GATE — answer nodes are stored structure!
-                        if !immune_gate("/answer", ans_raw; is_critical=false)
+                        if !immune_gate("/answer", ans_content; is_critical=false)
                             println("⛔ /answer blocked by immune system.")
                         else
-                            # GRUG v7.51: Dampen strain — the user is resolving the deficit.
+                            # GRUG v7.52: Dampen strain — the user is resolving the deficit.
                             dampen_result = try
-                                EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
+                                EphemeralMLP.dampen_strain!(0.7)
                             catch e
                                 @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
                                 nothing
                             end
 
-                            # GRUG v7.51: Clear the pending ask — question has been answered.
+                            # GRUG v7.52: Clear the pending ask.
                             pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
                                 old = _HIPPOCAMPAL_PENDING_ASK[]
                                 _HIPPOCAMPAL_PENDING_ASK[] = ""
                                 old
                             end
 
-                            # GRUG: Create a regular node from the user's answer.
-                            # Pattern = the answer text, action = "reason^1" (standard response action).
-                            # Tag it with hippocampal metadata so we know where it came from.
-                            ans_data = Dict{String,Any}(
-                                "growth_source"     => "hippocampal_answer",
-                                "hippocampal_born"  => string(round(time(), digits=3)),
-                                "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
-                                # GRUG v7.51: AIML requires system_prompt in every node's json_data.
-                                # Answer nodes get a simple voice: "I learned this from a question."
-                                "system_prompt"     => "Grug. I learned this from a question. I reason about what I was taught.",
-                                "voice_register"    => "plain",
-                                "frame_hints"       => ["plain", "exploratory"],
-                            )
-                            # GRUG v7.51: If there was a pending ask, tag the answer with what it resolved.
-                            if !isempty(pending_ask_text)
-                                ans_data["resolved_ask"] = pending_ask_text
-                            end
-                            ans_id = create_node(lowercase(strip(ans_raw)), "reason^1", ans_data, String[])
-
-                            # GRUG v7.51: Assign answer node to the specified lobe (if any).
-                            if !isnothing(target_lobe_ans)
-                                try
-                                    Lobe.add_node_to_lobe!(target_lobe_ans, ans_id)
-                                catch e
-                                    @warn "[MAIN] /answer: failed to assign node $ans_id to lobe '$target_lobe_ans': $e"
-                                end
-                            end
-
-                            lobe_tag = let l = Lobe.find_lobe_for_node(ans_id)
-                                isnothing(l) ? " (no lobe)" : " (lobe: $l)"
-                            end
                             strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
                             strain_msg = if dampen_result !== nothing
                                 "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
@@ -8756,7 +8902,174 @@ elseif !isnothing(m_right)
                                 "strain now $strain_now"
                             end
                             resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
-                            println("🧠 Answer node created: id=$ans_id pattern='$(lowercase(strip(ans_raw)))'$lobe_tag | $strain_msg$resolve_msg")
+
+                            # ==========================================================
+                            # MODE DISPATCH
+                            # ==========================================================
+
+                            if ans_mode == "json"
+                                # --- :json — raw JSON passthrough to grow_nodes_from_packet ---
+                                try
+                                    new_ids = grow_nodes_from_packet(ans_content; target_lobe=target_lobe_ans,
+                                                                     default_system_prompt="Grug. I learned this from a question. I reason about what I was taught.")
+                                    println("🧠 Answer [:json]: planted $(length(new_ids)) node(s) into lobe '$(isnothing(target_lobe_ans) ? "-" : target_lobe_ans)' [$(join(new_ids, ", "))] | $strain_msg$resolve_msg")
+                                catch e
+                                    println("!!! ERROR in /answer :json: $e !!!")
+                                end
+
+                            elseif ans_mode == "multi"
+                                # --- :multi — pipe-delimited multi-node creation ---
+                                parts = _parse_multi_parts(ans_content)
+                                if isempty(parts)
+                                    println("!!! FATAL: /answer :multi needs pipe-delimited parts. Example: /answer :multi part1 | part2 | part3 !!!")
+                                else
+                                    multi_ids = String[]
+                                    for (action_pkt, part_text) in parts
+                                        part_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                        # GRUG: Override action-specific voice if the part has a custom action
+                                        action_name = split(action_pkt, '^')[1]
+                                        if haskey(_ANSWER_MODE_CONFIG, action_name) && !isempty(_ANSWER_MODE_CONFIG[action_name])
+                                            cfg = _ANSWER_MODE_CONFIG[action_name]
+                                            part_data["system_prompt"] = cfg["prompt"]
+                                            part_data["voice_register"] = cfg["voice"]
+                                            part_data["frame_hints"] = cfg["frame"]
+                                        end
+                                        part_data["answer_mode"] = "multi"
+                                        part_data["multi_part_action"] = action_pkt
+                                        nid, lobe_tag = _create_answer_node(part_text, action_pkt, part_data, target_lobe_ans)
+                                        push!(multi_ids, nid)
+                                    end
+                                    # GRUG: Auto-group the multi-part nodes so they fire together.
+                                    if length(multi_ids) > 1
+                                        try
+                                            first_id = multi_ids[1]
+                                            # Register the first node as a group root
+                                            if haskey(NODE_MAP, first_id)
+                                                register_group!(NODE_MAP[first_id])
+                                                for other_id in multi_ids[2:end]
+                                                    if haskey(NODE_MAP, other_id)
+                                                        grp = group_for(first_id)
+                                                        if !isnothing(grp)
+                                                            add_to_group!(grp, other_id)
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        catch e
+                                            @warn "[MAIN] /answer :multi — auto-grouping failed (non-fatal): $e"
+                                        end
+                                    end
+                                    println("🧠 Answer [:multi]: planted $(length(multi_ids)) node(s) [$(join(multi_ids, ", "))] | $strain_msg$resolve_msg")
+                                end
+
+                            elseif ans_mode == "relate"
+                                # --- :relate — triple-seeded node ---
+                                # Format: "subject | relation | object"
+                                relate_parts = [strip(String(p)) for p in split(ans_content, "|")]
+                                if length(relate_parts) < 3
+                                    println("!!! FATAL: /answer :relate needs 'subject | relation | object'. Example: /answer :relate fire | burns | wood !!!")
+                                else
+                                    subj = relate_parts[1]
+                                    rel  = relate_parts[2]
+                                    obj  = relate_parts[3]
+                                    # GRUG: Pattern is the subject, but node carries relational metadata.
+                                    relate_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                    relate_data["answer_mode"] = "relate"
+                                    relate_data["noun_anchors"] = [lowercase(subj), lowercase(obj)]
+                                    relate_data["required_relations"] = [lowercase(rel)]
+                                    # GRUG: Also store the full triple for AIML reference.
+                                    relate_data["seeded_triple"] = Dict(
+                                        "subject"   => lowercase(subj),
+                                        "relation"  => lowercase(rel),
+                                        "object"    => lowercase(obj),
+                                    )
+                                    relate_data["system_prompt"] = "Grug. I learned this from a question. I know that $(lowercase(subj)) $(lowercase(rel)) $(lowercase(obj)). I reason about this relationship."
+                                    relate_data["voice_register"] = "plain"
+                                    relate_data["frame_hints"] = ["plain", "exploratory"]
+                                    nid, lobe_tag = _create_answer_node(subj, "reason^1", relate_data, target_lobe_ans)
+                                    println("🧠 Answer [:relate]: id=$nid triple='$(lowercase(subj)) → $(lowercase(rel)) → $(lowercase(obj))'$lobe_tag | $strain_msg$resolve_msg")
+                                end
+
+                            elseif ans_mode == "proc"
+                                # --- :proc — procedural chain (sequential steps) ---
+                                # Format: "step1; step2; step3"
+                                proc_steps = [strip(String(s)) for s in split(ans_content, ";")]
+                                proc_steps = filter(!isempty, proc_steps)
+                                if length(proc_steps) < 2
+                                    println("!!! FATAL: /answer :proc needs at least 2 semicolon-delimited steps. Example: /answer :proc gather wood; build fire; cook food !!!")
+                                else
+                                    proc_ids = String[]
+                                    for (i, step_text) in enumerate(proc_steps)
+                                        step_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                        step_data["answer_mode"] = "proc"
+                                        step_data["proc_step"] = i
+                                        step_data["proc_total"] = length(proc_steps)
+                                        step_data["system_prompt"] = "Grug. I learned this procedure from a question. Step $i of $(length(proc_steps)). I explain what to do."
+                                        step_data["voice_register"] = "plain"
+                                        step_data["frame_hints"] = ["imperative", "plain"]
+                                        nid, lobe_tag = _create_answer_node(step_text, "reason^1", step_data, target_lobe_ans)
+                                        push!(proc_ids, nid)
+                                    end
+                                    # GRUG: Link steps into a drop_table chain so they co-activate.
+                                    # step[1].drop_table = [step[2]], step[2].drop_table = [step[3]], etc.
+                                    for i in 1:(length(proc_ids)-1)
+                                        current_id = proc_ids[i]
+                                        next_id    = proc_ids[i+1]
+                                        if haskey(NODE_MAP, current_id)
+                                            push!(NODE_MAP[current_id].drop_table, next_id)
+                                        end
+                                    end
+                                    # GRUG: Also auto-group the procedural nodes.
+                                    if length(proc_ids) > 1
+                                        try
+                                            first_id = proc_ids[1]
+                                            if haskey(NODE_MAP, first_id)
+                                                register_group!(NODE_MAP[first_id])
+                                                for other_id in proc_ids[2:end]
+                                                    if haskey(NODE_MAP, other_id)
+                                                        grp = group_for(first_id)
+                                                        if !isnothing(grp)
+                                                            add_to_group!(grp, other_id)
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        catch e
+                                            @warn "[MAIN] /answer :proc — auto-grouping failed (non-fatal): $e"
+                                        end
+                                    end
+                                    println("🧠 Answer [:proc]: planted $(length(proc_ids)) step(s) [$(join(proc_ids, " → "))] | $strain_msg$resolve_msg")
+                                end
+
+                            elseif ans_mode == "math"
+                                # --- :math — arithmetic-ready node ---
+                                math_data = _base_answer_data("math"; pending_ask_text=pending_ask_text)
+                                # GRUG: Extract noun_anchors from math content — numbers, operators, variables.
+                                math_tokens = split(lowercase(ans_content))
+                                math_anchors = String[]
+                                for tok in math_tokens
+                                    # Keep numbers, operator-like tokens, and short identifiers
+                                    if occursin(r"^[\d\.\+\-\*\/\=\^\<\>%]+$", tok) || (length(tok) <= 3 && occursin(r"^[a-z]$", tok))
+                                        push!(math_anchors, tok)
+                                    end
+                                end
+                                if !isempty(math_anchors)
+                                    math_data["noun_anchors"] = math_anchors
+                                end
+                                math_data["answer_mode"] = "math"
+                                math_data["is_math_node"] = true
+                                nid, lobe_tag = _create_answer_node(ans_content, "reason^1", math_data, target_lobe_ans)
+                                anchor_msg = !isempty(math_anchors) ? " anchors=$(math_anchors)" : ""
+                                println("🧠 Answer [:math]: id=$nid pattern='$(lowercase(ans_content))'$lobe_tag$anchor_msg | $strain_msg$resolve_msg")
+
+                            else
+                                # --- :reason, :explain, :define, :alert, :comfort — single typed node ---
+                                cfg = _ANSWER_MODE_CONFIG[ans_mode]
+                                action_pkt = cfg["action"]
+                                typed_data = _base_answer_data(ans_mode; pending_ask_text=pending_ask_text)
+                                nid, lobe_tag = _create_answer_node(ans_content, action_pkt, typed_data, target_lobe_ans)
+                                println("🧠 Answer [:$ans_mode]: id=$nid pattern='$(lowercase(ans_content))'$lobe_tag | $strain_msg$resolve_msg")
+                            end
                         end
                     end
                 end
@@ -8770,14 +9083,29 @@ elseif !isnothing(m_right)
             # GRUG v7.51: Also DAMPENS STRAIN and CLEARS the pending ask.
             # Same as /answer — the user is resolving the strain event.
             elseif !isnothing(m_antianswer)
-                # GRUG v7.51: /antiAnswer [@lobe_id] <text>
+                # GRUG v7.52: /antiAnswer [@lobe_id] [:mode] <text>
                 # Optional @lobe_id targets the anti-answer to a specific lobe.
-                #   /antiAnswer @moderation no slurs allowed
-                #   /antiAnswer offensive content   (no lobe)
+                # Optional :mode selects answer shape (:alert, :multi, :json).
+                #   /antiAnswer @moderation :alert no slurs allowed
+                #   /antiAnswer offensive content   (no lobe, no mode)
                 anti_lobe_raw = m_antianswer.captures[1]  # may be Nothing if no @lobe_id
-                anti_raw      = String(strip(m_antianswer.captures[2]))
+                anti_mode_raw = m_antianswer.captures[2]  # may be Nothing if no :mode
+                anti_raw      = String(strip(m_antianswer.captures[3]))
+                # GRUG v7.52: Resolve mode — antiAnswer supports :alert, :multi, :json.
+                anti_mode = if !isnothing(anti_mode_raw)
+                    mode_candidate = lowercase(String(anti_mode_raw))
+                    if mode_candidate ∉ ["alert", "multi", "json"]
+                        println("⚠  /antiAnswer: unknown mode ':$mode_candidate'. Valid modes: alert, multi, json. Falling back to default.")
+                        "alert"
+                    else
+                        mode_candidate
+                    end
+                else
+                    "alert"  # default for anti-answer — terse suppression
+                end
+
                 if isempty(anti_raw)
-                    println("!!! FATAL: /antiAnswer needs text. Example: /antiAnswer @moderation no slurs, or /antiAnswer offensive content !!!")
+                    println("!!! FATAL: /antiAnswer needs text. Example: /antiAnswer @moderation :alert no slurs, or /antiAnswer :multi slur1 | slur2 !!!")
                 else
                     # GRUG v7.51: Validate lobe if specified.
                     target_lobe_anti = if !isnothing(anti_lobe_raw)
@@ -8815,38 +9143,13 @@ elseif !isnothing(m_right)
                                 old
                             end
 
-                            # GRUG: Create an anti-match node that drains confidence.
-                            # Same mechanism as /addAntiMatch but tagged as hippocampal.
-                            anti_data = Dict{String,Any}(
-                                "required_relations" => String[],
-                                "growth_source"      => "hippocampal_anti_answer",
-                                "hippocampal_born"   => string(round(time(), digits=3)),
-                                "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
-                                # GRUG v7.51: Anti-match nodes don't fire through AIML but include
-                                # system_prompt for consistency in case they're ever inspected.
-                                "system_prompt"      => "Grug. I suppress what I was told to suppress. I do not reason about this.",
-                                "voice_register"     => "terse",
-                                "frame_hints"        => ["terse"],
-                            )
-                            # GRUG v7.51: If there was a pending ask, tag the anti-answer with what it resolved.
-                            if !isempty(pending_ask_text)
-                                anti_data["resolved_ask"] = pending_ask_text
-                            end
-                            anti_id = create_node(lowercase(strip(anti_raw)), "ponder^1", anti_data, String[];
-                                                  is_antimatch_node=true)
+                            # ==========================================================
+                            # ANTI-ANSWER MODE DISPATCH (GRUG v7.52)
+                            # ==========================================================
+                            # Anti-answer modes: :alert (default), :multi, :json
+                            # These create anti-match nodes that drain confidence from
+                            # matching votes, suppressing the strain-causing pattern.
 
-                            # GRUG v7.51: Assign anti-answer node to the specified lobe (if any).
-                            if !isnothing(target_lobe_anti)
-                                try
-                                    Lobe.add_node_to_lobe!(target_lobe_anti, anti_id)
-                                catch e
-                                    @warn "[MAIN] /antiAnswer: failed to assign node $anti_id to lobe '$target_lobe_anti': $e"
-                                end
-                            end
-
-                            lobe_tag = let l = Lobe.find_lobe_for_node(anti_id)
-                                isnothing(l) ? " (no lobe)" : " (lobe: $l)"
-                            end
                             strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
                             strain_msg = if dampen_result !== nothing
                                 "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
@@ -8854,7 +9157,66 @@ elseif !isnothing(m_right)
                                 "strain now $strain_now"
                             end
                             resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
-                            println("🧠 Anti-answer node created: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | $strain_msg$resolve_msg")
+
+                            if anti_mode == "json"
+                                # --- :json — raw JSON passthrough for anti-match nodes ---
+                                try
+                                    # GRUG: Force all nodes as anti-match via is_antimatch_node in packet.
+                                    # We inject hippocampal metadata into each node's json_data.
+                                    json_with_meta = replace(anti_raw, r"""("is_antimatch_node"\s*:\s*)false""" => s"\1true")
+                                    # If the JSON doesn't have is_antimatch_node at all, inject it.
+                                    if !occursin("is_antimatch_node", json_with_meta)
+                                        json_with_meta = replace(json_with_meta, r"(\})\s*$" =>
+                                            s", \"is_antimatch_node\": true}")
+                                    end
+                                    new_ids = grow_nodes_from_packet(json_with_meta; target_lobe=target_lobe_anti,
+                                                                     default_system_prompt="Grug. I suppress what I was told to suppress. I do not reason about this.")
+                                    println("🧠 Anti-answer [:json]: planted $(length(new_ids)) anti-match node(s) [$(join(new_ids, ", "))] | $strain_msg$resolve_msg")
+                                catch e
+                                    println("!!! ERROR in /antiAnswer :json: $e !!!")
+                                end
+
+                            elseif anti_mode == "multi"
+                                # --- :multi — pipe-delimited multi anti-match nodes ---
+                                parts = _parse_multi_parts(anti_raw)
+                                if isempty(parts)
+                                    println("!!! FATAL: /antiAnswer :multi needs pipe-delimited parts. Example: /antiAnswer :multi slur1 | slur2 !!!")
+                                else
+                                    anti_ids = String[]
+                                    for (action_pkt, part_text) in parts
+                                        part_data = _base_answer_data("alert"; pending_ask_text=pending_ask_text, is_anti=true)
+                                        part_data["answer_mode"] = "multi_anti"
+                                        nid, lobe_tag = _create_answer_node(part_text, action_pkt, part_data, target_lobe_anti; is_antimatch=true)
+                                        push!(anti_ids, nid)
+                                    end
+                                    # GRUG: Auto-group the anti-match nodes.
+                                    if length(anti_ids) > 1
+                                        try
+                                            first_id = anti_ids[1]
+                                            if haskey(NODE_MAP, first_id)
+                                                register_group!(NODE_MAP[first_id])
+                                                for other_id in anti_ids[2:end]
+                                                    if haskey(NODE_MAP, other_id)
+                                                        grp = group_for(first_id)
+                                                        if !isnothing(grp)
+                                                            add_to_group!(grp, other_id)
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        catch e
+                                            @warn "[MAIN] /antiAnswer :multi — auto-grouping failed (non-fatal): $e"
+                                        end
+                                    end
+                                    println("🧠 Anti-answer [:multi]: planted $(length(anti_ids)) anti-match node(s) [$(join(anti_ids, ", "))] | $strain_msg$resolve_msg")
+                                end
+
+                            else
+                                # --- :alert (default) — single anti-match node ---
+                                anti_data = _base_answer_data("alert"; pending_ask_text=pending_ask_text, is_anti=true)
+                                anti_id, lobe_tag = _create_answer_node(anti_raw, "ponder^1", anti_data, target_lobe_anti; is_antimatch=true)
+                                println("🧠 Anti-answer [:alert]: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | $strain_msg$resolve_msg")
+                            end
                         end
                     end
                 end
