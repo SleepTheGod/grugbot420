@@ -571,8 +571,9 @@ using .SigilRegistry
     @testset "default_registry — exact contents + provenance" begin
         t = default_registry()
         @test t.label == "engine-default"
-        # Stage 1.5 added &op; default registry now ships 5 entries.
-        @test length(t.entries) == 5
+        # Stage 1.5 added &op; v7.56 added 5 relation sigils (temporal, causal,
+        # spatial, possessive, similarity); default registry now ships 10 entries.
+        @test length(t.entries) == 10
 
         e_n = lookup_sigil(t, "n")
         @test e_n.class === :lambda
@@ -603,6 +604,34 @@ using .SigilRegistry
         @test e_op.applies_at === :match
         @test e_op.sigil_type === :op
         @test e_op.promote_at_tokenize === true
+
+        # v7.56: five relation sigils are now in the default registry.
+        e_temporal = lookup_sigil(t, "temporal")
+        @test e_temporal.class === :relation
+        @test e_temporal.applies_at === :relation
+        @test e_temporal.expansion == ["before", "after", "during", "since", "until", "now", "then", "precedes", "follows", "while", "when"]
+        @test e_temporal.provenance == "engine-default"
+
+        e_causal = lookup_sigil(t, "causal")
+        @test e_causal.class === :relation
+        @test e_causal.applies_at === :relation
+        @test "causes" in e_causal.expansion
+        @test e_causal.provenance == "engine-default"
+
+        e_spatial = lookup_sigil(t, "spatial")
+        @test e_spatial.class === :relation
+        @test "above" in e_spatial.expansion
+        @test e_spatial.provenance == "engine-default"
+
+        e_possessive = lookup_sigil(t, "possessive")
+        @test e_possessive.class === :relation
+        @test "has" in e_possessive.expansion
+        @test e_possessive.provenance == "engine-default"
+
+        e_similarity = lookup_sigil(t, "similarity")
+        @test e_similarity.class === :relation
+        @test "resembles" in e_similarity.expansion
+        @test e_similarity.provenance == "engine-default"
 
         # Two fresh defaults are independent objects (no shared state).
         t2 = default_registry()

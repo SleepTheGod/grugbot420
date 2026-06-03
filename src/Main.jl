@@ -3096,6 +3096,11 @@ end
 #              Each part can optionally have its own :action prefix.
 #   :relate   — triple-seeded node: "subject | relation | object"
 #              Creates a node with required_relations pre-seeded.
+#   :time     — time node: "subject | object" (auto &temporal gate)
+#              Same as :relate but relation is always &temporal.
+#              Time nodes cluster together and gate on temporal verbs.
+#              When a user asks "what now?" or uses any time word, the
+#              &temporal sigil expansion means the node activates structurally.
 #   :proc     — semicolon-delimited procedural chain: "step1; step2; step3"
 #              Creates linked nodes with drop_table chain.
 #              Good for "how to do X" answers.
@@ -3107,7 +3112,7 @@ end
 
 const _VALID_ANSWER_MODES = [
     "reason", "explain", "define", "alert", "comfort",
-    "math", "multi", "relate", "proc", "json",
+    "math", "multi", "relate", "time", "proc", "json",
 ]
 
 # GRUG: Map answer mode → action family name + system_prompt voice.
@@ -3120,6 +3125,7 @@ const _ANSWER_MODE_CONFIG = Dict{String, Dict{String, Any}}(
     "math"    => Dict("action" => "reason^1",  "voice" => "terse",       "frame" => ["imperative", "plain"],    "prompt" => "Grug. I compute. I give answers. Numbers are my language. I reason about mathematical truths I was taught."),
     "multi"   => Dict(),   # handled specially — multi-node
     "relate"  => Dict(),   # handled specially — triple-seeded
+    "time"    => Dict(),   # handled specially — time-node (auto &temporal)
     "proc"    => Dict(),   # handled specially — procedural chain
     "json"    => Dict(),   # handled specially — raw JSON passthrough
 )
@@ -3253,7 +3259,7 @@ end
 const _FANOUT_ENABLED     = Ref{Bool}(true)         # global on/off switch
 const _FANOUT_MAX_SHADOWS = Ref{Int}(4)              # cap on shadow nodes per answer
 const _FANOUT_MODES       = Set{String}([            # modes that get fan-out
-    "reason", "explain", "define", "alert", "comfort", "math", "relate",
+    "reason", "explain", "define", "alert", "comfort", "math", "relate", "time",
 ])
 
 """
@@ -3366,6 +3372,30 @@ function _generate_fanout_patterns(content::AbstractString, mode::AbstractString
             if !in(qf, seen) && length(qf) >= 4
                 push!(patterns, qf)
                 push!(seen, qf)
+            end
+        end
+    end
+
+    # --- 5. Time-node question surfaces ---
+    # GRUG v7.56: For :time mode, add natural temporal question forms.
+    # Time nodes gate on &temporal, so questions using temporal verbs will
+    # activate them. Generate surfaces like "when is X" and "what now about X".
+    if mode == "time"
+        for noun in noun_anchors
+            if length(noun) >= 2
+                time_questions = [
+                    "when is $noun",
+                    "what now about $noun",
+                    "what happens after $noun",
+                    "what happens before $noun",
+                ]
+                for tq in time_questions
+                    p = lowercase(strip(tq))
+                    if !in(p, seen) && length(p) >= 4
+                        push!(patterns, p)
+                        push!(seen, p)
+                    end
+                end
             end
         end
     end
@@ -4020,6 +4050,7 @@ Hippo    : When cave is empty, system asks a question. Use /answer or
          :   /answer @physics :explain energy is conserved
          :   /answer :math 2+2=4        /answer :multi part1 | part2
          :   /answer :relate fire | burns | wood
+         :   /answer :time present | future
          :   /answer :proc step1; step2; step3
          :   /answer :json {...}        /answer energy is conserved
          : Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json
@@ -4113,6 +4144,7 @@ const HELP_MSG = """
 ║    :math    arithmetic-ready node (noun_anchors)            ║
 ║    :multi   pipe-delimited multi-node (part1 | part2)       ║
 ║    :relate  triple-seeded (subj | rel | obj)                ║
+║    :time    time node (subj | obj) auto &temporal gate    ║
 ║    :proc    procedural chain (step1; step2; step3)          ║
 ║    :json    raw JSON passthrough to grow_nodes_from_packet  ║
 ║  /antiAnswer [@lobe] [:mode] <text> Suppress strain         ║
@@ -9622,6 +9654,50 @@ elseif !isnothing(m_right)
                                     else
                                         println("🧠 Answer [:relate]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))'$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
                                     end
+                                end
+
+                            elseif ans_mode == "time"
+                                # --- :time — time node (auto &temporal relational) ---
+                                # GRUG v7.56: A time node is just a regular node with &temporal
+                                # baked in. The user supplies subject | object (the relation
+                                # is automatically &temporal). Time nodes cluster together
+                                # because they share the &temporal gate and carry a time_node
+                                # flag in their metadata. When a user asks "what now?" or
+                                # uses any temporal verb, the &temporal sigil expansion
+                                # (before, after, during, since, until, now, then, precedes,
+                                # follows, while, when) means the required_relations gate
+                                # is satisfied structurally — the engine knows this is a
+                                # time-coherent task before any pattern matching.
+                                # Format: "/answer :time subject | object"
+                                # Example: "/answer :time present | future"
+                                time_parts = [strip(String(s)) for s in split(ans_content, "|")]
+                                time_parts = filter(!isempty, time_parts)
+                                if length(time_parts) < 2
+                                    println("!!! FATAL: /answer :time needs 'subject | object'. Example: /answer :time present | future !!!")
+                                else
+                                    subj = time_parts[1]
+                                    obj  = time_parts[2]
+                                    # GRUG: Always use &temporal — it's the whole point of :time mode.
+                                    rel_for_triple = "&temporal"
+                                    rel_for_display = SigilRegistry.expand_relation_sigil(_ENGINE_SIGIL_TABLE, "temporal")
+
+                                    time_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                    time_data["answer_mode"] = "time"
+                                    time_data["time_node"] = true
+                                    time_data["noun_anchors"] = [lowercase(subj), lowercase(obj)]
+                                    time_data["required_relations"] = [rel_for_triple]
+                                    time_data["seeded_triple"] = Dict(
+                                        "subject"   => lowercase(subj),
+                                        "relation"  => rel_for_triple,
+                                        "object"    => lowercase(obj),
+                                    )
+                                    time_data["system_prompt"] = "Grug. I learned this from a question about time. I know that $(lowercase(subj)) $(rel_for_triple) $(lowercase(obj)). I reason about temporal relationships."
+                                    time_data["voice_register"] = "plain"
+                                    time_data["frame_hints"] = ["plain", "exploratory"]
+                                    # GRUG v7.53: Fan-out for time — primary + shadow nodes.
+                                    nid, shadow_ids, lobe_tag = _plant_answer_cluster(subj, "reason^1", time_data, target_lobe_ans, "time")
+                                    shadow_msg = !isempty(shadow_ids) ? " +$(length(shadow_ids)) shadows [$(join(shadow_ids, ", "))]" : ""
+                                    println("🕐 Answer [:time]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))' (temporal: $(join(rel_for_display[1:min(3,length(rel_for_display))], " | "))…)$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
                                 end
 
                             elseif ans_mode == "proc"
