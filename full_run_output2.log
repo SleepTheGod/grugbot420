@@ -1,0 +1,352 @@
+  Activating project at `/workspace/grugbot420`
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + 3 boot seeds registered into `default` lobe
+======================================================================
+  FULL SPECIMEN BUILDER + CONVERSATION — v7.57
+======================================================================
+
+📦 Creating lobes...
+  + lobe 'science' (cap=100, aiml_cap=33)
+  + lobe 'emotions' (cap=80, aiml_cap=26)
+  + lobe 'time' (cap=60, aiml_cap=20)
+  + lobe 'math' (cap=80, aiml_cap=26)
+  + lobe 'survival' (cap=100, aiml_cap=33)
+  + lobe 'language' (cap=60, aiml_cap=20)
+  + lobe 'social' (cap=60, aiml_cap=20)
+  ↔ connected science ↔ math
+  ↔ connected emotions ↔ survival
+  ↔ connected time ↔ science
+  ↔ connected time ↔ survival
+  ↔ connected emotions ↔ social
+  ↔ connected science ↔ language
+  ↔ connected survival ↔ social
+  ↔ connected language ↔ math
+
+🧠 Planting reason nodes...
+  ✓ reason: 'fire burns wood' → node_3 [default]
+  ✓ reason: 'water flows downhill' → node_4 [default]
+  ✓ reason: 'sky is blue' → node_5 [default]
+  ✓ reason: 'gravity pulls objects' → node_6 [science]
+  ✓ reason: 'atoms are small' → node_7 [science]
+  ✓ reason: 'light travels fast' → node_8 [science]
+  ✓ reason: 'earth orbits the sun' → node_9 [science]
+  ✓ reason: 'happiness feels good' → node_10 [emotions]
+  ✓ reason: 'sadness feels heavy' → node_11 [emotions]
+  ✓ reason: 'shelter protects from cold' → node_12 [survival]
+  ✓ reason: 'food gives energy' → node_13 [survival]
+  ✓ reason: 'water is essential' → node_14 [survival]
+  ✓ reason: 'friendship brings joy' → node_15 [social]
+  ✓ reason: 'cooperation builds trust' → node_16 [social]
+  ✓ reason: 'words carry meaning' → node_17 [language]
+
+📖 Planting explain nodes...
+  ✓ explain: 'why does fire burn' → node_18 [science]
+  ✓ explain: 'why is the sky blue' → node_19 [science]
+  ✓ explain: 'why do we feel sad' → node_20 [emotions]
+  ✓ explain: 'how does shelter work' → node_21 [survival]
+  ✓ explain: 'why do we need friends' → node_22 [social]
+
+📋 Planting define nodes...
+  ✓ define: 'define gravity' → node_23 [science]
+  ✓ define: 'define atom' → node_24 [science]
+  ✓ define: 'define addition' → node_25 [math]
+  ✓ define: 'define happiness' → node_26 [emotions]
+  ✓ define: 'define shelter' → node_27 [survival]
+  ✓ define: 'define synonym' → node_28 [language]
+
+⚠️  Planting alert nodes...
+  ✓ alert: 'fire is dangerous' → node_29 [survival]
+  ✓ alert: 'deep water is dangerous' → node_30 [survival]
+  ✓ alert: 'wild animals are dangerous' → node_31 [survival]
+  ✓ alert: 'betrayal is dangerous' → node_32 [social]
+
+💚 Planting comfort nodes...
+  ✓ comfort: 'i feel sad' → node_33 [emotions]
+  ✓ comfort: 'i am scared' → node_34 [emotions]
+  ✓ comfort: 'i feel lonely' → node_35 [emotions]
+  ✓ comfort: 'i miss someone' → node_36 [social]
+
+🔢 Planting math nodes...
+  ✓ math: '2 plus 2' = 4 → node_37
+  ✓ math: '3 times 4' = 12 → node_38
+  ✓ math: '10 minus 3' = 7 → node_39
+  ✓ math: '15 divided by 5' = 3 → node_40
+  ✓ math: '7 plus 8' = 15 → node_41
+  ✓ math: '9 times 6' = 54 → node_42
+  ✓ math: '20 minus 8' = 12 → node_43
+  ✓ math: '100 divided by 10' = 10 → node_44
+
+🔗 Planting relate nodes...
+  ✓ relate: 'fire → burns → wood' → node_45 [science]
+  ✓ relate: 'water → extinguishes → fire' → node_46 [science]
+  ✓ relate: 'earth → orbits → sun' → node_47 [science]
+  ✓ relate: 'hunger → causes → hunting' → node_48 [survival]
+  ✓ relate: 'love → comforts → sadness' → node_49 [emotions]
+  ✓ relate: 'fear → precedes → courage' → node_50 [emotions]
+  ✓ relate: 'sharing → strengthens → community' → node_51 [social]
+  ✓ relate: 'trust → enables → cooperation' → node_52 [social]
+
+⏰ Planting time nodes...
+  ⏰ time: 'past → &temporal → present' → node_53 [time]
+  ⏰ time: 'present → &temporal → future' → node_54 [time]
+  ⏰ time: 'dawn → &temporal → day' → node_55 [time]
+  ⏰ time: 'day → &temporal → dusk' → node_56 [time]
+  ⏰ time: 'dusk → &temporal → night' → node_57 [time]
+  ⏰ time: 'spring → &temporal → summer' → node_58 [science]
+  ⏰ time: 'summer → &temporal → autumn' → node_59 [science]
+  ⏰ time: 'autumn → &temporal → winter' → node_60 [science]
+  ⏰ time: 'planting → &temporal → harvest' → node_61 [survival]
+  ⏰ time: 'hunting → &temporal → feasting' → node_62 [survival]
+  ⏰ time: 'morning → &temporal → afternoon' → node_63 [time]
+  ⏰ time: 'winter → &temporal → spring' → node_64 [time]
+
+⚙️  Planting procedure chains...
+  ⚙️  proc: 'make fire' → 5 steps
+  ⚙️  proc: 'find water' → 4 steps
+  ⚙️  proc: 'build shelter' → 4 steps
+  ⚙️  proc: 'solve equation' → 4 steps
+  ⚙️  proc: 'make friend' → 5 steps
+
+🎯 Planting multi-mode nodes...
+  🎯 multi: 'describe and explain fire' → node_87 [science]
+  🎯 multi: 'comfort and explain sadness' → node_88 [emotions]
+  🎯 multi: 'alert and explain water danger' → node_89 [survival]
+
+📊 Planting JSON passthrough nodes...
+  📊 json: 'system status report' → node_90 [math]
+  📊 json: 'element properties carbon' → node_91 [science]
+
+🏷️  Planting sigil-gated relational nodes...
+  🔗 &causal: 'heat → &causal → evaporation' → node_92 [science]
+  🔗 &causal: 'rain → &causal → flooding' → node_93 [science]
+  🔗 &causal: 'cold → &causal → freezing' → node_94 [science]
+  🔗 &causal: 'hunger → &causal → foraging' → node_95 [survival]
+  🔗 &causal: 'darkness → &causal → fire making' → node_96 [survival]
+  🔗 &causal: 'betrayal → &causal → isolation' → node_97 [social]
+  📍 &spatial: 'clouds → &spatial → sky' → node_98 [science]
+  📍 &spatial: 'roots → &spatial → ground' → node_99 [science]
+  📍 &spatial: 'fire → &spatial → hearth' → node_100 [survival]
+  📍 &spatial: 'fish → &spatial → river' → node_101 [survival]
+  📍 &spatial: 'people → &spatial → village' → node_102 [social]
+  🏠 &possessive: 'tree → &possessive → branches' → node_103 [survival]
+  🏠 &possessive: 'river → &possessive → water' → node_104 [survival]
+  🏠 &possessive: 'person → &possessive → feelings' → node_105 [emotions]
+  🏠 &possessive: 'atom → &possessive → electrons' → node_106 [science]
+  🏠 &possessive: 'clan → &possessive → elders' → node_107 [social]
+  🧬 &similarity: 'fire → &similarity → star' → node_108 [science]
+  🧬 &similarity: 'joy → &similarity → warmth' → node_109 [emotions]
+  🧬 &similarity: 'cave → &similarity → shelter' → node_110 [survival]
+  🧬 &similarity: 'family → &similarity → roots' → node_111 [social]
+
+🚫 Planting anti-match nodes...
+  🚫 anti-match: 'wrong bad incorrect' → node_112 [default]
+  🚫 anti-match: 'fake false nonsense' → node_113 [science]
+  🚫 anti-match: 'error mistake bug' → node_114 [math]
+
+💜 Registering custom relation sigil &emotional...
+  💜 &emotional: 'person → &emotional → music' → node_115 [emotions]
+  💜 &emotional: 'child → &emotional → mother' → node_116 [emotions]
+  💜 &emotional: 'warrior → &emotional → battle' → node_117 [emotions]
+  💜 &emotional: 'friend → &emotional → companion' → node_118 [social]
+
+🍂 Registering custom macro sigil &season...
+  🍂 &season node: 'spring' → node_119 [time]
+  🍂 &season node: 'summer' → node_120 [time]
+  🍂 &season node: 'autumn' → node_121 [time]
+  🍂 &season node: 'winter' → node_122 [time]
+
+🔥 Registering custom tag sigil &danger...
+  🔥 &danger node: 'poison' → node_123 [survival]
+  🔥 &danger node: 'venom' → node_124 [survival]
+  🔥 &danger node: 'hazard' → node_125 [survival]
+
+🫱 Planting sigil pattern nodes...
+  🫱 &n pattern: 'what is &n plus &n' → node_126 [math]
+  🫱 &n pattern: 'what is &n times &n' → node_127 [math]
+  🫱 &n pattern: 'what is &n minus &n' → node_128 [math]
+  🫱 &n pattern: 'what is &n divided by &n' → node_129 [math]
+  🫱 &word pattern: 'define &word' → node_130 [language]
+  🫱 &word pattern: 'explain &word' → node_131 [language]
+  🫱 &word pattern: 'what is &word' → node_132 [language]
+
+🤖 Adding AIML executive nodes...
+  🤖 AIML: 'sci_exec_01' in science → strength=3.0604777588771515
+  🤖 AIML: 'sci_exec_02' in science → strength=2.912585859343385
+  🤖 AIML: 'emo_exec_01' in emotions → strength=3.087766617088726
+  🤖 AIML: 'emo_exec_02' in emotions → strength=3.0479157702782604
+  🤖 AIML: 'math_exec_01' in math → strength=2.984811052799837
+  🤖 AIML: 'surv_exec_01' in survival → strength=3.0779102130445954
+  🤖 AIML: 'surv_exec_02' in survival → strength=2.966019269166083
+  🤖 AIML: 'time_exec_01' in time → strength=2.9558677497814685
+  🤖 AIML: 'soc_exec_01' in social → strength=3.084029222179536
+  🤖 AIML: 'lang_exec_01' in language → strength=3.055614174795575
+
+📝 Setting up verb classes and synonyms...
+[ Info: [SEMANTIC] ✅  New relation class added: 'action'
+  📝 class: 'action'
+[ Info: [SEMANTIC] ✅  New relation class added: 'emotional'
+  📝 class: 'emotional'
+[ Info: [SEMANTIC] ✅  New relation class added: 'cognitive'
+  📝 class: 'cognitive'
+┌ Warning: [SEMANTIC] Relation class 'causal' already exists. No change.
+└ @ Main.SemanticVerbs /workspace/grugbot420/src/SemanticVerbs.jl:90
+  📝 class: 'causal'
+[ Info: [SEMANTIC] ✅  New relation class added: 'similarity'
+  📝 class: 'similarity'
+[ Info: [SEMANTIC] ✅  New relation class added: 'possessive'
+  📝 class: 'possessive'
+[ Info: [SEMANTIC] ✅  New relation class added: 'social'
+  📝 class: 'social'
+[ Info: [SEMANTIC] ✅  Verb 'burn' added to class 'action'
+  📝 verb: 'burn' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'flow' added to class 'action'
+  📝 verb: 'flow' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'feel' added to class 'emotional'
+  📝 verb: 'feel' → class 'emotional'
+[ Info: [SEMANTIC] ✅  Verb 'think' added to class 'cognitive'
+  📝 verb: 'think' → class 'cognitive'
+[ Info: [SEMANTIC] ✅  Verb 'build' added to class 'action'
+  📝 verb: 'build' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'hunt' added to class 'action'
+  📝 verb: 'hunt' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'gather' added to class 'action'
+  📝 verb: 'gather' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'cause' added to class 'causal'
+  📝 verb: 'cause' → class 'causal'
+[ Info: [SEMANTIC] ✅  Verb 'produce' added to class 'causal'
+  📝 verb: 'produce' → class 'causal'
+[ Info: [SEMANTIC] ✅  Verb 'create' added to class 'causal'
+  📝 verb: 'create' → class 'causal'
+[ Info: [SEMANTIC] ✅  Verb 'resemble' added to class 'similarity'
+  📝 verb: 'resemble' → class 'similarity'
+[ Info: [SEMANTIC] ✅  Verb 'contain' added to class 'possessive'
+  📝 verb: 'contain' → class 'possessive'
+[ Info: [SEMANTIC] ✅  Verb 'share' added to class 'social'
+  📝 verb: 'share' → class 'social'
+[ Info: [SEMANTIC] ✅  Verb 'trust' added to class 'social'
+  📝 verb: 'trust' → class 'social'
+[ Info: [SEMANTIC] ✅  Verb 'cooperate' added to class 'social'
+  📝 verb: 'cooperate' → class 'social'
+[ Info: [SEMANTIC] ✅  Verb 'love' added to class 'emotional'
+  📝 verb: 'love' → class 'emotional'
+[ Info: [SEMANTIC] ✅  Verb 'fear' added to class 'emotional'
+  📝 verb: 'fear' → class 'emotional'
+[ Info: [SEMANTIC] ✅  Verb 'know' added to class 'cognitive'
+  📝 verb: 'know' → class 'cognitive'
+[ Info: [SEMANTIC] ✅  Verb 'remember' added to class 'cognitive'
+  📝 verb: 'remember' → class 'cognitive'
+[ Info: [SEMANTIC] ✅  Verb 'orbit' added to class 'action'
+  📝 verb: 'orbit' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'protect' added to class 'action'
+  📝 verb: 'protect' → class 'action'
+[ Info: [SEMANTIC] ✅  Verb 'comfort' added to class 'emotional'
+  📝 verb: 'comfort' → class 'emotional'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'ignite' -> 'burn'
+  📝 synonym: 'burn' ≈ 'ignite'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'combust' -> 'burn'
+  📝 synonym: 'burn' ≈ 'combust'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'stream' -> 'flow'
+  📝 synonym: 'flow' ≈ 'stream'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'run' -> 'flow'
+  📝 synonym: 'flow' ≈ 'run'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'experience' -> 'feel'
+  📝 synonym: 'feel' ≈ 'experience'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'sense' -> 'feel'
+  📝 synonym: 'feel' ≈ 'sense'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'ponder' -> 'think'
+  📝 synonym: 'think' ≈ 'ponder'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'consider' -> 'think'
+  📝 synonym: 'think' ≈ 'consider'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'construct' -> 'build'
+  📝 synonym: 'build' ≈ 'construct'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'assemble' -> 'build'
+  📝 synonym: 'build' ≈ 'assemble'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'chase' -> 'hunt'
+  📝 synonym: 'hunt' ≈ 'chase'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'track' -> 'hunt'
+  📝 synonym: 'hunt' ≈ 'track'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'collect' -> 'gather'
+  📝 synonym: 'gather' ≈ 'collect'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'forage' -> 'gather'
+  📝 synonym: 'gather' ≈ 'forage'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'produce' -> 'cause'
+  📝 synonym: 'cause' ≈ 'produce'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'trigger' -> 'cause'
+  📝 synonym: 'cause' ≈ 'trigger'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'make' -> 'create'
+  📝 synonym: 'create' ≈ 'make'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'generate' -> 'create'
+  📝 synonym: 'create' ≈ 'generate'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'distribute' -> 'share'
+  📝 synonym: 'share' ≈ 'distribute'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'rely upon' -> 'trust'
+  📝 synonym: 'trust' ≈ 'rely upon'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'dread' -> 'fear'
+  📝 synonym: 'fear' ≈ 'dread'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'adore' -> 'love'
+  📝 synonym: 'love' ≈ 'adore'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'understand' -> 'know'
+  📝 synonym: 'know' ≈ 'understand'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'guard' -> 'protect'
+  📝 synonym: 'protect' ≈ 'guard'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'console' -> 'comfort'
+  📝 synonym: 'comfort' ≈ 'console'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'collaborate' -> 'cooperate'
+  📝 synonym: 'cooperate' ≈ 'collaborate'
+
+📇 Adding seed synonyms to Thesaurus...
+  📇 seed synonyms: 'fire' → [flame, blaze, inferno, conflagration]
+  📇 seed synonyms: 'water' → [stream, river, lake, ocean, rain]
+  📇 seed synonyms: 'food' → [nourishment, sustenance, provisions, rations]
+  📇 seed synonyms: 'shelter' → [refuge, haven, sanctuary, dwelling]
+  📇 seed synonyms: 'happy' → [joyful, glad, content, cheerful]
+  📇 seed synonyms: 'sad' → [unhappy, sorrowful, melancholy, gloomy]
+  📇 seed synonyms: 'big' → [large, huge, vast, enormous]
+  📇 seed synonyms: 'small' → [tiny, little, minute, diminutive]
+  📇 seed synonyms: 'friend' → [companion, ally, comrade, partner]
+  📇 seed synonyms: 'danger' → [peril, hazard, threat, menace]
+
+💪 Bumping key node strengths...
+  💪 'fire burns wood' strength: 2.0 → 4.0
+  💪 'water is essential' strength: 2.5 → 4.5
+  💪 'gravity pulls objects' strength: 2.5 → 4.5
+  💪 'past present' strength: 2.0 → 4.0
+  💪 'define gravity' strength: 2.0 → 4.0
+  💪 'shelter protects from cold' strength: 2.5 → 4.5
+  💪 'fire is dangerous' strength: 3.0 → 5.0
+  💪 'friendship brings joy' strength: 2.0 → 4.0
+
+======================================================================
+SPECIMEN BUILT SUCCESSFULLY
+  Nodes:         133
+  Groups:        130 (118 regular, 12 time-node)
+  Lobes:         8
+  Sigils:        13
+  AIML nodes:    10
+======================================================================
+
+🚀 Running 44 conversation turns...
+
+── Turn 1/44 ──
+   Input: "Hey Grug, what do you know about fire?"
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 8 tokens → 11 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.3 | ArousalNudge=0.0 | Weight=1.06 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (6 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "node_2"
+│   pattern = "grug hits rock and makes fire"
+└ @ Main /workspace/grugbot420/src/engine.jl:3562
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.29 | ArousalNudge=0.0 | Weight=1.17 [FRAME=exploratory/basic]
+┌ Warning: [ORCHESTRATOR] MultipartOrchestrator.build_objectives failed, falling back to old path: MultipartError("multipart group 'mp_2' must have exactly one :primary vote, got 4", "_objective_from_group")
+└ @ Main /workspace/grugbot420/src/Main.jl:1520
+ERROR: LoadError: MethodError: no method matching clean_grug_reply(::SubString{String})
+
+Closest candidates are:
+  clean_grug_reply(!Matched::String)
+   @ Main /workspace/grugbot420/full_specimen_conversation.jl:885
+
+Stacktrace:
+ [1] top-level scope
+   @ /workspace/grugbot420/full_specimen_conversation.jl:1043
+in expression starting at /workspace/grugbot420/full_specimen_conversation.jl:1034
