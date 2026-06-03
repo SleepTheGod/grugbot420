@@ -3170,7 +3170,8 @@ Returns (node_id, lobe_tag_string).
 function _create_answer_node(pattern_text::AbstractString, action_packet::AbstractString,
                              ans_data::Dict{String,Any},
                              target_lobe::Union{AbstractString,Nothing};
-                             is_antimatch::Bool=false)::Tuple{String, String}
+                             is_antimatch::Bool=false,
+                             skip_auto_latch::Bool=false)::Tuple{String, String}
     nid = create_node(lowercase(strip(pattern_text)), action_packet, ans_data, String[];
                       is_antimatch_node=is_antimatch)
 
@@ -3185,6 +3186,18 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
     lobe_tag = let l = Lobe.find_lobe_for_node(nid)
         isnothing(l) ? " (no lobe)" : " (lobe: $l)"
     end
+
+    # GRUG v7.54: Auto group latch — try to join an existing related group
+    # via strength-biased coinflip. If no group wins, node starts its own.
+    # Skip for antimatch nodes (suppressors don't cluster) and shadow nodes
+    # (they follow their primary's group, set by _plant_answer_cluster).
+    if !is_antimatch && !skip_auto_latch && haskey(NODE_MAP, nid)
+        latch_gid = _auto_group_latch(nid)
+        if !isnothing(latch_gid)
+            lobe_tag *= " → $latch_gid"
+        end
+    end
+
     return (nid, lobe_tag)
 end
 
@@ -3418,7 +3431,7 @@ function _plant_answer_cluster(content::AbstractString, action_pkt::AbstractStri
         end
 
         # GRUG: Shadow nodes use the same action as the primary.
-        nid, _ = _create_answer_node(shadow_pattern, action_pkt, shadow_data, target_lobe)
+        nid, _ = _create_answer_node(shadow_pattern, action_pkt, shadow_data, target_lobe; skip_auto_latch=true)
 
         # GRUG: Link shadow → primary via drop_table (co-activation).
         # When the shadow fires (someone says "what is fire"), the primary
@@ -3446,6 +3459,9 @@ function _plant_answer_cluster(content::AbstractString, action_pkt::AbstractStri
                 if haskey(NODE_MAP, sid)
                     grp = group_for(primary_id)
                     if !isnothing(grp)
+                        # GRUG v7.54: Shadow may be in a solo seed group from create_node.
+                        # Dissolve it before adding to the primary's group.
+                        _dissolve_solo_group!(sid)
                         add_to_group!(grp, sid)
                     end
                 end
@@ -3456,6 +3472,304 @@ function _plant_answer_cluster(content::AbstractString, action_pkt::AbstractStri
     end
 
     return (primary_id, shadow_ids, lobe_tag)
+end
+
+# ==============================================================================
+# GRUG v7.54: SOLO GROUP DISSOLUTION — remove a node from its solo seed group
+# ==============================================================================
+# create_node (engine.jl, v7.19) automatically registers every text node into
+# its own solo group. When we later want to add the node to a different group
+# (e.g. fan-out cluster, proc chain, multi parts, or auto-latch winner), the
+# solo group must be dissolved first to avoid dual membership. This function
+# safely removes the node from its solo group and deletes the empty group.
+# If the node is in a multi-member group or no group, it's a no-op.
+
+function _dissolve_solo_group!(node_id::String)
+    existing_grp = group_for(node_id)
+    if isnothing(existing_grp)
+        return nothing  # Not in any group — nothing to dissolve.
+    end
+    if length(existing_grp.members) > 1
+        return nothing  # Multi-member group — don't dissolve.
+    end
+    # Solo group — dissolve it.
+    lock(GROUP_LOCK) do
+        delete!(NODE_TO_GROUP, node_id)
+        filter!(m -> m != node_id, existing_grp.members)
+        if isempty(existing_grp.members)
+            delete!(GROUP_MAP, existing_grp.id)
+        end
+    end
+    return existing_grp.id
+end
+
+# ==============================================================================
+# GRUG v7.54: AUTO GROUP LATCH — new nodes join existing groups via
+# strength-biased coinflip
+# ==============================================================================
+# When a new answer node is created, it should try to join an existing group
+# rather than floating alone. The system scans existing groups, filters by
+# pattern+vote similarity past a threshold, and does a strength-biased coinflip
+# for each candidate. First group that wins the flip gets the node. If none
+# win, the node starts its own group — a seed for future nodes to find.
+#
+# Scan is batched at 1000 groups per pass to keep it cheap. There are only
+# 20k nodes per lobe anyway so group count is bounded.
+#
+# Groups must be:
+#   1. Pattern-related (Jaccard token overlap > _AUTO_LATCH_PAT_FLOOR)
+#   2. Vote-related (shared action names > _AUTO_LATCH_VOTE_FLOOR)
+#   3. Not at max occupancy
+#   4. Not all members UNLINKABLE (at least one member can accept a neighbor)
+# ==============================================================================
+
+# GRUG: Thresholds for auto-latch. Similar to mitosis thresholds but tuned
+# for answer-node grouping — slightly more permissive because answer nodes
+# are user-planted (trusted source) and benefit from broader clustering.
+const _AUTO_LATCH_PAT_FLOOR  = 0.10   # GRUG: Min pattern Jaccard overlap (lower = more groups qualify)
+const _AUTO_LATCH_VOTE_FLOOR = 0.20   # GRUG: Min shared action names ratio
+const _AUTO_LATCH_BATCH_SIZE = 1000   # GRUG: Scan groups in chunks of this many
+
+"""
+    _find_linkable_groups(pattern, action_packet; batch_size=1000) -> Vector{GroupLatchCandidate}
+
+GRUG: Scan GROUP_MAP for groups that are pattern+vote related to a new node.
+Filters by similarity thresholds, occupancy cap, and at-least-one-linkable-member.
+Returns candidates sorted by avg_strength descending (strongest first for coinflip).
+"""
+function _find_linkable_groups(pattern::AbstractString, action_packet::AbstractString;
+                                batch_size::Int=_AUTO_LATCH_BATCH_SIZE)::Vector{GroupLatchCandidate}
+    candidates = GroupLatchCandidate[]
+    pat_lower  = lowercase(strip(pattern))
+    new_actions = _action_names_from_packet(action_packet)
+
+    # GRUG: Batch-scan GROUP_MAP. Collect candidates that pass all thresholds.
+    grp_items = collect(GROUP_MAP)
+    for batch_start in 1:batch_size:length(grp_items)
+        batch_end = min(batch_start + batch_size - 1, length(grp_items))
+        for i in batch_start:batch_end
+            gid, grp = grp_items[i]
+
+            # GRUG: Full group = no room. Skip.
+            if length(grp.members) >= grp.max_occupancy
+                continue
+            end
+
+            # GRUG: Pattern similarity — Jaccard token overlap with group centroid.
+            pat_sim = _token_overlap_similarity(pattern, grp.centroid_pattern)
+            if pat_sim < _AUTO_LATCH_PAT_FLOOR
+                continue
+            end
+
+            # GRUG: Vote similarity — shared action names ratio.
+            # Get the "representative" action packet from the centroid node.
+            centroid_actions = Set{String}()
+            lock(NODE_LOCK) do
+                # GRUG: Use the centroid node's action_packet for vote similarity.
+                # If centroid is gone, scan first 5 alive members.
+                centroid_node = get(NODE_MAP, grp.members[1], nothing)
+                if !isnothing(centroid_node)
+                    centroid_actions = _action_names_from_packet(centroid_node.action_packet)
+                else
+                    # GRUG: Centroid missing — sample first 5 alive members.
+                    seen = 0
+                    for mid in grp.members
+                        seen >= 5 && break
+                        mn = get(NODE_MAP, mid, nothing)
+                        isnothing(mn) && continue
+                        mn.is_grave && continue
+                        union!(centroid_actions, _action_names_from_packet(mn.action_packet))
+                        seen += 1
+                    end
+                end
+            end
+
+            if isempty(centroid_actions) || isempty(new_actions)
+                continue
+            end
+
+            vote_overlap = length(intersect(new_actions, centroid_actions)) /
+                           Float64(length(union(new_actions, centroid_actions)))
+            if vote_overlap < _AUTO_LATCH_VOTE_FLOOR
+                continue
+            end
+
+            # GRUG: At least one alive non-unlinkable member (so we can link).
+            has_linkable = false
+            lock(NODE_LOCK) do
+                for mid in grp.members
+                    mn = get(NODE_MAP, mid, nothing)
+                    isnothing(mn) && continue
+                    mn.is_grave && continue
+                    if !mn.is_unlinkable
+                        has_linkable = true
+                        break
+                    end
+                end
+            end
+            if !has_linkable
+                continue
+            end
+
+            # GRUG: Grave-slot groups get a boost (they have a vacancy to fill).
+            sim_score = pat_sim
+            if grp.has_grave_slot
+                sim_score += 0.5
+            end
+
+            avg_s = group_avg_strength(grp; node_map=NODE_MAP, node_lock=NODE_LOCK)
+            push!(candidates, GroupLatchCandidate(grp, sim_score, avg_s))
+        end
+    end
+
+    # GRUG: Sort by avg_strength descending — strongest groups flip first.
+    sort!(candidates; by=c -> c.avg_strength, rev=true)
+
+    return candidates
+end
+
+"""
+    _strength_biased_group_coinflip(candidates) -> Union{NodeGroup, Nothing}
+
+GRUG: For each candidate group, roll a coin biased by avg_strength.
+Stronger groups are more likely to win. First group that passes the flip wins.
+If none pass, return nothing (the node starts its own group).
+
+The bias formula: probability = avg_strength * _AUTO_LATCH_BIAS_SCALE
+  - avg_strength=1.0 → probability ~0.5 (very strong group, likely win)
+  - avg_strength=0.5 → probability ~0.25 (moderate group)
+  - avg_strength=0.1 → probability ~0.05 (weak group, unlikely win)
+"""
+const _AUTO_LATCH_BIAS_SCALE = 0.5  # GRUG: Maps [0,1] strength → [0,0.5] probability
+
+function _strength_biased_group_coinflip(candidates::Vector{GroupLatchCandidate})::Union{NodeGroup, Nothing}
+    for cand in candidates
+        # GRUG: Probability = avg_strength * BIAS_SCALE, capped at 0.95.
+        prob = min(cand.avg_strength * _AUTO_LATCH_BIAS_SCALE, 0.95)
+        if rand() < prob
+            return cand.group
+        end
+    end
+    return nothing
+end
+
+"""
+    _auto_group_latch(node_id) -> Union{String, Nothing}
+
+GRUG: Main entry point for auto group latching. After a node is created,
+try to attach it to an existing group via strength-biased coinflip.
+
+If a group wins: add the node to that group AND link it to the best
+linkable member (via try_link_nodes!). Returns the group_id joined.
+
+If no group wins: register the node as its own group seed. Returns nothing.
+
+Returns: group_id if joined an existing group, nothing if started own group.
+"""
+function _auto_group_latch(node_id::String)::Union{String, Nothing}
+    node = get(NODE_MAP, node_id, nothing)
+    if isnothing(node)
+        return nothing
+    end
+
+    # GRUG: If node is already in a multi-member group (e.g. fan-out cluster
+    # already grouped it), respect that — don't move it.
+    # If it's in a SOLO group (only member = itself), that's just the v7.19
+    # seed group from create_node. We can dissolve it and try to join a
+    # better-matching group instead.
+    existing_grp = group_for(node_id)
+    if !isnothing(existing_grp)
+        if length(existing_grp.members) > 1
+            # Real group with multiple members — stay put.
+            return existing_grp.id
+        end
+        # Solo seed group — dissolve it so we can try joining a better group.
+        # Only the node itself is in it, so safe to remove.
+        lock(GROUP_LOCK) do
+            delete!(NODE_TO_GROUP, node_id)
+            filter!(m -> m != node_id, existing_grp.members)
+            if isempty(existing_grp.members)
+                delete!(GROUP_MAP, existing_grp.id)
+            end
+        end
+    end
+
+    # GRUG: Find candidate groups that are pattern+vote related.
+    candidates = _find_linkable_groups(node.pattern, node.action_packet)
+
+    if isempty(candidates)
+        # GRUG: No related groups exist. Node becomes its own group seed.
+        # (register_group! again after dissolving the solo seed above)
+        try
+            register_group!(node)
+        catch e
+            @warn "[MAIN] auto_group_latch: register_group! failed for $node_id (non-fatal): $e"
+        end
+        return nothing
+    end
+
+    # GRUG: Strength-biased coinflip — first group that wins the flip gets the node.
+    winner = _strength_biased_group_coinflip(candidates)
+
+    if isnothing(winner)
+        # GRUG: No group won the coinflip. Node starts its own group.
+        try
+            register_group!(node)
+        catch e
+            @warn "[MAIN] auto_group_latch: register_group! failed for $node_id (non-fatal): $e"
+        end
+        return nothing
+    end
+
+    # GRUG: Winner! Add the node to the winning group.
+    try
+        added = add_to_group!(winner, node_id)
+        if !added
+            # GRUG: Group was full or node already member. Start own group.
+            register_group!(node)
+            return nothing
+        end
+    catch e
+        @warn "[MAIN] auto_group_latch: add_to_group! failed for $node_id (non-fatal): $e"
+        try
+            register_group!(node)
+        catch _
+        end
+        return nothing
+    end
+
+    # GRUG: Also link the node to the best linkable member of the group.
+    # This creates a neighbor connection so the node actually fires alongside
+    # its group members, not just shares a group label.
+    best_member_id = nothing
+    best_score = -1.0
+    lock(NODE_LOCK) do
+        for mid in winner.members
+            mid == node_id && continue
+            mn = get(NODE_MAP, mid, nothing)
+            isnothing(mn) && continue
+            mn.is_grave && continue
+            mn.is_unlinkable && continue
+            score = mn.strength * _token_overlap_similarity(node.pattern, mn.pattern)
+            if score > best_score
+                best_score = score
+                best_member_id = mid
+            end
+        end
+    end
+
+    if !isnothing(best_member_id) && haskey(NODE_MAP, best_member_id)
+        try
+            linked = try_link_nodes!(node, NODE_MAP[best_member_id])
+            if linked
+                @debug "[MAIN] auto_group_latch: linked $node_id → $best_member_id in group $(winner.id)"
+            end
+        catch e
+            @warn "[MAIN] auto_group_latch: try_link_nodes! failed (non-fatal): $e"
+        end
+    end
+
+    return winner.id
 end
 
 # GRUG: Family of brain actions. Command must take all vote states now!
@@ -9178,7 +9492,7 @@ elseif !isnothing(m_right)
                                         end
                                         part_data["answer_mode"] = "multi"
                                         part_data["multi_part_action"] = action_pkt
-                                        nid, lobe_tag = _create_answer_node(part_text, action_pkt, part_data, target_lobe_ans)
+                                        nid, lobe_tag = _create_answer_node(part_text, action_pkt, part_data, target_lobe_ans; skip_auto_latch=true)
                                         push!(multi_ids, nid)
                                     end
                                     # GRUG: Auto-group the multi-part nodes so they fire together.
@@ -9192,6 +9506,7 @@ elseif !isnothing(m_right)
                                                     if haskey(NODE_MAP, other_id)
                                                         grp = group_for(first_id)
                                                         if !isnothing(grp)
+                                                            _dissolve_solo_group!(other_id)
                                                             add_to_group!(grp, other_id)
                                                         end
                                                     end
@@ -9251,7 +9566,7 @@ elseif !isnothing(m_right)
                                         step_data["system_prompt"] = "Grug. I learned this procedure from a question. Step $i of $(length(proc_steps)). I explain what to do."
                                         step_data["voice_register"] = "plain"
                                         step_data["frame_hints"] = ["imperative", "plain"]
-                                        nid, lobe_tag = _create_answer_node(step_text, "reason^1", step_data, target_lobe_ans)
+                                        nid, lobe_tag = _create_answer_node(step_text, "reason^1", step_data, target_lobe_ans; skip_auto_latch=true)
                                         push!(proc_ids, nid)
                                     end
                                     # GRUG: Link steps into a drop_table chain so they co-activate.
@@ -9273,6 +9588,7 @@ elseif !isnothing(m_right)
                                                     if haskey(NODE_MAP, other_id)
                                                         grp = group_for(first_id)
                                                         if !isnothing(grp)
+                                                            _dissolve_solo_group!(other_id)
                                                             add_to_group!(grp, other_id)
                                                         end
                                                     end
@@ -9447,6 +9763,7 @@ elseif !isnothing(m_right)
                                                     if haskey(NODE_MAP, other_id)
                                                         grp = group_for(first_id)
                                                         if !isnothing(grp)
+                                                            _dissolve_solo_group!(other_id)
                                                             add_to_group!(grp, other_id)
                                                         end
                                                     end
