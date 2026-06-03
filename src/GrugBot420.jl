@@ -441,6 +441,12 @@ export DecomposedSubSubject, decompose_input, is_compound
 export register_procedure_sigil!, expand_procedure_sigil, is_procedure_sigil,
        MAX_PROCEDURE_DEPTH
 
+# GRUG: v7.55 — Relation-class sigils for dynamic relational triples.
+# A :relation sigil's expansion lists alternative relation verbs. At evaluation
+# time, a triple with &name in its relation slot matches any alternative.
+export register_relation_sigil!, expand_relation_sigil, is_relation_sigil,
+       expand_relation_if_sigil
+
 # GRUG: v7.23 — ATP→automaton escalation hook. `maybe_escalate(prediction)` is
 # the primary entry; it checks if the predicted action family is in
 # ESCALATION_FAMILIES and confidence is high enough, then runs the matching

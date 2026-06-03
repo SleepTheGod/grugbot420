@@ -3349,11 +3349,20 @@ function _generate_fanout_patterns(content::AbstractString, mode::AbstractString
     seeded = get(ans_data, "seeded_triple", nothing)
     if !isnothing(seeded) && isa(seeded, Dict)
         obj = lowercase(strip(get(seeded, "object", "")))
+        rel_raw = get(seeded, "relation", "relates")
+        # GRUG v7.55: For dynamic relationals, expand the sigil for question forms.
+        # &causes → use the first alternative ("causes") as the canonical question verb.
+        rel_for_q = if !isempty(rel_raw) && rel_raw[1] == '&'
+            alts = SigilRegistry.expand_relation_if_sigil(_ENGINE_SIGIL_TABLE, rel_raw)
+            isempty(alts) ? "relates" : alts[1]
+        else
+            rel_raw
+        end
         if !isempty(obj) && !in(obj, seen) && length(obj) >= 2
             push!(patterns, obj)
             push!(seen, obj)
             # Also create question form from the object
-            qf = "what $(get(seeded, "relation", "relates")) $obj"
+            qf = "what $rel_for_q $obj"
             if !in(qf, seen) && length(qf) >= 4
                 push!(patterns, qf)
                 push!(seen, qf)
@@ -4001,6 +4010,7 @@ Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addRelationClass <name>            (create new verb class bucket)
          : /addSynonym <canonical> <alias>     (normalize alias->canonical)
          : /addSeedSynonym <canonical> <syn1 syn2 ...>  (thesaurus seed group)
+         : /addRelRelation <name> <alt1 alt2 ...>  (dynamic relation sigil)
          : /addAntiMatch <pattern> [NONJITTER]  (anti-match confidence drain node)
          : /answer [@lobe_id] [:mode] <text>   (resolve strain — mode shapes the answer)
          : /antiAnswer [@lobe_id] [:mode] <text> (suppress strain — modes: alert, multi, json)
@@ -4086,6 +4096,7 @@ const HELP_MSG = """
 ║  /addRelationClass <name>   Create new verb class bucket     ║
 ║  /addSynonym <canon> <alias> Register synonym normalization  ║
 ║  /addSeedSynonym <can> <syns> Register thesaurus seed group   ║
+║  /addRelRelation <name> <alts> Dynamic relation sigil macro  ║
 ║  /addAntiMatch <pattern>    Anti-match confidence drain node  ║
 ║  /answer [@lobe] [:mode] <text>   Resolve strain with mode-shaped answer  ║
 ║  /antiAnswer [@lobe] [:mode] <text> Suppress strain (modes: alert/multi/json) ║
@@ -4212,8 +4223,8 @@ const HELP_MSG = """
 ║  🛡  IMMUNE SYSTEM (auto-gates all structure-storing cmds)  ║
 ║  Gated: /grow /lobeGrow /addRule /pin /addVerb              ║
 ║         /addRelationClass /addSynonym /addSeedSynonym        ║
-║         /addAntiMatch /newLobe /nameLobe /connectLobes       ║
-║         /negativeThesaurus-add                                ║
+║         /addRelRelation /addAntiMatch /newLobe /nameLobe     ║
+║         /connectLobes                                        ║
 ║         /loadSpecimen /nodeAttach /imgnodeAttach            ║
 ║  Exempt: /mission and all read-only commands                ║
 ║                                                              ║
@@ -8518,6 +8529,9 @@ function run_cli()
             m_addsynonym  = match(r"^/addSynonym\s+(\S+)\s+(\S+)\s*$",     line)
             m_addseedsyn  = match(r"^/addSeedSynonym\s+(\S+)\s+(.+)$",      line)
             m_addantimatch= match(r"^/addAntiMatch\s+(.+)$",                 line)
+            # GRUG v7.55: /addRelRelation <name> <alt1 alt2 alt3 ...>
+            # Register a :relation-class sigil for dynamic relational triples.
+            m_addrelrelation = match(r"^/addRelRelation\s+(\S+)\s+(.+)$",  line)
             m_answer      = match(r"^/answer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$",            line)  # GRUG v7.52: @lobe_id + :mode
             m_antianswer  = match(r"^/antiAnswer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$",          line)  # GRUG v7.52: @lobe_id + :mode
             m_listverbs   = match(r"^/listVerbs\s*$",                        line)
@@ -9316,6 +9330,41 @@ elseif !isnothing(m_right)
                     println("📖 Synonym registered: '$(alias_verb)' → '$(canonical_verb)'. Normalization active.")
                 end
 
+            elseif !isnothing(m_addrelrelation)
+                # GRUG v7.55: /addRelRelation <name> <alt1 alt2 alt3 ...>
+                # Register a :relation-class sigil for dynamic relational triples.
+                # The name becomes &name in triple relation slots; the alternatives
+                # are the concrete verbs that the sigil expands to at match time.
+                # Example: /addRelRelation causes causes produces creates generates
+                #   Then: /answer :relate fire | &causes | heat
+                #   → matches user triples with "causes", "produces", "creates", or "generates"
+                rel_name = String(m_addrelrelation.captures[1])
+                alts_raw = String(m_addrelrelation.captures[2])
+                # GRUG: strip brackets if present ([causes produces] → causes produces)
+                alts_clean = replace(replace(alts_raw, r"^\[" => ""), r"\]$" => "")
+                alt_list = [lowercase(strip(w)) for w in split(alts_clean) if !isempty(strip(w))]
+                if isempty(alt_list)
+                    println("⚠️  /addRelRelation: no alternatives provided. Format: /addRelRelation <name> <alt1 alt2 ...>")
+                elseif !occursin(SigilRegistry.SIGIL_NAME_REGEX, rel_name)
+                    println("⚠️  /addRelRelation: name '$rel_name' is not a valid sigil name. Use letters, digits, dash, underscore.")
+                else
+                    # GRUG: IMMUNE GATE — sigil registry is stored structure!
+                    if !immune_gate("/addRelRelation", rel_name * " " * join(alt_list, " "); is_critical=false)
+                        println("⛔ /addRelRelation blocked by immune system.")
+                    else
+                        try
+                            SigilRegistry.register_relation_sigil!(_ENGINE_SIGIL_TABLE;
+                                name = rel_name,
+                                expansion = alt_list,
+                                provenance = "user-relation",
+                                overwrite = true)  # allow overwrite so user can refine
+                            println("🔗 Relation sigil '&$rel_name' registered: $(join(alt_list, " | "))")
+                        catch e
+                            println("⚠️  /addRelRelation failed: $e")
+                        end
+                    end
+                end
+
             elseif !isnothing(m_addseedsyn)
                 # GRUG v7.35: /addSeedSynonym <canonical> <syn1 syn2 syn3 ...>
                 # Register a thesaurus seed synonym group at runtime.
@@ -9522,31 +9571,57 @@ elseif !isnothing(m_right)
                             elseif ans_mode == "relate"
                                 # --- :relate — triple-seeded node ---
                                 # Format: "subject | relation | object"
+                                # Relation can be a literal verb OR a &sigilName for dynamic relational.
+                                # Dynamic example: /answer :relate fire | &causes | heat
+                                #   → matches "causes", "produces", "creates", etc. per sigil expansion.
                                 relate_parts = [strip(String(p)) for p in split(ans_content, "|")]
                                 if length(relate_parts) < 3
                                     println("!!! FATAL: /answer :relate needs 'subject | relation | object'. Example: /answer :relate fire | burns | wood !!!")
                                 else
                                     subj = relate_parts[1]
-                                    rel  = relate_parts[2]
+                                    rel_raw = relate_parts[2]
                                     obj  = relate_parts[3]
+
+                                    # GRUG v7.55: Check if relation is a dynamic relational sigil.
+                                    # If it starts with &, it must be a registered :relation-class sigil.
+                                    is_dynamic = !isempty(rel_raw) && rel_raw[1] == '&'
+                                    if is_dynamic
+                                        sigil_name = rel_raw[2:end]  # strip & prefix
+                                        if !SigilRegistry.is_relation_sigil(_ENGINE_SIGIL_TABLE, sigil_name)
+                                            println("!!! FATAL: /answer :relate relation sigil &$sigil_name is not registered as a :relation-class sigil. Use /addRelRelation first. !!!")
+                                            continue
+                                        end
+                                        # Keep the &name form for the triple's relation field.
+                                        # evaluate_relational_dialectics will expand it at match time.
+                                        rel_for_triple = rel_raw  # "&causes" etc.
+                                        rel_for_display = SigilRegistry.expand_relation_sigil(_ENGINE_SIGIL_TABLE, sigil_name)
+                                    else
+                                        rel_for_triple = lowercase(rel_raw)
+                                        rel_for_display = [lowercase(rel_raw)]
+                                    end
+
                                     # GRUG: Pattern is the subject, but node carries relational metadata.
                                     relate_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
                                     relate_data["answer_mode"] = "relate"
                                     relate_data["noun_anchors"] = [lowercase(subj), lowercase(obj)]
-                                    relate_data["required_relations"] = [lowercase(rel)]
+                                    relate_data["required_relations"] = [rel_for_triple]
                                     # GRUG: Also store the full triple for AIML reference.
                                     relate_data["seeded_triple"] = Dict(
                                         "subject"   => lowercase(subj),
-                                        "relation"  => lowercase(rel),
+                                        "relation"  => rel_for_triple,
                                         "object"    => lowercase(obj),
                                     )
-                                    relate_data["system_prompt"] = "Grug. I learned this from a question. I know that $(lowercase(subj)) $(lowercase(rel)) $(lowercase(obj)). I reason about this relationship."
+                                    relate_data["system_prompt"] = "Grug. I learned this from a question. I know that $(lowercase(subj)) $(rel_for_triple) $(lowercase(obj)). I reason about this relationship."
                                     relate_data["voice_register"] = "plain"
                                     relate_data["frame_hints"] = ["plain", "exploratory"]
                                     # GRUG v7.53: Fan-out for relate — primary + shadow nodes from subject pattern.
                                     nid, shadow_ids, lobe_tag = _plant_answer_cluster(subj, "reason^1", relate_data, target_lobe_ans, "relate")
                                     shadow_msg = !isempty(shadow_ids) ? " +$(length(shadow_ids)) shadows [$(join(shadow_ids, ", "))]" : ""
-                                    println("🧠 Answer [:relate]: id=$nid triple='$(lowercase(subj)) → $(lowercase(rel)) → $(lowercase(obj))'$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
+                                    if is_dynamic
+                                        println("🧠 Answer [:relate]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))' (dynamic: $(join(rel_for_display, " | ")))$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
+                                    else
+                                        println("🧠 Answer [:relate]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))'$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
+                                    end
                                 end
 
                             elseif ans_mode == "proc"

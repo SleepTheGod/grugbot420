@@ -132,13 +132,14 @@ const SIGIL_PREFIX::Char = '&'
 # :glue, :functor, :procedure are RESERVED — their registry entries are accepted
 # but cannot yet appear in a pattern (would throw at parse time). Reservation
 # is so Stage 2+ can add them without revising the registry schema.
-const SIGIL_CLASSES::NTuple{6,Symbol} = (
+const SIGIL_CLASSES::NTuple{7,Symbol} = (
     :lambda,    # parametric position; binds value at match time. Stage 1.
     :macro,     # alternation family; expands to alternatives at bind. Stage 1.
     :tag,       # annotation; carries no value, no expansion. Stage 1.
     :glue,      # connector; sub-vote boundary at match time. RESERVED for Stage 2.
     :functor,   # phase morphism; applies to phase data. RESERVED for Stage 6.
     :procedure, # named ordered chain of sigils+literals. RESERVED for Stage 6.
+    :relation,  # relational triple macro; expands to alternative relation names. Stage 4.
 )
 
 # GRUG: closed enum of phases a sigil can `applies_at`. Stage 1 only really
@@ -158,10 +159,11 @@ const SIGIL_APPLIES_AT::NTuple{9,Symbol} = (
 
 # GRUG: which classes are activated in Stage 1. Patterns referencing reserved
 # classes throw at parse time with a clear "reserved for stage N" message.
-const STAGE1_ACTIVE_CLASSES::NTuple{3,Symbol} = (:lambda, :macro, :tag)
+const STAGE1_ACTIVE_CLASSES::NTuple{4,Symbol} = (:lambda, :macro, :tag, :relation)
 
-# GRUG: which applies_at values are activated in Stage 1.
-const STAGE1_ACTIVE_PHASES::NTuple{2,Symbol} = (:bind, :match)
+# GRUG: which applies_at values are activated in Stage 1 (now including :relation
+# for dynamic relational triples — Stage 4 feature activated early).
+const STAGE1_ACTIVE_PHASES::NTuple{3,Symbol} = (:bind, :match, :relation)
 
 # GRUG: regex for a valid sigil name. Letters, digits, dash, underscore. No
 # spaces, no other punctuation. Greek letters allowed (for the eventual
@@ -403,15 +405,14 @@ function register_sigil!(
         params_clean = d
     end
 
-    # GRUG: expansion field is RESERVED for Stage 6 :procedure class. Stage 1
-    # accepts the field but rejects non-nothing values UNLESS class is
-    # :procedure (which is reserved itself). This guards against accidental
-    # use before Stage 6 lands.
+    # GRUG: expansion field is for :procedure class (ordered chains) and
+    # :relation class (alternative relation names). Other classes must not
+    # carry expansion.
     exp_clean::Union{Nothing,Vector{Any}} = nothing
     if expansion !== nothing
-        if class !== :procedure
+        if class !== :procedure && class !== :relation
             throw(SigilConfigError(
-                "expansion field is reserved for :procedure class (got class :$class)",
+                "expansion field is reserved for :procedure and :relation classes (got class :$class)",
                 "expansion"))
         end
         exp_clean = Vector{Any}(expansion)
@@ -533,6 +534,26 @@ function _validate_class_fields(
         # GRUG: Stage 6 reserved. expansion field is the procedure's chain.
         # Stage 1 won't be able to USE these but we let them register so a
         # specimen can ship them ahead of Stage 6.
+    elseif class === :relation
+        # GRUG v7.55: Relation-class sigils expand to alternative relation names
+        # for dynamic relational triples. They require an expansion list (the
+        # relation verb alternatives), must not have sigil_type or lexicon,
+        # and apply at :relation phase.
+        if expansion === nothing
+            throw(SigilConfigError(
+                ":relation sigil &$name requires an expansion list of alternative relation names (e.g. [\"causes\", \"produces\", \"creates\"])",
+                "expansion"))
+        end
+        if sigil_type !== nothing
+            throw(SigilConfigError(
+                ":relation sigil &$name must not carry sigil_type",
+                "sigil_type"))
+        end
+        if lexicon !== nothing
+            throw(SigilConfigError(
+                ":relation sigil &$name must not carry lexicon",
+                "lexicon"))
+        end
     else
         # Unreachable: class was already validated against SIGIL_CLASSES.
         throw(SigilError("unreachable: unhandled class :$class in field validation",
@@ -992,5 +1013,135 @@ end
 # Re-export the new public surface so callers can `using` them.
 export register_procedure_sigil!, expand_procedure_sigil, is_procedure_sigil,
        MAX_PROCEDURE_DEPTH
+
+# ==============================================================================
+# v7.55: RELATION-CLASS SIGIL — dynamic relational triple macros
+# ==============================================================================
+# GRUG: A :relation-class sigil is like a :procedure but flat — it expands to
+# a list of alternative relation verb strings. When a node triple's relation
+# field contains a `&relName` reference, the evaluation code expands it and
+# matches against ANY of the alternatives. This is how dynamic relationals work:
+#
+#   (subject, &causes, object)  →  matches "causes" OR "produces" OR "creates"
+#
+# The expansion list is just literal strings (no nested sigil recursion needed
+# for relation names — they're simple verb tokens, not compound patterns).
+# ==============================================================================
+
+"""
+    register_relation_sigil!(table; name, expansion, provenance="user-relation",
+                             overwrite=false) -> SigilEntry
+
+Register a `:relation` class sigil whose `expansion` is a list of alternative
+relation verb strings. At evaluation time, a triple with `&name` in its
+relation slot matches if the user's triple relation matches ANY alternative.
+
+Example:
+    register_relation_sigil!(tbl;
+        name = "causes",
+        expansion = ["causes", "produces", "creates", "generates"])
+
+Then a node triple `(fire, &causes, heat)` matches user triples:
+  - (fire, causes, heat)  ✓
+  - (fire, produces, heat)  ✓
+  - (fire, creates, heat)  ✓
+  - (fire, generates, heat)  ✓
+
+Throws SigilConfigError on empty expansion or any non-String element.
+"""
+function register_relation_sigil!(table::SigilTable;
+                                  name::AbstractString,
+                                  expansion::AbstractVector,
+                                  provenance::AbstractString = "user-relation",
+                                  overwrite::Bool = false)::SigilEntry
+    if isempty(expansion)
+        throw(SigilConfigError(
+            "register_relation_sigil!: expansion cannot be empty for &$name",
+            "expansion"))
+    end
+    for (i, el) in enumerate(expansion)
+        if !(el isa AbstractString)
+            throw(SigilConfigError(
+                "register_relation_sigil!: expansion[$i] must be a String, got $(typeof(el))",
+                "expansion"))
+        end
+        if isempty(strip(String(el)))
+            throw(SigilConfigError(
+                "register_relation_sigil!: expansion[$i] is empty/whitespace",
+                "expansion"))
+        end
+    end
+    return register_sigil!(table;
+                           name = name,
+                           class = :relation,
+                           applies_at = :relation,
+                           expansion = collect(String, expansion),
+                           provenance = String(provenance),
+                           overwrite = overwrite)
+end
+
+"""
+    expand_relation_sigil(table, name) -> Vector{String}
+
+Expand a `:relation` class sigil into its flat list of alternative relation
+verb strings. Unlike procedure sigils, relation sigils do NOT recurse — the
+expansion list contains only literal verb strings.
+
+Throws:
+  - SigilResolutionError when the named sigil is not in the table.
+  - SigilConfigError when the sigil exists but is not :relation class.
+"""
+function expand_relation_sigil(table::SigilTable,
+                               name::AbstractString)::Vector{String}
+    nm = String(name)
+    haskey(table.entries, nm) || throw(SigilResolutionError(
+        "no such sigil in registry \"$(table.label)\"", nm, "<relation-expand>"))
+    entry = table.entries[nm]
+    entry.class === :relation || throw(SigilConfigError(
+        "expand_relation_sigil: &$nm has class :$(entry.class), expected :relation",
+        "class"))
+    entry.expansion === nothing && throw(SigilConfigError(
+        "expand_relation_sigil: &$nm has no expansion list", "expansion"))
+    # GRUG: Return as pure Vector{String}. Relation expansions are flat — no nesting.
+    return [String(el) for el in entry.expansion]
+end
+
+"""
+    is_relation_sigil(table, name) -> Bool
+
+Cheap check: does the named sigil exist and have class :relation?
+"""
+function is_relation_sigil(table::SigilTable, name::AbstractString)::Bool
+    nm = String(name)
+    haskey(table.entries, nm) || return false
+    return table.entries[nm].class === :relation
+end
+
+"""
+    expand_relation_if_sigil(table, relation_str) -> Vector{String}
+
+If `relation_str` starts with `&` and names a registered :relation sigil,
+expand it and return the alternatives. Otherwise return `[relation_str]`
+as a singleton. This is the main call site helper for evaluate_relational_dialectics.
+"""
+function expand_relation_if_sigil(table::SigilTable,
+                                  relation_str::AbstractString)::Vector{String}
+    s = String(relation_str)
+    if isempty(s) || s[1] != SIGIL_PREFIX
+        return [s]  # Plain literal — no expansion needed.
+    end
+    nm = s[2:end]  # Strip & prefix
+    if is_relation_sigil(table, nm)
+        return expand_relation_sigil(table, nm)
+    end
+    # GRUG: Unknown &name that isn't a relation sigil — return as-is.
+    # Pattern resolution will throw if it's an unknown sigil in a pattern,
+    # but in a triple's relation field we're permissive: it could be a
+    # lambda/macro sigil that the user explicitly placed. Return literal.
+    return [s]
+end
+
+export register_relation_sigil!, expand_relation_sigil, is_relation_sigil,
+       expand_relation_if_sigil
 
 end # module SigilRegistry

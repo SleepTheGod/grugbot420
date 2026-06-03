@@ -16,7 +16,7 @@
 #       * :tag with sigil_type or lexicon → SigilConfigError
 #       * lexicon overflow (MAX_LEXICON_SIZE) → SigilConfigError
 #       * lexicon empty-string entry → SigilConfigError
-#       * expansion on non-:procedure class → SigilConfigError
+#       * expansion on non-:procedure/:relation class → SigilConfigError
 #       * collision without overwrite → SigilConfigError
 #       * collision with overwrite=true → succeeds
 #       * registry overflow (MAX_REGISTRY_ENTRIES) → SigilConfigError
@@ -59,13 +59,14 @@ using .SigilRegistry
         # arity or membership without bumping the engine version, this test
         # catches it.
         @test SIGIL_PREFIX === '&'
-        @test length(SIGIL_CLASSES) == 6
+        @test length(SIGIL_CLASSES) == 7
         @test :lambda    in SIGIL_CLASSES
         @test :macro     in SIGIL_CLASSES
         @test :tag       in SIGIL_CLASSES
         @test :glue      in SIGIL_CLASSES
         @test :functor   in SIGIL_CLASSES
         @test :procedure in SIGIL_CLASSES
+        @test :relation  in SIGIL_CLASSES
 
         @test length(SIGIL_APPLIES_AT) == 9
         @test :bind   in SIGIL_APPLIES_AT
@@ -259,7 +260,7 @@ using .SigilRegistry
     @testset "register_sigil! — expansion field is reserved" begin
         t = SigilTable("test")
 
-        # expansion on non-:procedure class is REJECTED.
+        # expansion on non-:procedure/:relation class is REJECTED.
         @test_throws SigilConfigError register_sigil!(t;
             name="bad_exp", class=:tag, applies_at=:bind,
             expansion=["step1", "step2"])
@@ -271,6 +272,13 @@ using .SigilRegistry
             expansion=Any["a", "b"], provenance="forward-compat")
         @test e.class === :procedure
         @test e.expansion == Any["a", "b"]
+
+        # On :relation class it is ACCEPTED — v7.55 dynamic relationals.
+        e2 = register_sigil!(t;
+            name="rel_x", class=:relation, applies_at=:relation,
+            expansion=["causes", "produces"], provenance="v7.55-test")
+        @test e2.class === :relation
+        @test e2.expansion == ["causes", "produces"]
     end
 
     # ==========================================================================

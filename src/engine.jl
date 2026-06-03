@@ -519,15 +519,19 @@ function evaluate_relational_dialectics(
     # Implementation: skip the tag inside the membership check.
     nonjitter = NONJITTER_TAG in required_relations
 
+    # GRUG v7.55: Expand any relation sigils in required_relations before
+    # checking. If a required relation is "&causes" and the sigil expands to
+    # ["causes","produces","creates"], then the user supplying ANY of those
+    # satisfies the requirement.
     if !isempty(required_relations)
         user_rels = Set([t.relation for t in user_triples])
         for req in required_relations
-            # GRUG v7.21: NONJITTER is a behavioral tag, not a semantic relation.
-            # Do not treat it as a missing requirement if the user didn't supply it.
             req == NONJITTER_TAG && continue
-            if !(req in user_rels)
-                # GRUG FIX 2.7: Sentinel Value for hard requirement miss!
-                return (-9999.0, false) 
+            # GRUG v7.55: Expand relation sigil if present.
+            req_alternatives = SigilRegistry.expand_relation_if_sigil(_ENGINE_SIGIL_TABLE, req)
+            satisfied = any(alt -> alt in user_rels, req_alternatives)
+            if !satisfied
+                return (-9999.0, false)
             end
         end
     end
@@ -547,10 +551,47 @@ function evaluate_relational_dialectics(
 
     for ut in user_triples
         for nt in node_triples
+            # GRUG v7.55: Expand node triple's relation if it's a sigil reference.
+            # Dynamic relational: (subj, &causes, obj) matches (subj, causes, obj)
+            # OR (subj, produces, obj) OR any alternative in the sigil's expansion.
+            nt_rel_alternatives = SigilRegistry.expand_relation_if_sigil(_ENGINE_SIGIL_TABLE, nt.relation)
+            relation_match = any(alt -> ut.relation == alt, nt_rel_alternatives)
+
             # GRUG: Weight itself gets the first nudge — same bullseye every
             # activation otherwise. jitter_weight is the sign-preserving wrapper.
-            weight = jitter_w(get(relation_weights, ut.relation, 1.0))
-            if ut.relation == nt.relation
+            # For dynamic relationals, look up weight by:
+            #   1. User's actual relation verb (always concrete)
+            #   2. The sigil reference name (e.g. "&causes")
+            #   3. Any expansion alternative that has a weight
+            #   4. Default 1.0
+            weight = if !isempty(nt_rel_alternatives) && nt_rel_alternatives[1] != nt.relation
+                # Dynamic relational — nt.relation is "&name" form
+                w = get(relation_weights, ut.relation, nothing)
+                if !isnothing(w)
+                    jitter_w(w)
+                else
+                    # Try the sigil name itself as a weight key (e.g. "&causes")
+                    w2 = get(relation_weights, nt.relation, nothing)
+                    if !isnothing(w2)
+                        jitter_w(w2)
+                    else
+                        # Try each alternative until one has a weight
+                        found = nothing
+                        for alt in nt_rel_alternatives
+                            w3 = get(relation_weights, alt, nothing)
+                            if !isnothing(w3)
+                                found = w3
+                                break
+                            end
+                        end
+                        jitter_w(something(found, 1.0))
+                    end
+                end
+            else
+                jitter_w(get(relation_weights, ut.relation, 1.0))
+            end
+
+            if relation_match
                 if ut.subject == nt.object && ut.object == nt.subject
                     match_score -= jitter_s(2.0 * weight)
                     is_antimatch = true
