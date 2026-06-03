@@ -4067,13 +4067,14 @@ Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
 Thesaurus: /thesaurus <word1> | <word2>        (compare words/concepts dimensionally)
          : /thesaurus <w1> | <w2> :: <ctx1> :: <ctx2>  (with context lists)
 NegThes  : /negativeThesaurus add|remove|list|check|flush
-Attach   : /nodeAttach <lobe> <target> <id> <pat> ...  (attach nodes with relational fire patterns)
-         : /nodeDetach <lobe> <target> <id>            (detach a node from target)
+Bridge   : /nodeBridge <lobe> <n_a> <n_b> [seam...]  (bridge two nodes bidirectionally, max 4/node)
+         : /nodeUnbridge <lobe> <n_a> <n_b>             (remove bidirectional bridge)
+         : /nodeAttach / /nodeDetach                     (backward compat aliases)
 ImgAttach: /imgnodeAttach <lobe> <tgt> <id> <b64> [w h] (attach image node with SDF-based fire)
          : /imgnodeDetach <lobe> <target> <id>         (detach image node from target)
-         : /attachments                         (show all node attachments)
-Crystal  : /crystalize <lobe> <target> <attach>        (💎 mark attachment as sticky/user-locked)
-         : /decrystalize <lobe> <target> <attach>      (🔓 remove sticky flag, restore coinflip)
+         : /bridges                              (show all cascade bridges, also /attachments)
+Crystal  : /crystalize <lobe> <n_a> <n_b>             (💎 mark bridge as sticky/user-locked, both sides)
+         : /decrystalize <lobe> <n_a> <n_b>            (🔓 remove sticky flag, both sides, cross-lobe OK)
 Specimen : /saveSpecimen <filepath>            (save full cave state — .json or .gz)
          : /loadSpecimen <filepath>            (restore full cave state — .json or .gz)
 Help     : /help                               (full command reference)
@@ -4190,23 +4191,29 @@ const HELP_MSG = """
 ║  /negativeThesaurus check <word>                            ║
 ║  /negativeThesaurus flush                                   ║
 ║                                                              ║
-║  RELATIONAL FIRE (NODE ATTACHMENTS)                          ║
-║  /nodeAttach <lobe> <tgt> <id> <pat> ...                     ║
-║    Attach up to 4 nodes to target with firing patterns       ║
-║    Confidence JIT-baked at attach time (not at fire time)    ║
-║    All nodes (target + attachments) must be in same lobe.    ║
-║    Example: /nodeAttach greeting node_0 node_1 "fire pattern"║
-║  /nodeDetach <lobe> <target> <id>   Detach node from target  ║
-║  /imgnodeAttach <lobe> <tgt> <id> <b64> [w h]                ║
-║    Attach image node with SDF-based relational fire          ║
-║    Image→SDF conversion at attach time (JIT GPU accel)       ║
+║  RELATIONAL FIRE (CASCADE BRIDGES)                           ║
+║  /nodeBridge <lobe> <node_a> <node_b> [seam...]             ║
+║    Bridge two nodes bidirectionally (max 4 per node)        ║
+║    Confidence JIT-baked: overlap + partner strength bonus  ║
+║    Cross-lobe bridges work naturally (no more restriction)  ║
+║    Seam tokens = unmatched tail at match boundary           ║
+║    Also accepts /nodeAttach (backward compat)              ║
+║    Example: /nodeBridge greeting node_0 node_1 hello world ║
+║  /nodeUnbridge <lobe> <node_a> <node_b>  Remove bridge    ║
+║    Also accepts /nodeDetach (backward compat)              ║
+║  /imgnodeAttach <lobe> <tgt> <id> <b64> [w h]              ║
+║    Bridge image node with SDF-based relational fire        ║
+║    Image→SDF conversion at attach time (JIT GPU accel)     ║
 ║    Example: /imgnodeAttach vision n0 img1 "data:image/..." 64 64║
-║  /imgnodeDetach <lobe> <tgt> <id>   Detach image node        ║
-║  /attachments                Show all attachment map          ║
+║  /imgnodeDetach <lobe> <tgt> <id>   Detach image node      ║
+║  /bridges                    Show all bridge map (bidir.)   ║
+║    Also accepts /attachments (backward compat)             ║
 ║                                                              ║
-║  CRYSTAL (STICKY ATTACHMENTS)                                ║
-║  /crystalize <lobe> <tgt> <attach>     💎 mark sticky        ║
-║  /decrystalize <lobe> <tgt> <attach>   🔓 unmark sticky      ║
+║  CRYSTAL (STICKY BRIDGES)                                   ║
+║  /crystalize <lobe> <node_a> <node_b>   💎 mark sticky      ║
+║  /decrystalize <lobe> <node_a> <node_b> 🔓 unmark sticky    ║
+║    Both sides crystalized/revoked bidirectionally           ║
+║    Cross-lobe crystalize now works (no more same-lobe req)  ║
 ║                                                              ║
 ║  SPECIMEN PERSISTENCE                                        ║
 │  /saveSpecimen <filepath>    Save cave (.json or .gz)       │
@@ -5545,7 +5552,7 @@ Captures ALL mutable state across all modules:
   - counters    (NODE ID_COUNTER + MSG_ID_COUNTER)
   - last_voters (LAST_VOTER_IDS for /wrong feedback)
   - brainstem   (dispatch count, propagation history)
-  - attachments (ATTACHMENT_MAP relational fire system)
+  - bridges (BRIDGE_MAP cascade bridge system, bidirectional)
   - trajectory  (ActionTonePredictor ring buffer + config)
   - temporal    (ImageSDF TEMPORAL_COHERENCE_LEDGER timing patterns)
   - cooldowns   (ChatterMode MORPH_COOLDOWN_MAP 24h morph timestamps)
@@ -5824,25 +5831,60 @@ function save_specimen_to_file!(filepath::String)::String
     end
     specimen["brainstem"] = brainstem_data
 
-    # ── 14. ATTACHMENTS (RELATIONAL FIRE SYSTEM) ──────────────────────────────
-    # GRUG: Serialize the ATTACHMENT_MAP. Each target_id maps to a list of
-    # AttachedNode structs (node_id, pattern, signal, base_confidence).
-    # base_confidence is the JIT-baked value computed at attach time.
-    attachment_list = Dict{String, Any}[]
-    lock(ATTACHMENT_LOCK) do
-        for (target_id, attachments) in ATTACHMENT_MAP
-            for att in attachments
-                push!(attachment_list, Dict{String, Any}(
-                    "target_id"       => target_id,
-                    "node_id"         => att.node_id,
-                    "pattern"         => att.pattern,
-                    "signal"          => att.signal,
-                    "base_confidence" => att.base_confidence,
-                    "is_crystalized"  => att.is_crystalized,
-                    "crystal_origin"  => String(att.crystal_origin)
+    # ── 14. BRIDGES (CASCADE BRIDGE SYSTEM — v8.0 bidirectional) ──────────────
+    # GRUG v8.0: Serialize BRIDGE_MAP bidirectionally. Each A↔B bridge appears
+    # under BOTH BRIDGE_MAP[A] and BRIDGE_MAP[B], so we deduplicate by saving
+    # each pair once (sorted minmax). We store asymmetric confidence for each
+    # direction and also write backward-compat "attachments" key for old loads.
+    bridge_list = Dict{String, Any}[]
+    shown_pairs = Set{Tuple{String,String}}()
+    lock(BRIDGE_LOCK) do
+        for (node_id, bridges) in BRIDGE_MAP
+            for br in bridges
+                pair_key = minmax(node_id, br.partner_id)
+                if pair_key in shown_pairs
+                    continue
+                end
+                push!(shown_pairs, pair_key)
+                # GRUG: Find the reverse entry for asymmetric confidence
+                reverse_conf = br.base_confidence  # fallback
+                for rbr in get(BRIDGE_MAP, br.partner_id, CascadeBridge[])
+                    if rbr.partner_id == node_id
+                        reverse_conf = rbr.base_confidence
+                        break
+                    end
+                end
+                push!(bridge_list, Dict{String, Any}(
+                    "node_a"              => node_id,
+                    "node_b"              => br.partner_id,
+                    "seam_tokens"         => br.seam_tokens,
+                    "base_confidence_ab"  => br.base_confidence,
+                    "base_confidence_ba"  => reverse_conf,
+                    "source_lobe"         => br.source_lobe,
+                    "is_crystalized"      => br.is_crystalized,
+                    "crystal_origin"      => String(br.crystal_origin)
                 ))
             end
         end
+    end
+    specimen["bridges"] = bridge_list
+    # GRUG: Backward compat — also write old "attachments" format for v7.x loads
+    attachment_list = Dict{String, Any}[]
+    for bentry in bridge_list
+        na = String(bentry["node_a"])
+        nb = String(bentry["node_b"])
+        seam = bentry["seam_tokens"]
+        pat_str = isempty(seam) ? "" : join(seam, " ")
+        # GRUG: Old format had "target_id" and "node_id" (one-way A→B)
+        push!(attachment_list, Dict{String, Any}(
+            "target_id"       => na,
+            "node_id"         => nb,
+            "pattern"         => pat_str,
+            "signal"          => Float64[],
+            "base_confidence" => Float64(bentry["base_confidence_ab"]),
+            "is_crystalized"  => Bool(bentry["is_crystalized"]),
+            "crystal_origin"  => String(bentry["crystal_origin"])
+        ))
     end
     specimen["attachments"] = attachment_list
 
@@ -6794,9 +6836,9 @@ function load_specimen_from_file!(filepath::String)::String
         empty!(LAST_VOTER_IDS)
     end
 
-    # Wipe attachments (relational fire system)
-    lock(ATTACHMENT_LOCK) do
-        empty!(ATTACHMENT_MAP)
+    # Wipe bridges (cascade bridge system)
+    lock(BRIDGE_LOCK) do
+        empty!(BRIDGE_MAP)
     end
 
     # GRUG (v7.19): Wipe chatter groups and per-node chatter cooldowns.
@@ -7284,32 +7326,76 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
 
-    # ── 4.14 ATTACHMENTS (RELATIONAL FIRE SYSTEM) ────────────────────────────
-    n_attachments = 0
-    if haskey(specimen, "attachments") && isa(specimen["attachments"], AbstractVector)
-        lock(ATTACHMENT_LOCK) do
+    # ── 4.14 BRIDGES (CASCADE BRIDGE SYSTEM — v8.0 bidirectional) ────────────────
+    n_bridges = 0
+    # GRUG v8.0: Try new "bridges" format first, fall back to old "attachments" format
+    if haskey(specimen, "bridges") && isa(specimen["bridges"], AbstractVector)
+        lock(BRIDGE_LOCK) do
+            for bentry in specimen["bridges"]
+                try
+                    na = String(bentry["node_a"])
+                    nb = String(bentry["node_b"])
+                    seam = String.(get(bentry, "seam_tokens", String[]))
+                    conf_ab = Float64(get(bentry, "base_confidence_ab", 0.3))
+                    conf_ba = Float64(get(bentry, "base_confidence_ba", 0.3))
+                    src_lobe = String(get(bentry, "source_lobe", ""))
+                    is_crys = Bool(get(bentry, "is_crystalized", false))
+                    crys_orig = Symbol(get(bentry, "crystal_origin", "none"))
+                    # GRUG: Resolve lobe provenance for both sides
+                    lobe_a = Lobe.find_lobe_for_node(na)
+                    lobe_b = Lobe.find_lobe_for_node(nb)
+                    if isempty(src_lobe)
+                        src_lobe = lobe_b !== nothing ? lobe_b : ""
+                    end
+                    # GRUG: Re-bake confidence if needed (partner may have changed strength)
+                    ref_a = get(NODE_MAP, na, nothing)
+                    ref_b = get(NODE_MAP, nb, nothing)
+                    if !isnothing(ref_a) && !isnothing(ref_b)
+                        # Re-bake both directions using current strengths
+                        if !isempty(seam)
+                            overlap = _token_overlap_similarity(join(seam, " "), ref_b.pattern)
+                            conf_ab = overlap + (ref_b.strength / STRENGTH_CAP) * 0.5
+                            overlap_ba = _token_overlap_similarity(join(seam, " "), ref_a.pattern)
+                            conf_ba = overlap_ba + (ref_a.strength / STRENGTH_CAP) * 0.5
+                        end
+                    end
+                    # GRUG: Create bidirectional entries
+                    br_ab = CascadeBridge(nb, seam, conf_ab, src_lobe, is_crys, crys_orig)
+                    br_ba = CascadeBridge(na, seam, conf_ba, lobe_a !== nothing ? lobe_a : "", is_crys, crys_orig)
+                    existing_ab = get(BRIDGE_MAP, na, CascadeBridge[])
+                    push!(existing_ab, br_ab)
+                    BRIDGE_MAP[na] = existing_ab
+                    existing_ba = get(BRIDGE_MAP, nb, CascadeBridge[])
+                    push!(existing_ba, br_ba)
+                    BRIDGE_MAP[nb] = existing_ba
+                    n_bridges += 1
+                catch e
+                    @warn "loadSpecimen: skipping bad bridge entry: $e"
+                end
+            end
+        end
+        counts["bridges"] = n_bridges
+        println("  🌉 Bridges restored ($n_bridges)")
+    elseif haskey(specimen, "attachments") && isa(specimen["attachments"], AbstractVector)
+        # GRUG: Old v7.x format — upgrade to bidirectional CascadeBridge entries
+        lock(BRIDGE_LOCK) do
             for aentry in specimen["attachments"]
                 try
                     tid  = String(aentry["target_id"])
                     nid  = String(aentry["node_id"])
-                    pat  = String(aentry["pattern"])
+                    pat  = String(get(aentry, "pattern", ""))
                     sig  = Float64.(get(aentry, "signal", Float64[]))
                     # GRUG: Re-bake signal if missing from file (backward compat)
                     if isempty(sig)
                         sig = words_to_signal(pat)
                     end
-                    # GRUG: Re-bake base_confidence if missing from old specimen (backward compat).
-                    # Old specimens didn't store JIT-baked confidence, so we re-compute it.
-                    # If the attached node still exists, use its pattern for similarity.
-                    # Otherwise, use a sensible default of 0.3 (some voice, not dominant).
+                    # GRUG: Re-bake base_confidence if missing from old specimen
                     base_conf = Float64(get(aentry, "base_confidence", -1.0))
                     if base_conf < 0.0
-                        # GRUG: Backward compat re-bake — compute JIT confidence now
                         attach_ref = get(NODE_MAP, nid, nothing)
                         if !isnothing(attach_ref) && !isempty(pat) && !startswith(pat, "SDF:")
                             base_conf = _token_overlap_similarity(pat, attach_ref.pattern) + (attach_ref.strength / STRENGTH_CAP) * 0.5
                         elseif !isnothing(attach_ref) && startswith(pat, "SDF:")
-                            # GRUG: Image attachment — use SDF signal similarity if possible
                             if !isempty(sig) && !isempty(attach_ref.signal)
                                 base_conf = _sdf_signal_similarity(sig, attach_ref.signal) + (attach_ref.strength / STRENGTH_CAP) * 0.5
                             else
@@ -7319,22 +7405,41 @@ function load_specimen_from_file!(filepath::String)::String
                             base_conf = 0.3
                         end
                     end
-                    # GRUG: Restore crystalization state (v7.35+). Backward compat:
-                    # old specimens lack is_crystalized/crystal_origin fields → defaults to false/:none
                     is_crys = Bool(get(aentry, "is_crystalized", false))
                     crys_orig = Symbol(get(aentry, "crystal_origin", "none"))
-                    att = AttachedNode(nid, pat, sig, base_conf, is_crys, crys_orig)
-                    existing = get(ATTACHMENT_MAP, tid, AttachedNode[])
-                    push!(existing, att)
-                    ATTACHMENT_MAP[tid] = existing
-                    n_attachments += 1
+                    # GRUG v8.0: Upgrade to bidirectional — split pattern into seam tokens
+                    seam = isempty(pat) ? String[] : split(pat)
+                    lobe_tid = Lobe.find_lobe_for_node(tid)
+                    lobe_nid = Lobe.find_lobe_for_node(nid)
+                    # Compute reverse confidence too
+                    ref_tid = get(NODE_MAP, tid, nothing)
+                    ref_nid = get(NODE_MAP, nid, nothing)
+                    reverse_conf = 0.3
+                    if !isnothing(ref_tid) && !isempty(pat) && !startswith(pat, "SDF:")
+                        reverse_conf = _token_overlap_similarity(pat, ref_tid.pattern) + (ref_tid.strength / STRENGTH_CAP) * 0.5
+                    elseif !isnothing(ref_tid) && startswith(pat, "SDF:")
+                        if !isempty(sig) && !isempty(ref_tid.signal)
+                            reverse_conf = _sdf_signal_similarity(sig, ref_tid.signal) + (ref_tid.strength / STRENGTH_CAP) * 0.5
+                        end
+                    end
+                    # Bidirectional entries
+                    br_fwd = CascadeBridge(nid, seam, base_conf, lobe_nid !== nothing ? lobe_nid : "", is_crys, crys_orig)
+                    br_rev = CascadeBridge(tid, seam, reverse_conf, lobe_tid !== nothing ? lobe_tid : "", is_crys, crys_orig)
+                    existing_fwd = get(BRIDGE_MAP, tid, CascadeBridge[])
+                    push!(existing_fwd, br_fwd)
+                    BRIDGE_MAP[tid] = existing_fwd
+                    existing_rev = get(BRIDGE_MAP, nid, CascadeBridge[])
+                    push!(existing_rev, br_rev)
+                    BRIDGE_MAP[nid] = existing_rev
+                    n_bridges += 1
                 catch e
-                    @warn "loadSpecimen: skipping bad attachment entry: $e"
+                    @warn "loadSpecimen: skipping bad attachment entry (v7.x upgrade): $e"
                 end
             end
         end
-        counts["attachments"] = n_attachments
-        println("  🔗 Attachments restored ($n_attachments)")
+        counts["bridges"] = n_bridges
+        println("  🌉 Bridges restored from v7.x format ($n_bridges)")
+    end
     end
 
     # ── 4.14b CHATTER GROUPS (v7.19) ────────────────────────
@@ -8562,8 +8667,8 @@ function maybe_run_idle()
                 chatter_node_cooldown_lock = CHATTER_NODE_COOLDOWN_LOCK,
                 morph_cooldown_map         = ChatterMode.MORPH_COOLDOWN_MAP,
                 morph_cooldown_lock        = ChatterMode.MORPH_COOLDOWN_LOCK,
-                attachment_map             = ATTACHMENT_MAP,
-                attachment_lock            = ATTACHMENT_LOCK,
+                bridge_map                  = BRIDGE_MAP,
+                bridge_lock                 = BRIDGE_LOCK,
                 group_map                  = GROUP_MAP,
                 group_lock                 = GROUP_LOCK,
                 node_to_group              = NODE_TO_GROUP,
@@ -8593,7 +8698,7 @@ function maybe_run_idle()
     # Nodes that fire together wire together — SLOWLY, EARNED, ORGANIC.
     try
         gov_stats = RelationalGovernance.run_relational_governance!(;
-            attach_fn        = (target_id, attach_id, pattern) -> attach_node!(target_id, attach_id, pattern),
+            attach_fn        = (target_id, attach_id, pattern) -> bridge_nodes!(target_id, attach_id; seam_tokens=split(pattern)),
             token_overlap_fn = (id_a, id_b) -> begin
                 na = lock(() -> get(NODE_MAP, id_a, nothing), NODE_LOCK)
                 nb = lock(() -> get(NODE_MAP, id_b, nothing), NODE_LOCK)
@@ -8636,8 +8741,9 @@ _assert_node_in_lobe(lobe_id::String, node_id::String, cmd::String)
 GRUG: Validate a node truly belongs to the lobe the user named. Catches
 copy-paste mistakes and cross-lobe id collisions BEFORE the engine fires.
 Throws a clean FATAL the user can read instead of letting silent state-mismatch
-percolate. Used by every node-targeted CLI command (/nodeAttach, /nodeDetach,
-/imgnodeAttach, /imgnodeDetach, /crystalize, /decrystalize) so each command is
+percolate. Used by every node-targeted CLI command (/nodeBridge, /nodeAttach,
+/nodeUnbridge, /nodeDetach, /imgnodeAttach, /imgnodeDetach, /crystalize,
+/decrystalize) so each command is
 self-documenting and addressable from a script without first running /lobes.
 """
 function _assert_node_in_lobe(lobe_id::String, node_id::String, cmd::String)
@@ -8653,6 +8759,25 @@ function _assert_node_in_lobe(lobe_id::String, node_id::String, cmd::String)
         preview_list = length(members) > 8 ? join(members[1:8], ", ") * ", ..." : join(members, ", ")
         error("!!! FATAL: $cmd: node '$node_id' is not a member of lobe '$lobe_id'. " *
               "Lobe members: [$preview_list]. !!!")
+    end
+    return true
+end
+
+"""
+    _assert_node_exists(node_id::String, cmd::String)
+
+GRUG v8.0: Validate a node exists in ANY lobe. Used by cross-lobe bridge
+commands (/crystalize, /decrystalize) where the partner node may be in a
+different lobe from the first. Throws FATAL if node not found anywhere.
+"""
+function _assert_node_exists(node_id::String, cmd::String)
+    found_lobe = Lobe.find_lobe_for_node(node_id)
+    if isnothing(found_lobe)
+        lock(NODE_LOCK) do
+            if !haskey(NODE_MAP, node_id)
+                error("!!! FATAL: $cmd: node '$node_id' does not exist on the map! !!!")
+            end
+        end
     end
     return true
 end
@@ -8777,7 +8902,7 @@ function run_cli()
 
         # GRUG: Wait for any idle process to finish before touching shared state.
         # Idle processes (mitosis, chatter, phagy, relgov) touch NODE_MAP,
-        # ATTACHMENT_MAP, and other shared structures. User input also reads
+        # BRIDGE_MAP, and other shared structures. User input also reads
         # and writes them. No interleaving. User input waits for idle.
         if _IDLE_ACTIVE[]
             println("[MAIN] ⏳  Idle process active — waiting for it to finish...")
@@ -8929,11 +9054,11 @@ function run_cli()
             # This disambiguates which lobe owns the node, makes the commands
             # script-addressable, and lets the CLI validate intent before the
             # engine fires. /nodeAttach takes pairs after the target_id.
-            m_nodeattach   = match(r"^/nodeAttach\s+(\S+)\s+(.+)"s,                       line)
-            m_nodedetach   = match(r"^/nodeDetach\s+(\S+)\s+(\S+)\s+(\S+)\s*$",           line)
+            m_nodeattach   = match(r"^/node(Bridge|Attach)\s+(\S+)\s+(.+)"s,                     line)
+            m_nodedetach   = match(r"^/node(Unbridge|Detach)\s+(\S+)\s+(\S+)\s+(\S+)\s*$",       line)
             m_imgnodeattach = match(r"^/imgnodeAttach\s+(\S+)\s+(.+)"s,                   line)
             m_imgnodedetach = match(r"^/imgnodeDetach\s+(\S+)\s+(\S+)\s+(\S+)\s*$",       line)
-            m_attachments  = match(r"^/attachments\s*$",                                 line)
+            m_attachments  = match(r"^/(attachments|bridges)\s*$",                                line)
             # GRUG: CRYSTALIZE — sticky attachments that bypass strength-biased coinflip
             m_crystalize   = match(r"^/crystalize\s+(\S+)\s+(\S+)\s+(\S+)\s*$",           line)
             m_decrystalize = match(r"^/decrystalize\s+(\S+)\s+(\S+)\s+(\S+)\s*$",         line)
@@ -9460,10 +9585,10 @@ elseif !isnothing(m_right)
             elseif !isnothing(m_nodes)
                 # GRUG: /nodes - show full node map status (strength, neighbors, graves, etc.)
                 println(get_node_status_summary())
-                # GRUG: Also show attachment map if any attachments exist
-                att_summary = get_attachment_summary()
-                if !contains(att_summary, "EMPTY")
-                    println("\n$att_summary")
+                # GRUG v8.0: Also show bridge map if any bridges exist
+                br_summary = get_bridge_summary()
+                if !contains(br_summary, "EMPTY")
+                    println("\n$br_summary")
                 end
 
             elseif !isnothing(m_status)
@@ -10571,22 +10696,23 @@ elseif !isnothing(m_right)
                 end
 
             elseif !isnothing(m_nodeattach)
-                # GRUG: /nodeAttach <lobe_id> <target_id> <attach_id1> <pattern1> [<attach_id2> <pattern2> ...]
-                # Relational fire system: bolt nodes onto a target with user-defined patterns.
-                # The leading <lobe_id> scopes both target AND every attach_id; cross-lobe
-                # attachments are rejected. This makes the command script-addressable
-                # (you no longer need to /lobes + /tableStatus to find which lobe owns a node).
-                # Parsing: lobe_id is captures[1], everything else is captures[2].
-                # Then within captures[2]: target_id is first token, remaining tokens
-                # alternate between node_id and quoted/unquoted pattern.
+                # GRUG v8.0: /nodeBridge <lobe_id> <node_a> <node_b> [seam_tokens...]
+                # (also accepts /nodeAttach for backward compat)
+                # Cascade bridge system: bridge two nodes bidirectionally with seam tokens.
+                # The leading <lobe_id> scopes node_a; node_b can be in ANY lobe (cross-lobe OK!).
+                # Seam tokens are optional — if omitted, populated at fire time from scanner's
+                # unmatched tail (match-boundary handoff).
+                # Parsing: lobe_id is captures[2] (captures[1] is Bridge|Attach), captures[3] is the rest.
                 #
                 # Supported formats:
-                #   /nodeAttach greeting target_0 node_1 "hello world" node_2 "fire pattern"
-                #   /nodeAttach greeting target_0 node_1 hello node_2 fire
+                #   /nodeBridge greeting node_0 node_1 hello world
+                #   /nodeBridge greeting node_0 node_1 "seam tokens here"
+                #   /nodeBridge greeting node_0 node_1     (no seam, dynamic at fire time)
+                #   /nodeAttach greeting node_0 node_1 hello world  (backward compat)
                 #
-                lobe_id  = String(strip(m_nodeattach.captures[1]))
-                raw_args = String(strip(m_nodeattach.captures[2]))
-                # GRUG: IMMUNE GATE — node attachments are stored structure!
+                lobe_id  = String(strip(m_nodeattach.captures[2]))
+                raw_args = String(strip(m_nodeattach.captures[3]))
+                # GRUG: IMMUNE GATE — node bridges are stored structure!
                 if !immune_gate("/nodeAttach", raw_args; is_critical=false)
                     println("⛔ /nodeAttach blocked by immune system.")
                 else
@@ -10618,54 +10744,42 @@ elseif !isnothing(m_right)
                     end
                 end
 
-                if length(tokens) < 3
-                    error("!!! FATAL: /nodeAttach needs at least: <lobe_id> <target_id> <attach_id> <pattern>. Got $(length(tokens)) token(s) after lobe_id! !!!")
+                if length(tokens) < 2
+                    error("!!! FATAL: /nodeAttach needs at least: <lobe_id> <node_a> <node_b>. Got $(length(tokens)) token(s) after lobe_id! !!!")
                 end
 
-                target_id = tokens[1]
-                # GRUG: Validate target lives in the named lobe BEFORE any engine call.
-                _assert_node_in_lobe(lobe_id, target_id, "/nodeAttach")
-                
-                # GRUG: Remaining tokens are pairs: (node_id, pattern)
-                pair_tokens = tokens[2:end]
-                if length(pair_tokens) % 2 != 0
-                    error("!!! FATAL: /nodeAttach attachment args must be pairs of <node_id> <pattern>. Got odd count ($(length(pair_tokens)))! !!!")
+                node_a = tokens[1]
+                node_b = tokens[2]
+                # GRUG v8.0: Seam tokens are optional. Everything after node_a and node_b.
+                seam_tokens = length(tokens) >= 3 ? tokens[3:end] : String[]
+
+                # GRUG: Validate node_a lives in the named lobe
+                _assert_node_in_lobe(lobe_id, node_a, "/nodeAttach")
+                # GRUG v8.0: node_b can be in ANY lobe — cross-lobe bridges work now!
+                # But we still validate it exists.
+                lock(NODE_LOCK) do
+                    if !haskey(NODE_MAP, node_b)
+                        error("!!! FATAL: /nodeAttach node_b '$node_b' does not exist on the map! !!!")
+                    end
                 end
 
-                n_pairs = length(pair_tokens) ÷ 2
-                if n_pairs > MAX_ATTACHMENTS
-                    error("!!! FATAL: /nodeAttach trying to attach $n_pairs nodes at once, but max is $MAX_ATTACHMENTS! !!!")
-                end
+                result = bridge_nodes!(node_a, node_b; seam_tokens=seam_tokens)
 
-                results = String[]
-                for i in 1:n_pairs
-                    aid = pair_tokens[(i-1)*2 + 1]
-                    pat = pair_tokens[(i-1)*2 + 2]
-                    # GRUG: Each attached node must also live in the same lobe.
-                    # Cross-lobe attachments aren't supported — bridge via /connectLobes instead.
-                    _assert_node_in_lobe(lobe_id, aid, "/nodeAttach")
-                    result = attach_node!(target_id, aid, pat)
-                    push!(results, result)
-                end
-
-                println("🔗 /nodeAttach complete:")
-                for r in results
-                    println("   → $r")
-                end
-                add_message_to_history!("System", "/nodeAttach: $(join(results, " | "))", false)
+                println("🌉 /nodeAttach (bridge) complete:")
+                println("   $result")
+                add_message_to_history!("System", "/nodeAttach: $result", false)
                 end  # GRUG: End immune_gate else block for /nodeAttach
 
             elseif !isnothing(m_nodedetach)
-                # GRUG: /nodeDetach <lobe_id> <target_id> <attach_id>
-                # Remove a specific attached node from a target. Lobe specifier
-                # validates target ownership; attach_id is verified to be in the
-                # same lobe (matches the attach-time invariant from /nodeAttach).
-                lobe_id   = String(strip(m_nodedetach.captures[1]))
-                target_id = String(strip(m_nodedetach.captures[2]))
-                attach_id = String(strip(m_nodedetach.captures[3]))
-                _assert_node_in_lobe(lobe_id, target_id, "/nodeDetach")
-                _assert_node_in_lobe(lobe_id, attach_id, "/nodeDetach")
-                result = detach_node!(target_id, attach_id)
+                # GRUG v8.0: /nodeUnbridge <lobe_id> <node_a> <node_b>
+                # (also accepts /nodeDetach for backward compat)
+                # Remove a bidirectional bridge between two nodes.
+                # Both sides of the bridge are removed.
+                lobe_id   = String(strip(m_nodedetach.captures[2]))
+                node_a = String(strip(m_nodedetach.captures[3]))
+                node_b = String(strip(m_nodedetach.captures[4]))
+                _assert_node_in_lobe(lobe_id, node_a, "/nodeDetach")
+                result = unbridge_nodes!(node_a, node_b)
                 println("🔓 $result")
                 add_message_to_history!("System", "/nodeDetach: $result", false)
 
@@ -10751,7 +10865,7 @@ elseif !isnothing(m_right)
 
             elseif !isnothing(m_imgnodedetach)
                 # GRUG: /imgnodeDetach <lobe_id> <target_id> <attach_id>
-                # Same as /nodeDetach — reuse detach_node! since AttachedNode is universal.
+                # Same as /nodeDetach — reuse unbridge_nodes! since CascadeBridge is universal.
                 lobe_id   = String(strip(m_imgnodedetach.captures[1]))
                 target_id = String(strip(m_imgnodedetach.captures[2]))
                 attach_id = String(strip(m_imgnodedetach.captures[3]))
@@ -10762,33 +10876,35 @@ elseif !isnothing(m_right)
                 add_message_to_history!("System", "/imgnodeDetach: $result", false)
 
             elseif !isnothing(m_attachments)
-                # GRUG: /attachments — show all current node attachments
-                summary = get_attachment_summary()
+                # GRUG v8.0: /attachments or /bridges — show all current node bridges (bidirectional)
+                summary = get_bridge_summary()
                 println(summary)
 
             elseif !isnothing(m_crystalize)
-                # GRUG: /crystalize <lobe_id> <target_id> <attach_id> — mark attachment as user-sticky
-                # Crystalized attachments bypass the strength-biased fire coinflip and
+                # GRUG v8.0: /crystalize <lobe_id> <node_a> <node_b> — mark bridge as user-sticky
+                # Crystalized bridges bypass the strength-biased fire coinflip and
                 # are NOT auto-revoked when strength drops. Origin = :user.
-                # Lobe specifier disambiguates the target across multiple lobes.
-                lobe_id   = String(strip(m_crystalize.captures[1]))
-                target_id = String(strip(m_crystalize.captures[2]))
-                attach_id = String(strip(m_crystalize.captures[3]))
-                _assert_node_in_lobe(lobe_id, target_id, "/crystalize")
-                _assert_node_in_lobe(lobe_id, attach_id, "/crystalize")
-                result = crystalize_attachment!(target_id, attach_id; origin=:user)
+                # Both sides of the bridge are crystalized bidirectionally.
+                # node_a must be in the named lobe; node_b can be in ANY lobe (cross-lobe OK).
+                lobe_id = String(strip(m_crystalize.captures[1]))
+                node_a  = String(strip(m_crystalize.captures[2]))
+                node_b  = String(strip(m_crystalize.captures[3]))
+                _assert_node_in_lobe(lobe_id, node_a, "/crystalize")
+                _assert_node_exists(node_b, "/crystalize")  # v8.0: cross-lobe OK
+                result = crystalize_bridge!(node_a, node_b; origin=:user)
                 println("💎 $result")
                 add_message_to_history!("System", "/crystalize: $result", false)
 
             elseif !isnothing(m_decrystalize)
-                # GRUG: /decrystalize <lobe_id> <target_id> <attach_id> — remove sticky flag
-                # Force=true clears even :user origin. Without force, only :auto is cleared.
-                lobe_id   = String(strip(m_decrystalize.captures[1]))
-                target_id = String(strip(m_decrystalize.captures[2]))
-                attach_id = String(strip(m_decrystalize.captures[3]))
-                _assert_node_in_lobe(lobe_id, target_id, "/decrystalize")
-                _assert_node_in_lobe(lobe_id, attach_id, "/decrystalize")
-                result = decrystalize_attachment!(target_id, attach_id; force=true)
+                # GRUG v8.0: /decrystalize <lobe_id> <node_a> <node_b> — remove sticky flag
+                # Force=true clears even :user origin. Both sides decrystalized bidirectionally.
+                # node_a must be in the named lobe; node_b can be in ANY lobe (cross-lobe OK).
+                lobe_id = String(strip(m_decrystalize.captures[1]))
+                node_a  = String(strip(m_decrystalize.captures[2]))
+                node_b  = String(strip(m_decrystalize.captures[3]))
+                _assert_node_in_lobe(lobe_id, node_a, "/decrystalize")
+                _assert_node_exists(node_b, "/decrystalize")  # v8.0: cross-lobe OK
+                result = decrystalize_bridge!(node_a, node_b; force=true)
                 println("🔓 $result")
                 add_message_to_history!("System", "/decrystalize: $result", false)
 
@@ -11424,7 +11540,7 @@ end
 #  11. arousal        — EyeSystem arousal state (level, decay_rate, baseline)
 #  12. id_counters    — NODE ID_COUNTER + MSG_ID_COUNTER atomic values
 #  13. brainstem      — dispatch count, propagation history
-#  14. attachments    — ATTACHMENT_MAP relational fire system
+#  14. bridges        — BRIDGE_MAP cascade bridge system (bidirectional)
 #  15. trajectory     — ActionTonePredictor ring buffer + config (Lorenz damping)
 #  16. temporal_coherence — ImageSDF TEMPORAL_COHERENCE_LEDGER timing patterns
 #  17. morph_cooldowns — ChatterMode MORPH_COOLDOWN_MAP 24h timestamps

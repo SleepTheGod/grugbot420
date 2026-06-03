@@ -1388,20 +1388,38 @@ end
 # /imgnodeAttach does the same for image nodes: SDF conversion happens at
 # attach time (JIT GPU accel), base_confidence is baked from SDF similarity.
 #
-# GRUG: Attachment ≠ Neighbor linking. Neighbors are symmetric co-activation
-# via drop tables. Attachments are ASYMMETRIC: target fires → attached MAY fire.
-# Attached nodes don't cause the target to fire. One-way dependency chain.
+# GRUG v8.0: CASCADE BRIDGE — Match-Cascade Handoff System
+# OLD: nodeattach was ASYMMETRIC one-way (target fires → attached MAY fire).
+#      Dumb middle-man connector pattern that didn't use the scanner's natural
+#      match boundary. Cross-lobe suppression was a hack. AttachedNode was
+#      direction-locked — B→A never knew A→B existed.
+# NEW: CascadeBridge is BIDIRECTIONAL. When a node fires, the scanner's
+#      unmatched tail (the match boundary cutoff) IS the handoff payload to
+#      the bridged node. The receiving lobe's scanner processes that fragment
+#      directly — no middle-man connector pattern needed. Two-way because
+#      the bridge entry exists under BOTH node IDs in BRIDGE_MAP.
+#      Cross-lobe works NATURALLY: the unmatched tail carries provenance
+#      (which lobe matched last, which node, seam verb) so the receiving
+#      lobe knows exactly where the handoff came from.
+# Crystallize preserved: crystalized bridges skip the handoff coinflip
+#      and always fire. Same :user/:auto/:none origin system.
 
-mutable struct AttachedNode
-    node_id::String          # GRUG: ID of the node being attached (must exist in NODE_MAP)
-    pattern::String          # GRUG: Connector pattern — middleman reason WHY these nodes are related
-    signal::Vector{Float64}  # GRUG: Pre-baked signal from connector pattern (for PatternScanner compat)
-    base_confidence::Float64 # GRUG: JIT-baked confidence computed at attach time, NOT at fire time!
-                             #       Formula: token_overlap(connector, attached_node.pattern) + (strength/CAP)*0.5
+mutable struct CascadeBridge
+    partner_id::String       # GRUG: ID of the bridged partner node (must exist in NODE_MAP)
+    seam_tokens::Vector{String}  # GRUG: Tokens at the match boundary — the seam where one lobe's
+                              #       scanner cut off and the handoff begins. These are the ACTUAL
+                              #       unmatched tokens from the source lobe's scan, not a fabricated
+                              #       connector pattern. Replaced the dumb middle-man.
+    base_confidence::Float64 # GRUG: JIT-baked confidence computed at bridge time.
+                             #       Formula: token_overlap_similarity(node_A.pattern, node_B.pattern)
+                             #                 + (partner.strength / STRENGTH_CAP) * 0.5
                              #       At fire time, only jitter is applied: max(0.1, base_confidence + jitter)
-    is_crystalized::Bool     # GRUG (CRYSTALIZE spec): if true, skip the strength-biased coinflip —
-                             #       this attachment ALWAYS fires when the target fires. Set by user
-                             #       via /crystalize, or auto-set when the attached node has high
+    source_lobe::String      # GRUG: Lobe ID of the node that created this bridge entry.
+                             #       For bidirectional entries, each side records the OTHER node's lobe.
+                             #       This is the provenance — the receiving lobe knows who sent the handoff.
+    is_crystalized::Bool     # GRUG (CRYSTALIZE spec): if true, skip the handoff coinflip —
+                             #       this bridge ALWAYS fires when its partner fires. Set by user
+                             #       via /crystalize, or auto-set when the partner node has high
                              #       strength AND high semantic-truth on its relational triples.
                              #       Auto-revoked if strength drops below the crystalization floor.
     crystal_origin::Symbol   # GRUG: :user (manual /crystalize), :auto (semantic-truth triggered),
@@ -1409,14 +1427,22 @@ mutable struct AttachedNode
                              #       nodes it crystalized itself — manual marks stay sticky.
 end
 
-# Backwards-compat 4-arg constructor: old attach sites get a non-crystalized
-# attachment by default. CRYSTALIZE-aware sites use the 6-arg form.
-AttachedNode(node_id::String, pattern::String, signal::Vector{Float64}, base_confidence::Float64) =
-    AttachedNode(node_id, pattern, signal, base_confidence, false, :none)
+# Backwards-compat constructor: old 4-arg attach sites still work (seam_tokens
+# defaults to empty, source_lobe defaults to ""). Full bridge creation uses 6-arg form.
+CascadeBridge(partner_id::String, seam_tokens::Vector{String}, base_confidence::Float64) =
+    CascadeBridge(partner_id, seam_tokens, base_confidence, "", false, :none)
 
-# GRUG: Map from target_node_id -> Vector of AttachedNode (max MAX_ATTACHMENTS each)
-const ATTACHMENT_MAP  = Dict{String, Vector{AttachedNode}}()
-const ATTACHMENT_LOCK = ReentrantLock()
+# GRUG v8.0: BRIDGE_MAP is BIDIRECTIONAL. When A↔B is bridged, BOTH
+# BRIDGE_MAP[A] and BRIDGE_MAP[B] get an entry. Each side's entry points
+# to the other. This makes handoff two-way: when A fires, it checks
+# BRIDGE_MAP[A] and hands off unmatched tail to B. When B fires, it
+# checks BRIDGE_MAP[B] and hands off to A. No more one-way derp.
+const BRIDGE_MAP   = Dict{String, Vector{CascadeBridge}}()
+const BRIDGE_LOCK  = ReentrantLock()
+
+# GRUG: Backward compat aliases so existing code doesn't break during migration
+const ATTACHMENT_MAP  = BRIDGE_MAP
+const ATTACHMENT_LOCK = BRIDGE_LOCK
 
 # ==============================================================================
 # CHATTER GROUPS (v7.19)
@@ -1849,8 +1875,11 @@ end
 # by scan_specimens under its own flow).
 const _LAST_FIRE_COUNTER = Ref{Union{Nothing, VoteOrchestrator.FireCounter}}(nothing)
 
-# GRUG: Hard cap on how many nodes can be bolted onto one target. User said 4.
-const MAX_ATTACHMENTS = 4
+# GRUG: Hard cap on how many bridges a node can have. User said 4.
+# Each bridge is bidirectional, so MAX_BRIDGES=4 means 4 partners per node.
+const MAX_BRIDGES = 4
+# GRUG: Backward compat alias
+const MAX_ATTACHMENTS = MAX_BRIDGES
 
 # GRUG: Small stochastic jitter applied to co-fired node confidence.
 # Biologically motivated — synaptic relay is noisy. Same neuron doesn't fire
@@ -1920,300 +1949,382 @@ const STOPWORDS = Set([
 
 
 """
-attach_node!(target_id::String, attach_id::String, pattern::String)::String
+    bridge_nodes!(node_a::String, node_b::String; seam_tokens::Vector{String}=String[])::String
 
-GRUG: Bolt a node onto a target node with a connector pattern (middleman).
-When target fires, attached node does a coinflip to decide if it fires too.
+GRUG v8.0: MATCH-CASCADE BRIDGE! Replace the dumb one-way middle-man nodeattach
+with a two-way bridge. When node A fires, the scanner's unmatched tail (the
+match boundary cutoff) is handed off to node B's lobe. Vice versa from B→A.
+No more fabricated connector pattern — the ACTUAL unmatched tokens at the seam
+become the bridge payload. Both sides know about each other (bidirectional).
 
-JIT CONFIDENCE BAKING: The connector pattern is scanned against the ATTACHED
-NODE's own pattern ONCE at attach time to compute base_confidence. This is
-stored in the AttachedNode struct so fire_attachments! never re-scans — it
-only applies stochastic jitter to the pre-baked value. The pattern is still
-stored for AIML reference and generative context downstream.
+JIT CONFIDENCE BAKING: Same as old attach_node! but now symmetric:
+  base_confidence_AB = token_overlap(node_A.pattern, node_B.pattern) + (B.strength/CAP)*0.5
+  base_confidence_BA = token_overlap(node_A.pattern, node_B.pattern) + (A.strength/CAP)*0.5
+Each side's base_confidence includes the PARTNER's strength bonus, so the
+stronger your partner, the more likely the handoff succeeds. Symmetric overlap
+but asymmetric strength bonus = asymmetric confidence (correct! the node with
+more provenance should fire more readily).
 
-  base_confidence = token_overlap(connector, attached_node.pattern)
-                  + (attached_node.strength / STRENGTH_CAP) * 0.5
+SEAM TOKENS: The tokens at the match boundary where the source lobe's scanner
+cut off. These become the handoff payload — the receiving lobe's scanner
+processes these tokens directly. If empty at bridge time, they'll be populated
+at fire time from the actual scanner match boundary. For manual /nodeBridge
+commands, seam_tokens come from the user's pattern argument (backward compat).
 
 Validation (error-first, NO silent failures):
-  - target_id must exist in NODE_MAP and not be grave
-  - attach_id must exist in NODE_MAP and not be grave
-  - target_id ≠ attach_id (no self-attachment, that's a mirror not a relay)
-  - target cannot already have MAX_ATTACHMENTS (4) attached nodes
-  - attach_id cannot already be attached to this target (no duplicate bolts)
-  - pattern must not be empty
-  
+  - Both nodes must exist in NODE_MAP and not be grave
+  - node_a ≠ node_b (no self-bridging, that's a loop not a bridge)
+  - Neither node can already have MAX_BRIDGES (4) bridges
+  - node_a and node_b cannot already be bridged (no duplicate bridges)
+
 Returns confirmation string on success.
 """
-function attach_node!(target_id::String, attach_id::String, pattern::String)::String
-    if strip(target_id) == ""
-        error("!!! FATAL: attach_node! got empty target_id! Grug needs a real target! !!!")
+function bridge_nodes!(node_a::String, node_b::String;
+                       seam_tokens::Vector{String}=String[])::String
+    if strip(node_a) == ""
+        error("!!! FATAL: bridge_nodes! got empty node_a! Grug needs a real node! !!!")
     end
-    if strip(attach_id) == ""
-        error("!!! FATAL: attach_node! got empty attach_id! Grug needs a real node to attach! !!!")
+    if strip(node_b) == ""
+        error("!!! FATAL: bridge_nodes! got empty node_b! Grug needs a real partner! !!!")
     end
-    if strip(pattern) == ""
-        error("!!! FATAL: attach_node! got empty pattern for node '$attach_id'! Every attachment needs a pattern! !!!")
-    end
-    if target_id == attach_id
-        error("!!! FATAL: attach_node! target '$target_id' cannot attach to itself! That's a mirror, not a relay! !!!")
+    if node_a == node_b
+        error("!!! FATAL: bridge_nodes! '$node_a' cannot bridge to itself! That's a loop, not a bridge! !!!")
     end
 
     # GRUG: Validate both nodes exist and are alive
+    lobe_a = ""
+    lobe_b = ""
     lock(NODE_LOCK) do
-        if !haskey(NODE_MAP, target_id)
-            error("!!! FATAL: attach_node! target node '$target_id' does not exist on the map! !!!")
+        if !haskey(NODE_MAP, node_a)
+            error("!!! FATAL: bridge_nodes! node '$node_a' does not exist on the map! !!!")
         end
-        if !haskey(NODE_MAP, attach_id)
-            error("!!! FATAL: attach_node! attach node '$attach_id' does not exist on the map! !!!")
+        if !haskey(NODE_MAP, node_b)
+            error("!!! FATAL: bridge_nodes! node '$node_b' does not exist on the map! !!!")
         end
-        target_node = NODE_MAP[target_id]
-        attach_node_ref = NODE_MAP[attach_id]
-        if target_node.is_grave
-            error("!!! FATAL: attach_node! target node '$target_id' is GRAVE [$(target_node.grave_reason)]! Cannot attach to dead nodes! !!!")
+        na = NODE_MAP[node_a]
+        nb = NODE_MAP[node_b]
+        if na.is_grave
+            error("!!! FATAL: bridge_nodes! node '$node_a' is GRAVE [$(na.grave_reason)]! Cannot bridge dead nodes! !!!")
         end
-        if attach_node_ref.is_grave
-            error("!!! FATAL: attach_node! attach node '$attach_id' is GRAVE [$(attach_node_ref.grave_reason)]! Cannot attach dead nodes! !!!")
+        if nb.is_grave
+            error("!!! FATAL: bridge_nodes! node '$node_b' is GRAVE [$(nb.grave_reason)]! Cannot bridge dead nodes! !!!")
         end
     end
 
-    # GRUG: Pre-bake the signal from the user-defined pattern
-    attach_signal = words_to_signal(pattern)
+    # GRUG: Resolve lobe provenance for both sides of the bridge
+    lobe_a = something(Lobe.find_lobe_for_node(node_a), "")
+    lobe_b = something(Lobe.find_lobe_for_node(node_b), "")
 
-    # GRUG: JIT CONFIDENCE BAKING! Compute base_confidence NOW at attach time,
-    # not every fire cycle. This is the core JIT optimization:
-    #   base_confidence = token_overlap(connector_pattern, attached_node.pattern)
-    #                   + (attached_node.strength / STRENGTH_CAP) * 0.5
-    # At fire time, only jitter is applied: max(0.1, base_confidence + jitter).
-    # The connector pattern is still stored for AIML reference — it's just that
-    # the expensive scan happens once here instead of every relay activation.
-    jit_base_confidence = lock(NODE_LOCK) do
-        attach_node_ref = NODE_MAP[attach_id]
-        base_conf = _token_overlap_similarity(pattern, attach_node_ref.pattern)
-        strength_bonus = attach_node_ref.strength / STRENGTH_CAP
-        return base_conf + (strength_bonus * 0.5)
+    # GRUG: JIT CONFIDENCE BAKING — symmetric overlap, asymmetric strength bonus.
+    # Each side's base_confidence includes the PARTNER's strength so a strong
+    # partner = easier handoff. This is the match-cascade analog of the old
+    # connector-pattern JIT baking, but without the dumb middle-man.
+    overlap = lock(NODE_LOCK) do
+        na = NODE_MAP[node_a]
+        nb = NODE_MAP[node_b]
+        return _token_overlap_similarity(na.pattern, nb.pattern)
+    end
+    jit_conf_a_to_b = lock(NODE_LOCK) do
+        nb = NODE_MAP[node_b]
+        return overlap + (nb.strength / STRENGTH_CAP) * 0.5
+    end
+    jit_conf_b_to_a = lock(NODE_LOCK) do
+        na = NODE_MAP[node_a]
+        return overlap + (na.strength / STRENGTH_CAP) * 0.5
     end
 
-    lock(ATTACHMENT_LOCK) do
-        existing = get(ATTACHMENT_MAP, target_id, AttachedNode[])
-
-        # GRUG: Check max attachments cap
-        if length(existing) >= MAX_ATTACHMENTS
-            error("!!! FATAL: attach_node! target '$target_id' already has $(length(existing)) attachments (max $MAX_ATTACHMENTS)! Detach one first! !!!")
+    lock(BRIDGE_LOCK) do
+        # GRUG: Check bridge caps on BOTH sides (bidirectional = both must have room)
+        existing_a = get(BRIDGE_MAP, node_a, CascadeBridge[])
+        if length(existing_a) >= MAX_BRIDGES
+            error("!!! FATAL: bridge_nodes! node '$node_a' already has $(length(existing_a)) bridges (max $MAX_BRIDGES)! Unbridge one first! !!!")
+        end
+        existing_b = get(BRIDGE_MAP, node_b, CascadeBridge[])
+        if length(existing_b) >= MAX_BRIDGES
+            error("!!! FATAL: bridge_nodes! node '$node_b' already has $(length(existing_b)) bridges (max $MAX_BRIDGES)! Unbridge one first! !!!")
         end
 
-        # GRUG: Check for duplicate attachment (same node already bolted on)
-        for att in existing
-            if att.node_id == attach_id
-                error("!!! FATAL: attach_node! node '$attach_id' is already attached to target '$target_id'! No duplicate bolts! !!!")
+        # GRUG: Check for duplicate bridge (either direction)
+        for br in existing_a
+            if br.partner_id == node_b
+                error("!!! FATAL: bridge_nodes! '$node_a' is already bridged to '$node_b'! No duplicate bridges! !!!")
+            end
+        end
+        for br in existing_b
+            if br.partner_id == node_a
+                error("!!! FATAL: bridge_nodes! '$node_b' is already bridged to '$node_a'! Bidirectional bridge already exists! !!!")
             end
         end
 
-        # GRUG: All checks passed. Bolt it on with JIT-baked confidence!
-        new_attachment = AttachedNode(attach_id, pattern, attach_signal, jit_base_confidence)
-        push!(existing, new_attachment)
-        ATTACHMENT_MAP[target_id] = existing
+        # GRUG: All checks passed. Create bidirectional bridge entries!
+        # A→B entry: partner is B, source_lobe is B's lobe (provenance = "came from B's lobe")
+        # B→A entry: partner is A, source_lobe is A's lobe (provenance = "came from A's lobe")
+        bridge_a_to_b = CascadeBridge(node_b, seam_tokens, jit_conf_a_to_b, lobe_b, false, :none)
+        bridge_b_to_a = CascadeBridge(node_a, seam_tokens, jit_conf_b_to_a, lobe_a, false, :none)
+
+        push!(existing_a, bridge_a_to_b)
+        BRIDGE_MAP[node_a] = existing_a
+        push!(existing_b, bridge_b_to_a)
+        BRIDGE_MAP[node_b] = existing_b
     end
 
-    n_attached = lock(() -> length(get(ATTACHMENT_MAP, target_id, AttachedNode[])), ATTACHMENT_LOCK)
-    println("[ENGINE] 🔗  Node '$attach_id' attached to target '$target_id' with pattern \"$(first(pattern, 40))\" (base_conf=$(round(jit_base_confidence, digits=3)), $n_attached/$MAX_ATTACHMENTS slots used).")
-    return "Attached '$attach_id' to '$target_id' with pattern \"$(first(pattern, 40))\" (base_conf=$(round(jit_base_confidence, digits=3)), $n_attached/$MAX_ATTACHMENTS)"
+    n_bridged_a = lock(() -> length(get(BRIDGE_MAP, node_a, CascadeBridge[])), BRIDGE_LOCK)
+    n_bridged_b = lock(() -> length(get(BRIDGE_MAP, node_b, CascadeBridge[])), BRIDGE_LOCK)
+    cross_lobe_tag = lobe_a != lobe_b ? " [CROSS-LOBE: $lobe_a ↔ $lobe_b]" : ""
+    seam_preview = isempty(seam_tokens) ? "(seam tokens populated at fire time)" : "\"$(join(seam_tokens, " "))\""
+    println("[ENGINE] 🌉  Bridge: '$node_a' ↔ '$node_b'$cross_lobe_tag | seam=$seam_preview | conf_A→B=$(round(jit_conf_a_to_b, digits=3)), conf_B→A=$(round(jit_conf_b_to_a, digits=3)) | A: $n_bridged_a/$MAX_BRIDGES, B: $n_bridged_b/$MAX_BRIDGES")
+    return "Bridged '$node_a' ↔ '$node_b'$cross_lobe_tag | seam=$seam_preview | conf_A→B=$(round(jit_conf_a_to_b, digits=3)), B→A=$(round(jit_conf_b_to_a, digits=3)) | A: $n_bridged_a/$MAX_BRIDGES, B: $n_bridged_b/$MAX_BRIDGES"
+end
+
+# GRUG: Backward-compat wrapper — old /nodeAttach calls still work.
+# Converts the old (target_id, attach_id, pattern) signature into the new
+# bidirectional bridge. The pattern becomes seam_tokens (split on whitespace).
+function attach_node!(target_id::String, attach_id::String, pattern::String)::String
+    seam = isempty(strip(pattern)) ? String[] : split(strip(pattern))
+    return bridge_nodes!(target_id, attach_id; seam_tokens=seam)
 end
 
 """
-detach_node!(target_id::String, attach_id::String)::String
+    unbridge_nodes!(node_a::String, node_b::String)::String
 
-GRUG: Remove a specific attached node from a target. Unbolt one relay.
-Returns confirmation string. Errors if target or attachment not found.
+GRUG v8.0: Remove a bidirectional bridge between two nodes. Both sides of
+the bridge entry are removed — BRIDGE_MAP[node_a] loses the B entry AND
+BRIDGE_MAP[node_b] loses the A entry. No half-bridges allowed.
+
+Returns confirmation string. Errors if bridge doesn't exist.
 """
+function unbridge_nodes!(node_a::String, node_b::String)::String
+    if strip(node_a) == ""
+        error("!!! FATAL: unbridge_nodes! got empty node_a! !!!")
+    end
+    if strip(node_b) == ""
+        error("!!! FATAL: unbridge_nodes! got empty node_b! !!!")
+    end
+
+    lock(BRIDGE_LOCK) do
+        # GRUG: Remove node_b from node_a's bridge list
+        found_a = false
+        if haskey(BRIDGE_MAP, node_a)
+            existing_a = BRIDGE_MAP[node_a]
+            idx_a = findfirst(br -> br.partner_id == node_b, existing_a)
+            if !isnothing(idx_a)
+                deleteat!(existing_a, idx_a)
+                found_a = true
+                if isempty(existing_a)
+                    delete!(BRIDGE_MAP, node_a)
+                end
+            end
+        end
+
+        # GRUG: Remove node_a from node_b's bridge list (bidirectional!)
+        found_b = false
+        if haskey(BRIDGE_MAP, node_b)
+            existing_b = BRIDGE_MAP[node_b]
+            idx_b = findfirst(br -> br.partner_id == node_a, existing_b)
+            if !isnothing(idx_b)
+                deleteat!(existing_b, idx_b)
+                found_b = true
+                if isempty(existing_b)
+                    delete!(BRIDGE_MAP, node_b)
+                end
+            end
+        end
+
+        if !found_a && !found_b
+            error("!!! FATAL: unbridge_nodes! no bridge exists between '$node_a' and '$node_b'! !!!")
+        end
+    end
+
+    println("[ENGINE] 🌉💨  Bridge removed: '$node_a' ↔ '$node_b'.")
+    return "Unbridged '$node_a' ↔ '$node_b'"
+end
+
+# GRUG: Backward-compat wrapper — old /nodeDetach still works
 function detach_node!(target_id::String, attach_id::String)::String
-    if strip(target_id) == ""
-        error("!!! FATAL: detach_node! got empty target_id! !!!")
-    end
-    if strip(attach_id) == ""
-        error("!!! FATAL: detach_node! got empty attach_id! !!!")
-    end
-
-    lock(ATTACHMENT_LOCK) do
-        if !haskey(ATTACHMENT_MAP, target_id)
-            error("!!! FATAL: detach_node! target '$target_id' has no attachments! Nothing to detach! !!!")
-        end
-        existing = ATTACHMENT_MAP[target_id]
-        idx = findfirst(a -> a.node_id == attach_id, existing)
-        if isnothing(idx)
-            error("!!! FATAL: detach_node! node '$attach_id' is not attached to target '$target_id'! !!!")
-        end
-        deleteat!(existing, idx)
-        if isempty(existing)
-            delete!(ATTACHMENT_MAP, target_id)
-        end
-    end
-
-    println("[ENGINE] 🔓  Node '$attach_id' detached from target '$target_id'.")
-    return "Detached '$attach_id' from '$target_id'"
+    return unbridge_nodes!(target_id, attach_id)
 end
 
 """
-fire_attachments!(target_id::String, active_count::Int, active_cap::Int)::Vector{Tuple{String, Float64, String}}
+    fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
+                  unmatched_tail::Vector{String}=String[])::Vector{Tuple{String, Float64, String}}
 
-GRUG: RELATIONAL FIRE! When a target node fires, check its attachments.
-Each attached node does a strength-biased coinflip. Winners fire and return
-their (node_id, confidence, connector_pattern) for voting. Losers are skipped.
+GRUG v8.0: MATCH-CASCADE HANDOFF! Replaces the old dumb fire_attachments!.
+When a node fires, its bridge partners get the unmatched tail of the input —
+the tokens the scanner DIDN'T match. This is the match-boundary cutoff, and
+it IS the natural cross-lobe bridge. No more fabricated connector pattern
+middle-man. The receiving lobe's scanner processes these tokens directly.
+
+Bidirectional: When A fires and checks BRIDGE_MAP[A], it finds B. When B fires
+and checks BRIDGE_MAP[B], it finds A. Both directions work. No more one-way derp.
+
+CRYSTALIZE: Crystalized bridges skip the coinflip and always fire. Same
+:user/:auto/:none system as before. The auto-crystallizer still works.
+
+JIT CONFIDENCE: base_confidence was baked at bridge time using symmetric
+pattern overlap + partner strength bonus. At fire time, only stochastic
+jitter is applied: max(0.1, base_confidence + randn() * RELAY_CONF_JITTER_SIGMA)
+Same as before but without the dumb connector pattern.
+
+MATCH-BOUNDARY HANDOFF: The unmatched_tail parameter carries the tokens that
+the source lobe's scanner couldn't match. These are the seam tokens — the
+bridge payload. When the partner node is in a different lobe, this tail gets
+handed to that lobe's scanner for processing. Same-lobe bridges also benefit
+because the tail carries context the primary scan missed.
 
 active_count = how many nodes have already fired this scan cycle
 active_cap   = the biological attention bottleneck limit for this cycle
 
-JIT CONFIDENCE BAKING: The expensive token_overlap scan between the connector
-pattern and the attached node's own pattern happens ONCE at attach time (in
-attach_node!), NOT every fire cycle. The pre-baked base_confidence is stored
-in the AttachedNode struct. At fire time, only stochastic jitter is applied:
-  confidence = max(0.1, att.base_confidence + randn() * RELAY_CONF_JITTER_SIGMA)
-  Minimum confidence floor of 0.1 so attached nodes always have SOME voice.
-  Jitter is small (sigma=0.05) — nudges but never dominates.
-
-The connector pattern is stored for AIML reference and returned so it can
-surface downstream as generative context — it tells the pipeline WHY these
-nodes were co-activated.
-
-Returns: Vector of (node_id, confidence, connector_pattern) triples.
+Returns: Vector of (partner_id, confidence, seam_text) triples.
+         seam_text is the join of seam_tokens for generative context.
 """
-function fire_attachments!(target_id::String, active_count::Int, active_cap::Int)::Vector{Tuple{String, Float64, String}}
+function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
+                        unmatched_tail::Vector{String}=String[])::Vector{Tuple{String, Float64, String}}
     fired = Tuple{String, Float64, String}[]
 
-    attachments = lock(() -> get(ATTACHMENT_MAP, target_id, AttachedNode[]), ATTACHMENT_LOCK)
-    if isempty(attachments)
+    bridges = lock(() -> get(BRIDGE_MAP, source_id, CascadeBridge[]), BRIDGE_LOCK)
+    if isempty(bridges)
         return fired
     end
 
     lock(NODE_LOCK) do
-        # GRUG: Verify target still exists. Non-fatal if gone (vanished between scan and fire).
-        target_node = get(NODE_MAP, target_id, nothing)
-        if isnothing(target_node)
-            @warn "[ENGINE] ⚠ fire_attachments!: target '$target_id' vanished from NODE_MAP."
+        # GRUG: Verify source still exists. Non-fatal if gone.
+        source_node = get(NODE_MAP, source_id, nothing)
+        if isnothing(source_node)
+            @warn "[ENGINE] ⚠ fire_cascades!: source '$source_id' vanished from NODE_MAP."
             return
         end
 
+        source_lobe = something(Lobe.find_lobe_for_node(source_id), "")
         current_active = active_count
 
-        for att in attachments
-            # GRUG: ACTIVE CAP GATE! If we're at the biological attention limit, stop firing.
+        for br in bridges
+            # GRUG: ACTIVE CAP GATE! Biological attention limit.
             if current_active >= active_cap
-                println("[ENGINE] 🧠  Attachment relay halted for '$target_id' — active cap ($active_cap) reached.")
+                println("[ENGINE] 🧠  Cascade handoff halted for '$source_id' — active cap ($active_cap) reached.")
                 break
             end
 
-            # GRUG: Check attached node still exists and is alive
-            attach_node_ref = get(NODE_MAP, att.node_id, nothing)
-            if isnothing(attach_node_ref)
-                # GRUG: Attached node was deleted/graved. Stale attachment. Skip.
+            # GRUG: Check partner node still exists and is alive
+            partner_ref = get(NODE_MAP, br.partner_id, nothing)
+            if isnothing(partner_ref)
+                # Partner was deleted/graved. Stale bridge. Skip.
                 continue
             end
-            if attach_node_ref.is_grave
-                # GRUG: Dead nodes don't fire. Skip.
+            if partner_ref.is_grave
+                # Dead nodes don't fire. Skip.
                 continue
             end
 
-            # GRUG v7.25 LOBE-SCOPED ATTACHMENTS! Relays are LOCAL, not global.
-            # When a node fires, its attachments only fire if they live in the
-            # SAME lobe. Cross-lobe attachments are suppressed — they cause
-            # decoherence where e.g. a grammar node wins a math question via
-            # n1↔n6 crystalized relay. Cross-lobe signal must go through PASS 2
-            # cascade (which has its own token-overlap gate + 60% discount),
-            # NOT through the attachment relay which carries full confidence.
-            target_lobe = Lobe.find_lobe_for_node(target_id)
-            attach_lobe = Lobe.find_lobe_for_node(att.node_id)
-            if !isnothing(target_lobe) && !isnothing(attach_lobe) && target_lobe != attach_lobe
-                println("[ENGINE] 🧠  Attachment relay suppressed: '$(att.node_id)' (lobe=$attach_lobe) is cross-lobe from target '$target_id' (lobe=$target_lobe). Use cascade instead.")
-                continue
-            end
+            # GRUG v8.0: NO MORE CROSS-LOBE SUPPRESSION! The old system had a
+            # hack that suppressed cross-lobe attachments and redirected to cascade
+            # PASS 2. That's gone now. The match-cascade handoff IS the cross-lobe
+            # bridge. When source is in lobe A and partner is in lobe B, the
+            # unmatched tail carries provenance (which lobe, which node, seam tokens)
+            # so lobe B's scanner knows exactly where the handoff came from.
+            # This is the whole point of the rework — cross-lobe works NATURALLY.
+            partner_lobe = something(Lobe.find_lobe_for_node(br.partner_id), "")
+            is_cross_lobe = source_lobe != "" && partner_lobe != "" && source_lobe != partner_lobe
 
             # GRUG: STRENGTH-BIASED COINFLIP! Same formula as scan coinflip.
-            # Strong attached nodes fire more often. Weak ones still have a chance.
-            # CRYSTALIZE: crystalized attachments SKIP the coinflip — they always
-            # fire when the target fires. This is the user-spec'd hard-fire path.
-            if !att.is_crystalized && !strength_biased_scan_coinflip(attach_node_ref)
-                # GRUG: Lost the coinflip. This attached node stays dormant this round.
+            # Strong partners fire more often. Weak ones still have a chance.
+            # CRYSTALIZE: crystalized bridges SKIP the coinflip — always fire.
+            if !br.is_crystalized && !strength_biased_scan_coinflip(partner_ref)
+                # Lost the coinflip. Partner stays dormant this round.
                 continue
             end
 
-            # GRUG: JIT CONFIDENCE — pre-baked at attach time, just apply jitter now!
-            # The expensive token_overlap scan happened once in attach_node! (JIT baking).
-            # At fire time we only add stochastic synaptic jitter (sigma=0.05).
-            # Floor of 0.1 so attached nodes always have SOME voice.
-            if isempty(att.pattern)
-                error("!!! FATAL: fire_attachments! found empty connector pattern for '$(att.node_id)' on target '$target_id'! Every attachment MUST have a pattern! !!!")
-            end
-            # GRUG: Add small stochastic jitter (sigma=RELAY_CONF_JITTER_SIGMA).
-            # Synaptic relay is biologically noisy — same node shouldn't fire with
-            # identical confidence every cycle. Nudges vote pool diversity.
-            #
-            # GRUG v7.21 NONJITTER HONOR: if the attached node carries the
-            # NONJITTER tag, suppress the synaptic relay jitter so its voted
-            # confidence is exactly att.base_confidence (floored at 0.1). This
-            # is the system-wide promise of the tag: wherever a node-scoped
-            # jitter happens, a NONJITTER-tagged node skips it.
-            #
-            # GRUG v7.20 VOTE-LEVEL OVERRIDE: even on a NONJITTER node, if the
-            # base confidence carried by the attachment is below
-            # JITTER_CONFIDENCE_FLOOR, the relay still jitters. "Solid rock,
-            # weak signal → still nudge it; we don't ossify guesses." This
-            # uses the same single-source-of-truth helper jitter_allowed_for
-            # used by the scan-side override.
-            jitter = jitter_allowed_for(attach_node_ref, att.base_confidence) ?
+            # GRUG: JIT CONFIDENCE — pre-baked at bridge time, just apply jitter now!
+            # Same as old fire_attachments! but using CascadeBridge.base_confidence.
+            # Floor of 0.1 so bridged nodes always have SOME voice.
+            # NONJITTER honor and VOTE-LEVEL OVERRIDE still apply — same single-source-of-truth.
+            jitter = jitter_allowed_for(partner_ref, br.base_confidence) ?
                      randn() * RELAY_CONF_JITTER_SIGMA :
                      0.0
-            confidence = max(0.1, att.base_confidence + jitter)
+            confidence = max(0.1, br.base_confidence + jitter)
 
-            # GRUG: Return the connector pattern so generative knows WHY this relay fired.
-            push!(fired, (att.node_id, confidence, att.pattern))
+            # GRUG: MATCH-BOUNDARY HANDOFF! The seam tokens are the bridge payload.
+            # At fire time, if we have an unmatched_tail from the scanner, those
+            # tokens are the seam. If the bridge already has seam_tokens from
+            # bridge creation time, those are used instead (backward compat).
+            # For generative context, we return the seam as a text string.
+            actual_seam = isempty(unmatched_tail) ? br.seam_tokens : unmatched_tail
+            seam_text = join(actual_seam, " ")
+
+            # GRUG: For cross-lobe bridges, log the handoff with provenance.
+            # This is the key diagnostic — you can see exactly which lobe sent
+            # what to which lobe through which seam.
+            if is_cross_lobe
+                println("[ENGINE] 🌉  Cross-lobe cascade: '$source_id' ($source_lobe) → '$(br.partner_id)' ($partner_lobe) | seam=\"$seam_text\" | conf=$(round(confidence, digits=3))")
+            end
+
+            push!(fired, (br.partner_id, confidence, seam_text))
             current_active += 1
 
-            # GRUG: Bump strength on the attached node (it got used!)
-            bump_strength!(attach_node_ref)
+            # GRUG: Bump strength on the partner node (it got used!)
+            bump_strength!(partner_ref)
 
-            println("[ENGINE] ⚡  Attachment relay: '$(att.node_id)' fired via target '$target_id' (conf=$(round(confidence, digits=3)), connector=\"$(first(att.pattern, 30))\")")
+            println("[ENGINE] ⚡  Cascade handoff: '$(br.partner_id)' fired via bridge from '$source_id' (conf=$(round(confidence, digits=3)), seam=\"$(first(seam_text, 40))\")")
         end
     end
 
     return fired
 end
 
-"""
-get_attachment_summary()::String
+# GRUG: Backward-compat wrapper — old fire_attachments! calls still work.
+# Without unmatched_tail, uses the bridge's stored seam_tokens.
+function fire_attachments!(target_id::String, active_count::Int, active_cap::Int)::Vector{Tuple{String, Float64, String}}
+    return fire_cascades!(target_id, active_count, active_cap)
+end
 
-GRUG: Return human-readable summary of all node attachments for /nodes or /status.
 """
-function get_attachment_summary()::String
+    get_bridge_summary()::String
+
+GRUG v8.0: Return human-readable summary of all node bridges for /nodes or /status.
+Shows bidirectional bridges with provenance, seam tokens, and crystalize status.
+"""
+function get_bridge_summary()::String
     lines = String[]
-    lock(ATTACHMENT_LOCK) do
-        if isempty(ATTACHMENT_MAP)
-            push!(lines, "[ATTACHMENT MAP EMPTY]")
+    lock(BRIDGE_LOCK) do
+        if isempty(BRIDGE_MAP)
+            push!(lines, "[BRIDGE MAP EMPTY]")
             return
         end
-        push!(lines, "=== ATTACHMENT MAP ($(length(ATTACHMENT_MAP)) targets with attachments) ===")
-        for (target_id, attachments) in sort(collect(ATTACHMENT_MAP), by=x->x[1])
-            push!(lines, "  🎯 $target_id ($(length(attachments))/$MAX_ATTACHMENTS attached):")
-            for att in attachments
-                node_status = lock(() -> begin
-                    n = get(NODE_MAP, att.node_id, nothing)
+        push!(lines, "=== BRIDGE MAP ($(length(BRIDGE_MAP)) nodes with bridges) ===")
+        # GRUG: Deduplicate — each bridge A↔B appears under both A and B.
+        # Show it once under A (sorted by node ID). Mark B's entry as "see A".
+        shown_pairs = Set{Tuple{String,String}}()
+        for (node_id, bridges) in sort(collect(BRIDGE_MAP), by=x->x[1])
+            push!(lines, "  🌉 $node_id ($(length(bridges))/$MAX_BRIDGES bridges):")
+            for br in bridges
+                partner_status = lock(() -> begin
+                    n = get(NODE_MAP, br.partner_id, nothing)
                     isnothing(n) ? "[MISSING]" : (n.is_grave ? "[GRAVE]" : "[ALIVE str=$(round(n.strength, digits=1))]")
                 end, NODE_LOCK)
-                crystal_tag = att.is_crystalized ? " 💎[CRYSTAL:$(att.crystal_origin)]" : ""
-                push!(lines, "      🔗 $(att.node_id) $node_status$crystal_tag | base_conf=$(round(att.base_confidence, digits=3)) | connector=\"$(first(att.pattern, 35))\"")
+                crystal_tag = br.is_crystalized ? " 💎[CRYSTAL:$(br.crystal_origin)]" : ""
+                cross_tag = br.source_lobe != "" ? " [from_lobe=$(br.source_lobe)]" : ""
+                seam_preview = isempty(br.seam_tokens) ? "(dynamic)" : "\"$(join(br.seam_tokens[1:min(5, length(br.seam_tokens))], " "))$(length(br.seam_tokens) > 5 ? "..." : "")\""
+                push!(lines, "      ↔ $(br.partner_id) $partner_status$crystal_tag$cross_tag | base_conf=$(round(br.base_confidence, digits=3)) | seam=$seam_preview")
             end
         end
     end
     return join(lines, "\n")
 end
 
-"""
-get_attachments_for_target(target_id::String)::Vector{AttachedNode}
+# GRUG: Backward compat alias
+get_attachment_summary() = get_bridge_summary()
 
-GRUG: Get the list of attachments for a specific target node.
-Returns empty vector if no attachments exist.
 """
-function get_attachments_for_target(target_id::String)::Vector{AttachedNode}
-    return lock(() -> get(ATTACHMENT_MAP, target_id, AttachedNode[]), ATTACHMENT_LOCK)
+    get_bridges_for_node(node_id::String)::Vector{CascadeBridge}
+
+GRUG v8.0: Get the list of bridges for a specific node.
+Returns empty vector if no bridges exist.
+"""
+function get_bridges_for_node(node_id::String)::Vector{CascadeBridge}
+    return lock(() -> get(BRIDGE_MAP, node_id, CascadeBridge[]), BRIDGE_LOCK)
 end
+
+# GRUG: Backward compat alias
+get_attachments_for_target(target_id::String) = get_bridges_for_node(target_id)
 
 # ==============================================================================
 # CRYSTALIZE — manual + auto crystalization of attached nodes
@@ -2234,35 +2345,115 @@ const CRYSTAL_AUTO_SEMANTIC_FLOOR  = 0.7   # mean relational-truth score >= this
 const CRYSTAL_AUTO_REVOKE_FLOOR    = 3.0   # auto-crystal revoked if strength drops below this
 
 """
-    crystalize_attachment!(target_id, attach_id; origin=:user) -> String
+    crystalize_bridge!(node_a::String, node_b::String; origin::Symbol=:user)::String
 
-GRUG: Mark the attachment from `target_id`→`attach_id` as crystalized so it
-fires unconditionally on target activation. Returns a status string. Errors
-if no such attachment exists.
+GRUG v8.0: Mark the bridge between node_a and node_b as crystalized so it
+fires unconditionally on partner activation. Crystallizes BOTH sides of the
+bidirectional bridge (both A→B and B→A entries). Returns a status string.
+Errors if no such bridge exists.
 
 `origin` should be `:user` for manual marks (sticky) or `:auto` for
 auto-crystallizer marks (revocable when strength drops).
 """
+function crystalize_bridge!(node_a::String, node_b::String;
+                            origin::Symbol = :user)::String
+    if origin ∉ (:user, :auto)
+        error("!!! FATAL: crystalize_bridge! origin must be :user or :auto, got :$origin !!!")
+    end
+    found_a = false
+    found_b = false
+    msg = ""
+    lock(BRIDGE_LOCK) do
+        # GRUG: Crystalize A→B entry
+        bridges_a = get(BRIDGE_MAP, node_a, CascadeBridge[])
+        for br in bridges_a
+            if br.partner_id == node_b
+                if br.is_crystalized && br.crystal_origin == origin
+                    msg = "Bridge $node_a→$node_b already crystalized (origin=:$(origin))."
+                else
+                    br.is_crystalized = true
+                    br.crystal_origin = origin
+                    msg = "💎 Bridge $node_a↔$node_b CRYSTALIZED (origin=:$(origin)). Always fires."
+                end
+                found_a = true
+                break
+            end
+        end
+
+        # GRUG: Crystalize B→A entry (bidirectional!)
+        bridges_b = get(BRIDGE_MAP, node_b, CascadeBridge[])
+        for br in bridges_b
+            if br.partner_id == node_a
+                if br.is_crystalized && br.crystal_origin != origin
+                    # Already crystalized from different origin — upgrade if :user overrides :auto
+                    if origin == :user
+                        br.is_crystalized = true
+                        br.crystal_origin = origin
+                    end
+                else
+                    br.is_crystalized = true
+                    br.crystal_origin = origin
+                end
+                found_b = true
+                break
+            end
+        end
+    end
+    if !found_a && !found_b
+        error("!!! FATAL: crystalize_bridge! found no bridge between '$node_a' and '$node_b' !!!")
+    end
+    return msg
+end
+
+# GRUG: Backward compat wrapper — old crystalize_attachment! calls still work
 function crystalize_attachment!(target_id::String, attach_id::String;
                                 origin::Symbol = :user)::String
-    if origin ∉ (:user, :auto)
-        error("!!! FATAL: crystalize_attachment! origin must be :user or :auto, got :$origin !!!")
-    end
+    return crystalize_bridge!(target_id, attach_id; origin=origin)
+end
+
+"""
+    decrystalize_bridge!(node_a::String, node_b::String; force::Bool=false)::String
+
+GRUG v8.0: Clear the crystalize tag on both sides of a bidirectional bridge.
+By default this only clears `:auto` marks (so the auto-revoker can't
+accidentally remove a manual mark). Pass `force=true` to also clear `:user`
+marks (used by /decrystalize). Both sides are decrystalized.
+"""
+function decrystalize_bridge!(node_a::String, node_b::String;
+                              force::Bool = false)::String
     found = false
     msg = ""
-    lock(ATTACHMENT_LOCK) do
-        atts = get(ATTACHMENT_MAP, target_id, AttachedNode[])
-        for (i, att) in enumerate(atts)
-            if att.node_id == attach_id
-                if att.is_crystalized && att.crystal_origin == origin
-                    msg = "Attachment $target_id→$attach_id already crystalized (origin=:$(origin))."
+    lock(BRIDGE_LOCK) do
+        # GRUG: Decrystalize A->B entry
+        bridges_a = get(BRIDGE_MAP, node_a, CascadeBridge[])
+        for br in bridges_a
+            if br.partner_id == node_b
+                if !br.is_crystalized
+                    msg = "Bridge $node_a<->$node_b was not crystalized."
+                elseif br.crystal_origin == :user && !force
+                    msg = "Bridge $node_a<->$node_b is :user-crystalized -- pass force=true (or use /decrystalize)."
                 else
-                    # Replace in-place via reassignment (mutable struct so
-                    # we can also just mutate fields, but reassignment keeps
-                    # the API symmetric with non-mutable-friendly callers).
-                    att.is_crystalized = true
-                    att.crystal_origin = origin
-                    msg = "💎 Attachment $target_id→$attach_id CRYSTALIZED (origin=:$(origin)). Always fires."
+                    prev = br.crystal_origin
+                    br.is_crystalized = false
+                    br.crystal_origin = :none
+                    msg = "Bridge $node_a<->$node_b de-crystalized (was :$prev)."
+                end
+                found = true
+                break
+            end
+        end
+
+        # GRUG: Decrystalize B->A entry (bidirectional!)
+        bridges_b = get(BRIDGE_MAP, node_b, CascadeBridge[])
+        for br in bridges_b
+            if br.partner_id == node_a
+                if br.is_crystalized
+                    if br.crystal_origin == :user && !force
+                        # Don't clear :user marks without force
+                    else
+                        br.is_crystalized = false
+                        br.crystal_origin = :none
+                    end
                 end
                 found = true
                 break
@@ -2270,46 +2461,17 @@ function crystalize_attachment!(target_id::String, attach_id::String;
         end
     end
     if !found
-        error("!!! FATAL: crystalize_attachment! found no attachment from '$target_id' to '$attach_id' !!!")
+        error("!!! FATAL: decrystalize_bridge! found no bridge between '$node_a' and '$node_b' !!!")
     end
     return msg
 end
 
-"""
-    decrystalize_attachment!(target_id, attach_id; force=false) -> String
-
-GRUG: Clear the crystalize tag. By default this only clears `:auto` marks
-(so the auto-revoker can't accidentally remove a manual mark). Pass
-`force=true` to also clear `:user` marks (used by /decrystalize).
-"""
+# GRUG: Backward compat wrapper
 function decrystalize_attachment!(target_id::String, attach_id::String;
                                   force::Bool = false)::String
-    found = false
-    msg = ""
-    lock(ATTACHMENT_LOCK) do
-        atts = get(ATTACHMENT_MAP, target_id, AttachedNode[])
-        for att in atts
-            if att.node_id == attach_id
-                if !att.is_crystalized
-                    msg = "Attachment $target_id→$attach_id was not crystalized."
-                elseif att.crystal_origin == :user && !force
-                    msg = "Attachment $target_id→$attach_id is :user-crystalized — pass force=true (or use /decrystalize)."
-                else
-                    prev = att.crystal_origin
-                    att.is_crystalized = false
-                    att.crystal_origin = :none
-                    msg = "🪨 Attachment $target_id→$attach_id de-crystalized (was :$prev)."
-                end
-                found = true
-                break
-            end
-        end
-    end
-    if !found
-        error("!!! FATAL: decrystalize_attachment! found no attachment from '$target_id' to '$attach_id' !!!")
-    end
-    return msg
+    return decrystalize_bridge!(target_id, attach_id; force=force)
 end
+
 
 """
     _semantic_truth_score(node) -> Float64
@@ -2351,37 +2513,53 @@ end
 """
     auto_crystalize_sweep!() -> Tuple{Int, Int}
 
-GRUG: Walk every attachment in ATTACHMENT_MAP. Auto-crystallize attachments
-whose attached node has BOTH:
+GRUG v8.0: Walk every bridge in BRIDGE_MAP. Auto-crystallize bridges
+whose partner node has BOTH:
   - strength >= CRYSTAL_AUTO_STRENGTH_FLOOR, AND
   - semantic_truth_score >= CRYSTAL_AUTO_SEMANTIC_FLOOR
-Auto-revoke attachments previously auto-crystalized whose strength has
+Auto-revoke bridges previously auto-crystalized whose partner strength has
 dropped below CRYSTAL_AUTO_REVOKE_FLOOR. Manual (`:user`) marks are never
-touched. Returns (crystallized_count, revoked_count).
+touched. Bidirectional: crystallizing one side also crystallizes the partner side.
 
-Called from the idle / phagy sweep loop. Cheap to run — O(attachments).
+Called from the idle / phagy sweep loop. Cheap to run — O(bridges).
 """
 function auto_crystalize_sweep!()::Tuple{Int, Int}
     crystallized = 0
     revoked = 0
-    lock(ATTACHMENT_LOCK) do
-        for (target_id, atts) in ATTACHMENT_MAP
-            for att in atts
-                node = lock(() -> get(NODE_MAP, att.node_id, nothing), NODE_LOCK)
-                isnothing(node) && continue
-                node.is_grave && continue
+    lock(BRIDGE_LOCK) do
+        for (node_id, bridges) in BRIDGE_MAP
+            for br in bridges
+                partner = lock(() -> get(NODE_MAP, br.partner_id, nothing), NODE_LOCK)
+                isnothing(partner) && continue
+                partner.is_grave && continue
 
-                if att.is_crystalized && att.crystal_origin == :auto
-                    if node.strength < CRYSTAL_AUTO_REVOKE_FLOOR
-                        att.is_crystalized = false
-                        att.crystal_origin = :none
+                if br.is_crystalized && br.crystal_origin == :auto
+                    if partner.strength < CRYSTAL_AUTO_REVOKE_FLOOR
+                        br.is_crystalized = false
+                        br.crystal_origin = :none
+                        # GRUG: Also decrystalize the partner side (bidirectional)
+                        partner_bridges = get(BRIDGE_MAP, br.partner_id, CascadeBridge[])
+                        for pbr in partner_bridges
+                            if pbr.partner_id == node_id && pbr.crystal_origin == :auto
+                                pbr.is_crystalized = false
+                                pbr.crystal_origin = :none
+                            end
+                        end
                         revoked += 1
                     end
-                elseif !att.is_crystalized
-                    if node.strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
-                       _semantic_truth_score(node) >= CRYSTAL_AUTO_SEMANTIC_FLOOR
-                        att.is_crystalized = true
-                        att.crystal_origin = :auto
+                elseif !br.is_crystalized
+                    if partner.strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
+                       _semantic_truth_score(partner) >= CRYSTAL_AUTO_SEMANTIC_FLOOR
+                        br.is_crystalized = true
+                        br.crystal_origin = :auto
+                        # GRUG: Also crystalize the partner side (bidirectional)
+                        partner_bridges = get(BRIDGE_MAP, br.partner_id, CascadeBridge[])
+                        for pbr in partner_bridges
+                            if pbr.partner_id == node_id && !pbr.is_crystalized
+                                pbr.is_crystalized = true
+                                pbr.crystal_origin = :auto
+                            end
+                        end
                         crystallized += 1
                     end
                 end
@@ -2393,19 +2571,22 @@ function auto_crystalize_sweep!()::Tuple{Int, Int}
 end
 
 """
-    is_crystalized(target_id, attach_id) -> Bool
+    is_bridge_crystalized(node_a::String, node_b::String) -> Bool
 
-GRUG: Convenience query. Returns false if attachment doesn't exist.
+GRUG v8.0: Convenience query. Returns false if bridge doesn't exist.
 """
-function is_crystalized(target_id::String, attach_id::String)::Bool
-    return lock(ATTACHMENT_LOCK) do
-        atts = get(ATTACHMENT_MAP, target_id, AttachedNode[])
-        for att in atts
-            att.node_id == attach_id && return att.is_crystalized
+function is_bridge_crystalized(node_a::String, node_b::String)::Bool
+    return lock(() -> begin
+        bridges = get(BRIDGE_MAP, node_a, CascadeBridge[])
+        for br in bridges
+            br.partner_id == node_b && return br.is_crystalized
         end
         return false
-    end
+    end, BRIDGE_LOCK)
 end
+
+# GRUG: Backward compat alias
+is_crystalized(target_id::String, attach_id::String) = is_bridge_crystalized(target_id, attach_id)
 
 # ==============================================================================
 # IMAGE NODE ATTACHMENT (SDF-BASED RELATIONAL FIRE)
@@ -2518,7 +2699,7 @@ function attach_image_node!(target_id::String, attach_id::String, image_data::Ve
             error("!!! FATAL: attach_image_node! attach node '$attach_id' is GRAVE [$(attach_node_ref.grave_reason)]! Cannot attach dead nodes! !!!")
         end
         if !attach_node_ref.is_image_node
-            error("!!! FATAL: attach_image_node! node '$attach_id' is NOT an image node! Use /nodeAttach for text nodes! !!!")
+            error("!!! FATAL: attach_image_node! node '$attach_id' is NOT an image node! Use /nodeBridge for text nodes! !!!")
         end
     end
 
@@ -2529,13 +2710,12 @@ function attach_image_node!(target_id::String, attach_id::String, image_data::Ve
     connector_sdf = ImageSDF.JITGPU(image_data; width=width, height=height)
     connector_signal = ImageSDF.sdf_to_signal(connector_sdf)
 
-    # GRUG: JIT CONFIDENCE BAKING — SDF cosine similarity + strength bonus
-    # Compare connector SDF signal against attached image node's own signal.
-    jit_base_confidence = lock(NODE_LOCK) do
+    # GRUG v8.0: JIT CONFIDENCE BAKING — SDF cosine similarity + strength bonus.
+    # Now bidirectional: compute confidence for both directions.
+    # A→B uses B's strength, B→A uses A's strength. Same SDF similarity.
+    jit_conf_target_to_attach = lock(NODE_LOCK) do
         attach_node_ref = NODE_MAP[attach_id]
-        # GRUG: Image node signals are already SDF-derived. Compare directly.
         if isempty(attach_node_ref.signal)
-            # GRUG: Image node with empty signal — use flat baseline confidence
             return 0.3
         end
         sdf_sim = _sdf_signal_similarity(connector_signal, attach_node_ref.signal)
@@ -2543,34 +2723,61 @@ function attach_image_node!(target_id::String, attach_id::String, image_data::Ve
         return sdf_sim + (strength_bonus * 0.5)
     end
 
-    # GRUG: Pattern stores SDF metadata string for AIML reference.
-    # Not a text pattern — this tells downstream "this is an image attachment".
-    sdf_meta_pattern = "SDF:image:$(width)x$(height)"
+    jit_conf_attach_to_target = lock(NODE_LOCK) do
+        target_node = NODE_MAP[target_id]
+        if isempty(target_node.signal)
+            # GRUG: Text node with no signal — use flat baseline
+            return 0.3
+        end
+        sdf_sim = _sdf_signal_similarity(connector_signal, target_node.signal)
+        strength_bonus = target_node.strength / STRENGTH_CAP
+        return sdf_sim + (strength_bonus * 0.5)
+    end
 
-    lock(ATTACHMENT_LOCK) do
-        existing = get(ATTACHMENT_MAP, target_id, AttachedNode[])
+    # GRUG: Seam tokens for image bridges use SDF metadata as the seam marker
+    sdf_seam = ["SDF:image:$(width)x$(height)"]
 
-        # GRUG: Check max attachments cap
-        if length(existing) >= MAX_ATTACHMENTS
-            error("!!! FATAL: attach_image_node! target '$target_id' already has $(length(existing)) attachments (max $MAX_ATTACHMENTS)! Detach one first! !!!")
+    # GRUG: Resolve lobe provenance
+    lobe_target = something(Lobe.find_lobe_for_node(target_id), "")
+    lobe_attach = something(Lobe.find_lobe_for_node(attach_id), "")
+
+    lock(BRIDGE_LOCK) do
+        # GRUG: Check bridge caps on BOTH sides (bidirectional!)
+        existing_target = get(BRIDGE_MAP, target_id, CascadeBridge[])
+        if length(existing_target) >= MAX_BRIDGES
+            error("!!! FATAL: attach_image_node! target '$target_id' already has $(length(existing_target)) bridges (max $MAX_BRIDGES)! Unbridge one first! !!!")
+        end
+        existing_attach = get(BRIDGE_MAP, attach_id, CascadeBridge[])
+        if length(existing_attach) >= MAX_BRIDGES
+            error("!!! FATAL: attach_image_node! image node '$attach_id' already has $(length(existing_attach)) bridges (max $MAX_BRIDGES)! Unbridge one first! !!!")
         end
 
-        # GRUG: Check for duplicate attachment (same node already bolted on)
-        for att in existing
-            if att.node_id == attach_id
-                error("!!! FATAL: attach_image_node! node '$attach_id' is already attached to target '$target_id'! No duplicate bolts! !!!")
+        # GRUG: Check for duplicate bridge (either direction)
+        for br in existing_target
+            if br.partner_id == attach_id
+                error("!!! FATAL: attach_image_node! '$attach_id' is already bridged to '$target_id'! No duplicate bridges! !!!")
+            end
+        end
+        for br in existing_attach
+            if br.partner_id == target_id
+                error("!!! FATAL: attach_image_node! '$target_id' is already bridged to '$attach_id'! No duplicate bridges! !!!")
             end
         end
 
-        # GRUG: All checks passed. Bolt it on with JIT-baked SDF confidence!
-        new_attachment = AttachedNode(attach_id, sdf_meta_pattern, connector_signal, jit_base_confidence)
-        push!(existing, new_attachment)
-        ATTACHMENT_MAP[target_id] = existing
+        # GRUG: Create bidirectional bridge entries!
+        bridge_target_to_attach = CascadeBridge(attach_id, sdf_seam, jit_conf_target_to_attach, lobe_attach, false, :none)
+        bridge_attach_to_target = CascadeBridge(target_id, sdf_seam, jit_conf_attach_to_target, lobe_target, false, :none)
+
+        push!(existing_target, bridge_target_to_attach)
+        BRIDGE_MAP[target_id] = existing_target
+        push!(existing_attach, bridge_attach_to_target)
+        BRIDGE_MAP[attach_id] = existing_attach
     end
 
-    n_attached = lock(() -> length(get(ATTACHMENT_MAP, target_id, AttachedNode[])), ATTACHMENT_LOCK)
-    println("[ENGINE] 🖼️🔗  Image node '$attach_id' attached to target '$target_id' via SDF ($(width)x$(height), base_conf=$(round(jit_base_confidence, digits=3)), $n_attached/$MAX_ATTACHMENTS slots used).")
-    return "Attached image '$attach_id' to '$target_id' via SDF ($(width)x$(height), base_conf=$(round(jit_base_confidence, digits=3)), $n_attached/$MAX_ATTACHMENTS)"
+    n_bridged_target = lock(() -> length(get(BRIDGE_MAP, target_id, CascadeBridge[])), BRIDGE_LOCK)
+    n_bridged_attach = lock(() -> length(get(BRIDGE_MAP, attach_id, CascadeBridge[])), BRIDGE_LOCK)
+    println("[ENGINE] 🖼️🌉  Image bridge: '$target_id' ↔ '$attach_id' via SDF ($(width)x$(height), conf_T→A=$(round(jit_conf_target_to_attach, digits=3)), conf_A→T=$(round(jit_conf_attach_to_target, digits=3)), T: $n_bridged_target/$MAX_BRIDGES, A: $n_bridged_attach/$MAX_BRIDGES)")
+    return "Bridged image '$attach_id' ↔ '$target_id' via SDF ($(width)x$(height), conf_T→A=$(round(jit_conf_target_to_attach, digits=3)), A→T=$(round(jit_conf_attach_to_target, digits=3)))"
 end
 
 # ==============================================================================
@@ -4038,21 +4245,20 @@ function scan_and_expand(input_text::String;
         end
     end
 
-    # ── PASS 3: Attachment relay (relational fire system, coinflip-gated) ──────
-    # GRUG: For every node that made it into the expanded set, check if it has
-    # attachments. If so, fire_attachments! runs a strength-biased coinflip on
-    # each attached node. Winners get added to the expanded set with their own
-    # connector-pattern-derived confidence. The connector pattern (middleman) is
-    # scanned against the ATTACHED NODE's own pattern — not the target's — so
-    # confidence reflects how relevant the relay reason is to the waking node.
+    # ── PASS 3: Cascade bridge handoff (match-cascade relay system) ──────
+    # GRUG v8.0: For every node that made it into the expanded set, check if it
+    # has bridges. If so, fire_cascades! hands off the unmatched input tail (the
+    # match boundary) to the bridged partner node's lobe scanner. The unmatched
+    # tail IS the natural cross-lobe bridge — no more dumb middle-man connector
+    # pattern. The seam tokens at the boundary become the handoff payload.
     #
-    # The connector pattern also surfaces as a RelationalTriple in the node's
-    # context so the generative pipeline knows WHY this node was co-activated.
-    # Triple format: (target_id, "relay_attached", connector_pattern)
+    # The seam text also surfaces as a RelationalTriple in the node's context
+    # so the generative pipeline knows WHY this node was co-activated.
+    # Triple format: (source_id, "cascade_bridge", seam_text)
     # GRUG: Relay pass uses the SAME FireCounter that scan_specimens built for
-    # this cycle. That means attachment fires COUNT against the global 1000 cap
+    # this cycle. That means bridge fires COUNT against the global 1000 cap
     # along with pattern-scan fires, drop-table fires, and cascade fires.
-    # If scan already consumed all 1000 slots, attachments simply won't fire.
+    # If scan already consumed all 1000 slots, bridges simply won't fire.
     # If scan_specimens was never called (edge case, e.g. empty NODE_MAP branch),
     # fall back to a fresh FireCounter so relay still respects the cap.
     shared_fc = _LAST_FIRE_COUNTER[]
@@ -4062,29 +4268,50 @@ function scan_and_expand(input_text::String;
     relay_cap   = shared_fc.cap
     relay_additions = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
 
+    # GRUG v8.0: Compute the unmatched tail from the input. This is the match
+    # boundary — the tokens the primary scan DIDN'T consume. These become the
+    # seam tokens for the cascade handoff. Simple approach: tokens in the input
+    # that aren't in any matched node's pattern. This is the "cut off where it
+    # didn't match" the user was talking about.
+    input_tokens = Set(split(lowercase(input_text)))
+    matched_tokens = Set{String}()
     for (id, conf, antimatch, u_trips, n_trips, ichunks) in expanded
-        # GRUG: Stop firing attachments if global cap is already hit. Hard cap
-        # applies across ALL fire paths — no bypass for attachments!
+        if !antimatch
+            node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
+            if !isnothing(node)
+                for tok in split(lowercase(node.pattern))
+                    push!(matched_tokens, tok)
+                end
+            end
+        end
+    end
+    unmatched_tail = collect(setdiff(input_tokens, matched_tokens))
+
+    for (id, conf, antimatch, u_trips, n_trips, ichunks) in expanded
+        # GRUG: Stop firing bridges if global cap is already hit. Hard cap
+        # applies across ALL fire paths — no bypass for bridges!
         if VoteOrchestrator.fire_cap_reached(shared_fc)
-            println("[ENGINE] 🧠  Attachment relay halted — global fire cap ($relay_cap) reached.")
+            println("[ENGINE] 🧠  Cascade bridge halted — global fire cap ($relay_cap) reached.")
             break
         end
-        # GRUG: Pass current counter value to fire_attachments! so it can
-        # honor the cap internally. Tracking is per-call; counter persists.
-        fired_pairs = fire_attachments!(id, VoteOrchestrator.current_fire_count(shared_fc), relay_cap)
-        for (fired_id, fired_conf, connector_pattern) in fired_pairs
+        # GRUG v8.0: Pass unmatched tail to fire_cascades! so the bridge
+        # handoff carries the match-boundary payload. This is the core of
+        # the match-cascade system — the scanner's cutoff IS the bridge.
+        fired_pairs = fire_cascades!(id, VoteOrchestrator.current_fire_count(shared_fc), relay_cap;
+                                     unmatched_tail=unmatched_tail)
+        for (fired_id, fired_conf, seam_text) in fired_pairs
             if !(fired_id in already_included)
-                # GRUG: Claim a fire slot for this attachment. If cap is hit, skip.
-                # This ensures attached-node firings count toward the 1000 limit.
+                # GRUG: Claim a fire slot for this bridge. If cap is hit, skip.
+                # This ensures bridge-node firings count toward the 1000 limit.
                 if !VoteOrchestrator.try_claim_fire_slot!(shared_fc)
                     break
                 end
                 fired_node = lock(() -> get(NODE_MAP, fired_id, nothing), NODE_LOCK)
                 isnothing(fired_node) && continue
-                # GRUG: Inject the connector pattern as a relay triple so generative
+                # GRUG v8.0: Inject the seam text as a cascade triple so generative
                 # knows WHY this node was co-fired. The triple reads:
-                #   subject=target_id, relation="relay_attached", object=connector_pattern
-                relay_triple = RelationalTriple(id, "relay_attached", connector_pattern)
+                #   subject=source_id, relation="cascade_bridge", object=seam_text
+                relay_triple = RelationalTriple(id, "cascade_bridge", seam_text)
                 relay_triples = vcat(fired_node.relational_patterns, [relay_triple])
                 push!(relay_additions, (fired_id, fired_conf, false, user_triples, relay_triples, Int[]))
                 push!(already_included, fired_id)
@@ -4094,7 +4321,7 @@ function scan_and_expand(input_text::String;
 
     if !isempty(relay_additions)
         append!(expanded, relay_additions)
-        println("[ENGINE] 🔗  Attachment relay pass added $(length(relay_additions)) node(s) to expanded set.")
+        println("[ENGINE] 🌉  Cascade bridge pass added $(length(relay_additions)) node(s) to expanded set.")
     end
 
     # GRUG v7.49: Re-join anti-match primary entries into expanded before drain.
