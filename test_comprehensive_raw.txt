@@ -1,0 +1,2754 @@
+WARNING: redefinition of constant GrugBot420._ENGINE_SIGIL_TABLE. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_BINDINGS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_REWRITTEN. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_RAW. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.CAUSAL_VERBS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.SPATIAL_VERBS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.TEMPORAL_VERBS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.NODE_MAP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.COMMANDS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.NODE_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ID_COUNTER. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.HOPFIELD_CACHE. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.HOPFIELD_CACHE_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.HOPFIELD_HIT_COUNTS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ATTACHMENT_MAP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ATTACHMENT_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.GROUP_MAP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.GROUP_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.GROUP_COUNTER. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.NODE_TO_GROUP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.CHATTER_NODE_COOLDOWN. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.CHATTER_NODE_COOLDOWN_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._LAST_FIRE_COUNTER. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.STOPWORDS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.AIML_DROP_TABLE. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ALLOWED_RULE_TAGS. This may fail, cause incorrect answers, or produce other errors.
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + 3 boot seeds registered into `default` lobe
+System Online. Grug waiting at cave entrance for instructions.
+Primary  : /mission <input>                    (text or image binary)
+Feedback : /wrong                              (penalize last response voters)
+Explicit : /explicit <cmd> [<node_id>] <input>
+Grow     : /grow <lobe_id> <json_packet>      (plant node(s) into a lobe)
+         :   • <lobe_id> is required — use `-` for unassigned pool
+         :   • Single node: {"pattern":"...","action_packet":"...","data":{...}}
+         :   • Multi node:  {"nodes":[{...},{...}]}
+         :   • `data.system_prompt` defaults to "Grug speaks plainly." if absent
+Rules    : /addRule <rule text> [prob=0.0-1.0]
+           Tags: {MISSION}, {PRIMARY_ACTION}, {SURE_ACTIONS}, {UNSURE_ACTIONS},
+                 {ALL_ACTIONS}, {CONFIDENCE}, {NODE_ID}, {MEMORY}, {LOBE_CONTEXT}
+Memory   : /pin <text>
+Nodes    : /nodes                              (show node map status)
+Status   : /status                             (show chatter + system status)
+Arousal  : /arousal <0.0-1.0>                 (set eye system arousal level)
+Verbs    : /addVerb <verb> <class>             (add verb to relation class)
+         : /addRelationClass <name>            (create new verb class bucket)
+         : /addSynonym <canonical> <alias>     (normalize alias->canonical)
+         : /listVerbs                          (show all verb classes + synonyms)
+Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
+         : /connectLobes <id_a> <id_b>         (connect two lobes)
+         : /lobeGrow <lobe_id> <json_packet>   (DEPRECATED — alias for /grow)
+         : /lobes                              (list all lobes + node counts)
+         : /tableStatus <lobe_id>              (show hash table chunks for a lobe)
+         : /tableMatch <lobe_id> <chunk> <pat> (pattern-activate entries in chunk)
+Thesaurus: /thesaurus <word1> | <word2>        (compare words/concepts dimensionally)
+         : /thesaurus <w1> | <w2> :: <ctx1> :: <ctx2>  (with context lists)
+NegThes  : /negativeThesaurus add|remove|list|check|flush
+Attach   : /nodeAttach <lobe> <target> <id> <pat> ...  (attach nodes with relational fire patterns)
+         : /nodeDetach <lobe> <target> <id>            (detach a node from target)
+ImgAttach: /imgnodeAttach <lobe> <tgt> <id> <b64> [w h] (attach image node with SDF-based fire)
+         : /imgnodeDetach <lobe> <target> <id>         (detach image node from target)
+         : /attachments                         (show all node attachments)
+Crystal  : /crystalize <lobe> <target> <attach>        (💎 mark attachment as sticky/user-locked)
+         : /decrystalize <lobe> <target> <attach>      (🔓 remove sticky flag, restore coinflip)
+Specimen : /saveSpecimen <filepath>            (save full cave state — .json or .gz)
+         : /loadSpecimen <filepath>            (restore full cave state — .json or .gz)
+Help     : /help                               (full command reference)
+
+╔══════════════════════════════════════════════════════════════════╗
+║  SPECIMEN SEEDING GUIDE (read before /grow)                     ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Automatic neighbor latching is SUPPRESSED below 1000 nodes.   ║
+║  Below that threshold, YOU control topology via drop_table.     ║
+║                                                                  ║
+║  For a coherent specimen from the start:                        ║
+║  1. Seed ORTHOGONAL archetypes first - distinct semantic poles. ║
+║     Don't plant 50 near-identical nodes up front.               ║
+║  2. Use required_relations as semantic GATES from day one.      ║
+║     Nodes that demand specific verbs won't fire on noise.       ║
+║  3. Name action_packets deliberately - distinct action families ║
+║     give the superposition orchestrator something to work with. ║
+║  4. Wire drop_tables manually for known co-activation pairs.    ║
+║     Don't rely on the latch system to discover semantics.       ║
+║  5. Your first ~100 nodes are the specimen's DNA.               ║
+║     The engine enforces structure at scale (1000+ nodes).       ║
+║     You enforce MEANING at the start.                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Brain > --> Grug thawing specimen from file...
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=40, msg=110)
+  🗳  Last voters restored (1 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (11 classes, 38 verbs, 0 synonyms)
+  🔤 Thesaurus restored (499 words)
+  🧠 Lobes restored (8)
+  📋 Lobe tables restored (8)
+  🌱 Nodes restored (36)
+  ⚡ Hopfield cache restored (0 entries)
+  ⚙️  Rules restored (6)
+  🚫 Inhibitions restored (2)
+  💬 Messages restored (77 total, 5 pinned)
+  👁  Arousal restored (level=0.55)
+  🧬 BrainStem state restored
+  🔗 Attachments restored (0)
+  🗣  Chatter groups restored (18)
+  🔮 Trajectory restored (0 entries)
+  🕐 Temporal coherence restored (0 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 0 ledger entries)
+  🤖 AIML system restored (13 nodes across 7 lobes)
+  🪄 Sigils restored (3 specimen-specific)
+  ⚙️  Automaton rules restored (6)
+  💎 Phase accumulator: 5 snapshots (threshold=0.55, enabled=true)
+  🗳  Contributor votes restored (1)
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.85)
+  🧠 EphemeralMLP restored (transforms=12, rules=0)
+  👁  MLP Observer Store: 8 entries, 5 distinct keys (store starts fresh; MLP gate counter restored)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 16 | Compound pairs: 1 leaders | Context: 'and'
+      Question markers: 9 | Command stems: 13 → 84 expanded | Conjugation rules: 21
+
+╔══════════════════════════════════════════════════════════════╗
+║            🧬 SPECIMEN LOADED SUCCESSFULLY                   ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : specimens/comprehensive_v727_test.specimen.json
+  📄  File size        : 195411 bytes
+  📦  JSON size        : 195411 bytes
+  ⏱️   Time             : 2.25s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 36
+  🧠  Lobes            : 8
+  📋  Lobe tables      : 8
+  ⚡  Hopfield entries  : 0
+  ⚙️   Rules            : 6
+  💬  Messages         : 77 (5 pinned)
+  🔧  Verb classes     : 11 (38 verbs)
+  🔤  Thesaurus words  : 499
+  🚫  Inhibitions      : 2
+  🔗  Attachments      : 0
+  🤖  AIML nodes       : 13 (7 lobes)
+  👁   Arousal          : 0.55
+  🔢  ID counters      : node=40, msg=110
+  ─────────────────────────────────────────────
+  🧹  Previous state   : WIPED (full brain transplant)
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 36
+  Hopfield cache  : 0 entries
+  Memory messages : 78
+  Est. memory use : ~74 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.55
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 8
+  Nodes in lobes  : 36
+  Top lobe (fires): ScienceLobe (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=14) ===
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 12
+  Sigmoid / ReLU  : 0 / 12
+  Last activation : relu
+  Novelty score   : 1.0
+  Dir. quality    : 0.5
+  Rules           : 0/0 enabled
+  Right / Wrong   : 2 / 0
+  Obs. threshold  : 4
+  Observer count  : 0
+  Adjustments     : GATED
+╚══════════════════════════════════════════════════╝
+
+Brain > === NODE MAP STATUS (36 nodes) ===
+  node_0 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=3.292s | pattern="hello"
+  node_1 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="think"
+  node_10 | str=8.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.854s | pattern="explain"
+  node_11 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="reason"
+  node_12 | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.534s | pattern="meaning"
+  node_13 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.326s | pattern="sad"
+  node_14 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="happy"
+  node_15 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.322s | pattern="worry"
+  node_16 | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.332s | pattern="danger"
+  node_17 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.332s | pattern="run"
+  node_2 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="fire"
+  node_3 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.37s | pattern="hello"
+  node_4 | str=3.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="goodbye"
+  node_5 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="add"
+  node_6 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="multiply"
+  node_7 | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.677s | pattern="calculate"
+  node_8 | str=7.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.854s | pattern="describe"
+  node_9 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="observe"
+  node_assert_fact | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="fact"
+  node_assert_truth | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="truth"
+  node_cmd_show | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="show"
+  node_cmd_tell | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="tell"
+  node_danger_emergency | str=8.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="emergency"
+  node_danger_help | str=7.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="help"
+  node_emo_afraid | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="afraid"
+  node_emo_sad | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="sad"
+  node_greet_hey | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="hey"
+  node_greet_hi | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="hi"
+  node_greet_morning | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="morning"
+  node_math_multiply | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="multiply"
+  node_math_plus | str=7.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="plus"
+  node_phil_exist | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="exist"
+  node_phil_meaning | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="meaning"
+  node_q_how | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="how"
+  node_q_what | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="what"
+  node_q_why | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="why"
+
+Brain > === LOBE REGISTRY (8 lobes, 36 nodes indexed) ===
+  EmotionLobe | subject='sad cry hurt alone afraid worried lonely happy joy laugh worry concern anxious' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[SocialLobe,SurvivalLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  MathLobe | subject='add plus sum calculate compute number total times multiply double triple' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  PhilosophyLobe | subject='meaning purpose exist truth wonder why life' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=1 json=6 drop=0 hopf=0]
+  ReasoningLobe | subject='think reason analyze infer because therefore why how' | nodes=4/20000 | fires=0 | inhibits=0 | connected=[MathLobe,PhilosophyLobe,ScienceLobe] | whitelist=open | tbl[nodes=1 json=6 drop=0 hopf=0]
+  ScienceLobe | subject='describe explain define what is observe measure data hypothesis fire warm cold light dark' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  SocialLobe | subject='hello hi hey friend warm greet welcome howdy' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe] | whitelist=open | tbl[nodes=2 json=12 drop=0 hopf=0]
+  SurvivalLobe | subject='danger threat enemy attack warning beware run fire burns hot cold winter storm' | nodes=4/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe] | whitelist=open | tbl[nodes=2 json=12 drop=0 hopf=0]
+  default | subject='general thinking reasoning conversation greeting' | nodes=3/20000 | fires=0 | inhibits=0 | connected=[none] | whitelist=open | tbl[nodes=3 json=0 drop=0 hopf=0]
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 5 | Recorded: 5 | Pulls: 0
+  Threshold: 0.55 | Surface bits: 3
+
+Brain > === SEMANTIC VERB REGISTRY ===
+  [arithmetic]: calculate, compute, sum
+  [causal]: causes, contradicts, hits, increases, makes, reduces, routes
+  [description]: clarify, define, describe, elaborate, explain
+  [emotion]: comfort, reassure, soothe
+  [greeting]: greet, smile, welcome
+  [philosophy]: ponder, wonder
+  [reasoning]: analyze, infer, reason
+  [science]: observe
+  [spatial]: are, connects, is, was, were
+  [survival]: alert, notify, warn
+  [temporal]: chasing, follows, precedes
+  (no synonyms registered)
+
+Brain > [ATTACHMENT MAP EMPTY]
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=14) ===
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 12
+  Sigmoid activations : 0
+  ReLU activations    : 12
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.5
+  Right feedback      : 2
+  Wrong feedback      : 0
+  Rules (total/enabled): 0 / 0
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 12
+  Novelty hashes      : 12
+  Observer threshold  : 4
+  Observer count      : 0
+  Adjustments enabled : NO
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > !!! SYSTEM ERROR: ErrorException("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!") !!!
+
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:7610
+ [3] top-level scope
+   @ none:1
+ [4] eval
+   @ ./boot.jl:385 [inlined]
+ [5] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [6] _start()
+   @ Base ./client.jl:552
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &hexnum | lambda | @match | type=word | promote=true | prov=user-cli
+  &mathconst | macro | @bind | lex=[e,inf,nan,one,phi,pi,…(+2)] | prov=user-cli
+  &mathfunc | macro | @bind | lex=[abs,ceil,cos,exp,floor,log,…(+3)] | prov=user-cli
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.699 × top=0.699 = 0.4083 [hard_votes=1]
+  · default: base=0.7 × top=0.7 = 0.205 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.554 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Let me think with you. Grug welcome you to the cave with open arms.. The link is clear: voice carries warmth. Pinned note: Grug speak plain. Grug not pretend smart.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'hello grug'
+Primary Action: greet  (conf=0.7, certainty=SURE)
+Sure Actions: [greet]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [friendly, welcoming]
+Winning Node: node_3
+Lobe Context: [SocialLobe (2/5 active (goodbye | hello))]
+User Triples: None
+Node Triples: (voice, carries, warmth), (gesture, signals, welcome)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.56 eligible=10] (Recent): [User]: calculate 15 plus 27 (intensity=0.58)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_3
+Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.699 × top=0.699 = 0.4083 [hard_votes=1]
+  · default: base=0.7 × top=0.7 = 0.205 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.699 × top=0.7 = 0.4097 [hard_votes=2]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=2 (sure=2 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_phil_meaning big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.555 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Here is the picture: Big questions never get small answers, but Grug still ask them.. The link is clear: wonder drives inquiry. A companion frame: Think about meaning of things. Big question create Grug wonder.. [Directives: [ponder "Grug stare at fire. what is the meaning of life make Grug wonder"] (fire_prob=0.6)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is the meaning of life'
+Primary Action: ponder  (conf=0.7, certainty=UNSURE)
+Sure Actions: [ponder, ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [deep, reflective]
+Winning Node: node_12
+Lobe Context: [PhilosophyLobe (1/5 active (meaning))]
+User Triples: (what, is, the)
+Node Triples: (wonder, drives, inquiry), (question, seeks, meaning)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_phil_meaning | action=ponder | conf=0.7 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.56 eligible=8] (Recent): [User]: hello grug (intensity=0.8) | [User]: what is the meaning of life (intensity=1.69)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_12
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.699 × top=0.7 = 0.4097 [hard_votes=2]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ReasoningLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+  · default: base=0.598 × top=0.598 = 0.1383 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_cmd_tell big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.548 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Here is the picture: Grug share knowledge plainly so you understand.. [Directives: [explain "Grug step by step. [ReasoningLobe (1/4 active (reason))] explain"] (fire_prob=0.85)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'tell me about fire'
+Primary Action: explain  (conf=0.6, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [clearly, simply]
+Winning Node: node_cmd_tell
+Lobe Context: [ReasoningLobe (1/4 active (reason))]
+User Triples: (tell, about, fire)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.56 eligible=5] (Recent): [User]: what is the meaning of life (intensity=0.94)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 ReasoningLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+  · default: base=0.598 × top=0.598 = 0.1383 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 default: base=0.549 × top=0.549 = 0.2231 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.547 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Grug hits rock and makes fire, that how Grug learn the world..
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'FIRE IN THE HOLE EVERYONE OUT'
+Primary Action: analyze  (conf=0.55, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont panic]
+Winning Node: node_2
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: FIRE IN THE HOLE EVERYONE OUT (intensity=1.24)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.55, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.549 × top=0.549 = 0.2231 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 MathLobe: base=0.6 × top=0.6 = 0.2783 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.548 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+two plus three equals 5. The link is clear: signal feeds computation.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'calculate two plus three'
+Primary Action: analyze  (conf=0.6, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [careful, exact]
+Winning Node: node_7
+Lobe Context: [MathLobe (3/5 active (add | multiply | calculate))]
+User Triples: None
+Node Triples: (input, feeds, computation), (algorithm, yields, result)
+Anti-Match Detected: false
+Arithmetic Computed: two + three = 5
+  Steps: 1
+    Step 1: 2 + 3 = 5
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=9] (Recent): [System]: Mission "FIRE IN THE HOLE EVERYONE OUT" → primary=analyze conf=0.55 node=node_2 (intensity=0.64) | [User]: calculate two plus three (intensity=1.32)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 MathLobe: base=0.6 × top=0.6 = 0.2783 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.6 × top=0.6 = 0.2785 [hard_votes=2]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=2 (sure=2 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_emo_sad big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.55 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Let me think with you. Grug sit with you by the fire until the hurt passes.. [Directives: [comfort "Grug pat back. [EmotionLobe (3/5 active (happy | sad | worry))] understand pain"] (fire_prob=0.7)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'I feel sad and lonely'
+Primary Action: comfort  (conf=0.6, certainty=UNSURE)
+Sure Actions: [comfort, support]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [gentle, warm]
+Winning Node: node_13
+Lobe Context: [EmotionLobe (3/5 active (happy | sad | worry))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_emo_sad | action=support | conf=0.6 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: tell me about fire (intensity=0.41)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_13
+Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.6 × top=0.6 = 0.2785 [hard_votes=2]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.596 × top=0.596 = 0.2743 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.547 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Let me think with you. Good thing better when more than one rock around the fire.. The link is clear: memory evokes gladness.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'I feel happy today'
+Primary Action: smile  (conf=0.6, certainty=SURE)
+Sure Actions: [smile]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [warm]
+Winning Node: node_14
+Lobe Context: [EmotionLobe (3/5 active (happy | sad | worry))]
+User Triples: None
+Node Triples: (moment, brings, joy), (memory, evokes, gladness)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: I feel sad and lonely (intensity=0.92) | [User]: I feel happy today (intensity=1.25)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.596 × top=0.596 = 0.2743 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ReasoningLobe: base=0.547 × top=0.547 = 0.2214 [hard_votes=1]
+  · PhilosophyLobe: base=0.547 × top=0.547 = 0.2209 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.548 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Each thought lean on the one before it like rocks in a wall.. The link is clear: premise supports conclusion.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'reason about why things exist'
+Primary Action: reason  (conf=0.55, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [step by step]
+Winning Node: node_11
+Lobe Context: [ReasoningLobe (1/4 active (reason))]
+User Triples: None
+Node Triples: (premise, supports, conclusion), (evidence, leads_to, inference)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [System]: Mission "I feel sad and lonely" → primary=comfort conf=0.6 node=node_13 (intensity=0.46)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_11
+Lobe Curve (√base × top² = score):
+  👑 ReasoningLobe: base=0.547 × top=0.547 = 0.2214 [hard_votes=1]
+  · PhilosophyLobe: base=0.547 × top=0.547 = 0.2209 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.599 × top=0.599 = 0.278 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.548 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth show up plain so anyone see it.. The link is clear: detail reveals nature.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'describe the nature of consciousness'
+Primary Action: define  (conf=0.6, certainty=SURE)
+Sure Actions: [define]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [clear, plain, step by step]
+Winning Node: node_8
+Lobe Context: [ScienceLobe (3/5 active (describe | explain | observe))]
+User Triples: (describe, targets, the)
+Node Triples: (observer, notices, quality), (detail, reveals, nature)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: reason about why things exist (intensity=0.87)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_8
+Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.599 × top=0.599 = 0.278 [hard_votes=1]
+=========================================
+
+Brain > [ENGINE] 💎 Node node_8 solidified (strength=9.5 ≥ 9.0) — NONJITTER tag applied.
+[ENGINE] ✅ /right: total=1 rewarded=1 [locked=1 unsure=0] double_skip=0 coinflip_miss=0 grave_skip=0
+✅ /right applied. 1 contributor(s) [1 locked, 0 unsure]: 1 rewarded, 0 skipped (already gained), 0 missed coinflip.
+   ↳ context intensity nudged up on 6 message(s) used last cycle.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2785 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=0.6 | quality=0.602 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth show up plain so anyone see it.. The link is clear: observer notices quality. [Directives: [explain "Grug step by step. [ScienceLobe (3/5 active (describe | explain | observe))] explain"] (fire_prob=0.85)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'describe the nature of consciousness'
+Primary Action: explain  (conf=0.6, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [clear, plain, step by step]
+Winning Node: node_8
+Lobe Context: [ScienceLobe (3/5 active (describe | explain | observe))]
+User Triples: (describe, targets, the)
+Node Triples: (observer, notices, quality), (detail, reveals, nature)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: reason about why things exist (intensity=0.89) | [User]: describe the nature of consciousness (intensity=1.47)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_8
+Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2785 [hard_votes=1]
+=========================================
+
+Brain > [ENGINE] ✅ /right: total=1 rewarded=0 [locked=0 unsure=0] double_skip=1 coinflip_miss=0 grave_skip=0
+✅ /right applied. 1 contributor(s) [1 locked, 0 unsure]: 0 rewarded, 1 skipped (already gained), 0 missed coinflip.
+   ↳ context intensity nudged up on 7 message(s) used last cycle.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: sigmoid | novelty=0.333 | quality=0.55 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth show up plain so anyone see it.. The link is clear: observer notices quality. [Directives: [explain "Grug step by step. [ScienceLobe (3/5 active (describe | explain | observe))] explain"] (fire_prob=0.85)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'describe the nature of consciousness'
+Primary Action: explain  (conf=0.6, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [clear, plain, step by step]
+Winning Node: node_8
+Lobe Context: [ScienceLobe (3/5 active (describe | explain | observe))]
+User Triples: (describe, targets, the)
+Node Triples: (observer, notices, quality), (detail, reveals, nature)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.75 eligible=6] (Recent): [User]: describe the nature of consciousness (intensity=1.94) | [User]: describe the nature of consciousness (intensity=1.24)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_8
+Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+=========================================
+
+Brain > [ENGINE] ❌  /wrong applied to 1 contributors. penalized= 1, newly_graved= 0.
+❌  /wrong applied. 1 contributor(s) penalized via coinflip.
+   ↳ context intensity nudged down on 7 message(s) used last cycle.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: sigmoid | novelty=0.25 | quality=0.526 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth show up plain so anyone see it.. The link is clear: detail reveals nature. [Directives: [describe "Grug paint picture with words. describe show truth"] (fire_prob=0.85)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'describe the nature of consciousness'
+Primary Action: describe  (conf=0.6, certainty=SURE)
+Sure Actions: [describe]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [clear, plain, step by step]
+Winning Node: node_8
+Lobe Context: [ScienceLobe (3/5 active (describe | explain | observe))]
+User Triples: (describe, targets, the)
+Node Triples: (observer, notices, quality), (detail, reveals, nature)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.75 eligible=7] (Recent): [User]: describe the nature of consciousness (intensity=1.54) | [System]: Mission "describe the nature of consciousness" → primary=define conf=0.6 node=node_8 (intensity=0.93) | [User]: describe the nature of consciousness (intensity=1.62) | [User]: describe the nature of consciousness (intensity=1.11)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_8
+Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+=========================================
+
+Brain > [AIML] ✅ /aimlRight: contributors=0 rewarded=0 double_skip=0 coinflip_miss=0 grave_skip=0
+⚠  /aimlRight: No AIML nodes voted this cycle. Did you run /mission first?
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2784 [hard_votes=1]
+[ENGINE] 💎 Node node_10 solidified (strength=9.5 ≥ 9.0) — NONJITTER tag applied.
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.545 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Heat come from wood breaking apart fast, that why fire warm.. [Directives: [explain "Grug step by step. [ScienceLobe (3/5 active (describe | explain | observe))] explain"] (fire_prob=0.85)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain quantum mechanics'
+Primary Action: explain  (conf=0.6, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [step by step]
+Winning Node: node_10
+Lobe Context: [ScienceLobe (3/5 active (describe | explain | observe))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.
+Fresh Memory [threshold=0.38 eligible=9] (Recent): [User]: describe the nature of consciousness (intensity=1.04)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_10
+Lobe Curve (√base × top² = score):
+  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2784 [hard_votes=1]
+=========================================
+
+Brain > [AIML] ❌ /aimlWrong: contributors=0 penalized=0 spared=0 newly_graved=0 grave_skip=0
+⚠  /aimlWrong: No AIML nodes voted this cycle. Did you run /mission first?
+
+Brain > 🎲 /brainstorm: entering heavy-jitter scope (ratio=0.08, coin_ratio=0.05) for one mission.
+--> Scanning specimens & looking for dialectical relations...
+--> No valid specimens found for this input. Cave is silent.
+🎲 /brainstorm: scope closed; jitter ratios snapped back to defaults.
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 8 | Recorded: 8 | Pulls: 0
+  Threshold: 0.55 | Surface bits: 3
+
+Brain > --> Grug forcing command override for [node_8]...
+
+🤖 AIML [Targeted Override]:
+("Let me think with you. Truth show up plain so anyone see it.. The link is clear: observer notices quality. [Directives: [describe \"Grug paint picture with words. describe show truth\"] (fire_prob=0.85)]\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'explain the concept of entropy in detail'\nPrimary Action: describe  (conf=9999.0, certainty=SURE)\nSure Actions: [describe]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [clear, plain, step by step]\nWinning Node: node_8\nLobe Context: [ScienceLobe (3/5 active (describe | explain | observe))]\nUser Triples: None\nNode Triples: (observer, notices, quality), (detail, reveals, nature)\nAnti-Match Detected: false\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.\nFresh Memory [threshold=0.75 eligible=7] (Recent): [User]: describe the nature of consciousness (intensity=1.04) | [User]: describe the nature of consciousness (intensity=0.84) | [User]: explain quantum mechanics (intensity=1.32) | [User]: explain the concept of entropy in detail (intensity=1.0)\nMemory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_8\nLobe Curve (√base × top² = score):\n  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2784 [hard_votes=1]\n=========================================", GrugBot420.Vote[GrugBot420.Vote("node_8", "describe", 9999.0, ["clear", "plain", "step by step"], GrugBot420.RelationalTriple[], GrugBot420.RelationalTriple[GrugBot420.RelationalTriple("observer", "notices", "quality"), GrugBot420.RelationalTriple("detail", "reveals", "nature")], false, "", :singleton, Int64[])], GrugBot420.Vote[])
+
+Brain > --> Grug forcing command override for [node_16]...
+
+🤖 AIML [Targeted Override]:
+("Let me think with you. Warn loud. Raise spear now before it too late.. [Directives: [alert \"Grug raise spear! danger near [SurvivalLobe (2/4 active (run | danger))]\"] (fire_prob=0.95)]\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'there is a fire in the cave'\nPrimary Action: alert  (conf=9999.0, certainty=SURE)\nSure Actions: [alert]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [urgent, loud]\nWinning Node: node_16\nLobe Context: [SurvivalLobe (2/4 active (run | danger))]\nUser Triples: None\nNode Triples: None\nAnti-Match Detected: false\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most.\nFresh Memory [threshold=0.75 eligible=9] (Recent): [User]: explain quantum mechanics (intensity=1.32) | [User]: there is a fire in the cave (intensity=1.0)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=9999.0, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 ScienceLobe: base=0.6 × top=0.6 = 0.2784 [hard_votes=1]\n=========================================", GrugBot420.Vote[GrugBot420.Vote("node_16", "alert", 9999.0, ["urgent", "loud"], GrugBot420.RelationalTriple[], GrugBot420.RelationalTriple[], false, "", :singleton, Int64[])], GrugBot420.Vote[])
+
+Brain > --> Grug unpacking JSON node seeds for lobe 'PhilosophyLobe'...
+🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'PhilosophyLobe': [node_40]
+
+Brain > --> Grug unpacking JSON node seeds for lobe 'EmotionLobe'...
+🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'EmotionLobe': [node_41]
+
+Brain > --> Grug unpacking JSON node seeds for lobe 'SurvivalLobe'...
+🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'SurvivalLobe': [node_42]
+
+Brain > 📌 Grug pinned text to Memory Wall!
+
+Brain > 📌 Grug pinned text to Memory Wall!
+
+Brain > 🗂  Relation class 'epistemic' created. Use /addVerb to populate.
+
+Brain > 🔧 Verb 'know' added to class 'epistemic'. Active immediately.
+
+Brain > 🔧 Verb 'believe' added to class 'epistemic'. Active immediately.
+
+Brain > 🔧 Verb 'infer' added to class 'epistemic'. Active immediately.
+
+Brain > 📖 Synonym registered: 'grok' → 'know'. Normalization active.
+
+Brain > 📖 Synonym registered: 'trust' → 'believe'. Normalization active.
+
+Brain > === SEMANTIC VERB REGISTRY ===
+  [arithmetic]: calculate, compute, sum
+  [causal]: causes, contradicts, hits, increases, makes, reduces, routes
+  [description]: clarify, define, describe, elaborate, explain
+  [emotion]: comfort, reassure, soothe
+  [epistemic]: believe, infer, know
+  [greeting]: greet, smile, welcome
+  [philosophy]: ponder, wonder
+  [reasoning]: analyze, infer, reason
+  [science]: observe
+  [spatial]: are, connects, is, was, were
+  [survival]: alert, notify, warn
+  [temporal]: chasing, follows, precedes
+  --- Synonyms ---
+    grok → know
+    trust → believe
+
+Brain > 🧠 Lobe 'DreamLobe' created for subject: 'dreams and imagination and sleep'. Cap: 20000 nodes. AIML tribe registered (cap=6666).
+
+Brain > 🔗 Lobes 'DreamLobe' ↔ 'PhilosophyLobe' connected.
+
+Brain > 🔗 Lobes 'DreamLobe' ↔ 'EmotionLobe' connected.
+
+Brain > === LOBE REGISTRY (9 lobes, 39 nodes indexed) ===
+  DreamLobe | subject='dreams and imagination and sleep' | nodes=0/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe,PhilosophyLobe] | whitelist=open | tbl[nodes=0 json=0 drop=0 hopf=0]
+  EmotionLobe | subject='sad cry hurt alone afraid worried lonely happy joy laugh worry concern anxious' | nodes=6/20000 | fires=0 | inhibits=0 | connected=[DreamLobe,SocialLobe,SurvivalLobe] | whitelist=open | tbl[nodes=4 json=23 drop=0 hopf=0]
+  MathLobe | subject='add plus sum calculate compute number total times multiply double triple' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  PhilosophyLobe | subject='meaning purpose exist truth wonder why life' | nodes=6/20000 | fires=0 | inhibits=0 | connected=[DreamLobe,ReasoningLobe] | whitelist=open | tbl[nodes=2 json=11 drop=0 hopf=0]
+  ReasoningLobe | subject='think reason analyze infer because therefore why how' | nodes=4/20000 | fires=0 | inhibits=0 | connected=[MathLobe,PhilosophyLobe,ScienceLobe] | whitelist=open | tbl[nodes=1 json=6 drop=0 hopf=0]
+  ScienceLobe | subject='describe explain define what is observe measure data hypothesis fire warm cold light dark' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  SocialLobe | subject='hello hi hey friend warm greet welcome howdy' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe] | whitelist=open | tbl[nodes=2 json=12 drop=0 hopf=0]
+  SurvivalLobe | subject='danger threat enemy attack warning beware run fire burns hot cold winter storm' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe] | whitelist=open | tbl[nodes=3 json=17 drop=0 hopf=0]
+  default | subject='general thinking reasoning conversation greeting' | nodes=3/20000 | fires=0 | inhibits=0 | connected=[none] | whitelist=open | tbl[nodes=3 json=0 drop=0 hopf=0]
+
+Brain > --> Grug unpacking JSON node seeds for lobe 'DreamLobe'...
+🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'DreamLobe': [node_43]
+
+Brain > === LOBE TABLE: PhilosophyLobe ===
+  [drop] 0 entries
+  [hopfield] 0 entries
+  [json] 11 entries
+  [meta] 0 entries
+  [nodes] 2 entries
+
+Brain > === LOBE TABLE: SocialLobe ===
+  [drop] 0 entries
+  [hopfield] 0 entries
+  [json] 12 entries
+  [meta] 0 entries
+  [nodes] 2 entries
+
+Brain > 
+🔍 THESAURUS COMPARISON
+  Input 1  : "fire"
+  Input 2  : "water"  → seeds: beverage, drink, fluid, liquid
+  Type     : word-word
+  ─────────────────────────────
+  Overall  : 0.0%  [NEGLIGIBLE]
+  Semantic : 0.0%
+  Context  : 50.0%
+  Assoc    : 0.0%
+  Confid.  : 90.0%
+
+
+Brain > 
+🔍 THESAURUS COMPARISON
+  Input 1  : "happy"  → seeds: cheerful, content, delighted, elated
+  Input 2  : "sad"  → seeds: dejected, downcast, gloomy, melancholy
+  Type     : word-word
+  ─────────────────────────────
+  Overall  : 0.0%  [NEGLIGIBLE]
+  Semantic : 0.0%
+  Context  : 50.0%
+  Assoc    : 0.0%
+  Confid.  : 90.0%
+
+
+Brain > 
+🔍 THESAURUS COMPARISON
+  Input 1  : "reason"  → seeds: argue, assert, claim, consider
+  Input 2  : "believe"
+  Type     : word-word
+  ─────────────────────────────
+  Overall  : 0.0%  [NEGLIGIBLE]
+  Semantic : 0.0%
+  Context  : 50.0%
+  Assoc    : 0.0%
+  Confid.  : 90.0%
+
+
+Brain > 📋 NegativeThesaurus — 2 inhibited word(s):
+   🚫 'fire,run,danger'   reason: fire alone is not always survival context   added: 54630.0s ago
+   🚫 'hello,attack'   reason: greeting and attack should not co-fire   added: 54630.0s ago
+
+Brain > 🚫 Inhibition registered: 'hate'  reason: toxic negativity
+   NegativeThesaurus size: 3 / 256
+
+Brain > 🚫 'hate' IS inhibited in NegativeThesaurus.
+
+Brain > ✅ Inhibition removed: 'hate'. Word no longer blocked.
+
+Brain > 📋 NegativeThesaurus — 2 inhibited word(s):
+   🚫 'fire,run,danger'   reason: fire alone is not always survival context   added: 54630.0s ago
+   🚫 'hello,attack'   reason: greeting and attack should not co-fire   added: 54630.0s ago
+
+Brain > [ENGINE] 🔗  Node 'node_1' attached to target 'node_2' with pattern "think" (base_conf=1.05, 1/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'node_1' to 'node_2' with pattern "think" (base_conf=1.05, 1/4)
+
+Brain > [ENGINE] 🔗  Node 'node_0' attached to target 'node_2' with pattern "hello" (base_conf=1.05, 2/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'node_0' to 'node_2' with pattern "hello" (base_conf=1.05, 2/4)
+
+Brain > === ATTACHMENT MAP (1 targets with attachments) ===
+  🎯 node_2 (2/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+      🔗 node_0 [ALIVE str=1.0] | base_conf=1.05 | connector="hello"
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_0' fired via target 'node_2' (conf=1.002, connector="hello")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 default: base=0.8 × top=1.002 = 0.4491 [hard_votes=2]
+  · ReasoningLobe: base=0.598 × top=0.598 = 0.277 [hard_votes=1]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.563 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Grug say hello back with warm heart.. Pinned note: Grug knows: fire was discovered by hitting rocks together
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'tell me about fire'
+Primary Action: greet  (conf=1.0, certainty=SURE)
+Sure Actions: [greet]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont frown, dont insult, dont be rude]
+Winning Node: node_0
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (tell, about, fire)
+Node Triples: (node_2, relay_attached, hello)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.66 eligible=9] (Recent): [User]: there is a fire in the cave (intensity=0.74) | [User]: tell me about fire (intensity=1.28)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.8 × top=1.002 = 0.4491 [hard_votes=2]
+  · ReasoningLobe: base=0.598 × top=0.598 = 0.277 [hard_votes=1]
+=========================================
+
+Here is the picture: Grug hits rock and makes fire, that how Grug learn the world.. Pinned note: Grug knows: fire was discovered by hitting rocks together [Directives: [ponder "Grug stare at fire. tell me about fire make Grug wonder"] (fire_prob=0.6)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'tell me about fire'
+Primary Action: ponder  (conf=0.6, certainty=SURE)
+Sure Actions: [ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont panic]
+Winning Node: node_2
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (tell, about, fire)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.66 eligible=9] (Recent): [User]: tell me about fire (intensity=0.66) | [User]: explain quantum mechanics (intensity=0.86) | [System]: Explicit "explain the concept of entropy in detail" → primary=describe node=node_8 (intensity=0.67)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.8 × top=1.002 = 0.4491 [hard_votes=2]
+  · ReasoningLobe: base=0.598 × top=0.598 = 0.277 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_0' fired via target 'node_2' (conf=1.026, connector="hello")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 default: base=0.862 × top=1.026 = 0.9772 [hard_votes=2]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.559 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Grug say hello back with warm heart.. Pinned note: Grug knows: fire was discovered by hitting rocks together
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'fire is warm'
+Primary Action: greet  (conf=1.03, certainty=SURE)
+Sure Actions: [greet]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont frown, dont insult, dont be rude]
+Winning Node: node_0
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (fire, is, warm)
+Node Triples: (node_2, relay_attached, hello)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=6] (Recent): [User]: tell me about fire (intensity=0.58) | [User]: tell me about fire (intensity=1.0) | [User]: fire is warm (intensity=1.67)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.03, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.862 × top=1.026 = 0.9772 [hard_votes=2]
+=========================================
+
+Grug hits rock and makes fire, that how Grug learn the world.. Pinned note: Grug knows: fire was discovered by hitting rocks together
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'fire is warm'
+Primary Action: analyze  (conf=0.7, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont panic]
+Winning Node: node_2
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (fire, is, warm)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=6] (Recent): No recent sounds
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.7, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.862 × top=1.026 = 0.9772 [hard_votes=2]
+=========================================
+
+Brain > 💎 💎 Attachment node_2→node_1 CRYSTALIZED (origin=:user). Always fires.
+
+Brain > === ATTACHMENT MAP (1 targets with attachments) ===
+  🎯 node_2 (2/4 attached):
+      🔗 node_1 [ALIVE str=1.0] 💎[CRYSTAL:user] | base_conf=1.05 | connector="think"
+      🔗 node_0 [ALIVE str=4.0] | base_conf=1.05 | connector="hello"
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_1' fired via target 'node_2' (conf=1.064, connector="think")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 default: base=0.832 × top=1.064 = 0.516 [hard_votes=2]
+  · ReasoningLobe: base=0.598 × top=0.598 = 0.2771 [hard_votes=1]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.564 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Grug line up the rocks one by one and check each before moving on.. Pinned note: Grug knows: fire was discovered by hitting rocks together
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'tell me about fire'
+Primary Action: reason  (conf=1.06, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont guess, dont hallucinate, dont assume]
+Winning Node: node_1
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (tell, about, fire)
+Node Triples: (node_2, relay_attached, think)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=6] (Recent): [User]: tell me about fire (intensity=0.99) | [User]: tell me about fire (intensity=1.25) | [System]: Mission "tell me about fire" → primary=greet conf=1.0 node=node_0 (intensity=0.75) | [User]: fire is warm (intensity=1.24)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.06, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.832 × top=1.064 = 0.516 [hard_votes=2]
+  · ReasoningLobe: base=0.598 × top=0.598 = 0.2771 [hard_votes=1]
+=========================================
+
+Here is the picture: Grug hits rock and makes fire, that how Grug learn the world.. Pinned note: Grug knows: fire was discovered by hitting rocks together
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'tell me about fire'
+Primary Action: analyze  (conf=0.6, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont panic]
+Winning Node: node_2
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (tell, about, fire)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=6] (Recent): [System]: Mission "tell me about fire" → primary=greet conf=1.0 node=node_0 (intensity=0.75) | [User]: fire is warm (intensity=1.24) | [User]: tell me about fire (intensity=1.28)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.832 × top=1.064 = 0.516 [hard_votes=2]
+  · ReasoningLobe: base=0.598 × top=0.598 = 0.2771 [hard_votes=1]
+=========================================
+
+Brain > 🔓 🪨 Attachment node_2→node_1 de-crystalized (was :user).
+
+Brain > === ATTACHMENT MAP (1 targets with attachments) ===
+  🎯 node_2 (2/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+      🔗 node_0 [ALIVE str=4.0] | base_conf=1.05 | connector="hello"
+
+Brain > [ENGINE] 🔓  Node 'node_0' detached from target 'node_2'.
+🔓 Detached 'node_0' from 'node_2'
+
+Brain > === ATTACHMENT MAP (1 targets with attachments) ===
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 default: base=0.7 × top=0.7 = 0.41 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.548 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Grug hits rock and makes fire, that how Grug learn the world.. Pinned note: Grug knows: fire was discovered by hitting rocks together [Directives: [ponder "Grug stare at fire. fire is dangerous make Grug wonder"] (fire_prob=0.6)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'fire is dangerous'
+Primary Action: ponder  (conf=0.7, certainty=SURE)
+Sure Actions: [ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [dont panic]
+Winning Node: node_2
+Lobe Context: [default (3/3 active (hello | think | fire))]
+User Triples: (fire, is, dangerous)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=6] (Recent): [User]: tell me about fire (intensity=0.81) | [User]: tell me about fire (intensity=1.01) | [User]: fire is dangerous (intensity=1.74)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.7, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 default: base=0.7 × top=0.7 = 0.41 [hard_votes=1]
+=========================================
+
+Brain > [ENGINE] 🔗  Node 'node_greet_hi' attached to target 'node_3' with pattern "hi" (base_conf=1.3, 1/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'node_greet_hi' to 'node_3' with pattern "hi" (base_conf=1.3, 1/4)
+
+Brain > [ENGINE] 🔗  Node 'node_greet_hey' attached to target 'node_3' with pattern "hey" (base_conf=1.275, 2/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'node_greet_hey' to 'node_3' with pattern "hey" (base_conf=1.275, 2/4)
+
+Brain > === ATTACHMENT MAP (2 targets with attachments) ===
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_greet_hey' fired via target 'node_3' (conf=1.237, connector="hey")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.968 × top=1.237 = 1.5056 [hard_votes=2]
+  · default: base=0.699 × top=0.699 = 0.2043 [hard_votes=1]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_greet_hey big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.565 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Let me think with you. Grug hear you and Grug glad you here..
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'hello there'
+Primary Action: greet  (conf=1.24, certainty=SURE)
+Sure Actions: [greet]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [be warm, smile]
+Winning Node: node_greet_hey
+Lobe Context: [SocialLobe (2/5 active (goodbye | hello))]
+User Triples: None
+Node Triples: (node_3, relay_attached, hey)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=8] (Recent): [User]: tell me about fire (intensity=0.65) | [User]: hello there (intensity=1.31)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.24, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.968 × top=1.237 = 1.5056 [hard_votes=2]
+  · default: base=0.699 × top=0.699 = 0.2043 [hard_votes=1]
+=========================================
+
+Let me think with you. Grug welcome you to the cave with open arms.. The link is clear: gesture signals welcome.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'hello there'
+Primary Action: smile  (conf=0.7, certainty=SURE)
+Sure Actions: [smile]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [friendly, welcoming]
+Winning Node: node_3
+Lobe Context: [SocialLobe (2/5 active (goodbye | hello))]
+User Triples: None
+Node Triples: (voice, carries, warmth), (gesture, signals, welcome)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=8] (Recent): [User]: fire is dangerous (intensity=1.1) | [System]: /nodeAttach: Attached 'node_greet_hi' to 'node_3' with pattern "hi" (base_conf=1.3, 1/4) (intensity=0.64) | [System]: /nodeAttach: Attached 'node_greet_hey' to 'node_3' with pattern "hey" (base_conf=1.275, 2/4) (intensity=0.64) | [User]: hello there (intensity=1.31)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_3
+Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.968 × top=1.237 = 1.5056 [hard_votes=2]
+  · default: base=0.699 × top=0.699 = 0.2043 [hard_votes=1]
+=========================================
+
+Brain > [ENGINE] 🔗  Node 'node_14' attached to target 'node_13' with pattern "smile" (base_conf=0.2, 1/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'node_14' to 'node_13' with pattern "smile" (base_conf=0.2, 1/4)
+
+Brain > === ATTACHMENT MAP (3 targets with attachments) ===
+  🎯 node_13 (1/4 attached):
+      🔗 node_14 [ALIVE str=4.0] | base_conf=0.2 | connector="smile"
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_14' fired via target 'node_13' (conf=0.201, connector="smile")
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.599 × top=0.6 = 0.2784 [hard_votes=3]
+--> 3 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=3 (sure=3 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.55 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Let me think with you. Grug sit with you by the fire until the hurt passes.. A companion frame: Good thing better when more than one rock around the fire.. [Directives: [comfort "Grug pat back. [EmotionLobe (4/6 active (happy | angry | sad))] understand pain"] (fire_prob=0.7)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'I feel sad but happy'
+Primary Action: reassure  (conf=0.6, certainty=UNSURE)
+Sure Actions: [reassure, smile, comfort]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [gentle, warm]
+Winning Node: node_13
+Lobe Context: [EmotionLobe (4/6 active (happy | angry | sad))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_14 | action=smile | conf=0.6 | relations=(moment, brings, joy), (memory, evokes, gladness)
+  🪨 node_emo_sad | action=comfort | conf=0.6 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=5] (Recent): [User]: fire is dangerous (intensity=0.73) | [User]: I feel sad but happy (intensity=1.26)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_13
+Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.599 × top=0.6 = 0.2784 [hard_votes=3]
+=========================================
+
+Brain > [ENGINE] 🔗  Node 'node_danger_help' attached to target 'node_16' with pattern "help" (base_conf=1.35, 1/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'node_danger_help' to 'node_16' with pattern "help" (base_conf=1.35, 1/4)
+
+Brain > === ATTACHMENT MAP (4 targets with attachments) ===
+  🎯 node_13 (1/4 attached):
+      🔗 node_14 [ALIVE str=6.0] | base_conf=0.2 | connector="smile"
+  🎯 node_16 (1/4 attached):
+      🔗 node_danger_help [ALIVE str=7.0] | base_conf=1.35 | connector="help"
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_danger_help' fired via target 'node_16' (conf=1.29, connector="help")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.995 × top=1.29 = 1.6606 [hard_votes=2]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_danger_help big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.568 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Grug come fast with torch and club..
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'danger is everywhere'
+Primary Action: support  (conf=1.29, certainty=SURE)
+Sure Actions: [support]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [now, strong]
+Winning Node: node_danger_help
+Lobe Context: [SurvivalLobe (3/5 active (storm | run | danger))]
+User Triples: (danger, is, everywhere)
+Node Triples: (node_16, relay_attached, help)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=8] (Recent): [System]: Mission "hello there" → primary=greet conf=1.24 node=node_greet_hey (intensity=0.44) | [System]: /nodeAttach: Attached 'node_danger_help' to 'node_16' with pattern "help" (base_conf=1.35, 1/4) (intensity=0.64) | [User]: danger is everywhere (intensity=1.65)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.29, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.995 × top=1.29 = 1.6606 [hard_votes=2]
+=========================================
+
+Warn loud. Raise spear now before it too late.. [Directives: [alert "Grug raise spear! danger near [SurvivalLobe (3/5 active (storm | run | danger))]"] (fire_prob=0.95)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'danger is everywhere'
+Primary Action: alert  (conf=0.7, certainty=SURE)
+Sure Actions: [alert]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [urgent, loud]
+Winning Node: node_16
+Lobe Context: [SurvivalLobe (3/5 active (storm | run | danger))]
+User Triples: (danger, is, everywhere)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=8] (Recent): [System]: Mission "hello there" → primary=greet conf=1.24 node=node_greet_hey (intensity=0.44) | [User]: I feel sad but happy (intensity=0.82)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.7, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.995 × top=1.29 = 1.6606 [hard_votes=2]
+=========================================
+
+Brain > 👁  Arousal set to 0.3. Eye system updated.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 👁  Arousal set to 0.9. Eye system updated.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_danger_help' fired via target 'node_16' (conf=1.307, connector="help")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.834 × top=0.953 = 0.8292 [hard_votes=3]
+[ENGINE] 💎 Node node_danger_emergency solidified (strength=9.0 ≥ 9.0) — NONJITTER tag applied.
+[ENGINE] 💎 Node node_danger_help solidified (strength=9.0 ≥ 9.0) — NONJITTER tag applied.
+--> 3 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=2 (sure=2 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_danger_emergency big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.569 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Grug come fast with torch and club..
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'EMERGENCY DANGER NOW'
+Primary Action: notify  (conf=1.31, certainty=SURE)
+Sure Actions: [notify]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [now, strong]
+Winning Node: node_danger_help
+Lobe Context: [SurvivalLobe (3/5 active (storm | run | danger))]
+User Triples: None
+Node Triples: (node_16, relay_attached, help)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: danger is everywhere (intensity=1.24) | [System]: Mission "danger is everywhere" → primary=support conf=1.29 node=node_danger_help (intensity=0.71)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.31, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.834 × top=0.953 = 0.8292 [hard_votes=3]
+=========================================
+
+Warn loud. Raise spear now before it too late.. A companion frame: Grug protect tribe first.. [Directives: [alert "Grug raise spear! danger near [SurvivalLobe (3/5 active (storm | run | danger))]"] (fire_prob=0.95)]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'EMERGENCY DANGER NOW'
+Primary Action: notify  (conf=0.6, certainty=UNSURE)
+Sure Actions: [notify, alert]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [urgent, loud]
+Winning Node: node_16
+Lobe Context: [SurvivalLobe (3/5 active (storm | run | danger))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_danger_emergency | action=alert | conf=0.6 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=7] (Recent): No recent sounds
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.834 × top=0.953 = 0.8292 [hard_votes=3]
+=========================================
+
+Brain > 👁  Arousal set to 0.5. Eye system updated.
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=38) ===
+  DreamLobe | pop=0/6666 | live=0 | grave=0
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > 
+╔══════════════════════════════════════════════════════════════╗
+║           🤖 AIML NODES IN LOBE: PhilosophyLobe
+╠══════════════════════════════════════════════════════════════╣
+  📍 ethics_tribe
+     Strength: 5.05 ✅ ALIVE
+     Template: should|ought|right|wrong|good|evil Grug weigh mora...
+  📍 wonder_tribe
+     Strength: 5.16 ✅ ALIVE
+     Template: why|meaning|purpose|exist|truth Grug ponder deep q...
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > 
+╔══════════════════════════════════════════════════════════════╗
+║                    🔄 AIML CYCLE INFO                         ║
+╠══════════════════════════════════════════════════════════════╣
+  Current Cycle    : 38
+  ─────────────────────────────────────────────────────────────
+  Cycle Mechanics:
+  • /aimlRight rewards nodes that voted this cycle
+  • /aimlWrong penalizes nodes that voted this cycle
+  • Nodes that gained strength are skipped from double reward
+  • Nodes that gained get EXTRA penalty on /aimlWrong
+  • Cycle counter increments with /mission calls
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > [AIML] 🧹 phagy_sweep: pruned 0 grave node(s).
+!!! SYSTEM ERROR: MethodError(isless, (0, Dict{String, Any}("pruned" => Tuple{String, String}[], "pruned_count" => 0)), 0x00000000000083d7) !!!
+
+Stacktrace:
+ [1] <(x::Int64, y::Dict{String, Any})
+   @ Base ./operators.jl:352
+ [2] >(x::Dict{String, Any}, y::Int64)
+   @ Base ./operators.jl:378
+ [3] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:6249
+ [4] top-level scope
+   @ none:1
+ [5] eval
+   @ ./boot.jl:385 [inlined]
+ [6] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [7] _start()
+   @ Base ./client.jl:552
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 33
+  Sigmoid activations : 2
+  ReLU activations    : 31
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.5694
+  Right feedback      : 4
+  Wrong feedback      : 1
+  Rules (total/enabled): 0 / 0
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 33
+  Novelty hashes      : 30
+  Observer threshold  : 4
+  Observer count      : 8
+  Adjustments enabled : YES
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+╔══════════════════════════════════════════════════════════════╗
+║         MLP SELF-OBSERVER STORE                            ║
+╠══════════════════════════════════════════════════════════════╣
+  Total observations  : 8
+  Distinct keys       : 8
+  Observation threshold: 4
+  Adjustments enabled : YES
+  Progress to gate    : 4/4 ✓ GATE OPEN
+╚══════════════════════════════════════════════════════════════╝
+
+
+Brain > 🔧  /mlpThreshold: 4 → 3
+
+Brain > 📋  /mlpRule list: No rules registered. Brain has no user instructions yet.
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.55 | Surface bits: 3
+
+Brain > 💎 Phase pull threshold set to 0.35
+
+Brain > 💎 Phase surface count set to 4
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.995 × top=0.995 = 0.9885 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.559 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Grug wonder what it means to be aware and experience things..
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is consciousness'
+Primary Action: analyze  (conf=1.0, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [deeply, carefully]
+Winning Node: node_40
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: (what, is, consciousness)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [System]: Mission "danger is everywhere" → primary=support conf=1.29 node=node_danger_help (intensity=0.45) | [User]: what is consciousness (intensity=1.72)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.995 × top=0.995 = 0.9885 [hard_votes=1]
+=========================================
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 ReasoningLobe: base=0.548 × top=0.548 = 0.2223 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=0.6 | quality=0.544 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Each thought lean on the one before it like rocks in a wall.. The link is clear: evidence leads_to inference.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'reason about time and existence'
+Primary Action: reason  (conf=0.55, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [step by step]
+Winning Node: node_11
+Lobe Context: [ReasoningLobe (1/4 active (reason))]
+User Triples: None
+Node Triples: (premise, supports, conclusion), (evidence, leads_to, inference)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: reason about time and existence (intensity=1.27)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_11
+Lobe Curve (√base × top² = score):
+  👑 ReasoningLobe: base=0.548 × top=0.548 = 0.2223 [hard_votes=1]
+=========================================
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > 💎 Phase pull DISABLED
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 💎 Phase pull ENABLED
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > ⚠  'however' already in split_conjunctions (no change)
+
+Brain > ✅ Created compound pair 'ice' → {'cream'} (new leader)
+
+Brain > ✅ Added 'whether' to question_markers (now 10 total)
+
+Brain > ❌ /decomposer addCommand FAILED: MethodError(GrugBot420.InputDecomposer.add_command_marker!, ("investigate", SubString{String}["investigates", "investigated"]), 0x00000000000083d7)
+
+Brain > !!! SYSTEM ERROR: ErrorException("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!") !!!
+
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:7610
+ [3] top-level scope
+   @ none:1
+ [4] eval
+   @ ./boot.jl:385 [inlined]
+ [5] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [6] _start()
+   @ Base ./client.jl:552
+
+Brain > ✅ Removed 'however' from split_conjunctions (now 15 total)
+
+Brain > ✅ Removed 'cream' from 'ice'; leader had no followers left, removed 'ice' entry entirely
+
+Brain > ✅ Removed 'whether' from question_markers (now 9 total)
+
+Brain > ❌ /decomposer removeCommand: 'investigate' not in command_markers — cannot remove what isn't there
+
+Brain > !!! SYSTEM ERROR: ErrorException("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!") !!!
+
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:7610
+ [3] top-level scope
+   @ none:1
+ [4] eval
+   @ ./boot.jl:385 [inlined]
+ [5] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [6] _start()
+   @ Base ./client.jl:552
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &hexnum | lambda | @match | type=word | promote=true | prov=user-cli
+  &mathconst | macro | @bind | lex=[e,inf,nan,one,phi,pi,…(+2)] | prov=user-cli
+  &mathfunc | macro | @bind | lex=[abs,ceil,cos,exp,floor,log,…(+3)] | prov=user-cli
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > 🔮 Sigil &MATH_OP registered as :functor @ :match (type=op, lexicon=5 words)
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &MATH_OP | functor | @match | type=op | lex=[+,−,×,÷,=] | prov=user-cli
+  &hexnum | lambda | @match | type=word | promote=true | prov=user-cli
+  &mathconst | macro | @bind | lex=[e,inf,nan,one,phi,pi,…(+2)] | prov=user-cli
+  &mathfunc | macro | @bind | lex=[abs,ceil,cos,exp,floor,log,…(+3)] | prov=user-cli
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > 🗑  Sigil &MATH_OP removed (was prov=user-cli).
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &hexnum | lambda | @match | type=word | promote=true | prov=user-cli
+  &mathconst | macro | @bind | lex=[e,inf,nan,one,phi,pi,…(+2)] | prov=user-cli
+  &mathfunc | macro | @bind | lex=[abs,ceil,cos,exp,floor,log,…(+3)] | prov=user-cli
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > ⚙️ Rule tied to tree: [when {PRIMARY_ACTION} is alert then {SURE_ACTIONS} must be urgent prob=0.8] (fire_prob=1.0)
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 40
+  Hopfield cache  : 0 entries
+  Memory messages : 160
+  Est. memory use : ~118 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.35
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 9
+  Nodes in lobes  : 40
+  Top lobe (fires): ScienceLobe (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=42) ===
+  DreamLobe | pop=0/6666 | live=0 | grave=0
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 35
+  Sigmoid / ReLU  : 2 / 33
+  Last activation : relu
+  Novelty score   : 0.6
+  Dir. quality    : 0.5443
+  Rules           : 0/0 enabled
+  Right / Wrong   : 4 / 1
+  Obs. threshold  : 3
+  Observer count  : 9
+  Adjustments     : ENABLED
+╚══════════════════════════════════════════════════╝
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.999 × top=0.999 = 0.9983 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_assert_truth big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.557 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth important to Grug. Grug not lie, Grug speak what is real.. [Directives: [describe "Grug paint picture with words. describe show truth"] (fire_prob=0.85); when describe is alert then describe must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is truth'
+Primary Action: describe  (conf=1.0, certainty=SURE)
+Sure Actions: [describe]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [honest, carefully]
+Winning Node: node_assert_truth
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: (what, is, truth)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.66 eligible=7] (Recent): [System]: 🗑  Sigil &MATH_OP removed (was prov=user-cli). (intensity=0.66) | [User]: what is truth (intensity=1.66)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.999 × top=0.999 = 0.9983 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.999 × top=0.999 = 0.9963 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=0.5 | quality=0.562 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth important to Grug. Grug not lie, Grug speak what is real.. [Directives: [describe "Grug paint picture with words. describe show truth"] (fire_prob=0.85); when describe is alert then describe must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is truth'
+Primary Action: describe  (conf=1.0, certainty=SURE)
+Sure Actions: [describe]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [honest, carefully]
+Winning Node: node_assert_truth
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: (what, is, truth)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.47 eligible=5] (Recent): [User]: what is truth (intensity=2.09)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.999 × top=0.999 = 0.9963 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.998 × top=0.998 = 0.995 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: sigmoid | novelty=0.333 | quality=0.527 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth important to Grug. Grug not lie, Grug speak what is real.. [Directives: [describe "Grug paint picture with words. describe show truth"] (fire_prob=0.85); when describe is alert then describe must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is truth'
+Primary Action: describe  (conf=1.0, certainty=SURE)
+Sure Actions: [describe]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [honest, carefully]
+Winning Node: node_assert_truth
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: (what, is, truth)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=5] (Recent): [User]: what is truth (intensity=1.66)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.998 × top=0.998 = 0.995 [hard_votes=1]
+=========================================
+
+Brain > [ENGINE] 💎 Node node_assert_truth solidified (strength=9.0 ≥ 9.0) — NONJITTER tag applied.
+[ENGINE] ✅ /right: total=1 rewarded=1 [locked=1 unsure=0] double_skip=0 coinflip_miss=0 grave_skip=0
+✅ /right applied. 1 contributor(s) [1 locked, 0 unsure]: 1 rewarded, 0 skipped (already gained), 0 missed coinflip.
+   ↳ context intensity nudged up on 8 message(s) used last cycle.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.998 × top=0.998 = 0.9939 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: sigmoid | novelty=0.25 | quality=0.54 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth important to Grug. Grug not lie, Grug speak what is real.. [Directives: [describe "Grug paint picture with words. describe show truth"] (fire_prob=0.85); when describe is alert then describe must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is truth'
+Primary Action: describe  (conf=1.0, certainty=SURE)
+Sure Actions: [describe]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [honest, carefully]
+Winning Node: node_assert_truth
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: (what, is, truth)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=5] (Recent): [User]: what is truth (intensity=2.62) | [User]: what is truth (intensity=2.47) | [User]: what is truth (intensity=2.43) | [User]: what is truth (intensity=1.72)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.998 × top=0.998 = 0.9939 [hard_votes=1]
+=========================================
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 10 | Recorded: 10 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(3 parts): [mp_1/primary] "I feel sad" | [mp_2/support] "I" | [mp_3/support] "wonder why we exist"
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 EmotionLobe: base=0.7 × top=0.7 = 0.4096 [hard_votes=2]
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.699 × top=0.699 = 0.4089 [hard_votes=1]
+--> 3 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=3 (sure=3 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_phil_exist big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.611 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Grug sit with you by the fire until the hurt passes.. [Directives: [ponder "Grug stare at fire. I feel sad but I also wonder why we exist make Grug wonder"] (fire_prob=0.6); when support is alert then support, reassure, ponder must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'I feel sad but I also wonder why we exist'
+Primary Action: support  (conf=0.7, certainty=UNSURE)
+Sure Actions: [support, reassure, ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [gently, warm]
+Winning Node: node_emo_sad
+Lobe Context: [EmotionLobe (4/6 active (happy | angry | sad))] | [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_13 | action=reassure | conf=0.7 | relations=None
+  🪨 node_phil_exist | action=ponder | conf=0.7 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=5] (Recent): [User]: what is truth (intensity=1.59) | [User]: what is truth (intensity=1.59) | [User]: what is truth (intensity=1.1) | [User]: I feel sad but I also wonder why we exist (intensity=1.7)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_13
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.699 × top=0.699 = 0.4089 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.519 × top=0.52 = 0.1949 [hard_votes=3]
+  · MathLobe: base=0.519 × top=0.519 = 0.1937 [hard_votes=1]
+--> 3 valid votes passed gate... compiling JIT superposition...
+[ORCHESTRATOR] 🎲  TIE DETECTED! 2 rocks at confidence 0.52. Random winner: node_assert_truth
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=3 (sure=3 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.597 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Let me think with you. Think about meaning of things. Big question make Grug wonder.. A companion frame: Big questions never get small answers, but Grug still ask them.. Pinned note: Grug remembers: the cave is safest during storms [Directives: [ponder "Grug stare at fire. calculate the meaning of happiness plus truth make Grug wonder"] (fire_prob=0.6); when reason is alert then reason, elaborate, ponder must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'calculate the meaning of happiness plus truth'
+Primary Action: reason  (conf=0.52, certainty=UNSURE)
+Sure Actions: [reason, elaborate, ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [deeply, carefully]
+Winning Node: node_phil_meaning
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_12 | action=elaborate | conf=0.52 | relations=(wonder, drives, inquiry), (question, seeks, meaning)
+  🪨 node_assert_truth | action=ponder | conf=0.52 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.75 eligible=6] (Recent): [User]: what is truth (intensity=1.15)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_12
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.519 × top=0.52 = 0.1949 [hard_votes=3]
+  · MathLobe: base=0.519 × top=0.519 = 0.1937 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.52 × top=0.52 = 0.195 [hard_votes=1]
+  · PhilosophyLobe: base=0.518 × top=0.518 = 0.1932 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.589 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Grug warn tribe to seek shelter before the sky falls.. Pinned note: Grug remembers: the cave is safest during storms [Directives: when warn is alert then warn must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'warn everyone that the storm of consciousness is coming'
+Primary Action: warn  (conf=0.52, certainty=SURE)
+Sure Actions: [warn]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [urgent, immediate]
+Winning Node: node_42
+Lobe Context: [SurvivalLobe (3/5 active (storm | run | danger))]
+User Triples: (consciousness, is, coming)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.38 eligible=9] (Recent): [User]: calculate the meaning of happiness plus truth (intensity=0.87)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.52, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 SurvivalLobe: base=0.52 × top=0.52 = 0.195 [hard_votes=1]
+  · PhilosophyLobe: base=0.518 × top=0.518 = 0.1932 [hard_votes=1]
+=========================================
+
+Brain > --> Grug freezing entire cave to specimen file...
+  💎 Phase accumulator saved: 11 snapshots in crystal
+  ✂️  Decomposer config saved: 49 total entries across 6 fields
+
+╔══════════════════════════════════════════════════════════════╗
+║            🧊 SPECIMEN SAVED SUCCESSFULLY                    ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : specimens/test_comprehensive_output.specimen.json
+  📦  JSON size        : 237270 bytes
+  📄  File size        : 237270 bytes (plain JSON)
+  ⏱️   Time             : 0.5s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 40
+  🧠  Lobes            : 9
+  💎  Phase Accumulator      : 11 snapshots
+  📋  Lobe tables      : 9
+  ⚡  Hopfield entries  : 0
+  ⚙️   Rules            : 7
+  💬  Messages         : 175
+  🔧  Verb classes     : 12
+  🔤  Thesaurus words  : 499
+  🚫  Inhibitions      : 2
+  🔗  Attachments      : 5
+  🔮  Trajectory entries : 0
+  🕐  Temporal coherence : 0
+  ⏳  Morph cooldowns    : 0
+  🤖  AIML nodes       : 13
+  🪄  Sigil entries    : 8
+  ⚙️  Automaton rules  : 6
+  🗳  Contributor votes : 1
+  🎭  Tonal knobs      : saved
+  👁   Arousal          : 0.35
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 40
+  Hopfield cache  : 0 entries
+  Memory messages : 176
+  Est. memory use : ~125 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.35
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 9
+  Nodes in lobes  : 40
+  Top lobe (fires): ScienceLobe (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=49) ===
+  DreamLobe | pop=0/6666 | live=0 | grave=0
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 42
+  Sigmoid / ReLU  : 4 / 38
+  Last activation : relu
+  Novelty score   : 1.0
+  Dir. quality    : 0.5893
+  Rules           : 0/0 enabled
+  Right / Wrong   : 5 / 1
+  Obs. threshold  : 3
+  Observer count  : 12
+  Adjustments     : ENABLED
+╚══════════════════════════════════════════════════╝
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 11 | Recorded: 11 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > === NODE MAP STATUS (40 nodes) ===
+  node_0 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=1.516s | pattern="hello"
+  node_1 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.624s | pattern="think"
+  node_10 | str=9.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.766s | pattern="explain"
+  node_11 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.324s | pattern="reason"
+  node_12 | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.455s | pattern="meaning"
+  node_13 | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.351s | pattern="sad"
+  node_14 | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.334s | pattern="happy"
+  node_15 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.322s | pattern="worry"
+  node_16 | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.528s | pattern="danger"
+  node_17 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.332s | pattern="run"
+  node_2 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.506s | pattern="fire"
+  node_3 | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=2.519s | pattern="hello"
+  node_4 | str=3.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="goodbye"
+  node_40 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.327s | pattern="consciousness"
+  node_41 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="angry"
+  node_42 | str=2.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.328s | pattern="storm"
+  node_43 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="dream"
+  node_5 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="add"
+  node_6 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="multiply"
+  node_7 | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.574s | pattern="calculate"
+  node_8 | str=10.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.618s | pattern="describe"
+  node_9 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="observe"
+  node_assert_fact | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="fact"
+  node_assert_truth | str=10.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.328s | pattern="truth"
+  node_cmd_show | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="show"
+  node_cmd_tell | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.329s | pattern="tell"
+  node_danger_emergency | str=9.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.624s | pattern="emergency"
+  node_danger_help | str=9.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.627s | pattern="help"
+  node_emo_afraid | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="afraid"
+  node_emo_sad | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.368s | pattern="sad"
+  node_greet_hey | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.627s | pattern="hey"
+  node_greet_hi | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="hi"
+  node_greet_morning | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="morning"
+  node_math_multiply | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="multiply"
+  node_math_plus | str=7.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="plus"
+  node_phil_exist | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.404s | pattern="exist"
+  node_phil_meaning | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.338s | pattern="meaning"
+  node_q_how | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="how"
+  node_q_what | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="what"
+  node_q_why | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="why"
+┌ Warning: Replacing docs for `GrugBot420.current_promotion_bindings :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.current_promotion_rewritten :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.current_promotion_raw :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.words_to_signal :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.rewrite_passive_mission :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.extract_relational_triples :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.extract_dynamic_relational_triples :: Tuple{String, Int64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.evaluate_relational_dialectics :: Tuple{Vector{GrugBot420.RelationalTriple}, Vector{GrugBot420.RelationalTriple}, Vector{String}, Dict{String, Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.hopfield_input_hash :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.hopfield_lookup :: Tuple{UInt64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.hopfield_record! :: Tuple{UInt64, Vector{String}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.is_nonjitter :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.set_nonjitter! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.clear_nonjitter! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.collect_nonjitter_ids :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.jitter_allowed_for :: Tuple{GrugBot420.Node, Float64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.is_solidified :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.check_solidify_threshold! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.bump_strength! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.penalize_strength! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.mark_node_grave! :: Tuple{GrugBot420.Node, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.mark_node_contributor! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.try_link_nodes! :: Tuple{GrugBot420.Node, GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.find_best_latch_target :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._token_overlap_similarity :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.next_group_id :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.register_group! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.add_to_group! :: Tuple{GrugBot420.NodeGroup, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.mark_group_grave_slot! :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.group_for :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.chatter_cooldown_remaining :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.stamp_chatter! :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.attach_node! :: Tuple{String, String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.detach_node! :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.fire_attachments! :: Tuple{String, Int64, Int64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.get_attachment_summary :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.get_attachments_for_target :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.crystalize_attachment! :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.decrystalize_attachment! :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._semantic_truth_score :: Tuple{Any}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.auto_crystalize_sweep! :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.is_crystalized :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._sdf_signal_similarity :: Tuple{Vector{Float64}, Vector{Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.attach_image_node! :: Tuple{String, String, Vector{UInt8}, Int64, Int64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.reset_throttle! :: Tuple{GrugBot420.Node, Float64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.create_node :: Tuple{String, String, Dict, Vector{String}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.parse_action_packet :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.select_action :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.screen_input_complexity :: Tuple{Vector{Float64}, Vector{GrugBot420.RelationalTriple}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._effective_scan_mode :: Tuple{Int64, Vector{Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._bidirectional_cheap_scan :: Tuple{Vector{Float64}, Vector{Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.collect_drop_table_neighbors :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.strength_biased_scan_coinflip :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.scan_specimens :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.scan_and_expand :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.cast_vote :: NTuple{5, Any}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.cast_explicit_vote :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.cast_vote_with_group :: Tuple{Any, Any, Any, Any, Any, String, Symbol}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.ensure_action_packet_registered! :: Tuple{AbstractString}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.grow_nodes_from_packet :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.get_node_status_summary :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.add_orchestration_rule! :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.count_alive_nodes_in_lobe :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.18 | ArousalNudge=0.0 | Weight=1.04 [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'wonder' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:1852
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'wonder' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:1852
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.54 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+[ Info: [PREDICTOR] 👁  Arousal nudged 0.55 → 1.0 (TONE_HOSTILE)
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=0.19 | ArousalNudge=0.0 | Weight=1.06 [FALLBACK] [FRAME=terse/basic]
+[ Info: [ATP-ESCALATE] Automaton rule 'speculate_step' fired (1 steps, 0 jittered) for action=ACTION_SPECULATE conf=1.0
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.35 | ArousalNudge=0.0 | Weight=1.18 [FALLBACK] [FRAME=imperative/basic]
+[ Info: [MAIN Stage 2] Arithmetic computed: two + three = 5
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.24 | ArousalNudge=0.0 | Weight=1.05 [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [ATP-ESCALATE] Automaton rule 'speculate_step' fired (1 steps, 0 jittered) for action=ACTION_SPECULATE conf=1.0
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "reason about why things exist"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ GrugBot420.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "reason about why things exist"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ GrugBot420.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.54 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.742, tone_gini=0.114
+[ Info: [ATP-ESCALATE] Automaton rule 'speculate_step' fired (1 steps, 0 jittered) for action=ACTION_SPECULATE conf=1.0
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.74, tone_gini=0.116
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.54 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.53 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.51 | ArousalNudge=0.0 | Weight=1.31 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.53 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.2 | ArousalNudge=0.0 | Weight=1.04 [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [SEMANTIC] ✅  New relation class added: 'epistemic'
+[ Info: [SEMANTIC] ✅  Verb 'know' added to class 'epistemic'
+[ Info: [SEMANTIC] ✅  Verb 'believe' added to class 'epistemic'
+┌ Warning: [SEMANTIC] Verb 'infer' already registered under class 'reasoning'. Adding to 'epistemic' too. Polysemy cave — verb may match multiple relation types.
+└ @ GrugBot420.SemanticVerbs /workspace/grugbot420/src/SemanticVerbs.jl:137
+[ Info: [SEMANTIC] ✅  Verb 'infer' added to class 'epistemic'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'grok' -> 'know'
+[ Info: [SEMANTIC] ✅  Synonym registered: 'trust' -> 'believe'
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.54 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.17 | ArousalNudge=0.0 | Weight=1.09 [FALLBACK] [FRAME=imperative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.53 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=0.2 | ArousalNudge=0.0 | Weight=1.06 [FALLBACK] [FRAME=terse/basic]
+[ Info: [ATP-ESCALATE] Automaton rule 'speculate_step' fired (1 steps, 0 jittered) for action=ACTION_SPECULATE conf=0.803
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.8 | ArousalNudge=0.0 | Weight=1.16 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'welcome' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:1852
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.46 | ArousalNudge=0.0 | Weight=1.09 [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=0.22 | ArousalNudge=0.0 | Weight=1.07 [FALLBACK] [FRAME=terse/basic]
+[ Info: [ATP-ESCALATE] Automaton rule 'speculate_step' fired (1 steps, 0 jittered) for action=ACTION_SPECULATE conf=0.926
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.96 | ArousalNudge=0.0 | Weight=1.19 [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [PREDICTOR] 👁  Arousal nudged 0.9 → 1.0 (TONE_URGENT)
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_URGENT | Conf=0.12 | ArousalNudge=0.25 | Weight=1.06 [FRAME=imperative/rel]
+[ Info: [EphemeralMLP] observation_threshold changed: 4 → 3 (adjustments_enabled=true)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.726, tone_gini=0.114
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.727, tone_gini=0.116
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [FALLBACK] [FRAME=imperative/basic]
+[ Info: [PREDICTOR] 👁  Arousal nudged 0.5 → 0.35 (TONE_REFLECTIVE)
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_REFLECTIVE | Conf=0.16 | ArousalNudge=-0.15 | Weight=1.03 [FRAME=contemplative/rel]
+┌ Warning: [CLI] /decomposer addCommand error: MethodError(GrugBot420.InputDecomposer.add_command_marker!, ("investigate", SubString{String}["investigates", "investigated"]), 0x00000000000083d7)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:7357
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.51 | ArousalNudge=0.0 | Weight=1.31 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.52 | ArousalNudge=0.0 | Weight=1.31 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.54 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.49 | ArousalNudge=0.0 | Weight=1.24 [FALLBACK] [FRAME=imperative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=0.12 | ArousalNudge=0.0 | Weight=1.04 [FALLBACK] [FRAME=terse/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.53 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.81, tone_gini=0.123
+[ Info: [ATP-ESCALATE] Automaton rule 'speculate_step' fired (1 steps, 0 jittered) for action=ACTION_SPECULATE conf=1.0
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.776, tone_gini=0.122
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=0.12 | ArousalNudge=0.0 | Weight=1.04 [FALLBACK] [FRAME=terse/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.93 | ArousalNudge=0.0 | Weight=1.47 [FALLBACK] [FRAME=imperative/basic]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+
+=== ATTACHMENT MAP (4 targets with attachments) ===
+  🎯 node_13 (1/4 attached):
+      🔗 node_14 [ALIVE str=6.0] | base_conf=0.2 | connector="smile"
+  🎯 node_16 (1/4 attached):
+      🔗 node_danger_help [ALIVE str=9.0] | base_conf=1.35 | connector="help"
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > === ATTACHMENT MAP (4 targets with attachments) ===
+  🎯 node_13 (1/4 attached):
+      🔗 node_14 [ALIVE str=6.0] | base_conf=0.2 | connector="smile"
+  🎯 node_16 (1/4 attached):
+      🔗 node_danger_help [ALIVE str=9.0] | base_conf=1.35 | connector="help"
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=49) ===
+  DreamLobe | pop=0/6666 | live=0 | grave=0
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > --> Grug thawing specimen from file...
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=44, msg=208)
+  🗳  Last voters restored (1 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (12 classes, 41 verbs, 2 synonyms)
+  🔤 Thesaurus restored (499 words)
+  🧠 Lobes restored (9)
+  📋 Lobe tables restored (9)
+  🌱 Nodes restored (40)
+  ⚡ Hopfield cache restored (0 entries)
+  ⚙️  Rules restored (7)
+  🚫 Inhibitions restored (2)
+  💬 Messages restored (175 total, 7 pinned)
+  👁  Arousal restored (level=0.35)
+  🧬 BrainStem state restored
+  🔗 Attachments restored (5)
+  🗣  Chatter groups restored (22)
+  🔮 Trajectory restored (0 entries)
+  🕐 Temporal coherence restored (0 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 0 ledger entries)
+  🤖 AIML system restored (13 nodes across 8 lobes)
+  🪄 Sigils restored (3 specimen-specific)
+  ⚙️  Automaton rules restored (6)
+  💎 Phase accumulator: 11 snapshots (threshold=0.35, enabled=true)
+  🗳  Contributor votes restored (1)
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.85)
+  🧠 EphemeralMLP restored (transforms=42, rules=0)
+  👁  MLP Observer Store: 13 entries, 13 distinct keys (store starts fresh; MLP gate counter restored)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 15 | Compound pairs: 1 leaders | Context: 'and'
+      Question markers: 9 | Command stems: 13 → 84 expanded | Conjugation rules: 21
+
+╔══════════════════════════════════════════════════════════════╗
+║            🧬 SPECIMEN LOADED SUCCESSFULLY                   ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : specimens/test_comprehensive_output.specimen.json
+  📄  File size        : 237270 bytes
+  📦  JSON size        : 237270 bytes
+  ⏱️   Time             : 0.05s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 40
+  🧠  Lobes            : 9
+  📋  Lobe tables      : 9
+  ⚡  Hopfield entries  : 0
+  ⚙️   Rules            : 7
+  💬  Messages         : 175 (7 pinned)
+  🔧  Verb classes     : 12 (41 verbs)
+  🔤  Thesaurus words  : 499
+  🚫  Inhibitions      : 2
+  🔗  Attachments      : 5
+  🤖  AIML nodes       : 13 (8 lobes)
+  👁   Arousal          : 0.35
+  🔢  ID counters      : node=44, msg=208
+  ─────────────────────────────────────────────
+  🧹  Previous state   : WIPED (full brain transplant)
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 40
+  Hopfield cache  : 0 entries
+  Memory messages : 176
+  Est. memory use : ~125 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.35
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 9
+  Nodes in lobes  : 40
+  Top lobe (fires): ScienceLobe (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=49) ===
+  DreamLobe | pop=0/6666 | live=0 | grave=0
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 42
+  Sigmoid / ReLU  : 4 / 38
+  Last activation : relu
+  Novelty score   : 1.0
+  Dir. quality    : 0.5893
+  Rules           : 0/0 enabled
+  Right / Wrong   : 5 / 1
+  Obs. threshold  : 3
+  Observer count  : 12
+  Adjustments     : ENABLED
+╚══════════════════════════════════════════════════╝
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 11 | Recorded: 11 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > === NODE MAP STATUS (40 nodes) ===
+  node_0 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=1.516s | pattern="hello"
+  node_1 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.624s | pattern="think"
+  node_10 | str=9.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.766s | pattern="explain"
+  node_11 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.324s | pattern="reason"
+  node_12 | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.455s | pattern="meaning"
+  node_13 | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.351s | pattern="sad"
+  node_14 | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.334s | pattern="happy"
+  node_15 | str=4.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.322s | pattern="worry"
+  node_16 | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.528s | pattern="danger"
+  node_17 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.332s | pattern="run"
+  node_2 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.506s | pattern="fire"
+  node_3 | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=2.519s | pattern="hello"
+  node_4 | str=3.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="goodbye"
+  node_40 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.327s | pattern="consciousness"
+  node_41 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="angry"
+  node_42 | str=2.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.328s | pattern="storm"
+  node_43 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="dream"
+  node_5 | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="add"
+  node_6 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="multiply"
+  node_7 | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.574s | pattern="calculate"
+  node_8 | str=10.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.618s | pattern="describe"
+  node_9 | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="observe"
+  node_assert_fact | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="fact"
+  node_assert_truth | str=10.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.328s | pattern="truth"
+  node_cmd_show | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="show"
+  node_cmd_tell | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.329s | pattern="tell"
+  node_danger_emergency | str=9.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.624s | pattern="emergency"
+  node_danger_help | str=9.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.627s | pattern="help"
+  node_emo_afraid | str=5.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="afraid"
+  node_emo_sad | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.368s | pattern="sad"
+  node_greet_hey | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.627s | pattern="hey"
+  node_greet_hi | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="hi"
+  node_greet_morning | str=4.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="morning"
+  node_math_multiply | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="multiply"
+  node_math_plus | str=7.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="plus"
+  node_phil_exist | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.404s | pattern="exist"
+  node_phil_meaning | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=0.338s | pattern="meaning"
+  node_q_how | str=6.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="how"
+  node_q_what | str=6.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="what"
+  node_q_why | str=5.5 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] | avg_rt=N/A | pattern="why"
+
+=== ATTACHMENT MAP (4 targets with attachments) ===
+  🎯 node_13 (1/4 attached):
+      🔗 node_14 [ALIVE str=6.0] | base_conf=0.2 | connector="smile"
+  🎯 node_16 (1/4 attached):
+      🔗 node_danger_help [ALIVE str=9.0] | base_conf=1.35 | connector="help"
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > === ATTACHMENT MAP (4 targets with attachments) ===
+  🎯 node_13 (1/4 attached):
+      🔗 node_14 [ALIVE str=6.0] | base_conf=0.2 | connector="smile"
+  🎯 node_16 (1/4 attached):
+      🔗 node_danger_help [ALIVE str=9.0] | base_conf=1.35 | connector="help"
+  🎯 node_2 (1/4 attached):
+      🔗 node_1 [ALIVE str=1.0] | base_conf=1.05 | connector="think"
+  🎯 node_3 (2/4 attached):
+      🔗 node_greet_hi [ALIVE str=6.0] | base_conf=1.3 | connector="hi"
+      🔗 node_greet_hey [ALIVE str=5.5] | base_conf=1.275 | connector="hey"
+
+Brain > === LOBE REGISTRY (9 lobes, 40 nodes indexed) ===
+  DreamLobe | subject='dreams and imagination and sleep' | nodes=1/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe,PhilosophyLobe] | whitelist=open | tbl[nodes=1 json=5 drop=0 hopf=0]
+  EmotionLobe | subject='sad cry hurt alone afraid worried lonely happy joy laugh worry concern anxious' | nodes=6/20000 | fires=0 | inhibits=0 | connected=[DreamLobe,SocialLobe,SurvivalLobe] | whitelist=open | tbl[nodes=4 json=23 drop=0 hopf=0]
+  MathLobe | subject='add plus sum calculate compute number total times multiply double triple' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  PhilosophyLobe | subject='meaning purpose exist truth wonder why life' | nodes=6/20000 | fires=0 | inhibits=0 | connected=[DreamLobe,ReasoningLobe] | whitelist=open | tbl[nodes=2 json=11 drop=0 hopf=0]
+  ReasoningLobe | subject='think reason analyze infer because therefore why how' | nodes=4/20000 | fires=0 | inhibits=0 | connected=[MathLobe,PhilosophyLobe,ScienceLobe] | whitelist=open | tbl[nodes=1 json=6 drop=0 hopf=0]
+  ScienceLobe | subject='describe explain define what is observe measure data hypothesis fire warm cold light dark' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[ReasoningLobe] | whitelist=open | tbl[nodes=3 json=18 drop=0 hopf=0]
+  SocialLobe | subject='hello hi hey friend warm greet welcome howdy' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe] | whitelist=open | tbl[nodes=2 json=12 drop=0 hopf=0]
+  SurvivalLobe | subject='danger threat enemy attack warning beware run fire burns hot cold winter storm' | nodes=5/20000 | fires=0 | inhibits=0 | connected=[EmotionLobe] | whitelist=open | tbl[nodes=3 json=17 drop=0 hopf=0]
+  default | subject='general thinking reasoning conversation greeting' | nodes=3/20000 | fires=0 | inhibits=0 | connected=[none] | whitelist=open | tbl[nodes=3 json=0 drop=0 hopf=0]
+
+Brain > === SEMANTIC VERB REGISTRY ===
+  [arithmetic]: calculate, compute, sum
+  [causal]: causes, contradicts, hits, increases, makes, reduces, routes
+  [description]: clarify, define, describe, elaborate, explain
+  [emotion]: comfort, reassure, soothe
+  [epistemic]: believe, infer, know
+  [greeting]: greet, smile, welcome
+  [philosophy]: ponder, wonder
+  [reasoning]: analyze, infer, reason
+  [science]: observe
+  [spatial]: are, connects, is, was, were
+  [survival]: alert, notify, warn
+  [temporal]: chasing, follows, precedes
+  --- Synonyms ---
+    grok → know
+    trust → believe
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ENGINE] ⚡  Attachment relay: 'node_greet_hi' fired via target 'node_3' (conf=1.346, connector="hi")
+[ENGINE] 🔗  Attachment relay pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.973 × top=1.346 = 1.7863 [hard_votes=2]
+  · default: base=0.6 × top=0.6 = 0.1394 [hard_votes=1]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  [2] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+[ENGINE] 🕐  Node node_greet_hi big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.639 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Grug say hi to friend with happy heart.. [Directives: when smile is alert then smile must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'hello after reload'
+Primary Action: smile  (conf=1.35, certainty=SURE)
+Sure Actions: [smile]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [be warm, smile]
+Winning Node: node_greet_hi
+Lobe Context: [SocialLobe (2/5 active (goodbye | hello))]
+User Triples: None
+Node Triples: (node_3, relay_attached, hi)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=6] (Recent): [System]: /saveSpecimen specimens/test_comprehensive_output.specimen.json (intensity=0.65)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.35, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.973 × top=1.346 = 1.7863 [hard_votes=2]
+  · default: base=0.6 × top=0.6 = 0.1394 [hard_votes=1]
+=========================================
+
+Grug welcome you to the cave with open arms.. The link is clear: voice carries warmth. [Directives: when smile is alert then smile must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'hello after reload'
+Primary Action: smile  (conf=0.6, certainty=SURE)
+Sure Actions: [smile]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [friendly, welcoming]
+Winning Node: node_3
+Lobe Context: [SocialLobe (2/5 active (goodbye | hello))]
+User Triples: None
+Node Triples: (voice, carries, warmth), (gesture, signals, welcome)
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=6] (Recent): [System]: /saveSpecimen specimens/test_comprehensive_output.specimen.json (intensity=0.65) | [System]: Specimen loaded: specimens/test_comprehensive_output.specimen.json (intensity=0.67)
+Memory-Pull Policy: pull_fresh=true — winning node(s) requested context: node_3
+Lobe Curve (√base × top² = score):
+  👑 SocialLobe: base=0.973 × top=1.346 = 1.7863 [hard_votes=2]
+  · default: base=0.6 × top=0.6 = 0.1394 [hard_votes=1]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.592 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: Truth important to Grug. Grug not lie, Grug speak what is real.. [Directives: [ponder "Grug stare at fire. what is truth after reload make Grug wonder"] (fire_prob=0.6); when ponder is alert then ponder must be urgent prob=0.8]
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is truth after reload'
+Primary Action: ponder  (conf=0.6, certainty=SURE)
+Sure Actions: [ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [honest, carefully]
+Winning Node: node_assert_truth
+Lobe Context: [PhilosophyLobe (2/6 active (meaning | consciousness))]
+User Triples: (what, is, truth)
+Node Triples: None
+Anti-Match Detected: false
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: Grug speak plain. Grug not pretend smart. | [User_Pinned]: Grug listen first, talk second. | [User_Pinned]: Grug count rocks careful, no skip. | [User_Pinned]: Many rocks compete. Loudest rock get to talk. | [User_Pinned]: Grug remember: friend matter most. | [User_Pinned]: Grug remembers: the cave is safest during storms | [User_Pinned]: Grug knows: fire was discovered by hitting rocks together
+Fresh Memory [threshold=0.56 eligible=7] (Recent): [User]: what is truth after reload (intensity=1.74)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.6, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 PhilosophyLobe: base=0.6 × top=0.6 = 0.2789 [hard_votes=1]
+=========================================
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 11 | Recorded: 11 | Pulls: 0
+  Threshold: 0.35 | Surface bits: 4
+
+Brain > --> Grug freezing entire cave to specimen file...
+  💎 Phase accumulator saved: 11 snapshots in crystal
+  ✂️  Decomposer config saved: 49 total entries across 6 fields
+
+╔══════════════════════════════════════════════════════════════╗
+║            🧊 SPECIMEN SAVED SUCCESSFULLY                    ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : specimens/test_comprehensive_final.specimen.json
+  📦  JSON size        : 239329 bytes
+  📄  File size        : 239329 bytes (plain JSON)
+  ⏱️   Time             : 0.01s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 40
+  🧠  Lobes            : 9
+  💎  Phase Accumulator      : 11 snapshots
+  📋  Lobe tables      : 9
+  ⚡  Hopfield entries  : 0
+  ⚙️   Rules            : 7
+  💬  Messages         : 181
+  🔧  Verb classes     : 12
+  🔤  Thesaurus words  : 499
+  🚫  Inhibitions      : 2
+  🔗  Attachments      : 5
+  🔮  Trajectory entries : 0
+  🕐  Temporal coherence : 0
+  ⏳  Morph cooldowns    : 0
+  🤖  AIML nodes       : 13
+  🪄  Sigil entries    : 8
+  ⚙️  Automaton rules  : 6
+  🗳  Contributor votes : 1
+  🎭  Tonal knobs      : saved
+  👁   Arousal          : 0.35
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 40
+  Hopfield cache  : 0 entries
+  Memory messages : 182
+  Est. memory use : ~128 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.35
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 9
+  Nodes in lobes  : 40
+  Top lobe (fires): ScienceLobe (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=51) ===
+  DreamLobe | pop=0/6666 | live=0 | grave=0
+  EmotionLobe | pop=2/6666 | live=2 | grave=0
+  MathLobe | pop=2/6666 | live=2 | grave=0
+  PhilosophyLobe | pop=2/6666 | live=2 | grave=0
+  ReasoningLobe | pop=1/6666 | live=1 | grave=0
+  ScienceLobe | pop=2/6666 | live=2 | grave=0
+  SocialLobe | pop=2/6666 | live=2 | grave=0
+  SurvivalLobe | pop=2/6666 | live=2 | grave=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 44
+  Sigmoid / ReLU  : 4 / 40
+  Last activation : relu
+  Novelty score   : 1.0
+  Dir. quality    : 0.5924
+  Rules           : 0/0 enabled
+  Right / Wrong   : 5 / 1
+  Obs. threshold  : 3
+  Observer count  : 13
+  Adjustments     : ENABLED
+╚══════════════════════════════════════════════════╝
+
+Brain > [GRUG] 👋 /quit received. Cave closes. Goodbye.

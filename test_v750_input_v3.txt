@@ -1,0 +1,167 @@
+# ============================================================
+# GrugBot420 v7.50 — Comprehensive Live Test Script v3
+# Tests ALL levers: multi-lobe, multi-subject, growth, strain,
+# question trigger, anti-match, AIML, hippocampal cascade
+# ============================================================
+
+# --- PHASE 0: Load specimen ---
+/loadSpecimen specimens/v750_comprehensive.specimen.json
+
+# --- PHASE 1: Status commands — verify specimen loaded correctly ---
+/status
+/nodes
+/lobes
+/aimlStatus
+/mlpStatus
+/growthStatus
+/mitosisStatus
+
+# --- PHASE 2: Lobe operations ---
+/tableStatus L1
+/tableStatus L2
+/connectLobes L1 L2
+/connectLobes L2 L3
+/connectLobes L3 L4
+/lobes
+
+# --- PHASE 3: Semantic operations ---
+/listVerbs
+/addVerb ruminate cognitive
+/addSynonym think ruminate
+/addSeedSynonym ponder ruminate consider reflect
+/thesaurus think | ponder
+/negativeThesaurus list
+
+# --- PHASE 4: Thesaurus dimensionality test ---
+/thesaurus calculus | poetry
+/thesaurus derivative | integral
+/negativeThesaurus check offensive
+
+# --- PHASE 5: Decomposer operations ---
+/decomposer status
+/decomposer addConjunction moreover
+/decomposer addQuestion whether
+/decomposer status
+
+# --- PHASE 6: Sigil operations ---
+/sigil list
+/sigil add phys noun scan type=word lexicon=force,mass,velocity,acceleration
+/sigil list
+
+# --- PHASE 7: AIML operations ---
+/aimlList L1
+/aimlList L2
+/aimlAdd L4 aiml_L4_1 Perceive visual stimuli through pattern recognition
+/aimlAdd L5 aiml_L5_1 Survive by detecting threats in environment
+/aimlList L4
+/aimlList L5
+/aimlCycle
+
+# --- PHASE 8: MLP operations ---
+/mlpRule add novelty fuzzy 0.8
+/mlpRule add quality fuzzy 0.3
+/mlpRule list
+/mlpStatus
+/mlpObserver
+
+# --- PHASE 9: Mission tests — standard inputs across lobes ---
+# L1 (math): should activate n1/n2/n3/n4
+/mission what is a derivative
+# L2 (language): should activate n6/n7/n8
+/mission explain the grammar of rhetoric
+# L3 (philosophy): should activate n11/n12/n13
+/mission why does ethics matter in epistemology
+# L5 (survival): should activate n21/n22
+/mission how to find shelter from threats
+
+# --- PHASE 10: Anti-match node tests ---
+# n5 "guess" is anti-match in L1 — should drain confidence
+/mission guess the answer to the calculus problem
+# n10 "offensive" is anti-match in L2
+/mission offensive language in poetry and rhetoric
+# n15 "dogma" is anti-match in L3
+/mission dogma in epistemology and metaphysics
+# n20 "illusion" is anti-match in L4
+/mission illusion of perception and attention
+# n25 "panic" is anti-match in L5
+/mission panic during combat and survival
+
+# --- PHASE 11: Hippocampal cascade — strain/warrant testing ---
+# Novel input that doesn't match existing nodes → high novelty → strain
+/mission quantum entanglement and superposition in spacetime
+# Another novel input
+/mission the architecture of ancient roman aqueducts
+# Enable adjustments to activate hippocampal warrant
+# (Need to check if there's a CLI toggle for this)
+/mission the thermodynamics of black hole evaporation
+
+# --- PHASE 12: Question trigger — ambiguous/competing inputs ---
+# Send ambiguous input that could activate multiple lobes with similar confidence
+/mission is mathematics a language or a science
+# Input with question markers
+/mission how and why does calculus relate to philosophy
+# Competing input across L1 and L3
+/mission what is the ethical derivative of logical proof
+
+# --- PHASE 13: /answer and /antiAnswer — strain resolution ---
+/answer mathematics is both a language and a formal system for describing patterns
+/antiAnswer quantum entanglement is irrelevant nonsense
+/answer roman aqueducts used gravity and arches for water transport
+
+# --- PHASE 14: /addAntiMatch — create new anti-match node ---
+/addAntiMatch superstition NONJITTER
+/mission superstition in epistemology and science
+
+# --- PHASE 15: Node operations ---
+/addRule If {MISSION} involves perception then flag visual processing 0.7
+/pin Test pinned memory for v750 live test
+/grow L1 {"pattern":"topology algebraic structures","action_packet":"reason^3|analyze^2","data":{"system_prompt":"Grug explains topology plainly."}}
+/grow L2 {"pattern":"etymology word origins","action_packet":"explain^3|clarify^2","data":{"system_prompt":"Grug explains etymology plainly."}}
+
+# --- PHASE 16: Explicit mission targeting ---
+/explicit reason n1 [reason^5 analyze^3] compute the derivative of x squared
+
+# --- PHASE 17: Node attachment operations ---
+/nodeAttach L1 n1 n2 "integral accumulation"
+/attachments
+/crystalize L1 n1 n2
+/attachments
+
+# --- PHASE 18: Vigilance and automaton ---
+/vigilance
+/vigilance threshold low 0.2
+/automaton phase
+/automaton list
+
+# --- PHASE 19: Arousal control ---
+/arousal 0.8
+/mission perception of visual patterns under high arousal
+/arousal 0.3
+
+# --- PHASE 20: Brainstorm mode ---
+/brainstorm how does consciousness emerge from neural computation
+
+# --- PHASE 21: Feedback operations — /wrong and /right ---
+/mission the fundamental theorem of calculus
+/wrong
+/mission explain the grammar of syntax trees
+/right
+
+# --- PHASE 22: Table match ---
+/tableMatch L1 nodes derivative
+/tableMatch L2 nodes grammar
+
+# --- PHASE 23: AIML phagy ---
+/aimlPhagy
+/aimlStatus
+
+# --- PHASE 24: Growth status and mitosis status after exercise ---
+/growthStatus
+/mitosisStatus
+/mlpStatus
+
+# --- PHASE 25: Save and verify ---
+/saveSpecimen specimens/v750_post_test.specimen.json
+
+# --- DONE ---
+/quit

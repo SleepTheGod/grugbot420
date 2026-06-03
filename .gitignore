@@ -1,0 +1,73 @@
+# Julia artifacts
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+deps/build.log
+Manifest.toml
+
+# Specimen files (user-generated persistence snapshots)
+*.specimen.gz
+# Exception: ship the curated example specimen
+!grugbot420_comprehensive.specimen.gz
+# Exception: ship the default specimen that auto-loads on first boot
+!grug-binary/default.specimen.gz
+# Exception: ship kitchen-sink demo specimens
+!specimen_demo/**/*.specimen.gz
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temp files
+/tmp/
+*.tmp
+
+# Working notes (not for distribution)
+todo.md
+# Session / interaction artifacts (generated per test run)
+interact_session_v7*.sh
+parse_*.py
+analyze_v7*.py
+fix_*.py
+replace_*.py
+add_*.py
+build_conversation_log.py
+generate_conversation_log.py
+build_comprehensive_specimen.sh
+__pycache__/
+
+# Conversation / session logs (generated per test run)
+CONVERSATION_LOG_*.md
+DATA_CONVERTER_DESIGN.md
+DECOHERENCE_FIX_LOG.md
+HARDCORE_GRUG_SESSION_LOG.md
+NEURAL_PHYSICS.md
+PSEUDOCODE_EXECUTION_DESIGN.md
+SPECIMEN_TEST_INTERACTIONS_*.md
+session_input*.txt
+session_output_*.txt
+session_raw_output*.txt
+
+# Specimen session artifacts
+specimens/v7*_conversation_log.md
+specimens/v7*_interaction_raw.log
+specimens/v7*_interacted.specimen.json
+specimens/v7*_pre_session.specimen.json
+specimens/v7*_session_raw.log
+specimens/v7*_post_session.specimen.json
+specimens/v7*_comprehensive.specimen.json
+specimens/v7*_build_verification.md
+specimens/comprehensive_v7*.specimen.json
+specimens/test_comprehensive_*.specimen.json
+specimens/test_session_output*.specimen.json
+specimens/mission_session_output.specimen.json
+specimens/v5_*.log
+specimens/v5_*.md
+specimens/hardcore_grug_v1.json

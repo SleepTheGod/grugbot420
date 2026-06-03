@@ -1,0 +1,6656 @@
+{
+  "immune_config": {
+    "hopfield_familiarity_threshold": 3,
+    "max_ledger_entries": 10000,
+    "coinflip_probability": 0.5,
+    "patch_timeout_jitter": 0.5,
+    "automata_population_ratio": "1//3",
+    "patch_timeout_seconds": 2.0,
+    "max_quarantine_size": 256,
+    "maturity_threshold": 1000
+  },
+  "node_to_lobe_idx": {
+    "node_6": "VigilanceLobe",
+    "node_2": "default",
+    "node_0": "default",
+    "node_4": "SocialLobe",
+    "node_5": "VigilanceLobe",
+    "node_8": "SurvivalLobe",
+    "node_1": "default",
+    "node_7": "SurvivalLobe",
+    "node_3": "SocialLobe"
+  },
+  "sigil_table": [
+    {
+      "provenance": "engine-default",
+      "name": "op",
+      "promote_at_tokenize": true,
+      "sigil_type": "op",
+      "expansion": null,
+      "class": "lambda",
+      "lexicon": null,
+      "applies_at": "match",
+      "params": null
+    },
+    {
+      "provenance": "engine-default",
+      "name": "rest",
+      "promote_at_tokenize": false,
+      "sigil_type": "slurp",
+      "expansion": null,
+      "class": "lambda",
+      "lexicon": null,
+      "applies_at": "match",
+      "params": null
+    },
+    {
+      "provenance": "engine-default",
+      "name": "word",
+      "promote_at_tokenize": false,
+      "sigil_type": "word",
+      "expansion": null,
+      "class": "lambda",
+      "lexicon": null,
+      "applies_at": "match",
+      "params": null
+    },
+    {
+      "provenance": "engine-default",
+      "name": "noun",
+      "promote_at_tokenize": false,
+      "sigil_type": null,
+      "expansion": null,
+      "class": "macro",
+      "lexicon": [],
+      "applies_at": "bind",
+      "params": null
+    },
+    {
+      "provenance": "engine-default",
+      "name": "n",
+      "promote_at_tokenize": true,
+      "sigil_type": "number",
+      "expansion": null,
+      "class": "lambda",
+      "lexicon": null,
+      "applies_at": "match",
+      "params": null
+    }
+  ],
+  "message_history": [
+    {
+      "intensity": 0.030767659721039918,
+      "role": "System",
+      "id": 0,
+      "pinned": false,
+      "text": "/grow SocialLobe [JSON MAP PACKET]"
+    },
+    {
+      "intensity": 0.04452350641808925,
+      "role": "System",
+      "id": 1,
+      "pinned": false,
+      "text": "🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'SocialLobe': [node_3]"
+    },
+    {
+      "intensity": 0.03453079055916281,
+      "role": "System",
+      "id": 2,
+      "pinned": false,
+      "text": "/grow SocialLobe [JSON MAP PACKET]"
+    },
+    {
+      "intensity": 0.050276430824002634,
+      "role": "System",
+      "id": 3,
+      "pinned": false,
+      "text": "🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'SocialLobe': [node_4]"
+    },
+    {
+      "intensity": 0.03129018834920984,
+      "role": "System",
+      "id": 4,
+      "pinned": false,
+      "text": "/grow VigilanceLobe [JSON MAP PACKET]"
+    },
+    {
+      "intensity": 0.04683866536165102,
+      "role": "System",
+      "id": 5,
+      "pinned": false,
+      "text": "🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'VigilanceLobe': [node_5]"
+    },
+    {
+      "intensity": 0.03266640342493584,
+      "role": "System",
+      "id": 6,
+      "pinned": false,
+      "text": "/grow VigilanceLobe [JSON MAP PACKET]"
+    },
+    {
+      "intensity": 0.04723765961032569,
+      "role": "System",
+      "id": 7,
+      "pinned": false,
+      "text": "🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'VigilanceLobe': [node_6]"
+    },
+    {
+      "intensity": 0.03678582371237391,
+      "role": "System",
+      "id": 8,
+      "pinned": false,
+      "text": "/grow SurvivalLobe [JSON MAP PACKET]"
+    },
+    {
+      "intensity": 0.04604321627556836,
+      "role": "System",
+      "id": 9,
+      "pinned": false,
+      "text": "🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'SurvivalLobe': [node_7]"
+    },
+    {
+      "intensity": 0.03017963458396827,
+      "role": "System",
+      "id": 10,
+      "pinned": false,
+      "text": "/grow SurvivalLobe [JSON MAP PACKET]"
+    },
+    {
+      "intensity": 0.04600088613713833,
+      "role": "System",
+      "id": 11,
+      "pinned": false,
+      "text": "🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'SurvivalLobe': [node_8]"
+    },
+    {
+      "intensity": 0.16335597925364007,
+      "role": "User",
+      "id": 12,
+      "pinned": false,
+      "text": "hello Grug! How are you today?"
+    },
+    {
+      "intensity": 0.10476699200693924,
+      "role": "System",
+      "id": 13,
+      "pinned": false,
+      "text": "Mission \"hello Grug! How are you today?\" → primary=greet conf=0.2 node=node_3"
+    },
+    {
+      "intensity": 0.18824088979588452,
+      "role": "User",
+      "id": 14,
+      "pinned": false,
+      "text": "Welcome to the cave, new friend"
+    },
+    {
+      "intensity": 0.13887947519041027,
+      "role": "System",
+      "id": 15,
+      "pinned": false,
+      "text": "Mission \"Welcome to the cave, new friend\" → primary=greet conf=0.5 node=node_3"
+    },
+    {
+      "intensity": 0.3508652161683305,
+      "role": "User",
+      "id": 16,
+      "pinned": false,
+      "text": "There is danger approaching from the north!"
+    },
+    {
+      "intensity": 0.2287135015172432,
+      "role": "System",
+      "id": 17,
+      "pinned": false,
+      "text": "Mission \"There is danger approaching from the north!\" → primary=warn conf=0.17 node=node_5"
+    },
+    {
+      "intensity": 0.3283316720880705,
+      "role": "User",
+      "id": 18,
+      "pinned": false,
+      "text": "The river floods and our shelter is threatened"
+    },
+    {
+      "intensity": 0.19466155980240457,
+      "role": "System",
+      "id": 19,
+      "pinned": false,
+      "text": "Mission \"The river floods and our shelter is threatened\" → primary=alert conf=0.17 node=node_7"
+    },
+    {
+      "intensity": 0.4869115592479142,
+      "role": "User",
+      "id": 20,
+      "pinned": false,
+      "text": "Watch the perimeter Grug, something is out there"
+    },
+    {
+      "intensity": 0.30543972045549506,
+      "role": "System",
+      "id": 21,
+      "pinned": false,
+      "text": "Mission \"Watch the perimeter Grug, something is out there\" → primary=flag conf=0.33 node=node_6"
+    },
+    {
+      "intensity": 0.29366566488495444,
+      "role": "User",
+      "id": 22,
+      "pinned": false,
+      "text": "Protect the children from the wildfire!"
+    },
+    {
+      "intensity": 0.8034853108134394,
+      "role": "User",
+      "id": 23,
+      "pinned": false,
+      "text": "Danger! The cave entrance is collapsing!"
+    },
+    {
+      "intensity": 0.46472556686279876,
+      "role": "System",
+      "id": 24,
+      "pinned": false,
+      "text": "Mission \"Danger! The cave entrance is collapsing!\" → primary=warn conf=0.33 node=node_5"
+    },
+    {
+      "intensity": 0.8545998811574836,
+      "role": "User",
+      "id": 25,
+      "pinned": false,
+      "text": "Fire keeps us warm but also burns"
+    },
+    {
+      "intensity": 0.6540114887199757,
+      "role": "System",
+      "id": 26,
+      "pinned": false,
+      "text": "Mission \"Fire keeps us warm but also burns\" → primary=support conf=0.45 node=node_8"
+    },
+    {
+      "intensity": 0.7297231816524228,
+      "role": "User",
+      "id": 27,
+      "pinned": false,
+      "text": "Grug, tell me about friendship"
+    },
+    {
+      "intensity": 1.2557950822109758,
+      "role": "User",
+      "id": 28,
+      "pinned": false,
+      "text": "What do you think about danger?"
+    },
+    {
+      "intensity": 1.0,
+      "role": "System",
+      "id": 29,
+      "pinned": false,
+      "text": "Mission \"What do you think about danger?\" → primary=reason conf=0.31 node=node_1"
+    },
+    {
+      "intensity": 1.0,
+      "role": "System",
+      "id": 30,
+      "pinned": false,
+      "text": "/saveSpecimen v734_test"
+    }
+  ],
+  "vote_orchestrator_knobs": {
+    "vote_bonus_cap": 1.5,
+    "vote_score_floor": 0.0,
+    "vote_w_lobe_alignment": 0.4,
+    "vote_w_anti_match_penalty": 1.0,
+    "fire_batch_size": 64,
+    "vote_w_recency_bonus": 0.15,
+    "aiml_subtop_base_prob": 0.2,
+    "active_fire_cap": 1000,
+    "vote_w_relational_match": 0.5,
+    "vote_w_peak_dominance": 0.2,
+    "aiml_confidence_threshold": 0.35,
+    "aiml_top_tier_window": 0.05,
+    "aiml_subtop_bonus_prob": 0.7,
+    "vote_w_action_tone_align": 0.25
+  },
+  "hopfield_cache": [],
+  "engine_config": {
+    "strength_floor": 0.0,
+    "strength_solidify_threshold": 9.0,
+    "latch_partner_cap_min": 8,
+    "strength_cap": 10.0,
+    "jitter_confidence_floor": 0.5,
+    "max_neighbors": 4,
+    "latch_partner_cap_max": 16
+  },
+  "node_to_group_idx": {
+    "node_6": "group_6",
+    "node_2": "group_2",
+    "node_0": "group_0",
+    "node_4": "group_4",
+    "node_5": "group_5",
+    "node_8": "group_8",
+    "node_1": "group_1",
+    "node_7": "group_7",
+    "node_3": "group_3"
+  },
+  "relational_jitter_config": {
+    "jitter_coin_ratio": 0.01,
+    "jitter_enabled": true,
+    "jitter_ratio": 0.03
+  },
+  "phagy_config": {
+    "rule_dormancy_cycles": 20,
+    "decay_rate": 0.03,
+    "drop_table_trim_floor": 0.05,
+    "orphan_max_neighbors": 0,
+    "decay_eligibility_max": 0.4
+  },
+  "action_tone_knobs": {
+    "low_signal_threshold": 0.5,
+    "curve_jitter_envelope": 0.03,
+    "fallback_damp_threshold": 0.4,
+    "escalation_confidence_floor": 0.6,
+    "incoherence_tag_threshold": 0.4
+  },
+  "trajectory": {
+    "config": {
+      "decay_halflife": 120.0,
+      "gini_threshold": 0.72,
+      "damping_strength": 0.25,
+      "buffer_size": 16,
+      "softmax_temperature": 1.5
+    },
+    "buffer": []
+  },
+  "decomposer_config": {
+    "compound_pairs": {
+      "and": [
+        "additionally",
+        "also",
+        "furthermore",
+        "moreover",
+        "then"
+      ]
+    },
+    "question_markers": [
+      "how",
+      "what",
+      "when",
+      "where",
+      "which",
+      "who",
+      "whom",
+      "whose",
+      "why"
+    ],
+    "context_conjunction": "and",
+    "command_markers": [
+      "calculate",
+      "compute",
+      "count",
+      "define",
+      "describe",
+      "explain",
+      "find",
+      "give",
+      "list",
+      "name",
+      "show",
+      "solve",
+      "tell"
+    ],
+    "conjugation_rules": {
+      "calculate": [
+        "calculates",
+        "calculated",
+        "calculating"
+      ],
+      "define": [
+        "defines",
+        "defined",
+        "defining"
+      ],
+      "list": [
+        "lists",
+        "listed",
+        "listing"
+      ],
+      "describe": [
+        "describes",
+        "described",
+        "describing"
+      ],
+      "compute": [
+        "computes",
+        "computed",
+        "computing"
+      ],
+      "find": [
+        "finds",
+        "found",
+        "finding"
+      ],
+      "explain": [
+        "explains",
+        "explained",
+        "explaining"
+      ],
+      "give": [
+        "gives",
+        "gave",
+        "giving"
+      ],
+      "name": [
+        "names",
+        "named",
+        "naming"
+      ],
+      "show": [
+        "shows",
+        "showed",
+        "showing"
+      ],
+      "tell": [
+        "tells",
+        "told",
+        "telling"
+      ],
+      "solve": [
+        "solves",
+        "solved",
+        "solving"
+      ],
+      "count": [
+        "counts",
+        "counted",
+        "counting"
+      ]
+    },
+    "split_conjunctions": [
+      "additionally",
+      "also",
+      "alternatively",
+      "besides",
+      "but",
+      "furthermore",
+      "however",
+      "instead",
+      "likewise",
+      "moreover",
+      "nevertheless",
+      "nonetheless",
+      "or",
+      "similarly",
+      "then",
+      "yet"
+    ]
+  },
+  "chatter_groups": [
+    {
+      "centroid_pattern": "hello hi greeting mornin",
+      "created_at": 1.780183331177342e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_0",
+      "members": [
+        "node_0"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "think ponder reason calculate",
+      "created_at": 1.780183331177362e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_1",
+      "members": [
+        "node_1"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "grug hits rock and makes fire",
+      "created_at": 1.780183331180376e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_2",
+      "members": [
+        "node_2"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "hello friend welcome",
+      "created_at": 1.780183361717773e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_3",
+      "members": [
+        "node_3"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "share give help",
+      "created_at": 1.780183361753137e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_4",
+      "members": [
+        "node_4"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "danger risk hazard",
+      "created_at": 1.780183361753304e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_5",
+      "members": [
+        "node_5"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "watch guard lookout",
+      "created_at": 1.780183361753441e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_6",
+      "members": [
+        "node_6"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "shelter cave home",
+      "created_at": 1.780183361753559e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_7",
+      "members": [
+        "node_7"
+      ],
+      "chatter_count": 0
+    },
+    {
+      "centroid_pattern": "fire burn warm",
+      "created_at": 1.780183361753678e9,
+      "last_chatter_at": 0.0,
+      "has_grave_slot": false,
+      "id": "group_8",
+      "members": [
+        "node_8"
+      ],
+      "chatter_count": 0
+    }
+  ],
+  "temporal_coherence": [],
+  "inhibitions": [],
+  "verb_registry": {
+    "classes": {
+      "causal": [
+        "causes",
+        "contradicts",
+        "hits",
+        "increases",
+        "makes",
+        "reduces",
+        "routes"
+      ],
+      "social": [
+        "acknowledge",
+        "alert",
+        "flag",
+        "greet",
+        "support",
+        "warn"
+      ],
+      "spatial": [
+        "are",
+        "connects",
+        "is",
+        "was",
+        "were"
+      ],
+      "temporal": [
+        "chasing",
+        "follows",
+        "precedes"
+      ]
+    },
+    "synonyms": {}
+  },
+  "thesaurus_seeds": {
+    "build": [
+      "construct",
+      "craft",
+      "create",
+      "form",
+      "make",
+      "produce"
+    ],
+    "want": [
+      "demand",
+      "desire",
+      "lack",
+      "need",
+      "require"
+    ],
+    "contemplate": [
+      "consider",
+      "ponder",
+      "reason",
+      "reflect",
+      "think"
+    ],
+    "observe": [
+      "detect",
+      "examine",
+      "inspect",
+      "look",
+      "measure",
+      "monitor",
+      "record",
+      "see",
+      "track",
+      "view",
+      "watch"
+    ],
+    "occupation": [
+      "career",
+      "employment",
+      "job",
+      "profession",
+      "work"
+    ],
+    "fearful": [
+      "afraid",
+      "anxious",
+      "nervous",
+      "scared",
+      "terrified",
+      "worried"
+    ],
+    "give": [
+      "deliver",
+      "grant",
+      "hand",
+      "offer",
+      "provide",
+      "supply"
+    ],
+    "truth": [
+      "actuality",
+      "fact",
+      "reality",
+      "validity",
+      "verity"
+    ],
+    "icy": [
+      "chilly",
+      "cold",
+      "cool",
+      "freezing",
+      "frigid"
+    ],
+    "solid": [
+      "mighty",
+      "powerful",
+      "robust",
+      "strong",
+      "sturdy",
+      "tough"
+    ],
+    "fast": [
+      "brisk",
+      "hasty",
+      "quick",
+      "rapid",
+      "speedy",
+      "swift"
+    ],
+    "employment": [
+      "career",
+      "job",
+      "occupation",
+      "profession",
+      "work"
+    ],
+    "relaxed": [
+      "calm",
+      "composed",
+      "peaceful",
+      "serene",
+      "tranquil"
+    ],
+    "weary": [
+      "drained",
+      "exhausted",
+      "fatigued",
+      "sleepy",
+      "tired"
+    ],
+    "force": [
+      "capacity",
+      "charge",
+      "energy",
+      "potential",
+      "power"
+    ],
+    "move": [
+      "migrate",
+      "relocate",
+      "shift",
+      "transfer",
+      "transport"
+    ],
+    "damage": [
+      "break",
+      "crack",
+      "destroy",
+      "fracture",
+      "ruin",
+      "shatter"
+    ],
+    "theoretical": [
+      "abstract",
+      "conceptual",
+      "hypothetical",
+      "intangible",
+      "notional"
+    ],
+    "walk": [
+      "march",
+      "stride",
+      "stroll",
+      "trek",
+      "wander"
+    ],
+    "say": [
+      "chat",
+      "converse",
+      "discuss",
+      "speak",
+      "talk",
+      "tell"
+    ],
+    "make": [
+      "build",
+      "construct",
+      "craft",
+      "create",
+      "form",
+      "produce"
+    ],
+    "associate": [
+      "attach",
+      "bind",
+      "connect",
+      "join",
+      "link",
+      "wire"
+    ],
+    "residence": [
+      "building",
+      "dwelling",
+      "home",
+      "house",
+      "place"
+    ],
+    "try": [
+      "attempt",
+      "endeavor",
+      "experiment",
+      "strive",
+      "test"
+    ],
+    "principled": [
+      "ethical",
+      "just",
+      "moral",
+      "righteous",
+      "virtuous"
+    ],
+    "postulate": [
+      "assumption",
+      "conjecture",
+      "hypothesis",
+      "supposition",
+      "theory"
+    ],
+    "plan": [
+      "approach",
+      "concept",
+      "design",
+      "idea",
+      "method",
+      "notion",
+      "proposal",
+      "scheme",
+      "strategy",
+      "thought"
+    ],
+    "search": [
+      "explore",
+      "find",
+      "look",
+      "query",
+      "scan",
+      "seek"
+    ],
+    "hypothetical": [
+      "abstract",
+      "conceptual",
+      "intangible",
+      "notional",
+      "theoretical"
+    ],
+    "product": [
+      "answer",
+      "consequence",
+      "effect",
+      "impact",
+      "outcome",
+      "output",
+      "reply",
+      "response",
+      "result"
+    ],
+    "cease": [
+      "end",
+      "finish",
+      "halt",
+      "quit",
+      "stop",
+      "terminate"
+    ],
+    "tranquil": [
+      "calm",
+      "composed",
+      "peaceful",
+      "relaxed",
+      "serene"
+    ],
+    "dispatch": [
+      "forward",
+      "push",
+      "route",
+      "send",
+      "transmit"
+    ],
+    "repair": [
+      "correct",
+      "fix",
+      "mend",
+      "patch",
+      "resolve",
+      "restore"
+    ],
+    "auto": [
+      "automobile",
+      "car",
+      "ride",
+      "truck",
+      "vehicle"
+    ],
+    "support": [
+      "aid",
+      "assist",
+      "facilitate",
+      "help",
+      "serve"
+    ],
+    "chilly": [
+      "cold",
+      "cool",
+      "freezing",
+      "frigid",
+      "icy"
+    ],
+    "shift": [
+      "migrate",
+      "move",
+      "relocate",
+      "transfer",
+      "transport"
+    ],
+    "bold": [
+      "brave",
+      "courageous",
+      "daring",
+      "fearless",
+      "heroic"
+    ],
+    "correct": [
+      "fix",
+      "mend",
+      "patch",
+      "repair",
+      "resolve",
+      "restore"
+    ],
+    "basic": [
+      "easy",
+      "effortless",
+      "simple",
+      "straightforward",
+      "trivial"
+    ],
+    "progress": [
+      "adapt",
+      "change",
+      "develop",
+      "evolve",
+      "mutate",
+      "transform"
+    ],
+    "train": [
+      "adapt",
+      "evolve",
+      "improve",
+      "learn",
+      "study"
+    ],
+    "cuisine": [
+      "dish",
+      "food",
+      "meal",
+      "nourishment",
+      "sustenance"
+    ],
+    "align": [
+      "correspond",
+      "fit",
+      "link",
+      "map",
+      "match",
+      "pair"
+    ],
+    "cache": [
+      "archive",
+      "keep",
+      "persist",
+      "record",
+      "save",
+      "store"
+    ],
+    "reality": [
+      "actuality",
+      "fact",
+      "truth",
+      "validity",
+      "verity"
+    ],
+    "failure": [
+      "bug",
+      "defect",
+      "error",
+      "fault",
+      "flaw",
+      "mistake"
+    ],
+    "livid": [
+      "angry",
+      "enraged",
+      "furious",
+      "irate",
+      "mad",
+      "wrathful"
+    ],
+    "sorrowful": [
+      "dejected",
+      "downcast",
+      "gloomy",
+      "melancholy",
+      "sad",
+      "unhappy"
+    ],
+    "response": [
+      "answer",
+      "outcome",
+      "output",
+      "product",
+      "reply",
+      "result",
+      "solution"
+    ],
+    "nervous": [
+      "afraid",
+      "anxious",
+      "fearful",
+      "scared",
+      "terrified",
+      "worried"
+    ],
+    "strenuous": [
+      "arduous",
+      "challenging",
+      "difficult",
+      "hard",
+      "tough"
+    ],
+    "faith": [
+      "belief",
+      "conviction",
+      "opinion",
+      "position",
+      "stance",
+      "view"
+    ],
+    "finance": [
+      "capital",
+      "cash",
+      "currency",
+      "funds",
+      "money"
+    ],
+    "conviction": [
+      "belief",
+      "faith",
+      "opinion",
+      "position",
+      "stance",
+      "view"
+    ],
+    "trivial": [
+      "basic",
+      "easy",
+      "effortless",
+      "simple",
+      "straightforward"
+    ],
+    "generate": [
+      "cause",
+      "create",
+      "induce",
+      "lead",
+      "produce",
+      "trigger"
+    ],
+    "question": [
+      "challenge",
+      "doubt",
+      "inquiry",
+      "interrogate",
+      "probe",
+      "query"
+    ],
+    "thought": [
+      "concept",
+      "idea",
+      "notion",
+      "plan",
+      "proposal"
+    ],
+    "find": [
+      "detect",
+      "discover",
+      "explore",
+      "identify",
+      "locate",
+      "look",
+      "query",
+      "scan",
+      "search",
+      "seek",
+      "uncover"
+    ],
+    "fluid": [
+      "beverage",
+      "drink",
+      "liquid",
+      "water"
+    ],
+    "proposal": [
+      "concept",
+      "idea",
+      "notion",
+      "plan",
+      "thought"
+    ],
+    "validity": [
+      "actuality",
+      "fact",
+      "reality",
+      "truth",
+      "verity"
+    ],
+    "track": [
+      "detect",
+      "measure",
+      "monitor",
+      "observe",
+      "record"
+    ],
+    "potential": [
+      "capacity",
+      "charge",
+      "energy",
+      "force",
+      "power"
+    ],
+    "subsist": [
+      "be",
+      "exist",
+      "live",
+      "occur",
+      "persist",
+      "remain"
+    ],
+    "evaluate": [
+      "analyze",
+      "assess",
+      "calculate",
+      "examine",
+      "gauge",
+      "investigate",
+      "measure",
+      "quantify",
+      "study"
+    ],
+    "excited": [
+      "animated",
+      "eager",
+      "enthusiastic",
+      "keen",
+      "thrilled"
+    ],
+    "restore": [
+      "correct",
+      "fix",
+      "mend",
+      "patch",
+      "repair",
+      "resolve"
+    ],
+    "job": [
+      "career",
+      "employment",
+      "occupation",
+      "profession",
+      "work"
+    ],
+    "bewildered": [
+      "baffled",
+      "confused",
+      "lost",
+      "perplexed",
+      "puzzled"
+    ],
+    "purge": [
+      "clear",
+      "delete",
+      "drop",
+      "erase",
+      "remove",
+      "wipe"
+    ],
+    "pleased": [
+      "cheerful",
+      "content",
+      "delighted",
+      "elated",
+      "glad",
+      "happy",
+      "joyful"
+    ],
+    "retrieve": [
+      "acquire",
+      "fetch",
+      "gain",
+      "get",
+      "import",
+      "load",
+      "obtain",
+      "open",
+      "read",
+      "receive"
+    ],
+    "tired": [
+      "drained",
+      "exhausted",
+      "fatigued",
+      "sleepy",
+      "weary"
+    ],
+    "keen": [
+      "animated",
+      "eager",
+      "enthusiastic",
+      "excited",
+      "thrilled"
+    ],
+    "freezing": [
+      "chilly",
+      "cold",
+      "cool",
+      "frigid",
+      "icy"
+    ],
+    "locate": [
+      "detect",
+      "discover",
+      "find",
+      "identify",
+      "uncover"
+    ],
+    "virtuous": [
+      "ethical",
+      "just",
+      "moral",
+      "principled",
+      "righteous"
+    ],
+    "ponder": [
+      "consider",
+      "contemplate",
+      "reason",
+      "reflect",
+      "think"
+    ],
+    "righteous": [
+      "ethical",
+      "just",
+      "moral",
+      "principled",
+      "virtuous"
+    ],
+    "get": [
+      "accept",
+      "acquire",
+      "collect",
+      "fetch",
+      "gain",
+      "obtain",
+      "pull",
+      "receive",
+      "retrieve"
+    ],
+    "be": [
+      "exist",
+      "live",
+      "occur",
+      "persist",
+      "remain",
+      "subsist"
+    ],
+    "record": [
+      "archive",
+      "cache",
+      "detect",
+      "keep",
+      "measure",
+      "monitor",
+      "observe",
+      "persist",
+      "save",
+      "store",
+      "track"
+    ],
+    "inference": [
+      "argument",
+      "deduction",
+      "logic",
+      "rationale",
+      "reasoning"
+    ],
+    "burning": [
+      "boiling",
+      "fiery",
+      "hot",
+      "scorching",
+      "warm"
+    ],
+    "message": [
+      "input",
+      "prompt",
+      "query",
+      "request",
+      "signal"
+    ],
+    "matter": [
+      "element",
+      "mass",
+      "material",
+      "stuff",
+      "substance"
+    ],
+    "probe": [
+      "challenge",
+      "doubt",
+      "inquiry",
+      "interrogate",
+      "query",
+      "question"
+    ],
+    "large": [
+      "big",
+      "enormous",
+      "gigantic",
+      "huge",
+      "massive",
+      "vast"
+    ],
+    "mistake": [
+      "bug",
+      "defect",
+      "error",
+      "failure",
+      "fault",
+      "flaw"
+    ],
+    "melancholy": [
+      "dejected",
+      "downcast",
+      "gloomy",
+      "sad",
+      "sorrowful",
+      "unhappy"
+    ],
+    "perplexed": [
+      "baffled",
+      "bewildered",
+      "confused",
+      "lost",
+      "puzzled"
+    ],
+    "simple": [
+      "basic",
+      "easy",
+      "effortless",
+      "straightforward",
+      "trivial"
+    ],
+    "patch": [
+      "correct",
+      "fix",
+      "mend",
+      "repair",
+      "resolve",
+      "restore"
+    ],
+    "easy": [
+      "basic",
+      "effortless",
+      "simple",
+      "straightforward",
+      "trivial"
+    ],
+    "automobile": [
+      "auto",
+      "car",
+      "ride",
+      "truck",
+      "vehicle"
+    ],
+    "mindfulness": [
+      "awareness",
+      "cognition",
+      "consciousness",
+      "perception",
+      "sentience"
+    ],
+    "wipe": [
+      "clear",
+      "delete",
+      "drop",
+      "erase",
+      "purge",
+      "remove"
+    ],
+    "grasp": [
+      "comprehend",
+      "know",
+      "realize",
+      "recognize",
+      "understand"
+    ],
+    "facilitate": [
+      "aid",
+      "assist",
+      "help",
+      "serve",
+      "support"
+    ],
+    "attempt": [
+      "endeavor",
+      "experiment",
+      "strive",
+      "test",
+      "try"
+    ],
+    "platform": [
+      "architecture",
+      "framework",
+      "structure",
+      "system"
+    ],
+    "mass": [
+      "element",
+      "material",
+      "matter",
+      "stuff",
+      "substance"
+    ],
+    "dash": [
+      "jog",
+      "race",
+      "run",
+      "rush",
+      "sprint"
+    ],
+    "profession": [
+      "career",
+      "employment",
+      "job",
+      "occupation",
+      "work"
+    ],
+    "archive": [
+      "cache",
+      "keep",
+      "persist",
+      "record",
+      "save",
+      "store"
+    ],
+    "work": [
+      "career",
+      "employment",
+      "job",
+      "occupation",
+      "profession"
+    ],
+    "straightforward": [
+      "basic",
+      "easy",
+      "effortless",
+      "simple",
+      "trivial"
+    ],
+    "delicate": [
+      "feeble",
+      "fragile",
+      "frail",
+      "powerless",
+      "weak"
+    ],
+    "daring": [
+      "bold",
+      "brave",
+      "courageous",
+      "fearless",
+      "heroic"
+    ],
+    "send": [
+      "dispatch",
+      "forward",
+      "push",
+      "route",
+      "transmit"
+    ],
+    "end": [
+      "cease",
+      "finish",
+      "halt",
+      "quit",
+      "stop",
+      "terminate"
+    ],
+    "hypothesis": [
+      "assumption",
+      "conjecture",
+      "postulate",
+      "supposition",
+      "theory"
+    ],
+    "speak": [
+      "chat",
+      "converse",
+      "discuss",
+      "say",
+      "talk",
+      "tell"
+    ],
+    "load": [
+      "fetch",
+      "import",
+      "open",
+      "read",
+      "retrieve"
+    ],
+    "initiate": [
+      "begin",
+      "commence",
+      "launch",
+      "start",
+      "trigger"
+    ],
+    "dwelling": [
+      "building",
+      "home",
+      "house",
+      "place",
+      "residence"
+    ],
+    "deduction": [
+      "argument",
+      "inference",
+      "logic",
+      "rationale",
+      "reasoning"
+    ],
+    "inquiry": [
+      "challenge",
+      "doubt",
+      "interrogate",
+      "probe",
+      "query",
+      "question"
+    ],
+    "read": [
+      "fetch",
+      "import",
+      "load",
+      "open",
+      "retrieve"
+    ],
+    "induce": [
+      "cause",
+      "create",
+      "generate",
+      "lead",
+      "produce",
+      "trigger"
+    ],
+    "understand": [
+      "comprehend",
+      "grasp",
+      "know",
+      "realize",
+      "recognize"
+    ],
+    "mutate": [
+      "adapt",
+      "change",
+      "develop",
+      "evolve",
+      "progress",
+      "transform"
+    ],
+    "boiling": [
+      "burning",
+      "fiery",
+      "hot",
+      "scorching",
+      "warm"
+    ],
+    "commence": [
+      "begin",
+      "initiate",
+      "launch",
+      "start",
+      "trigger"
+    ],
+    "data": [
+      "facts",
+      "info",
+      "information",
+      "records",
+      "stats"
+    ],
+    "remain": [
+      "be",
+      "exist",
+      "live",
+      "occur",
+      "persist",
+      "subsist"
+    ],
+    "obtain": [
+      "accept",
+      "acquire",
+      "collect",
+      "fetch",
+      "gain",
+      "get",
+      "pull",
+      "receive",
+      "retrieve"
+    ],
+    "element": [
+      "mass",
+      "material",
+      "matter",
+      "stuff",
+      "substance"
+    ],
+    "live": [
+      "be",
+      "exist",
+      "occur",
+      "persist",
+      "remain",
+      "subsist"
+    ],
+    "heroic": [
+      "bold",
+      "brave",
+      "courageous",
+      "daring",
+      "fearless"
+    ],
+    "conjecture": [
+      "assumption",
+      "hypothesis",
+      "postulate",
+      "supposition",
+      "theory"
+    ],
+    "defect": [
+      "bug",
+      "error",
+      "failure",
+      "fault",
+      "flaw",
+      "mistake"
+    ],
+    "elated": [
+      "cheerful",
+      "content",
+      "delighted",
+      "glad",
+      "happy",
+      "joyful",
+      "pleased"
+    ],
+    "ethical": [
+      "just",
+      "moral",
+      "principled",
+      "righteous",
+      "virtuous"
+    ],
+    "theory": [
+      "assumption",
+      "conjecture",
+      "hypothesis",
+      "postulate",
+      "supposition"
+    ],
+    "content": [
+      "cheerful",
+      "delighted",
+      "elated",
+      "glad",
+      "happy",
+      "joyful",
+      "pleased"
+    ],
+    "lead": [
+      "cause",
+      "create",
+      "generate",
+      "induce",
+      "produce",
+      "trigger"
+    ],
+    "procedure": [
+      "experiment",
+      "investigation",
+      "study",
+      "test",
+      "trial"
+    ],
+    "structure": [
+      "architecture",
+      "framework",
+      "platform",
+      "system"
+    ],
+    "puzzled": [
+      "baffled",
+      "bewildered",
+      "confused",
+      "lost",
+      "perplexed"
+    ],
+    "swift": [
+      "brisk",
+      "fast",
+      "hasty",
+      "quick",
+      "rapid",
+      "speedy"
+    ],
+    "tiny": [
+      "compact",
+      "little",
+      "miniature",
+      "minute",
+      "petite",
+      "small"
+    ],
+    "downcast": [
+      "dejected",
+      "gloomy",
+      "melancholy",
+      "sad",
+      "sorrowful",
+      "unhappy"
+    ],
+    "break": [
+      "crack",
+      "damage",
+      "destroy",
+      "fracture",
+      "ruin",
+      "shatter"
+    ],
+    "frigid": [
+      "chilly",
+      "cold",
+      "cool",
+      "freezing",
+      "icy"
+    ],
+    "keep": [
+      "archive",
+      "cache",
+      "persist",
+      "record",
+      "save",
+      "store"
+    ],
+    "method": [
+      "approach",
+      "design",
+      "plan",
+      "scheme",
+      "strategy"
+    ],
+    "launch": [
+      "begin",
+      "commence",
+      "initiate",
+      "start",
+      "trigger"
+    ],
+    "infer": [
+      "anticipate",
+      "estimate",
+      "forecast",
+      "predict",
+      "project"
+    ],
+    "erase": [
+      "clear",
+      "delete",
+      "drop",
+      "purge",
+      "remove",
+      "wipe"
+    ],
+    "cold": [
+      "chilly",
+      "cool",
+      "freezing",
+      "frigid",
+      "icy"
+    ],
+    "learn": [
+      "adapt",
+      "evolve",
+      "improve",
+      "study",
+      "train"
+    ],
+    "vast": [
+      "big",
+      "enormous",
+      "gigantic",
+      "huge",
+      "large",
+      "massive"
+    ],
+    "beverage": [
+      "drink",
+      "fluid",
+      "liquid",
+      "water"
+    ],
+    "logic": [
+      "argument",
+      "deduction",
+      "inference",
+      "rationale",
+      "reasoning"
+    ],
+    "shatter": [
+      "break",
+      "crack",
+      "damage",
+      "destroy",
+      "fracture",
+      "ruin"
+    ],
+    "push": [
+      "dispatch",
+      "forward",
+      "route",
+      "send",
+      "transmit"
+    ],
+    "assert": [
+      "argue",
+      "claim",
+      "contend",
+      "debate",
+      "posit",
+      "reason"
+    ],
+    "strong": [
+      "mighty",
+      "powerful",
+      "robust",
+      "solid",
+      "sturdy",
+      "tough"
+    ],
+    "drop": [
+      "clear",
+      "delete",
+      "erase",
+      "purge",
+      "remove",
+      "wipe"
+    ],
+    "hard": [
+      "arduous",
+      "challenging",
+      "difficult",
+      "strenuous",
+      "tough"
+    ],
+    "run": [
+      "dash",
+      "jog",
+      "race",
+      "rush",
+      "sprint"
+    ],
+    "stunned": [
+      "amazed",
+      "astonished",
+      "shocked",
+      "startled",
+      "surprised"
+    ],
+    "trial": [
+      "experiment",
+      "investigation",
+      "procedure",
+      "study",
+      "test"
+    ],
+    "hot": [
+      "boiling",
+      "burning",
+      "fiery",
+      "scorching",
+      "warm"
+    ],
+    "compact": [
+      "little",
+      "miniature",
+      "minute",
+      "petite",
+      "small",
+      "tiny"
+    ],
+    "eager": [
+      "animated",
+      "enthusiastic",
+      "excited",
+      "keen",
+      "thrilled"
+    ],
+    "examine": [
+      "analyze",
+      "assess",
+      "check",
+      "evaluate",
+      "inspect",
+      "investigate",
+      "look",
+      "observe",
+      "see",
+      "study",
+      "test",
+      "validate",
+      "verify",
+      "view",
+      "watch"
+    ],
+    "grant": [
+      "deliver",
+      "give",
+      "hand",
+      "offer",
+      "provide",
+      "supply"
+    ],
+    "rationale": [
+      "argument",
+      "deduction",
+      "inference",
+      "logic",
+      "reasoning"
+    ],
+    "prompt": [
+      "input",
+      "message",
+      "query",
+      "request",
+      "signal"
+    ],
+    "idea": [
+      "concept",
+      "notion",
+      "plan",
+      "proposal",
+      "thought"
+    ],
+    "mend": [
+      "correct",
+      "fix",
+      "patch",
+      "repair",
+      "resolve",
+      "restore"
+    ],
+    "resolve": [
+      "correct",
+      "fix",
+      "mend",
+      "patch",
+      "repair",
+      "restore"
+    ],
+    "match": [
+      "align",
+      "correspond",
+      "fit",
+      "link",
+      "map",
+      "pair"
+    ],
+    "seek": [
+      "explore",
+      "find",
+      "look",
+      "query",
+      "scan",
+      "search"
+    ],
+    "transport": [
+      "migrate",
+      "move",
+      "relocate",
+      "shift",
+      "transfer"
+    ],
+    "drained": [
+      "exhausted",
+      "fatigued",
+      "sleepy",
+      "tired",
+      "weary"
+    ],
+    "employ": [
+      "apply",
+      "leverage",
+      "operate",
+      "use",
+      "utilize"
+    ],
+    "brisk": [
+      "fast",
+      "hasty",
+      "quick",
+      "rapid",
+      "speedy",
+      "swift"
+    ],
+    "powerless": [
+      "delicate",
+      "feeble",
+      "fragile",
+      "frail",
+      "weak"
+    ],
+    "composed": [
+      "calm",
+      "peaceful",
+      "relaxed",
+      "serene",
+      "tranquil"
+    ],
+    "notion": [
+      "concept",
+      "idea",
+      "plan",
+      "proposal",
+      "thought"
+    ],
+    "contend": [
+      "argue",
+      "assert",
+      "claim",
+      "debate",
+      "posit",
+      "reason"
+    ],
+    "trouble": [
+      "challenge",
+      "difficulty",
+      "issue",
+      "obstacle",
+      "problem"
+    ],
+    "start": [
+      "begin",
+      "commence",
+      "initiate",
+      "launch",
+      "trigger"
+    ],
+    "insight": [
+      "awareness",
+      "cognition",
+      "knowledge",
+      "understanding",
+      "wisdom"
+    ],
+    "afraid": [
+      "anxious",
+      "fearful",
+      "nervous",
+      "scared",
+      "terrified",
+      "worried"
+    ],
+    "irate": [
+      "angry",
+      "enraged",
+      "furious",
+      "livid",
+      "mad",
+      "wrathful"
+    ],
+    "strategy": [
+      "approach",
+      "design",
+      "method",
+      "plan",
+      "scheme"
+    ],
+    "aid": [
+      "assist",
+      "facilitate",
+      "help",
+      "serve",
+      "support"
+    ],
+    "begin": [
+      "commence",
+      "initiate",
+      "launch",
+      "start",
+      "trigger"
+    ],
+    "explore": [
+      "find",
+      "look",
+      "query",
+      "scan",
+      "search",
+      "seek"
+    ],
+    "courageous": [
+      "bold",
+      "brave",
+      "daring",
+      "fearless",
+      "heroic"
+    ],
+    "enormous": [
+      "big",
+      "gigantic",
+      "huge",
+      "large",
+      "massive",
+      "vast"
+    ],
+    "surprised": [
+      "amazed",
+      "astonished",
+      "shocked",
+      "startled",
+      "stunned"
+    ],
+    "ruin": [
+      "break",
+      "crack",
+      "damage",
+      "destroy",
+      "fracture",
+      "shatter"
+    ],
+    "quick": [
+      "brisk",
+      "fast",
+      "hasty",
+      "rapid",
+      "speedy",
+      "swift"
+    ],
+    "reasoning": [
+      "argument",
+      "deduction",
+      "inference",
+      "logic",
+      "rationale"
+    ],
+    "material": [
+      "element",
+      "mass",
+      "matter",
+      "stuff",
+      "substance"
+    ],
+    "shocked": [
+      "amazed",
+      "astonished",
+      "startled",
+      "stunned",
+      "surprised"
+    ],
+    "comprehend": [
+      "grasp",
+      "know",
+      "realize",
+      "recognize",
+      "understand"
+    ],
+    "plodding": [
+      "gradual",
+      "leisurely",
+      "slow",
+      "sluggish",
+      "unhurried"
+    ],
+    "supply": [
+      "deliver",
+      "give",
+      "grant",
+      "hand",
+      "offer",
+      "provide"
+    ],
+    "reason": [
+      "argue",
+      "assert",
+      "claim",
+      "consider",
+      "contemplate",
+      "contend",
+      "debate",
+      "ponder",
+      "posit",
+      "reflect",
+      "think"
+    ],
+    "framework": [
+      "architecture",
+      "platform",
+      "structure",
+      "system"
+    ],
+    "chat": [
+      "converse",
+      "discuss",
+      "say",
+      "speak",
+      "talk",
+      "tell"
+    ],
+    "records": [
+      "data",
+      "facts",
+      "info",
+      "information",
+      "stats"
+    ],
+    "unhurried": [
+      "gradual",
+      "leisurely",
+      "plodding",
+      "slow",
+      "sluggish"
+    ],
+    "utilize": [
+      "apply",
+      "employ",
+      "leverage",
+      "operate",
+      "use"
+    ],
+    "lost": [
+      "baffled",
+      "bewildered",
+      "confused",
+      "perplexed",
+      "puzzled"
+    ],
+    "leisurely": [
+      "gradual",
+      "plodding",
+      "slow",
+      "sluggish",
+      "unhurried"
+    ],
+    "furious": [
+      "angry",
+      "enraged",
+      "irate",
+      "livid",
+      "mad",
+      "wrathful"
+    ],
+    "scared": [
+      "afraid",
+      "anxious",
+      "fearful",
+      "nervous",
+      "terrified",
+      "worried"
+    ],
+    "warm": [
+      "boiling",
+      "burning",
+      "fiery",
+      "hot",
+      "scorching"
+    ],
+    "fragile": [
+      "delicate",
+      "feeble",
+      "frail",
+      "powerless",
+      "weak"
+    ],
+    "stance": [
+      "belief",
+      "conviction",
+      "faith",
+      "opinion",
+      "position",
+      "view"
+    ],
+    "frail": [
+      "delicate",
+      "feeble",
+      "fragile",
+      "powerless",
+      "weak"
+    ],
+    "project": [
+      "anticipate",
+      "estimate",
+      "forecast",
+      "infer",
+      "predict"
+    ],
+    "car": [
+      "auto",
+      "automobile",
+      "ride",
+      "truck",
+      "vehicle"
+    ],
+    "bind": [
+      "associate",
+      "attach",
+      "connect",
+      "join",
+      "link",
+      "wire"
+    ],
+    "sleepy": [
+      "drained",
+      "exhausted",
+      "fatigued",
+      "tired",
+      "weary"
+    ],
+    "worried": [
+      "afraid",
+      "anxious",
+      "fearful",
+      "nervous",
+      "scared",
+      "terrified"
+    ],
+    "march": [
+      "stride",
+      "stroll",
+      "trek",
+      "walk",
+      "wander"
+    ],
+    "petite": [
+      "compact",
+      "little",
+      "miniature",
+      "minute",
+      "small",
+      "tiny"
+    ],
+    "sturdy": [
+      "mighty",
+      "powerful",
+      "robust",
+      "solid",
+      "strong",
+      "tough"
+    ],
+    "obstacle": [
+      "challenge",
+      "difficulty",
+      "issue",
+      "problem",
+      "trouble"
+    ],
+    "home": [
+      "building",
+      "dwelling",
+      "house",
+      "place",
+      "residence"
+    ],
+    "career": [
+      "employment",
+      "job",
+      "occupation",
+      "profession",
+      "work"
+    ],
+    "just": [
+      "ethical",
+      "moral",
+      "principled",
+      "righteous",
+      "virtuous"
+    ],
+    "stroll": [
+      "march",
+      "stride",
+      "trek",
+      "walk",
+      "wander"
+    ],
+    "difficulty": [
+      "challenge",
+      "issue",
+      "obstacle",
+      "problem",
+      "trouble"
+    ],
+    "fetch": [
+      "acquire",
+      "gain",
+      "get",
+      "import",
+      "load",
+      "obtain",
+      "open",
+      "read",
+      "receive",
+      "retrieve"
+    ],
+    "fix": [
+      "correct",
+      "mend",
+      "patch",
+      "repair",
+      "resolve",
+      "restore"
+    ],
+    "enraged": [
+      "angry",
+      "furious",
+      "irate",
+      "livid",
+      "mad",
+      "wrathful"
+    ],
+    "create": [
+      "build",
+      "cause",
+      "construct",
+      "craft",
+      "form",
+      "generate",
+      "induce",
+      "lead",
+      "make",
+      "produce",
+      "trigger"
+    ],
+    "fearless": [
+      "bold",
+      "brave",
+      "courageous",
+      "daring",
+      "heroic"
+    ],
+    "crack": [
+      "break",
+      "damage",
+      "destroy",
+      "fracture",
+      "ruin",
+      "shatter"
+    ],
+    "answer": [
+      "outcome",
+      "output",
+      "product",
+      "reply",
+      "response",
+      "result",
+      "solution"
+    ],
+    "apply": [
+      "employ",
+      "leverage",
+      "operate",
+      "use",
+      "utilize"
+    ],
+    "need": [
+      "demand",
+      "desire",
+      "lack",
+      "require",
+      "want"
+    ],
+    "scheme": [
+      "approach",
+      "design",
+      "method",
+      "plan",
+      "strategy"
+    ],
+    "improve": [
+      "adapt",
+      "evolve",
+      "learn",
+      "study",
+      "train"
+    ],
+    "hasty": [
+      "brisk",
+      "fast",
+      "quick",
+      "rapid",
+      "speedy",
+      "swift"
+    ],
+    "intangible": [
+      "abstract",
+      "conceptual",
+      "hypothetical",
+      "notional",
+      "theoretical"
+    ],
+    "sad": [
+      "dejected",
+      "downcast",
+      "gloomy",
+      "melancholy",
+      "sorrowful",
+      "unhappy"
+    ],
+    "building": [
+      "dwelling",
+      "home",
+      "house",
+      "place",
+      "residence"
+    ],
+    "acquire": [
+      "fetch",
+      "gain",
+      "get",
+      "obtain",
+      "receive",
+      "retrieve"
+    ],
+    "provide": [
+      "deliver",
+      "give",
+      "grant",
+      "hand",
+      "offer",
+      "supply"
+    ],
+    "cool": [
+      "chilly",
+      "cold",
+      "freezing",
+      "frigid",
+      "icy"
+    ],
+    "ride": [
+      "auto",
+      "automobile",
+      "car",
+      "truck",
+      "vehicle"
+    ],
+    "thrilled": [
+      "animated",
+      "eager",
+      "enthusiastic",
+      "excited",
+      "keen"
+    ],
+    "gradual": [
+      "leisurely",
+      "plodding",
+      "slow",
+      "sluggish",
+      "unhurried"
+    ],
+    "evolve": [
+      "adapt",
+      "change",
+      "develop",
+      "improve",
+      "learn",
+      "mutate",
+      "progress",
+      "study",
+      "train",
+      "transform"
+    ],
+    "halt": [
+      "cease",
+      "end",
+      "finish",
+      "quit",
+      "stop",
+      "terminate"
+    ],
+    "animated": [
+      "eager",
+      "enthusiastic",
+      "excited",
+      "keen",
+      "thrilled"
+    ],
+    "produce": [
+      "build",
+      "cause",
+      "construct",
+      "craft",
+      "create",
+      "form",
+      "generate",
+      "induce",
+      "lead",
+      "make",
+      "trigger"
+    ],
+    "attach": [
+      "associate",
+      "bind",
+      "connect",
+      "join",
+      "link",
+      "wire"
+    ],
+    "serene": [
+      "calm",
+      "composed",
+      "peaceful",
+      "relaxed",
+      "tranquil"
+    ],
+    "output": [
+      "answer",
+      "product",
+      "reply",
+      "response",
+      "result"
+    ],
+    "delighted": [
+      "cheerful",
+      "content",
+      "elated",
+      "glad",
+      "happy",
+      "joyful",
+      "pleased"
+    ],
+    "rush": [
+      "dash",
+      "jog",
+      "race",
+      "run",
+      "sprint"
+    ],
+    "brave": [
+      "bold",
+      "courageous",
+      "daring",
+      "fearless",
+      "heroic"
+    ],
+    "challenging": [
+      "arduous",
+      "difficult",
+      "hard",
+      "strenuous",
+      "tough"
+    ],
+    "view": [
+      "belief",
+      "conviction",
+      "examine",
+      "faith",
+      "inspect",
+      "look",
+      "observe",
+      "opinion",
+      "position",
+      "see",
+      "stance",
+      "watch"
+    ],
+    "system": [
+      "architecture",
+      "framework",
+      "platform",
+      "structure"
+    ],
+    "remove": [
+      "clear",
+      "delete",
+      "drop",
+      "erase",
+      "purge",
+      "wipe"
+    ],
+    "wisdom": [
+      "awareness",
+      "cognition",
+      "insight",
+      "knowledge",
+      "understanding"
+    ],
+    "map": [
+      "align",
+      "correspond",
+      "fit",
+      "link",
+      "match",
+      "pair"
+    ],
+    "terrified": [
+      "afraid",
+      "anxious",
+      "fearful",
+      "nervous",
+      "scared",
+      "worried"
+    ],
+    "arduous": [
+      "challenging",
+      "difficult",
+      "hard",
+      "strenuous",
+      "tough"
+    ],
+    "facts": [
+      "data",
+      "info",
+      "information",
+      "records",
+      "stats"
+    ],
+    "demonstrate": [
+      "display",
+      "exhibit",
+      "present",
+      "reveal",
+      "show"
+    ],
+    "stride": [
+      "march",
+      "stroll",
+      "trek",
+      "walk",
+      "wander"
+    ],
+    "detect": [
+      "discover",
+      "find",
+      "identify",
+      "locate",
+      "measure",
+      "monitor",
+      "observe",
+      "record",
+      "track",
+      "uncover"
+    ],
+    "endeavor": [
+      "attempt",
+      "experiment",
+      "strive",
+      "test",
+      "try"
+    ],
+    "solution": [
+      "answer",
+      "outcome",
+      "reply",
+      "response",
+      "result"
+    ],
+    "anticipate": [
+      "estimate",
+      "forecast",
+      "infer",
+      "predict",
+      "project"
+    ],
+    "trigger": [
+      "begin",
+      "cause",
+      "commence",
+      "create",
+      "generate",
+      "induce",
+      "initiate",
+      "launch",
+      "lead",
+      "produce",
+      "start"
+    ],
+    "belief": [
+      "conviction",
+      "faith",
+      "opinion",
+      "position",
+      "stance",
+      "view"
+    ],
+    "doubt": [
+      "challenge",
+      "inquiry",
+      "interrogate",
+      "probe",
+      "query",
+      "question"
+    ],
+    "stop": [
+      "cease",
+      "end",
+      "finish",
+      "halt",
+      "quit",
+      "terminate"
+    ],
+    "verify": [
+      "assess",
+      "check",
+      "examine",
+      "test",
+      "validate"
+    ],
+    "persist": [
+      "archive",
+      "be",
+      "cache",
+      "exist",
+      "keep",
+      "live",
+      "occur",
+      "record",
+      "remain",
+      "save",
+      "store",
+      "subsist"
+    ],
+    "form": [
+      "build",
+      "construct",
+      "craft",
+      "create",
+      "make",
+      "produce"
+    ],
+    "migrate": [
+      "move",
+      "relocate",
+      "shift",
+      "transfer",
+      "transport"
+    ],
+    "joyful": [
+      "cheerful",
+      "content",
+      "delighted",
+      "elated",
+      "glad",
+      "happy",
+      "pleased"
+    ],
+    "bug": [
+      "defect",
+      "error",
+      "failure",
+      "fault",
+      "flaw",
+      "mistake"
+    ],
+    "join": [
+      "associate",
+      "attach",
+      "bind",
+      "connect",
+      "link",
+      "wire"
+    ],
+    "problem": [
+      "challenge",
+      "difficulty",
+      "issue",
+      "obstacle",
+      "trouble"
+    ],
+    "capital": [
+      "cash",
+      "currency",
+      "finance",
+      "funds",
+      "money"
+    ],
+    "reply": [
+      "answer",
+      "outcome",
+      "output",
+      "product",
+      "response",
+      "result",
+      "solution"
+    ],
+    "gauge": [
+      "assess",
+      "calculate",
+      "evaluate",
+      "measure",
+      "quantify"
+    ],
+    "exist": [
+      "be",
+      "live",
+      "occur",
+      "persist",
+      "remain",
+      "subsist"
+    ],
+    "liquid": [
+      "beverage",
+      "drink",
+      "fluid",
+      "water"
+    ],
+    "query": [
+      "challenge",
+      "doubt",
+      "explore",
+      "find",
+      "input",
+      "inquiry",
+      "interrogate",
+      "look",
+      "message",
+      "probe",
+      "prompt",
+      "question",
+      "request",
+      "scan",
+      "search",
+      "seek",
+      "signal"
+    ],
+    "see": [
+      "examine",
+      "inspect",
+      "look",
+      "observe",
+      "view",
+      "watch"
+    ],
+    "conceptual": [
+      "abstract",
+      "hypothetical",
+      "intangible",
+      "notional",
+      "theoretical"
+    ],
+    "gain": [
+      "acquire",
+      "fetch",
+      "get",
+      "obtain",
+      "receive",
+      "retrieve"
+    ],
+    "weak": [
+      "delicate",
+      "feeble",
+      "fragile",
+      "frail",
+      "powerless"
+    ],
+    "exhibit": [
+      "demonstrate",
+      "display",
+      "present",
+      "reveal",
+      "show"
+    ],
+    "peaceful": [
+      "calm",
+      "composed",
+      "relaxed",
+      "serene",
+      "tranquil"
+    ],
+    "gigantic": [
+      "big",
+      "enormous",
+      "huge",
+      "large",
+      "massive",
+      "vast"
+    ],
+    "robust": [
+      "mighty",
+      "powerful",
+      "solid",
+      "strong",
+      "sturdy",
+      "tough"
+    ],
+    "substance": [
+      "element",
+      "mass",
+      "material",
+      "matter",
+      "stuff"
+    ],
+    "food": [
+      "cuisine",
+      "dish",
+      "meal",
+      "nourishment",
+      "sustenance"
+    ],
+    "stats": [
+      "data",
+      "facts",
+      "info",
+      "information",
+      "records"
+    ],
+    "vehicle": [
+      "auto",
+      "automobile",
+      "car",
+      "ride",
+      "truck"
+    ],
+    "quantify": [
+      "assess",
+      "calculate",
+      "evaluate",
+      "gauge",
+      "measure"
+    ],
+    "think": [
+      "consider",
+      "contemplate",
+      "ponder",
+      "reason",
+      "reflect"
+    ],
+    "dejected": [
+      "downcast",
+      "gloomy",
+      "melancholy",
+      "sad",
+      "sorrowful",
+      "unhappy"
+    ],
+    "angry": [
+      "enraged",
+      "furious",
+      "irate",
+      "livid",
+      "mad",
+      "wrathful"
+    ],
+    "feeble": [
+      "delicate",
+      "fragile",
+      "frail",
+      "powerless",
+      "weak"
+    ],
+    "fracture": [
+      "break",
+      "crack",
+      "damage",
+      "destroy",
+      "ruin",
+      "shatter"
+    ],
+    "rapid": [
+      "brisk",
+      "fast",
+      "hasty",
+      "quick",
+      "speedy",
+      "swift"
+    ],
+    "sustenance": [
+      "cuisine",
+      "dish",
+      "food",
+      "meal",
+      "nourishment"
+    ],
+    "reveal": [
+      "demonstrate",
+      "display",
+      "exhibit",
+      "present",
+      "show"
+    ],
+    "uncover": [
+      "detect",
+      "discover",
+      "find",
+      "identify",
+      "locate"
+    ],
+    "forward": [
+      "dispatch",
+      "push",
+      "route",
+      "send",
+      "transmit"
+    ],
+    "scan": [
+      "explore",
+      "find",
+      "look",
+      "query",
+      "search",
+      "seek"
+    ],
+    "assumption": [
+      "conjecture",
+      "hypothesis",
+      "postulate",
+      "supposition",
+      "theory"
+    ],
+    "stuff": [
+      "element",
+      "mass",
+      "material",
+      "matter",
+      "substance"
+    ],
+    "error": [
+      "bug",
+      "defect",
+      "failure",
+      "fault",
+      "flaw",
+      "mistake"
+    ],
+    "jog": [
+      "dash",
+      "race",
+      "run",
+      "rush",
+      "sprint"
+    ],
+    "trek": [
+      "march",
+      "stride",
+      "stroll",
+      "walk",
+      "wander"
+    ],
+    "cash": [
+      "capital",
+      "currency",
+      "finance",
+      "funds",
+      "money"
+    ],
+    "construct": [
+      "build",
+      "craft",
+      "create",
+      "form",
+      "make",
+      "produce"
+    ],
+    "claim": [
+      "argue",
+      "assert",
+      "contend",
+      "debate",
+      "posit",
+      "reason"
+    ],
+    "consciousness": [
+      "awareness",
+      "cognition",
+      "mindfulness",
+      "perception",
+      "sentience"
+    ],
+    "anxious": [
+      "afraid",
+      "fearful",
+      "nervous",
+      "scared",
+      "terrified",
+      "worried"
+    ],
+    "calm": [
+      "composed",
+      "peaceful",
+      "relaxed",
+      "serene",
+      "tranquil"
+    ],
+    "sluggish": [
+      "gradual",
+      "leisurely",
+      "plodding",
+      "slow",
+      "unhurried"
+    ],
+    "assess": [
+      "analyze",
+      "calculate",
+      "check",
+      "evaluate",
+      "examine",
+      "gauge",
+      "investigate",
+      "measure",
+      "quantify",
+      "study",
+      "test",
+      "validate",
+      "verify"
+    ],
+    "gloomy": [
+      "dejected",
+      "downcast",
+      "melancholy",
+      "sad",
+      "sorrowful",
+      "unhappy"
+    ],
+    "wire": [
+      "associate",
+      "attach",
+      "bind",
+      "connect",
+      "join",
+      "link"
+    ],
+    "startled": [
+      "amazed",
+      "astonished",
+      "shocked",
+      "stunned",
+      "surprised"
+    ],
+    "fatigued": [
+      "drained",
+      "exhausted",
+      "sleepy",
+      "tired",
+      "weary"
+    ],
+    "measure": [
+      "assess",
+      "calculate",
+      "detect",
+      "evaluate",
+      "gauge",
+      "monitor",
+      "observe",
+      "quantify",
+      "record",
+      "track"
+    ],
+    "fault": [
+      "bug",
+      "defect",
+      "error",
+      "failure",
+      "flaw",
+      "mistake"
+    ],
+    "charge": [
+      "capacity",
+      "energy",
+      "force",
+      "potential",
+      "power"
+    ],
+    "dish": [
+      "cuisine",
+      "food",
+      "meal",
+      "nourishment",
+      "sustenance"
+    ],
+    "destroy": [
+      "break",
+      "crack",
+      "damage",
+      "fracture",
+      "ruin",
+      "shatter"
+    ],
+    "pair": [
+      "align",
+      "correspond",
+      "fit",
+      "link",
+      "map",
+      "match"
+    ],
+    "sprint": [
+      "dash",
+      "jog",
+      "race",
+      "run",
+      "rush"
+    ],
+    "forecast": [
+      "anticipate",
+      "estimate",
+      "infer",
+      "predict",
+      "project"
+    ],
+    "cause": [
+      "create",
+      "generate",
+      "induce",
+      "lead",
+      "produce",
+      "trigger"
+    ],
+    "correspond": [
+      "align",
+      "fit",
+      "link",
+      "map",
+      "match",
+      "pair"
+    ],
+    "require": [
+      "demand",
+      "desire",
+      "lack",
+      "need",
+      "want"
+    ],
+    "challenge": [
+      "difficulty",
+      "doubt",
+      "inquiry",
+      "interrogate",
+      "issue",
+      "obstacle",
+      "probe",
+      "problem",
+      "query",
+      "question",
+      "trouble"
+    ],
+    "position": [
+      "belief",
+      "conviction",
+      "faith",
+      "opinion",
+      "stance",
+      "view"
+    ],
+    "receive": [
+      "accept",
+      "acquire",
+      "collect",
+      "fetch",
+      "gain",
+      "get",
+      "obtain",
+      "pull",
+      "retrieve"
+    ],
+    "drink": [
+      "beverage",
+      "fluid",
+      "liquid",
+      "water"
+    ],
+    "check": [
+      "assess",
+      "examine",
+      "test",
+      "validate",
+      "verify"
+    ],
+    "help": [
+      "aid",
+      "assist",
+      "facilitate",
+      "serve",
+      "support"
+    ],
+    "clear": [
+      "delete",
+      "drop",
+      "erase",
+      "purge",
+      "remove",
+      "wipe"
+    ],
+    "hand": [
+      "deliver",
+      "give",
+      "grant",
+      "offer",
+      "provide",
+      "supply"
+    ],
+    "test": [
+      "assess",
+      "attempt",
+      "check",
+      "endeavor",
+      "examine",
+      "experiment",
+      "investigation",
+      "procedure",
+      "strive",
+      "study",
+      "trial",
+      "try",
+      "validate",
+      "verify"
+    ],
+    "know": [
+      "comprehend",
+      "grasp",
+      "realize",
+      "recognize",
+      "understand"
+    ],
+    "house": [
+      "building",
+      "dwelling",
+      "home",
+      "place",
+      "residence"
+    ],
+    "talk": [
+      "chat",
+      "converse",
+      "discuss",
+      "say",
+      "speak",
+      "tell"
+    ],
+    "difficult": [
+      "arduous",
+      "challenging",
+      "hard",
+      "strenuous",
+      "tough"
+    ],
+    "delete": [
+      "clear",
+      "drop",
+      "erase",
+      "purge",
+      "remove",
+      "wipe"
+    ],
+    "calculate": [
+      "assess",
+      "evaluate",
+      "gauge",
+      "measure",
+      "quantify"
+    ],
+    "water": [
+      "beverage",
+      "drink",
+      "fluid",
+      "liquid"
+    ],
+    "issue": [
+      "challenge",
+      "difficulty",
+      "obstacle",
+      "problem",
+      "trouble"
+    ],
+    "pull": [
+      "accept",
+      "collect",
+      "get",
+      "obtain",
+      "receive"
+    ],
+    "predict": [
+      "anticipate",
+      "estimate",
+      "forecast",
+      "infer",
+      "project"
+    ],
+    "strive": [
+      "attempt",
+      "endeavor",
+      "experiment",
+      "test",
+      "try"
+    ],
+    "info": [
+      "data",
+      "facts",
+      "information",
+      "records",
+      "stats"
+    ],
+    "happy": [
+      "cheerful",
+      "content",
+      "delighted",
+      "elated",
+      "glad",
+      "joyful",
+      "pleased"
+    ],
+    "amazed": [
+      "astonished",
+      "shocked",
+      "startled",
+      "stunned",
+      "surprised"
+    ],
+    "relocate": [
+      "migrate",
+      "move",
+      "shift",
+      "transfer",
+      "transport"
+    ],
+    "opinion": [
+      "belief",
+      "conviction",
+      "faith",
+      "position",
+      "stance",
+      "view"
+    ],
+    "occur": [
+      "be",
+      "exist",
+      "live",
+      "persist",
+      "remain",
+      "subsist"
+    ],
+    "operate": [
+      "apply",
+      "employ",
+      "leverage",
+      "use",
+      "utilize"
+    ],
+    "fit": [
+      "align",
+      "correspond",
+      "link",
+      "map",
+      "match",
+      "pair"
+    ],
+    "connect": [
+      "associate",
+      "attach",
+      "bind",
+      "join",
+      "link",
+      "wire"
+    ],
+    "import": [
+      "fetch",
+      "load",
+      "open",
+      "read",
+      "retrieve"
+    ],
+    "minute": [
+      "compact",
+      "little",
+      "miniature",
+      "petite",
+      "small",
+      "tiny"
+    ],
+    "supposition": [
+      "assumption",
+      "conjecture",
+      "hypothesis",
+      "postulate",
+      "theory"
+    ],
+    "fact": [
+      "actuality",
+      "reality",
+      "truth",
+      "validity",
+      "verity"
+    ],
+    "knowledge": [
+      "awareness",
+      "cognition",
+      "insight",
+      "understanding",
+      "wisdom"
+    ],
+    "consequence": [
+      "effect",
+      "impact",
+      "outcome",
+      "product",
+      "result"
+    ],
+    "mighty": [
+      "powerful",
+      "robust",
+      "solid",
+      "strong",
+      "sturdy",
+      "tough"
+    ],
+    "little": [
+      "compact",
+      "miniature",
+      "minute",
+      "petite",
+      "small",
+      "tiny"
+    ],
+    "collect": [
+      "accept",
+      "get",
+      "obtain",
+      "pull",
+      "receive"
+    ],
+    "nourishment": [
+      "cuisine",
+      "dish",
+      "food",
+      "meal",
+      "sustenance"
+    ],
+    "argue": [
+      "assert",
+      "claim",
+      "contend",
+      "debate",
+      "posit",
+      "reason"
+    ],
+    "realize": [
+      "comprehend",
+      "grasp",
+      "know",
+      "recognize",
+      "understand"
+    ],
+    "signal": [
+      "input",
+      "message",
+      "prompt",
+      "query",
+      "request"
+    ],
+    "wander": [
+      "march",
+      "stride",
+      "stroll",
+      "trek",
+      "walk"
+    ],
+    "input": [
+      "message",
+      "prompt",
+      "query",
+      "request",
+      "signal"
+    ],
+    "debate": [
+      "argue",
+      "assert",
+      "claim",
+      "contend",
+      "posit",
+      "reason"
+    ],
+    "approach": [
+      "design",
+      "method",
+      "plan",
+      "scheme",
+      "strategy"
+    ],
+    "use": [
+      "apply",
+      "employ",
+      "leverage",
+      "operate",
+      "utilize"
+    ],
+    "converse": [
+      "chat",
+      "discuss",
+      "say",
+      "speak",
+      "talk",
+      "tell"
+    ],
+    "effect": [
+      "consequence",
+      "impact",
+      "outcome",
+      "product",
+      "result"
+    ],
+    "store": [
+      "archive",
+      "cache",
+      "keep",
+      "persist",
+      "record",
+      "save"
+    ],
+    "discover": [
+      "detect",
+      "find",
+      "identify",
+      "locate",
+      "uncover"
+    ],
+    "effortless": [
+      "basic",
+      "easy",
+      "simple",
+      "straightforward",
+      "trivial"
+    ],
+    "deliver": [
+      "give",
+      "grant",
+      "hand",
+      "offer",
+      "provide",
+      "supply"
+    ],
+    "truck": [
+      "auto",
+      "automobile",
+      "car",
+      "ride",
+      "vehicle"
+    ],
+    "request": [
+      "input",
+      "message",
+      "prompt",
+      "query",
+      "signal"
+    ],
+    "estimate": [
+      "anticipate",
+      "forecast",
+      "infer",
+      "predict",
+      "project"
+    ],
+    "powerful": [
+      "mighty",
+      "robust",
+      "solid",
+      "strong",
+      "sturdy",
+      "tough"
+    ],
+    "adapt": [
+      "change",
+      "develop",
+      "evolve",
+      "improve",
+      "learn",
+      "mutate",
+      "progress",
+      "study",
+      "train",
+      "transform"
+    ],
+    "terminate": [
+      "cease",
+      "end",
+      "finish",
+      "halt",
+      "quit",
+      "stop"
+    ],
+    "link": [
+      "align",
+      "associate",
+      "attach",
+      "bind",
+      "connect",
+      "correspond",
+      "fit",
+      "join",
+      "map",
+      "match",
+      "pair",
+      "wire"
+    ],
+    "offer": [
+      "deliver",
+      "give",
+      "grant",
+      "hand",
+      "provide",
+      "supply"
+    ],
+    "consider": [
+      "contemplate",
+      "ponder",
+      "reason",
+      "reflect",
+      "think"
+    ],
+    "display": [
+      "demonstrate",
+      "exhibit",
+      "present",
+      "reveal",
+      "show"
+    ],
+    "architecture": [
+      "framework",
+      "platform",
+      "structure",
+      "system"
+    ],
+    "posit": [
+      "argue",
+      "assert",
+      "claim",
+      "contend",
+      "debate",
+      "reason"
+    ],
+    "lack": [
+      "demand",
+      "desire",
+      "need",
+      "require",
+      "want"
+    ],
+    "study": [
+      "adapt",
+      "analyze",
+      "assess",
+      "evaluate",
+      "evolve",
+      "examine",
+      "experiment",
+      "improve",
+      "investigate",
+      "investigation",
+      "learn",
+      "procedure",
+      "test",
+      "train",
+      "trial"
+    ],
+    "desire": [
+      "demand",
+      "lack",
+      "need",
+      "require",
+      "want"
+    ],
+    "route": [
+      "dispatch",
+      "forward",
+      "push",
+      "send",
+      "transmit"
+    ],
+    "baffled": [
+      "bewildered",
+      "confused",
+      "lost",
+      "perplexed",
+      "puzzled"
+    ],
+    "demand": [
+      "desire",
+      "lack",
+      "need",
+      "require",
+      "want"
+    ],
+    "outcome": [
+      "answer",
+      "consequence",
+      "effect",
+      "impact",
+      "product",
+      "reply",
+      "response",
+      "result",
+      "solution"
+    ],
+    "save": [
+      "archive",
+      "cache",
+      "keep",
+      "persist",
+      "record",
+      "store"
+    ],
+    "cheerful": [
+      "content",
+      "delighted",
+      "elated",
+      "glad",
+      "happy",
+      "joyful",
+      "pleased"
+    ],
+    "argument": [
+      "deduction",
+      "inference",
+      "logic",
+      "rationale",
+      "reasoning"
+    ],
+    "confused": [
+      "baffled",
+      "bewildered",
+      "lost",
+      "perplexed",
+      "puzzled"
+    ],
+    "astonished": [
+      "amazed",
+      "shocked",
+      "startled",
+      "stunned",
+      "surprised"
+    ],
+    "huge": [
+      "big",
+      "enormous",
+      "gigantic",
+      "large",
+      "massive",
+      "vast"
+    ],
+    "watch": [
+      "examine",
+      "inspect",
+      "look",
+      "observe",
+      "see",
+      "view"
+    ],
+    "transfer": [
+      "migrate",
+      "move",
+      "relocate",
+      "shift",
+      "transport"
+    ],
+    "transmit": [
+      "dispatch",
+      "forward",
+      "push",
+      "route",
+      "send"
+    ],
+    "fiery": [
+      "boiling",
+      "burning",
+      "hot",
+      "scorching",
+      "warm"
+    ],
+    "open": [
+      "fetch",
+      "import",
+      "load",
+      "read",
+      "retrieve"
+    ],
+    "investigation": [
+      "experiment",
+      "procedure",
+      "study",
+      "test",
+      "trial"
+    ],
+    "serve": [
+      "aid",
+      "assist",
+      "facilitate",
+      "help",
+      "support"
+    ],
+    "change": [
+      "adapt",
+      "develop",
+      "evolve",
+      "mutate",
+      "progress",
+      "transform"
+    ],
+    "leverage": [
+      "apply",
+      "employ",
+      "operate",
+      "use",
+      "utilize"
+    ],
+    "inspect": [
+      "examine",
+      "look",
+      "observe",
+      "see",
+      "view",
+      "watch"
+    ],
+    "impact": [
+      "consequence",
+      "effect",
+      "outcome",
+      "product",
+      "result"
+    ],
+    "abstract": [
+      "conceptual",
+      "hypothetical",
+      "intangible",
+      "notional",
+      "theoretical"
+    ],
+    "craft": [
+      "build",
+      "construct",
+      "create",
+      "form",
+      "make",
+      "produce"
+    ],
+    "enthusiastic": [
+      "animated",
+      "eager",
+      "excited",
+      "keen",
+      "thrilled"
+    ],
+    "capacity": [
+      "charge",
+      "energy",
+      "force",
+      "potential",
+      "power"
+    ],
+    "design": [
+      "approach",
+      "method",
+      "plan",
+      "scheme",
+      "strategy"
+    ],
+    "present": [
+      "demonstrate",
+      "display",
+      "exhibit",
+      "reveal",
+      "show"
+    ],
+    "recognize": [
+      "comprehend",
+      "grasp",
+      "know",
+      "realize",
+      "understand"
+    ],
+    "glad": [
+      "cheerful",
+      "content",
+      "delighted",
+      "elated",
+      "happy",
+      "joyful",
+      "pleased"
+    ],
+    "monitor": [
+      "detect",
+      "measure",
+      "observe",
+      "record",
+      "track"
+    ],
+    "perception": [
+      "awareness",
+      "cognition",
+      "consciousness",
+      "mindfulness",
+      "sentience"
+    ],
+    "awareness": [
+      "cognition",
+      "consciousness",
+      "insight",
+      "knowledge",
+      "mindfulness",
+      "perception",
+      "sentience",
+      "understanding",
+      "wisdom"
+    ],
+    "analyze": [
+      "assess",
+      "evaluate",
+      "examine",
+      "investigate",
+      "study"
+    ],
+    "investigate": [
+      "analyze",
+      "assess",
+      "evaluate",
+      "examine",
+      "study"
+    ],
+    "result": [
+      "answer",
+      "consequence",
+      "effect",
+      "impact",
+      "outcome",
+      "output",
+      "product",
+      "reply",
+      "response",
+      "solution"
+    ],
+    "unhappy": [
+      "dejected",
+      "downcast",
+      "gloomy",
+      "melancholy",
+      "sad",
+      "sorrowful"
+    ],
+    "notional": [
+      "abstract",
+      "conceptual",
+      "hypothetical",
+      "intangible",
+      "theoretical"
+    ],
+    "mad": [
+      "angry",
+      "enraged",
+      "furious",
+      "irate",
+      "livid",
+      "wrathful"
+    ],
+    "interrogate": [
+      "challenge",
+      "doubt",
+      "inquiry",
+      "probe",
+      "query",
+      "question"
+    ],
+    "concept": [
+      "idea",
+      "notion",
+      "plan",
+      "proposal",
+      "thought"
+    ],
+    "information": [
+      "data",
+      "facts",
+      "info",
+      "records",
+      "stats"
+    ],
+    "tough": [
+      "arduous",
+      "challenging",
+      "difficult",
+      "hard",
+      "mighty",
+      "powerful",
+      "robust",
+      "solid",
+      "strenuous",
+      "strong",
+      "sturdy"
+    ],
+    "understanding": [
+      "awareness",
+      "cognition",
+      "insight",
+      "knowledge",
+      "wisdom"
+    ],
+    "show": [
+      "demonstrate",
+      "display",
+      "exhibit",
+      "present",
+      "reveal"
+    ],
+    "race": [
+      "dash",
+      "jog",
+      "run",
+      "rush",
+      "sprint"
+    ],
+    "sentience": [
+      "awareness",
+      "cognition",
+      "consciousness",
+      "mindfulness",
+      "perception"
+    ],
+    "identify": [
+      "detect",
+      "discover",
+      "find",
+      "locate",
+      "uncover"
+    ],
+    "place": [
+      "building",
+      "dwelling",
+      "home",
+      "house",
+      "residence"
+    ],
+    "develop": [
+      "adapt",
+      "change",
+      "evolve",
+      "mutate",
+      "progress",
+      "transform"
+    ],
+    "assist": [
+      "aid",
+      "facilitate",
+      "help",
+      "serve",
+      "support"
+    ],
+    "scorching": [
+      "boiling",
+      "burning",
+      "fiery",
+      "hot",
+      "warm"
+    ],
+    "small": [
+      "compact",
+      "little",
+      "miniature",
+      "minute",
+      "petite",
+      "tiny"
+    ],
+    "energy": [
+      "capacity",
+      "charge",
+      "force",
+      "potential",
+      "power"
+    ],
+    "big": [
+      "enormous",
+      "gigantic",
+      "huge",
+      "large",
+      "massive",
+      "vast"
+    ],
+    "slow": [
+      "gradual",
+      "leisurely",
+      "plodding",
+      "sluggish",
+      "unhurried"
+    ],
+    "currency": [
+      "capital",
+      "cash",
+      "finance",
+      "funds",
+      "money"
+    ],
+    "moral": [
+      "ethical",
+      "just",
+      "principled",
+      "righteous",
+      "virtuous"
+    ],
+    "quit": [
+      "cease",
+      "end",
+      "finish",
+      "halt",
+      "stop",
+      "terminate"
+    ],
+    "validate": [
+      "assess",
+      "check",
+      "examine",
+      "test",
+      "verify"
+    ],
+    "flaw": [
+      "bug",
+      "defect",
+      "error",
+      "failure",
+      "fault",
+      "mistake"
+    ],
+    "reflect": [
+      "consider",
+      "contemplate",
+      "ponder",
+      "reason",
+      "think"
+    ],
+    "massive": [
+      "big",
+      "enormous",
+      "gigantic",
+      "huge",
+      "large",
+      "vast"
+    ],
+    "look": [
+      "examine",
+      "explore",
+      "find",
+      "inspect",
+      "observe",
+      "query",
+      "scan",
+      "search",
+      "see",
+      "seek",
+      "view",
+      "watch"
+    ],
+    "actuality": [
+      "fact",
+      "reality",
+      "truth",
+      "validity",
+      "verity"
+    ],
+    "finish": [
+      "cease",
+      "end",
+      "halt",
+      "quit",
+      "stop",
+      "terminate"
+    ],
+    "exhausted": [
+      "drained",
+      "fatigued",
+      "sleepy",
+      "tired",
+      "weary"
+    ],
+    "discuss": [
+      "chat",
+      "converse",
+      "say",
+      "speak",
+      "talk",
+      "tell"
+    ],
+    "meal": [
+      "cuisine",
+      "dish",
+      "food",
+      "nourishment",
+      "sustenance"
+    ],
+    "experiment": [
+      "attempt",
+      "endeavor",
+      "investigation",
+      "procedure",
+      "strive",
+      "study",
+      "test",
+      "trial",
+      "try"
+    ],
+    "speedy": [
+      "brisk",
+      "fast",
+      "hasty",
+      "quick",
+      "rapid",
+      "swift"
+    ],
+    "power": [
+      "capacity",
+      "charge",
+      "energy",
+      "force",
+      "potential"
+    ],
+    "money": [
+      "capital",
+      "cash",
+      "currency",
+      "finance",
+      "funds"
+    ],
+    "accept": [
+      "collect",
+      "get",
+      "obtain",
+      "pull",
+      "receive"
+    ],
+    "tell": [
+      "chat",
+      "converse",
+      "discuss",
+      "say",
+      "speak",
+      "talk"
+    ],
+    "wrathful": [
+      "angry",
+      "enraged",
+      "furious",
+      "irate",
+      "livid",
+      "mad"
+    ],
+    "miniature": [
+      "compact",
+      "little",
+      "minute",
+      "petite",
+      "small",
+      "tiny"
+    ],
+    "cognition": [
+      "awareness",
+      "consciousness",
+      "insight",
+      "knowledge",
+      "mindfulness",
+      "perception",
+      "sentience",
+      "understanding",
+      "wisdom"
+    ],
+    "verity": [
+      "actuality",
+      "fact",
+      "reality",
+      "truth",
+      "validity"
+    ],
+    "funds": [
+      "capital",
+      "cash",
+      "currency",
+      "finance",
+      "money"
+    ],
+    "transform": [
+      "adapt",
+      "change",
+      "develop",
+      "evolve",
+      "mutate",
+      "progress"
+    ]
+  },
+  "lobe_tables": [
+    {
+      "created_at": 1.780183331177204e9,
+      "lobe_id": "default",
+      "chunks": {
+        "nodes": {
+          "node_0": {
+            "is_active": true,
+            "node_id": "node_0",
+            "_type": "NodeRef",
+            "lobe_id": "default",
+            "inserted_at": 1.78018333118038e9
+          },
+          "node_1": {
+            "is_active": true,
+            "node_id": "node_1",
+            "_type": "NodeRef",
+            "lobe_id": "default",
+            "inserted_at": 1.780183331180383e9
+          },
+          "node_2": {
+            "is_active": true,
+            "node_id": "node_2",
+            "_type": "NodeRef",
+            "lobe_id": "default",
+            "inserted_at": 1.780183331180384e9
+          }
+        },
+        "drop": {},
+        "json": {},
+        "meta": {},
+        "hopfield": {}
+      }
+    },
+    {
+      "created_at": 1.780183361539461e9,
+      "lobe_id": "VigilanceLobe",
+      "chunks": {
+        "nodes": {
+          "node_5": {
+            "is_active": true,
+            "node_id": "node_5",
+            "_type": "NodeRef",
+            "lobe_id": "VigilanceLobe",
+            "inserted_at": 1.780183361753306e9
+          },
+          "node_6": {
+            "is_active": true,
+            "node_id": "node_6",
+            "_type": "NodeRef",
+            "lobe_id": "VigilanceLobe",
+            "inserted_at": 1.780183361753443e9
+          }
+        },
+        "drop": {},
+        "json": {
+          "node_6:voice_register": "terse",
+          "node_5:noun_anchors": [
+            "danger",
+            "warning"
+          ],
+          "node_6:system_prompt": "Eyes open, ears sharp. The perimeter must be watched.",
+          "node_5:voice_register": "terse",
+          "node_5:system_prompt": "Warning given early is life saved later. Vigilance keeps the tribe safe.",
+          "node_6:noun_anchors": [
+            "perimeter",
+            "watch"
+          ]
+        },
+        "meta": {},
+        "hopfield": {}
+      }
+    },
+    {
+      "created_at": 1.780183361539481e9,
+      "lobe_id": "SurvivalLobe",
+      "chunks": {
+        "nodes": {
+          "node_8": {
+            "is_active": true,
+            "node_id": "node_8",
+            "_type": "NodeRef",
+            "lobe_id": "SurvivalLobe",
+            "inserted_at": 1.780183361753679e9
+          },
+          "node_7": {
+            "is_active": true,
+            "node_id": "node_7",
+            "_type": "NodeRef",
+            "lobe_id": "SurvivalLobe",
+            "inserted_at": 1.780183361753561e9
+          }
+        },
+        "drop": {},
+        "json": {
+          "node_8:system_prompt": "Fire is both friend and foe. Respect the flame.",
+          "node_7:noun_anchors": [
+            "cave",
+            "shelter"
+          ],
+          "node_7:system_prompt": "Cave is home, home is life. Protect the shelter at all costs.",
+          "node_7:voice_register": "plain",
+          "node_8:noun_anchors": [
+            "fire",
+            "flame"
+          ],
+          "node_8:voice_register": "warm"
+        },
+        "meta": {},
+        "hopfield": {}
+      }
+    },
+    {
+      "created_at": 1.780183361539339e9,
+      "lobe_id": "SocialLobe",
+      "chunks": {
+        "nodes": {
+          "node_4": {
+            "is_active": true,
+            "node_id": "node_4",
+            "_type": "NodeRef",
+            "lobe_id": "SocialLobe",
+            "inserted_at": 1.780183361753146e9
+          },
+          "node_3": {
+            "is_active": true,
+            "node_id": "node_3",
+            "_type": "NodeRef",
+            "lobe_id": "SocialLobe",
+            "inserted_at": 1.780183361717781e9
+          }
+        },
+        "drop": {},
+        "json": {
+          "node_4:voice_register": "warm",
+          "node_4:system_prompt": "Sharing is the heart of tribe. Together we are stronger.",
+          "node_3:noun_anchors": [
+            "friend",
+            "newcomer"
+          ],
+          "node_4:noun_anchors": [
+            "sharing",
+            "tribe"
+          ],
+          "node_3:voice_register": "warm",
+          "node_3:system_prompt": "Every newcomer is potential friend. Grug always happy to meet new tribe member."
+        },
+        "meta": {},
+        "hopfield": {}
+      }
+    }
+  ],
+  "rules": [
+    {
+      "text": "\"Grug reflect on yourself\"",
+      "prob": 1.0
+    },
+    {
+      "text": "\"What patterns do you see\"",
+      "prob": 1.0
+    }
+  ],
+  "ephemeral_mlp": {
+    "last_user_input": "What do you think about danger?",
+    "total_transforms": 8,
+    "total_sigmoid_activations": 0,
+    "last_activation": "relu",
+    "weights": {
+      "b_hidden": [
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0,
+          "value": 0.0,
+          "jitter_eligible": true
+        }
+      ],
+      "w_input_hidden": [
+        {
+          "last_wobble": -0.000253,
+          "value": 0.011247,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000385,
+          "value": -0.023232,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 8.2e-5,
+          "value": 0.00414,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -4.0e-6,
+          "value": -0.002492,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 5.7e-5,
+          "value": -0.005725,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000199,
+          "value": -0.010217,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000391,
+          "value": 0.035506,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000283,
+          "value": 0.010197,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000622,
+          "value": 0.023208,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000442,
+          "value": 0.048676,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000235,
+          "value": -0.02305,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 8.8e-5,
+          "value": -0.040657,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000876,
+          "value": -0.032904,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000396,
+          "value": 0.017324,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000211,
+          "value": 0.043029,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.001368,
+          "value": -0.045888,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -3.7e-5,
+          "value": -0.001613,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 5.9e-5,
+          "value": 0.026064,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000197,
+          "value": 0.049692,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001082,
+          "value": 0.046255,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 7.1e-5,
+          "value": 0.00787,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000157,
+          "value": -0.034003,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000186,
+          "value": 0.007195,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000829,
+          "value": 0.040139,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000275,
+          "value": -0.023104,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000104,
+          "value": -0.047628,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000176,
+          "value": -0.013242,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000308,
+          "value": 0.012341,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.0e-6,
+          "value": 0.00318,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000103,
+          "value": -0.027479,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000207,
+          "value": 0.049987,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000208,
+          "value": 0.033593,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001376,
+          "value": 0.046764,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000742,
+          "value": -0.037453,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000215,
+          "value": -0.011378,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -9.9e-5,
+          "value": 0.023818,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 8.2e-5,
+          "value": 0.022663,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000601,
+          "value": 0.023051,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000396,
+          "value": 0.026337,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000878,
+          "value": 0.029376,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000131,
+          "value": 0.032642,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000431,
+          "value": -0.045022,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000304,
+          "value": -0.029949,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.001288,
+          "value": 0.048606,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000966,
+          "value": 0.038738,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000195,
+          "value": 0.045719,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000395,
+          "value": 0.029269,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.001288,
+          "value": -0.046278,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000484,
+          "value": 0.018537,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000163,
+          "value": 0.01999,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 6.4e-5,
+          "value": 0.017447,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000149,
+          "value": 0.037635,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000111,
+          "value": 0.006302,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001247,
+          "value": -0.046703,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000347,
+          "value": 0.031997,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000247,
+          "value": -0.011189,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000128,
+          "value": 0.010848,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00053,
+          "value": -0.038056,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001051,
+          "value": 0.038182,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000752,
+          "value": 0.031628,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000135,
+          "value": 0.006427,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00048,
+          "value": 0.031918,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.2e-5,
+          "value": -0.01294,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000897,
+          "value": -0.034643,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000118,
+          "value": 0.004799,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000894,
+          "value": 0.04505,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00042,
+          "value": 0.03235,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000327,
+          "value": -0.029233,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 5.8e-5,
+          "value": -0.010565,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000126,
+          "value": 0.010535,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.2e-5,
+          "value": -0.029543,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000894,
+          "value": -0.04659,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000378,
+          "value": 0.022599,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000371,
+          "value": -0.029486,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000112,
+          "value": -0.005084,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 9.2e-5,
+          "value": -0.003165,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000771,
+          "value": 0.046948,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -1.8e-5,
+          "value": 0.003167,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000118,
+          "value": -0.022148,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000415,
+          "value": 0.01782,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 2.3e-5,
+          "value": -0.004753,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000791,
+          "value": 0.045244,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000677,
+          "value": 0.049256,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000164,
+          "value": -0.046276,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000289,
+          "value": -0.017342,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 6.1e-5,
+          "value": -0.022194,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000527,
+          "value": 0.02609,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000314,
+          "value": 0.02891,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 6.3e-5,
+          "value": -0.020962,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000219,
+          "value": 0.027471,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -1.1e-5,
+          "value": 0.013399,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 5.3e-5,
+          "value": -0.005353,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000212,
+          "value": -0.020848,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000253,
+          "value": 0.048837,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -1.0e-6,
+          "value": 0.000498,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000463,
+          "value": -0.049619,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000805,
+          "value": -0.043002,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00011,
+          "value": -0.033999,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000208,
+          "value": -0.023552,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.9e-5,
+          "value": -0.023411,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000247,
+          "value": -0.011058,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.7e-5,
+          "value": -0.001155,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000332,
+          "value": -0.030253,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000352,
+          "value": -0.037109,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.00051,
+          "value": 0.025952,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 9.9e-5,
+          "value": -0.041653,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -8.3e-5,
+          "value": 0.013535,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000436,
+          "value": -0.045117,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000455,
+          "value": 0.018003,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000563,
+          "value": -0.029326,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000338,
+          "value": -0.026987,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000407,
+          "value": -0.046216,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000114,
+          "value": -0.04904,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.00011,
+          "value": 0.015872,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000669,
+          "value": -0.02863,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000437,
+          "value": -0.030417,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000186,
+          "value": -0.043564,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000822,
+          "value": -0.02887,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -1.0e-5,
+          "value": -0.002134,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000128,
+          "value": -0.007037,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000787,
+          "value": 0.029142,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000238,
+          "value": -0.017931,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000302,
+          "value": -0.031539,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 7.8e-5,
+          "value": 0.011573,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000799,
+          "value": -0.03047,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000136,
+          "value": 0.022426,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -8.2e-5,
+          "value": -0.00381,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000118,
+          "value": -0.037432,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000496,
+          "value": 0.017383,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -5.0e-6,
+          "value": 0.008375,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000431,
+          "value": 0.027863,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.2e-5,
+          "value": -0.001258,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00068,
+          "value": 0.023437,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000579,
+          "value": -0.04212,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000104,
+          "value": -0.021987,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000867,
+          "value": -0.03097,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00032,
+          "value": -0.027207,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000221,
+          "value": -0.028738,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -3.6e-5,
+          "value": -0.027363,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000135,
+          "value": 0.006235,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000831,
+          "value": -0.032106,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000214,
+          "value": -0.013642,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000501,
+          "value": -0.021484,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000896,
+          "value": 0.036993,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000131,
+          "value": 0.01461,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000898,
+          "value": 0.035146,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000653,
+          "value": -0.029761,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000103,
+          "value": -0.013132,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000626,
+          "value": -0.029229,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -6.8e-5,
+          "value": -0.01889,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00026,
+          "value": 0.011199,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.001044,
+          "value": -0.04156,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 2.2e-5,
+          "value": 0.009707,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -6.7e-5,
+          "value": 0.006376,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000507,
+          "value": -0.021967,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000926,
+          "value": -0.048436,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001045,
+          "value": -0.046761,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000213,
+          "value": 0.036051,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000347,
+          "value": 0.024373,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000334,
+          "value": -0.035549,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000905,
+          "value": -0.032376,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00017,
+          "value": 0.00945,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 5.2e-5,
+          "value": -0.011874,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000729,
+          "value": -0.031086,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000464,
+          "value": 0.035327,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -1.2e-5,
+          "value": -0.015351,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 7.9e-5,
+          "value": 0.004537,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.00073,
+          "value": -0.029325,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.001134,
+          "value": 0.039816,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000516,
+          "value": -0.039791,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000129,
+          "value": -0.004695,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00017,
+          "value": 0.006612,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000449,
+          "value": 0.023479,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000694,
+          "value": 0.023866,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -5.0e-6,
+          "value": -0.002196,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001317,
+          "value": 0.04891,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -2.2e-5,
+          "value": -0.002658,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000226,
+          "value": -0.048168,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.0001,
+          "value": 0.02726,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -3.1e-5,
+          "value": 0.045197,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000169,
+          "value": -0.010572,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000263,
+          "value": 0.026125,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000458,
+          "value": -0.021144,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000918,
+          "value": -0.040772,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000397,
+          "value": 0.014986,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000727,
+          "value": 0.039713,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000329,
+          "value": -0.016703,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000277,
+          "value": -0.019766,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000766,
+          "value": -0.034781,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000521,
+          "value": 0.031096,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000299,
+          "value": 0.013711,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000408,
+          "value": 0.029015,
+          "jitter_eligible": true
+        }
+      ],
+      "w_attention": [
+        {
+          "last_wobble": -4.6e-5,
+          "value": -0.002094,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00015,
+          "value": -0.028095,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000121,
+          "value": -0.006418,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000851,
+          "value": -0.029436,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -7.6e-5,
+          "value": -0.006495,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000645,
+          "value": -0.030003,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.0002,
+          "value": 0.00818,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.00063,
+          "value": -0.022039,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.00021,
+          "value": 0.011284,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 2.8e-5,
+          "value": 0.017853,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000176,
+          "value": 0.024093,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000178,
+          "value": -0.038979,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000357,
+          "value": 0.028344,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000173,
+          "value": 0.013541,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000263,
+          "value": -0.016792,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000361,
+          "value": 0.046811,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -7.4e-5,
+          "value": 0.005366,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000531,
+          "value": 0.040755,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001117,
+          "value": -0.038204,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000202,
+          "value": -0.007268,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001349,
+          "value": -0.049284,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000119,
+          "value": 0.009551,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000671,
+          "value": 0.041236,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -5.8e-5,
+          "value": -0.008294,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000859,
+          "value": -0.029961,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000711,
+          "value": 0.0281,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -8.7e-5,
+          "value": -0.008453,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000563,
+          "value": 0.047483,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.001244,
+          "value": -0.046165,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000574,
+          "value": 0.022695,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -4.0e-5,
+          "value": -0.030889,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 4.7e-5,
+          "value": 0.025847,
+          "jitter_eligible": true
+        }
+      ],
+      "w_hidden_output": [
+        {
+          "last_wobble": -0.000479,
+          "value": -0.022951,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000191,
+          "value": 0.037481,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000411,
+          "value": -0.045374,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000234,
+          "value": -0.036124,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000299,
+          "value": -0.022883,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000197,
+          "value": 0.008823,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000173,
+          "value": -0.011304,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000381,
+          "value": -0.04948,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -4.6e-5,
+          "value": -0.002356,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 1.8e-5,
+          "value": -0.00572,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000142,
+          "value": -0.00645,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.000214,
+          "value": -0.012367,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000294,
+          "value": -0.009845,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": 0.001295,
+          "value": -0.045562,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -0.000632,
+          "value": -0.031222,
+          "jitter_eligible": true
+        },
+        {
+          "last_wobble": -8.5e-5,
+          "value": 0.002998,
+          "jitter_eligible": true
+        }
+      ],
+      "b_output": {
+        "last_wobble": 0.0,
+        "value": 0.0,
+        "jitter_eligible": true
+      }
+    },
+    "right_feedback_count": 0,
+    "input_correlations": {
+      "input_quality_ema": [
+        {
+          "ema_quality": 0.499699,
+          "hash": "12414721904194764767"
+        },
+        {
+          "ema_quality": 0.499833,
+          "hash": "3834957602070010294"
+        },
+        {
+          "ema_quality": 0.49967,
+          "hash": "15321937521290773214"
+        },
+        {
+          "ema_quality": 0.499841,
+          "hash": "548478960752331345"
+        },
+        {
+          "ema_quality": 0.499429,
+          "hash": "15554285182806691790"
+        },
+        {
+          "ema_quality": 0.499651,
+          "hash": "7694715143847072266"
+        },
+        {
+          "ema_quality": 0.499849,
+          "hash": "11273887568482749913"
+        },
+        {
+          "ema_quality": 0.499506,
+          "hash": "16387496350265071091"
+        }
+      ],
+      "entries": [
+        {
+          "directive_quality": 0.4998,
+          "vote_hash": "2753102316155902781",
+          "input_hash": "3834957602070010294",
+          "timestamp": 1.780183369555e9
+        },
+        {
+          "directive_quality": 0.4994,
+          "vote_hash": "4312374738461960789",
+          "input_hash": "15554285182806691790",
+          "timestamp": 1.780183370412e9
+        },
+        {
+          "directive_quality": 0.4998,
+          "vote_hash": "815515652437670496",
+          "input_hash": "548478960752331345",
+          "timestamp": 1.780183370742e9
+        },
+        {
+          "directive_quality": 0.4998,
+          "vote_hash": "10549538443795184917",
+          "input_hash": "11273887568482749913",
+          "timestamp": 1.780183371065e9
+        },
+        {
+          "directive_quality": 0.4997,
+          "vote_hash": "12780207758831397216",
+          "input_hash": "7694715143847072266",
+          "timestamp": 1.780183371389e9
+        },
+        {
+          "directive_quality": 0.4997,
+          "vote_hash": "2054277286447450181",
+          "input_hash": "15321937521290773214",
+          "timestamp": 1.780183371724e9
+        },
+        {
+          "directive_quality": 0.4995,
+          "vote_hash": "16590324209502022020",
+          "input_hash": "16387496350265071091",
+          "timestamp": 1.780183372055e9
+        },
+        {
+          "directive_quality": 0.4997,
+          "vote_hash": "7799280723690351048",
+          "input_hash": "12414721904194764767",
+          "timestamp": 1.780183372511e9
+        }
+      ],
+      "total_correlations": 8
+    },
+    "observation_threshold": 5,
+    "_meta": {
+      "format": "ephemeral-mlp-v1.4",
+      "saved_at": 1.780183372511949e9,
+      "version": "1.4"
+    },
+    "last_directive_quality": 0.4997,
+    "wrong_feedback_count": 0,
+    "novelty_tracker": {
+      "hash_counts": [
+        {
+          "hash": "2054277286447450181",
+          "count": 1
+        },
+        {
+          "hash": "12780207758831397216",
+          "count": 1
+        },
+        {
+          "hash": "815515652437670496",
+          "count": 1
+        },
+        {
+          "hash": "4312374738461960789",
+          "count": 1
+        },
+        {
+          "hash": "7799280723690351048",
+          "count": 1
+        },
+        {
+          "hash": "2753102316155902781",
+          "count": 1
+        },
+        {
+          "hash": "10549538443795184917",
+          "count": 1
+        },
+        {
+          "hash": "16590324209502022020",
+          "count": 1
+        }
+      ],
+      "history": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "total_observations": 8
+    },
+    "adjustments_enabled": true,
+    "selfobserver_observations": 6,
+    "rules": [],
+    "last_novelty_score": 1.0,
+    "total_relu_activations": 8
+  },
+  "lobes": [
+    {
+      "created_at": 1.780183331177192e9,
+      "fire_count": 0,
+      "node_cap": 20000,
+      "id": "default",
+      "node_ids": [
+        "node_0",
+        "node_1",
+        "node_2"
+      ],
+      "connected_lobe_ids": [],
+      "subject_whitelist": [],
+      "inhibit_count": 0,
+      "subject": "general thinking reasoning conversation greeting"
+    },
+    {
+      "created_at": 1.780183361539453e9,
+      "fire_count": 0,
+      "node_cap": 20000,
+      "id": "VigilanceLobe",
+      "node_ids": [
+        "node_5",
+        "node_6"
+      ],
+      "connected_lobe_ids": [
+        "SocialLobe"
+      ],
+      "subject_whitelist": [],
+      "inhibit_count": 0,
+      "subject": "danger risk hazard warning"
+    },
+    {
+      "created_at": 1.780183361539478e9,
+      "fire_count": 0,
+      "node_cap": 20000,
+      "id": "SurvivalLobe",
+      "node_ids": [
+        "node_7",
+        "node_8"
+      ],
+      "connected_lobe_ids": [
+        "SocialLobe"
+      ],
+      "subject_whitelist": [],
+      "inhibit_count": 0,
+      "subject": "shelter cave food fire"
+    },
+    {
+      "created_at": 1.780183361539329e9,
+      "fire_count": 0,
+      "node_cap": 20000,
+      "id": "SocialLobe",
+      "node_ids": [
+        "node_3",
+        "node_4"
+      ],
+      "connected_lobe_ids": [
+        "SurvivalLobe",
+        "VigilanceLobe"
+      ],
+      "subject_whitelist": [],
+      "inhibit_count": 0,
+      "subject": "grug social friend tribe"
+    }
+  ],
+  "phase_accumulator": {
+    "snapshots": [],
+    "total_pulls": 0,
+    "surface_count": 3,
+    "enabled": true,
+    "total_snapshots_recorded": 0,
+    "pull_threshold": 0.55
+  },
+  "brainstem": {
+    "dispatch_count": 0,
+    "last_dispatch_t": 0.0,
+    "propagation_history": [],
+    "last_winner_id": ""
+  },
+  "brainstem_config": {
+    "propagation_decay": 0.6,
+    "propagation_min_confidence": 0.1,
+    "fire_count_decay_factor": 0.85,
+    "fire_count_decay_interval": 50
+  },
+  "id_counters": {
+    "node_id_counter": 9,
+    "msg_id_counter": 31
+  },
+  "immune_system": {
+    "hopfield": {},
+    "ledger": []
+  },
+  "aiml_system": {
+    "cycle": 10,
+    "registry": {
+      "VigilanceLobe": [],
+      "SurvivalLobe": [],
+      "SocialLobe": []
+    },
+    "population_caps": {
+      "VigilanceLobe": 6666,
+      "SurvivalLobe": 6666,
+      "SocialLobe": 6666
+    }
+  },
+  "scanner_config": {
+    "default_candidate_threshold": 0.3,
+    "confident_threshold": 0.75,
+    "max_active_nodes": 1000
+  },
+  "_meta": {
+    "format": "grugbot420-specimen-v2.11",
+    "saved_at": 1.780183372511955e9,
+    "version": "2.11"
+  },
+  "nodes": [
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.030352196083735024,
+        0.9893542426508214,
+        0.009871586079801792
+      ],
+      "hopfield_key": "12713550575238951760",
+      "relational_patterns": [],
+      "max_neighbors": 14,
+      "json_data": {
+        "noun_anchors": [
+          "cave",
+          "shelter"
+        ],
+        "voice_register": "plain",
+        "system_prompt": "Cave is home, home is life. Protect the shelter at all costs."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183361753558e9,
+      "pattern": "shelter cave home",
+      "action_packet": "alert",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_7",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "response_times": [
+        0.32238197326660156
+      ],
+      "throttle": 0.5
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.2630790683754012,
+        0.8069211820079454,
+        0.6669524639054392
+      ],
+      "hopfield_key": "6482256615204328660",
+      "relational_patterns": [],
+      "max_neighbors": 15,
+      "json_data": {
+        "noun_anchors": [
+          "fire",
+          "flame"
+        ],
+        "voice_register": "warm",
+        "system_prompt": "Fire is both friend and foe. Respect the flame."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183361753677e9,
+      "pattern": "fire burn warm",
+      "action_packet": "support",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_8",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "response_times": [
+        0.3301858901977539
+      ],
+      "throttle": 0.3
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.9504661807338175,
+        0.6340081581416029,
+        0.6573056681613353,
+        0.054126128344148546
+      ],
+      "hopfield_key": "3424827947143480936",
+      "relational_patterns": [],
+      "max_neighbors": 12,
+      "json_data": {
+        "system_prompt": "Highly polite greeting protocols active. Friend at the cave mouth, Grug nod and make space by the fire."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183331177333e9,
+      "pattern": "hello hi greeting mornin",
+      "action_packet": "greet[dont frown, dont insult]^3 | welcome[dont be rude]^2 | smile^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_0",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "response_times": [],
+      "throttle": 0.5
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.43083490261649277,
+        0.788861966590238,
+        0.06923951997599607
+      ],
+      "hopfield_key": "12531394359369886682",
+      "relational_patterns": [],
+      "max_neighbors": 14,
+      "json_data": {
+        "noun_anchors": [
+          "sharing",
+          "tribe"
+        ],
+        "voice_register": "warm",
+        "system_prompt": "Sharing is the heart of tribe. Together we are stronger."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183361753132e9,
+      "pattern": "share give help",
+      "action_packet": "acknowledge",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_4",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "response_times": [],
+      "throttle": 0.5
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.4782986480661268,
+        0.3181577261294012,
+        0.2570875531690484
+      ],
+      "hopfield_key": "12715490346738178311",
+      "relational_patterns": [],
+      "max_neighbors": 13,
+      "json_data": {
+        "noun_anchors": [
+          "danger",
+          "warning"
+        ],
+        "voice_register": "terse",
+        "system_prompt": "Warning given early is life saved later. Vigilance keeps the tribe safe."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183361753302e9,
+      "pattern": "danger risk hazard",
+      "action_packet": "warn",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_5",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "response_times": [
+        0.32923007011413574,
+        0.32193803787231445
+      ],
+      "throttle": 0.5
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.39300060174861406,
+        0.6076281576512098,
+        0.9854313687825454,
+        0.10854154474261539
+      ],
+      "hopfield_key": "3363597340069351038",
+      "relational_patterns": [],
+      "max_neighbors": 9,
+      "json_data": {
+        "last_reason": "What do you think about danger?",
+        "system_prompt": "Cold logical analysis engine active. Grug line up the rocks one by one and check each before moving on."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183331177361e9,
+      "pattern": "think ponder reason calculate",
+      "action_packet": "reason[dont guess, dont hallucinate]^4 | analyze[dont assume]^3 | ponder^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_1",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 2.0,
+      "response_times": [
+        0.37975287437438965
+      ],
+      "throttle": 0.3
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.9504661807338175,
+        0.699635561591072,
+        0.8952146241572654
+      ],
+      "hopfield_key": "2075534462186690134",
+      "relational_patterns": [],
+      "max_neighbors": 12,
+      "json_data": {
+        "noun_anchors": [
+          "friend",
+          "newcomer"
+        ],
+        "voice_register": "warm",
+        "system_prompt": "Every newcomer is potential friend. Grug always happy to meet new tribe member."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.780183361717764e9,
+      "pattern": "hello friend welcome",
+      "action_packet": "greet",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_3",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 2.0,
+      "response_times": [
+        7.509327173233032,
+        0.6353859901428223
+      ],
+      "throttle": 0.3
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.8093117937885691,
+        0.24287983693085233,
+        0.34862431742742367
+      ],
+      "hopfield_key": "11528624621432026792",
+      "relational_patterns": [],
+      "max_neighbors": 13,
+      "json_data": {
+        "noun_anchors": [
+          "perimeter",
+          "watch"
+        ],
+        "voice_register": "terse",
+        "system_prompt": "Eyes open, ears sharp. The perimeter must be watched."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.78018336175344e9,
+      "pattern": "watch guard lookout",
+      "action_packet": "flag",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_6",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "response_times": [
+        0.32306694984436035
+      ],
+      "throttle": 0.5
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.3194648975276139,
+        0.8878016608890751,
+        0.1108933932798855,
+        0.28657804682023813,
+        0.9265236970110724,
+        0.2630790683754012
+      ],
+      "hopfield_key": "13406871354912520156",
+      "relational_patterns": [
+        {
+          "relation": "hits",
+          "object": "rock",
+          "subject": "grug"
+        },
+        {
+          "relation": "makes",
+          "object": "fire",
+          "subject": "and"
+        }
+      ],
+      "max_neighbors": 15,
+      "json_data": {
+        "required_relations": [
+          "hits"
+        ],
+        "relation_weights": {
+          "hits": 2.5
+        },
+        "system_prompt": "Causal relational analysis active. Grug trace what hits what, in what order, and what falls out the other side."
+      },
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1.78018333118037e9,
+      "pattern": "grug hits rock and makes fire",
+      "action_packet": "analyze[dont panic]^5 | ponder^2",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_2",
+      "required_relations": [
+        "hits"
+      ],
+      "relation_weights": {
+        "hits": 2.5
+      },
+      "strength": 1.0,
+      "response_times": [],
+      "throttle": 0.5
+    }
+  ],
+  "vigilance_config": {
+    "weight_extreme": 0.9,
+    "max_injectors_per_cycle": 4,
+    "weight_low": 0.25,
+    "injector_timeout_seconds": 5.0,
+    "injector_feedback_prob": 0.15,
+    "weight_high": 0.75,
+    "weight_medium": 0.5,
+    "enabled": true,
+    "max_cap": 6,
+    "weight_floor": 0.0
+  },
+  "arousal": {
+    "decay_rate": 0.05,
+    "baseline": 0.3,
+    "level": 1.0
+  },
+  "automaton_rules": [],
+  "last_voters": [
+    "node_1"
+  ],
+  "injector_stats": {
+    "total_entries_injected": 0,
+    "total_feedback_written": 0,
+    "total_timed_out": 0,
+    "total_dispatched": 0,
+    "total_probe_keys": 0,
+    "total_completed": 0
+  },
+  "tonal_judge_knobs": {
+    "frame_inhibit_multiplier": 0.85,
+    "frame_lift_multiplier": 1.2
+  },
+  "last_contributor_votes": [
+    {
+      "antimatch": false,
+      "user_triples": [],
+      "action": "reason",
+      "input_chunks": [
+        1
+      ],
+      "node_triples": [],
+      "multipart_role": "primary",
+      "node_id": "node_1",
+      "multipart_group": "mp_1",
+      "confidence": 0.3137215381709181,
+      "negatives": [
+        "dont guess",
+        "dont hallucinate",
+        "dont assume"
+      ]
+    }
+  ],
+  "chatter_cooldowns": [],
+  "eye_state": {
+    "last_centroid_x": 0.5,
+    "last_arousal": 0.3,
+    "attention_enabled": true,
+    "last_centroid_y": 0.5,
+    "blur_enabled": true
+  },
+  "chatter_config": {
+    "idle_jitter_seconds": 30.0,
+    "chatter_strong_floor": 5.0,
+    "chatter_default_low_weight": 0.5,
+    "idle_threshold_seconds": 120.0,
+    "chatter_weight_jitter_sigma": 0.1,
+    "chatter_window_max": 400,
+    "chatter_window_min": 100,
+    "strong_low_conf_override": 0.35,
+    "chatter_semantic_intensity_cap": 0.85,
+    "min_population_for_chatter": 1000,
+    "chatter_default_low_weight_prob": 0.5,
+    "morph_cooldown_seconds": 86400.0,
+    "chatter_weak_floor": 2.0
+  },
+  "mitosis_config": {
+    "mitosis_probability": 0.15,
+    "min_warrant_threshold": 0.5,
+    "lobe_coverage_ratio_min": 0.25,
+    "frequency_warrant_min": 5,
+    "max_population_cap": 10000,
+    "silence_warrant_min_accum": 5.0,
+    "mitosis_strength_default": 1.0,
+    "thesaurus_warrant_threshold": 0.8,
+    "min_population_gate": 10,
+    "silence_warrant_threshold": 2.0,
+    "max_mitosis_per_cycle": 1,
+    "mitosis_cooldown_cycles": 5
+  },
+  "lobe_orchestrator_knobs": {
+    "top_k_fraction": 0.5,
+    "hard_fire_batch_cap": 1000,
+    "min_winning_votes_per_lobe": 2,
+    "min_pass_through_score": 0.1,
+    "hard_selection_conf_threshold": 0.5,
+    "default_lobe_demotion_factor": 0.5
+  },
+  "mlp_observer_store": {
+    "key_count": 7,
+    "total_entries": 7
+  },
+  "morph_cooldowns": {},
+  "attachments": []
+}

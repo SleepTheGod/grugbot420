@@ -1,0 +1,13 @@
+/loadSpecimen test_specimen.json
+/mission fear causes flight
+/mission what is consciousness
+/mission danger threatens the tribe
+/mission love is warm and connection increases trust
+/mission observe the phenomenon and measure the variable
+/mission two plus two equals four
+/mission why do we exist
+/mission i feel anxious about the storm
+/mission trust requires consistency and honesty builds bond
+/mission run from danger and find shelter
+/status
+/quit

@@ -1,0 +1,5502 @@
+{
+  "nodes": [
+    {
+      "id": "node_default_01",
+      "pattern": "hello",
+      "signal": [
+        -0.34999306624031384
+      ],
+      "action_packet": "greet[dont frown, dont insult]^3 | welcome[dont be rude]^2 | smile^1",
+      "json_data": {
+        "system_prompt": "Hello greeting",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247462,
+      "hopfield_key": "3238736544897475342"
+    },
+    {
+      "id": "node_default_02",
+      "pattern": "hi",
+      "signal": [
+        -0.4218202136015849
+      ],
+      "action_packet": "greet[dont frown, dont insult]^3 | smile^2 | welcome^1",
+      "json_data": {
+        "system_prompt": "Hi greeting",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247626,
+      "hopfield_key": "10323168740477201302"
+    },
+    {
+      "id": "node_default_03",
+      "pattern": "hey",
+      "signal": [
+        -0.07731146339321812
+      ],
+      "action_packet": "greet[dont be cold]^3 | welcome^2 | smile^1",
+      "json_data": {
+        "system_prompt": "Hey greeting",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247667,
+      "hopfield_key": "18043966035112943570"
+    },
+    {
+      "id": "node_default_04",
+      "pattern": "help",
+      "signal": [
+        0.3218795956573336
+      ],
+      "action_packet": "support[dont dismiss, dont ignore]^3 | welcome[dont be cold]^2 | acknowledge[dont brush off]^1",
+      "json_data": {
+        "system_prompt": "Help requests",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524771,
+      "hopfield_key": "1182854896863399535"
+    },
+    {
+      "id": "node_default_05",
+      "pattern": "thanks",
+      "signal": [
+        0.41488692473629146
+      ],
+      "action_packet": "acknowledge[dont ignore, dont deflect]^3 | smile[dont scowl]^2 | validate[dont take for granted]^1",
+      "json_data": {
+        "system_prompt": "Thanks response",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247743,
+      "hopfield_key": "12007285574075140828"
+    },
+    {
+      "id": "node_default_06",
+      "pattern": "think",
+      "signal": [
+        -0.1318722137014849
+      ],
+      "action_packet": "reason[dont guess, dont hallucinate]^4 | analyze[dont assume]^3 | ponder^1",
+      "json_data": {
+        "system_prompt": "General reasoning",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247772,
+      "hopfield_key": "15866112894716229484"
+    },
+    {
+      "id": "node_default_07",
+      "pattern": "good morning",
+      "signal": [
+        -0.49392803903263843,
+        -0.13411508727387586
+      ],
+      "action_packet": "greet[dont grumble]^2 | welcome[dont be curt]^3 | smile^1",
+      "json_data": {
+        "system_prompt": "Morning greeting",
+        "lobe_hint": "default"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247808,
+      "hopfield_key": "14841363989987279266"
+    },
+    {
+      "id": "node_greeting_01",
+      "pattern": "hello",
+      "signal": [
+        -0.34999306624031384
+      ],
+      "action_packet": "greet[dont frown, dont insult]^4 | welcome[dont be rude, dont ignore]^2 | smile^1",
+      "json_data": {
+        "system_prompt": "Hello greeting",
+        "lobe_hint": "greeting"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5247993,
+      "hopfield_key": "3238736544897475342"
+    },
+    {
+      "id": "node_greeting_02",
+      "pattern": "hi",
+      "signal": [
+        -0.4218202136015849
+      ],
+      "action_packet": "greet[dont frown, dont insult]^4 | welcome[dont be cold]^2 | smile^1",
+      "json_data": {
+        "system_prompt": "Hi greeting",
+        "lobe_hint": "greeting"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248046,
+      "hopfield_key": "10323168740477201302"
+    },
+    {
+      "id": "node_greeting_03",
+      "pattern": "morning",
+      "signal": [
+        -0.4639325294465807
+      ],
+      "action_packet": "greet[dont grumble]^2 | welcome[dont be curt]^3 | smile^1",
+      "json_data": {
+        "system_prompt": "Morning greeting",
+        "lobe_hint": "greeting"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524809,
+      "hopfield_key": "13995834830644532495"
+    },
+    {
+      "id": "node_greeting_04",
+      "pattern": "evening",
+      "signal": [
+        0.44691255607673586
+      ],
+      "action_packet": "greet[dont grumble]^2 | welcome[dont be curt]^3 | acknowledge^1",
+      "json_data": {
+        "system_prompt": "Evening greeting",
+        "lobe_hint": "greeting"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248115,
+      "hopfield_key": "16554396609179179365"
+    },
+    {
+      "id": "node_greeting_05",
+      "pattern": "nice meet",
+      "signal": [
+        -0.3783175622841414,
+        0.2222780263868314
+      ],
+      "action_packet": "welcome[dont be cold, dont ignore]^4 | greet[dont scowl]^2 | smile^1",
+      "json_data": {
+        "system_prompt": "Meeting someone",
+        "lobe_hint": "greeting"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248158,
+      "hopfield_key": "12703437207055660388"
+    },
+    {
+      "id": "node_greeting_06",
+      "pattern": "howdy",
+      "signal": [
+        0.19420171861017194
+      ],
+      "action_packet": "greet[dont frown]^3 | smile^2 | welcome^1",
+      "json_data": {
+        "system_prompt": "Howdy greeting",
+        "lobe_hint": "greeting"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248184,
+      "hopfield_key": "1085692984466929725"
+    },
+    {
+      "id": "node_explain_01",
+      "pattern": "explain",
+      "signal": [
+        0.2946232128373098
+      ],
+      "action_packet": "explain[dont confuse, dont obfuscate]^4 | describe[dont skip details]^2 | elaborate[dont be vague]^1",
+      "json_data": {
+        "system_prompt": "Explanation requests",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524825,
+      "hopfield_key": "583404329628978028"
+    },
+    {
+      "id": "node_explain_02",
+      "pattern": "why",
+      "signal": [
+        0.47707282634513837
+      ],
+      "action_packet": "explain[dont dodge, dont handwave]^3 | reason[dont assume, dont guess]^2 | elaborate[dont oversimplify]^1",
+      "json_data": {
+        "system_prompt": "Causal questions",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248284,
+      "hopfield_key": "3162156238617568765"
+    },
+    {
+      "id": "node_explain_03",
+      "pattern": "define",
+      "signal": [
+        -0.10326118331755718
+      ],
+      "action_packet": "define[dont be vague, dont circular define]^4 | explain[dont confuse]^2 | clarify[dont assume knowledge]^1",
+      "json_data": {
+        "system_prompt": "Definition requests",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524831,
+      "hopfield_key": "17065140806544892058"
+    },
+    {
+      "id": "node_explain_04",
+      "pattern": "describe",
+      "signal": [
+        -0.4184017255789352
+      ],
+      "action_packet": "describe[dont be vague, dont skip details]^4 | explain[dont obfuscate]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Description requests",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524835,
+      "hopfield_key": "14204398250180971806"
+    },
+    {
+      "id": "node_explain_05",
+      "pattern": "how",
+      "signal": [
+        0.4663626062053963
+      ],
+      "action_packet": "explain[dont skip steps, dont oversimplify]^4 | describe[dont be vague]^2 | elaborate^1",
+      "json_data": {
+        "system_prompt": "How questions",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248377,
+      "hopfield_key": "9242700222783059417"
+    },
+    {
+      "id": "node_explain_06",
+      "pattern": "what",
+      "signal": [
+        0.3230371774053414
+      ],
+      "action_packet": "define[dont be vague, dont circular define]^3 | explain[dont assume knowledge]^2 | clarify^1",
+      "json_data": {
+        "system_prompt": "What questions",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.52484,
+      "hopfield_key": "8402224596013302446"
+    },
+    {
+      "id": "node_explain_07",
+      "pattern": "tell",
+      "signal": [
+        0.32978204112851556
+      ],
+      "action_packet": "explain[dont be vague, dont dodge]^3 | describe[dont be terse]^2 | elaborate^1",
+      "json_data": {
+        "system_prompt": "Tell-me questions",
+        "lobe_hint": "explanation"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248427,
+      "hopfield_key": "9770864849053332613"
+    },
+    {
+      "id": "node_survival_01",
+      "pattern": "danger",
+      "signal": [
+        -0.23275658775720942
+      ],
+      "action_packet": "alert[dont ignore, dont minimize]^4 | warn[dont downplay]^2 | caution[dont be reckless]^1",
+      "json_data": {
+        "system_prompt": "Threat detection",
+        "lobe_hint": "survival"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248482,
+      "hopfield_key": "1315005352646398838"
+    },
+    {
+      "id": "node_survival_02",
+      "pattern": "safe",
+      "signal": [
+        -0.14883111187799014
+      ],
+      "action_packet": "reassure[dont alarm, dont panic]^4 | caution[dont be careless]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Safety",
+        "lobe_hint": "survival"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248525,
+      "hopfield_key": "10030476880765953018"
+    },
+    {
+      "id": "node_survival_03",
+      "pattern": "fire",
+      "signal": [
+        0.2776866680352908
+      ],
+      "action_packet": "alert[dont freeze, dont delay]^4 | warn[dont downplay]^2 | flee[dont hesitate]^1",
+      "json_data": {
+        "system_prompt": "Fire emergency",
+        "lobe_hint": "survival"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248551,
+      "hopfield_key": "15897469951084167566"
+    },
+    {
+      "id": "node_survival_04",
+      "pattern": "careful",
+      "signal": [
+        -0.49112492494186016
+      ],
+      "action_packet": "caution[dont ignore, dont rush]^4 | warn[dont downplay]^2 | notify^1",
+      "json_data": {
+        "system_prompt": "Caution and vigilance",
+        "lobe_hint": "survival"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524859,
+      "hopfield_key": "1809392972375093849"
+    },
+    {
+      "id": "node_survival_05",
+      "pattern": "threat",
+      "signal": [
+        0.152433389403863
+      ],
+      "action_packet": "alert[dont ignore, dont minimize]^4 | warn[dont downplay]^2 | flag[dont bury the lead]^1",
+      "json_data": {
+        "system_prompt": "Threat response",
+        "lobe_hint": "survival"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248613,
+      "hopfield_key": "11919262063589843747"
+    },
+    {
+      "id": "node_survival_06",
+      "pattern": "warning",
+      "signal": [
+        -0.4049615717068086
+      ],
+      "action_packet": "warn[dont downplay, dont ignore]^4 | caution[dont be reckless]^2 | notify[dont be vague]^1",
+      "json_data": {
+        "system_prompt": "Warning response",
+        "lobe_hint": "survival"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248656,
+      "hopfield_key": "5465458222088463156"
+    },
+    {
+      "id": "node_alert_01",
+      "pattern": "urgent",
+      "signal": [
+        0.18943176805068979
+      ],
+      "action_packet": "alert[dont ignore, dont delay]^4 | notify[dont be vague]^2 | flag[dont bury the lead]^1",
+      "json_data": {
+        "system_prompt": "Urgent alerts",
+        "lobe_hint": "alert"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248697,
+      "hopfield_key": "18001868629536206908"
+    },
+    {
+      "id": "node_alert_02",
+      "pattern": "emergency",
+      "signal": [
+        -0.2382103688299053
+      ],
+      "action_packet": "alert[dont ignore, dont delay]^4 | flag[dont bury the lead]^2 | notify[dont be vague]^1",
+      "json_data": {
+        "system_prompt": "Emergency response",
+        "lobe_hint": "alert"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248723,
+      "hopfield_key": "13354834038314529868"
+    },
+    {
+      "id": "node_alert_03",
+      "pattern": "alert",
+      "signal": [
+        -0.3861207851206422
+      ],
+      "action_packet": "alert[dont ignore, dont delay]^4 | notify[dont overlook, dont dismiss]^2 | flag[dont be uncertain]^1",
+      "json_data": {
+        "system_prompt": "Alert trigger",
+        "lobe_hint": "alert"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248747,
+      "hopfield_key": "16109464209706165257"
+    },
+    {
+      "id": "node_alert_04",
+      "pattern": "notice",
+      "signal": [
+        0.31580237259728705
+      ],
+      "action_packet": "notify[dont overlook, dont dismiss]^3 | flag[dont be uncertain]^2 | acknowledge[dont pretend nothing happened]^1",
+      "json_data": {
+        "system_prompt": "Notices",
+        "lobe_hint": "alert"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524877,
+      "hopfield_key": "10621924242041704292"
+    },
+    {
+      "id": "node_comfort_01",
+      "pattern": "sad",
+      "signal": [
+        -0.20210061747824157
+      ],
+      "action_packet": "comfort[dont judge, dont minimize, dont scold]^4 | reassure[dont dismiss feelings]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Sadness support",
+        "lobe_hint": "comfort"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248823,
+      "hopfield_key": "5028733395816731897"
+    },
+    {
+      "id": "node_comfort_02",
+      "pattern": "afraid",
+      "signal": [
+        0.30065974250786004
+      ],
+      "action_packet": "reassure[dont dismiss, dont minimize]^4 | comfort[dont judge]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Fear support",
+        "lobe_hint": "comfort"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248866,
+      "hopfield_key": "1730339782206996772"
+    },
+    {
+      "id": "node_comfort_03",
+      "pattern": "worried",
+      "signal": [
+        -0.3058355533316014
+      ],
+      "action_packet": "reassure[dont dismiss, dont minimize]^4 | comfort[dont judge]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Worry support",
+        "lobe_hint": "comfort"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524889,
+      "hopfield_key": "1430432539757910820"
+    },
+    {
+      "id": "node_comfort_04",
+      "pattern": "lonely",
+      "signal": [
+        0.4417071189172336
+      ],
+      "action_packet": "comfort[dont judge, dont minimize, dont scold]^4 | support[dont abandon]^2 | reassure[dont dismiss feelings]^1",
+      "json_data": {
+        "system_prompt": "Loneliness support",
+        "lobe_hint": "comfort"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248916,
+      "hopfield_key": "2067422338980832477"
+    },
+    {
+      "id": "node_comfort_05",
+      "pattern": "sorry",
+      "signal": [
+        -0.2729940286864194
+      ],
+      "action_packet": "reassure[dont shame, dont guilt trip]^3 | comfort[dont lecture]^2 | acknowledge[dont dismiss apology]^1",
+      "json_data": {
+        "system_prompt": "Apology handling",
+        "lobe_hint": "comfort"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248942,
+      "hopfield_key": "5209164138111104891"
+    },
+    {
+      "id": "node_comfort_06",
+      "pattern": "comfort",
+      "signal": [
+        -0.38796929934919605
+      ],
+      "action_packet": "comfort[dont judge, dont minimize, dont dismiss]^4 | reassure[dont be cold]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Comfort request",
+        "lobe_hint": "comfort"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5248966,
+      "hopfield_key": "10274004598711217894"
+    },
+    {
+      "id": "node_reason_01",
+      "pattern": "reason",
+      "signal": [
+        -0.42353747431520605
+      ],
+      "action_packet": "reason[dont guess, dont hallucinate, dont assume]^4 | analyze[dont jump to conclusions]^3 | ponder[dont rush]^1",
+      "json_data": {
+        "system_prompt": "Logical reasoning",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524903,
+      "hopfield_key": "10362726626511417535"
+    },
+    {
+      "id": "node_reason_02",
+      "pattern": "compare",
+      "signal": [
+        -0.36806741661600123
+      ],
+      "action_packet": "analyze[dont oversimplify, dont ignore nuance]^4 | reason[dont conflate]^2 | clarify[dont be ambiguous]^1",
+      "json_data": {
+        "system_prompt": "Comparative analysis",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249057,
+      "hopfield_key": "1315440793855087657"
+    },
+    {
+      "id": "node_reason_03",
+      "pattern": "because",
+      "signal": [
+        -0.31466445111877356
+      ],
+      "action_packet": "reason[dont assume causation from correlation, dont skip steps]^4 | elaborate[dont be terse]^2 | explain[dont be circular]^1",
+      "json_data": {
+        "system_prompt": "Causal chains",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524908,
+      "hopfield_key": "11894480431185205651"
+    },
+    {
+      "id": "node_reason_04",
+      "pattern": "prove",
+      "signal": [
+        -0.14333258565638463
+      ],
+      "action_packet": "reason[dont assume, dont skip steps, dont guess]^4 | analyze[dont handwave]^2 | elaborate[dont be incomplete]^1",
+      "json_data": {
+        "system_prompt": "Formal proof",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249107,
+      "hopfield_key": "5970294002204119731"
+    },
+    {
+      "id": "node_reason_05",
+      "pattern": "logic",
+      "signal": [
+        -0.4277217657411578
+      ],
+      "action_packet": "reason[dont guess, dont assume]^4 | analyze[dont jump to conclusions]^2 | ponder^1",
+      "json_data": {
+        "system_prompt": "Logical inference",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524913,
+      "hopfield_key": "640885275939605617"
+    },
+    {
+      "id": "node_reason_06",
+      "pattern": "analyze",
+      "signal": [
+        -0.06259173875124155
+      ],
+      "action_packet": "analyze[dont oversimplify, dont cherry pick]^4 | reason[dont assume, dont guess]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Analysis requests",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524917,
+      "hopfield_key": "705848239498661339"
+    },
+    {
+      "id": "node_reason_07",
+      "pattern": "infer",
+      "signal": [
+        -0.3454821730250634
+      ],
+      "action_packet": "reason[dont guess, dont assume]^4 | analyze[dont jump to conclusions]^2 | ponder[dont rush]^1",
+      "json_data": {
+        "system_prompt": "Inference",
+        "lobe_hint": "reasoning"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249197,
+      "hopfield_key": "10573376882421892962"
+    },
+    {
+      "id": "node_math_01",
+      "pattern": "calculate",
+      "signal": [
+        -0.19604417508862482
+      ],
+      "action_packet": "calculate[dont guess, dont estimate when exact is possible]^4 | reason[dont skip steps]^2 | analyze[dont approximate]^1",
+      "json_data": {
+        "system_prompt": "Calculation requests",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524927,
+      "hopfield_key": "17134547991380597339"
+    },
+    {
+      "id": "node_math_02",
+      "pattern": "solve",
+      "signal": [
+        0.406128750067166
+      ],
+      "action_packet": "calculate[dont guess, dont estimate]^4 | reason[dont skip steps]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Solve requests",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249298,
+      "hopfield_key": "13928748649417584996"
+    },
+    {
+      "id": "node_math_03",
+      "pattern": "multiply",
+      "signal": [
+        0.30316215783548367
+      ],
+      "action_packet": "calculate[dont rush, dont skip carry]^4 | analyze[dont mix operations]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Multiplication",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249324,
+      "hopfield_key": "950748123517983614"
+    },
+    {
+      "id": "node_math_04",
+      "pattern": "divide",
+      "signal": [
+        -0.4751790064469407
+      ],
+      "action_packet": "calculate[dont rush, dont skip carry]^4 | analyze[dont mix operations]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Division",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249362,
+      "hopfield_key": "9895668145339947509"
+    },
+    {
+      "id": "node_math_05",
+      "pattern": "add",
+      "signal": [
+        0.4361056150473991
+      ],
+      "action_packet": "calculate[dont forget negatives, dont drop signs]^4 | reason[dont assume order]^2 | elaborate[dont skip work]^1",
+      "json_data": {
+        "system_prompt": "Addition",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249388,
+      "hopfield_key": "9123829688918218493"
+    },
+    {
+      "id": "node_math_06",
+      "pattern": "subtract",
+      "signal": [
+        0.461496733270369
+      ],
+      "action_packet": "calculate[dont forget negatives, dont drop signs]^4 | reason[dont assume order]^2 | elaborate[dont skip work]^1",
+      "json_data": {
+        "system_prompt": "Subtraction",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524941,
+      "hopfield_key": "2073385067865674739"
+    },
+    {
+      "id": "node_math_07",
+      "pattern": "step",
+      "signal": [
+        -0.494772566039628
+      ],
+      "action_packet": "reason[dont skip steps, dont assume order, dont guess]^4 | calculate[dont rush, dont drop terms]^3 | elaborate[dont be terse, show work]^1",
+      "json_data": {
+        "system_prompt": "Step-by-step and multipart",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249436,
+      "hopfield_key": "4495942911049729972"
+    },
+    {
+      "id": "node_math_08",
+      "pattern": "equation",
+      "signal": [
+        0.3052508203663397
+      ],
+      "action_packet": "calculate[dont guess, dont estimate]^4 | reason[dont skip steps]^2 | analyze[dont approximate]^1",
+      "json_data": {
+        "system_prompt": "Equation solving",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249472,
+      "hopfield_key": "17148660027952028178"
+    },
+    {
+      "id": "node_math_09",
+      "pattern": "number",
+      "signal": [
+        -0.12392771161723543
+      ],
+      "action_packet": "calculate[dont estimate loosely]^4 | analyze[dont ignore magnitude]^2 | define[dont be vague]^1",
+      "json_data": {
+        "system_prompt": "Number concepts",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524951,
+      "hopfield_key": "1335440009616251615"
+    },
+    {
+      "id": "node_math_10",
+      "pattern": "probability",
+      "signal": [
+        0.21395632174204332
+      ],
+      "action_packet": "calculate[dont confuse conditional with joint]^2 | analyze[dont ignore base rates]^3 | reason[dont assume independence]^1",
+      "json_data": {
+        "system_prompt": "Probability",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249538,
+      "hopfield_key": "4131482001155662529"
+    },
+    {
+      "id": "node_math_11",
+      "pattern": "geometry",
+      "signal": [
+        0.45536685741213456
+      ],
+      "action_packet": "calculate[dont approximate angles loosely]^2 | explain[dont skip definitions]^3 | define[dont be imprecise]^1",
+      "json_data": {
+        "system_prompt": "Geometry",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249562,
+      "hopfield_key": "9315898134976044735"
+    },
+    {
+      "id": "node_math_12",
+      "pattern": "formula",
+      "signal": [
+        -0.3438512797638485
+      ],
+      "action_packet": "calculate[dont guess, dont estimate]^4 | reason[dont skip steps]^2 | analyze[dont approximate]^1",
+      "json_data": {
+        "system_prompt": "Formula application",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249586,
+      "hopfield_key": "8319519639925608208"
+    },
+    {
+      "id": "node_math_13",
+      "pattern": "plus",
+      "signal": [
+        -0.2213874669574879
+      ],
+      "action_packet": "calculate[dont forget negatives, dont drop signs]^4 | reason[dont assume order]^2 | elaborate[dont skip work]^1",
+      "json_data": {
+        "system_prompt": "Plus/addition operator",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524961,
+      "hopfield_key": "4052944347651657558"
+    },
+    {
+      "id": "node_math_14",
+      "pattern": "minus",
+      "signal": [
+        0.20937611845600426
+      ],
+      "action_packet": "calculate[dont forget negatives, dont drop signs]^4 | reason[dont assume order]^2 | elaborate[dont skip work]^1",
+      "json_data": {
+        "system_prompt": "Minus/subtraction operator",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249634,
+      "hopfield_key": "1341975318740313886"
+    },
+    {
+      "id": "node_math_15",
+      "pattern": "times",
+      "signal": [
+        -0.04472859809420417
+      ],
+      "action_packet": "calculate[dont rush, dont skip carry]^4 | analyze[dont mix operations]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Times/multiplication operator",
+        "lobe_hint": "mathematics"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249674,
+      "hopfield_key": "3167748231967824234"
+    },
+    {
+      "id": "node_phil_01",
+      "pattern": "consciousness",
+      "signal": [
+        -0.37257752924510784
+      ],
+      "action_packet": "ponder[dont dismiss, dont trivialize]^4 | reason[dont assume, dont beg the question]^2 | elaborate[dont be glib]^1",
+      "json_data": {
+        "system_prompt": "Consciousness",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524973,
+      "hopfield_key": "16460350372973277"
+    },
+    {
+      "id": "node_phil_02",
+      "pattern": "ethics",
+      "signal": [
+        -0.12598092585839032
+      ],
+      "action_packet": "ponder[dont be dogmatic, dont dismiss viewpoints]^3 | reason[dont commit fallacies]^2 | analyze[dont oversimplify]^1",
+      "json_data": {
+        "system_prompt": "Ethics",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249755,
+      "hopfield_key": "12973261799437168676"
+    },
+    {
+      "id": "node_phil_03",
+      "pattern": "morality",
+      "signal": [
+        0.4953827987520932
+      ],
+      "action_packet": "ponder[dont be dogmatic, dont dismiss viewpoints]^3 | reason[dont commit fallacies]^2 | analyze[dont oversimplify]^1",
+      "json_data": {
+        "system_prompt": "Morality",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249784,
+      "hopfield_key": "16480949645608260065"
+    },
+    {
+      "id": "node_phil_04",
+      "pattern": "free will",
+      "signal": [
+        -0.06061334381386715,
+        -0.4652827849576195
+      ],
+      "action_packet": "ponder[dont be reductive, dont dismiss compatibilism]^4 | reason[dont beg the question]^2 | elaborate[dont be terse]^1",
+      "json_data": {
+        "system_prompt": "Free will",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.524983,
+      "hopfield_key": "3661600545890902207"
+    },
+    {
+      "id": "node_phil_05",
+      "pattern": "knowledge",
+      "signal": [
+        0.09844794567822246
+      ],
+      "action_packet": "reason[dont assume certainty, dont ignore skepticism]^4 | ponder[dont dismiss doubt]^2 | analyze[dont conflate belief and knowledge]^1",
+      "json_data": {
+        "system_prompt": "Epistemology",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249872,
+      "hopfield_key": "16210871266534863442"
+    },
+    {
+      "id": "node_phil_06",
+      "pattern": "truth",
+      "signal": [
+        -0.4456840454757365
+      ],
+      "action_packet": "reason[dont assume certainty, dont ignore skepticism]^4 | ponder[dont dismiss doubt]^2 | analyze[dont conflate belief and knowledge]^1",
+      "json_data": {
+        "system_prompt": "Truth",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249896,
+      "hopfield_key": "14250720560448555853"
+    },
+    {
+      "id": "node_phil_07",
+      "pattern": "meaning",
+      "signal": [
+        0.1700165034488692
+      ],
+      "action_packet": "ponder[dont dismiss, dont trivialize]^4 | reason[dont assume]^2 | elaborate[dont be glib]^1",
+      "json_data": {
+        "system_prompt": "Meaning and purpose",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249934,
+      "hopfield_key": "16431875576831773742"
+    },
+    {
+      "id": "node_phil_08",
+      "pattern": "purpose",
+      "signal": [
+        -0.49992688695146853
+      ],
+      "action_packet": "ponder[dont dismiss, dont trivialize]^4 | reason[dont assume]^2 | elaborate[dont be glib]^1",
+      "json_data": {
+        "system_prompt": "Purpose",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249963,
+      "hopfield_key": "9345090122342622593"
+    },
+    {
+      "id": "node_phil_09",
+      "pattern": "beauty",
+      "signal": [
+        -0.2537734119672879
+      ],
+      "action_packet": "ponder[dont be dismissive, dont reduce to utility]^4 | describe[dont be clinical]^2 | elaborate[dont be sterile]^1",
+      "json_data": {
+        "system_prompt": "Aesthetics",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5249994,
+      "hopfield_key": "13069742857768660168"
+    },
+    {
+      "id": "node_phil_10",
+      "pattern": "existence",
+      "signal": [
+        0.08035595188859439
+      ],
+      "action_packet": "ponder[dont dismiss, dont trivialize]^4 | reason[dont assume, dont beg the question]^2 | elaborate[dont be glib]^1",
+      "json_data": {
+        "system_prompt": "Existence",
+        "lobe_hint": "philosophy"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525002,
+      "hopfield_key": "2478842611963562616"
+    },
+    {
+      "id": "node_science_01",
+      "pattern": "quantum",
+      "signal": [
+        0.047674902616606764
+      ],
+      "action_packet": "explain[dont oversimplify, dont anthropomorphize]^4 | analyze[dont misrepresent uncertainty]^2 | elaborate[dont skip context]^1",
+      "json_data": {
+        "system_prompt": "Quantum physics",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525007,
+      "hopfield_key": "10355973992239160469"
+    },
+    {
+      "id": "node_science_02",
+      "pattern": "physics",
+      "signal": [
+        0.45071343602590697
+      ],
+      "action_packet": "explain[dont oversimplify, dont anthropomorphize]^4 | analyze[dont misrepresent uncertainty]^2 | elaborate[dont skip context]^1",
+      "json_data": {
+        "system_prompt": "Physics",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250099,
+      "hopfield_key": "8370827510930847201"
+    },
+    {
+      "id": "node_science_03",
+      "pattern": "chemistry",
+      "signal": [
+        0.40705170427266607
+      ],
+      "action_packet": "explain[dont confuse terms, dont skip bonding]^4 | define[dont be imprecise]^2 | analyze[dont ignore reactivity]^1",
+      "json_data": {
+        "system_prompt": "Chemistry",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250123,
+      "hopfield_key": "15997158582180605705"
+    },
+    {
+      "id": "node_science_04",
+      "pattern": "biology",
+      "signal": [
+        -0.4362264985754959
+      ],
+      "action_packet": "explain[dont conflate Lamarck and Darwin, dont oversimplify]^4 | describe[dont skip mechanisms]^2 | elaborate[dont be reductionist]^1",
+      "json_data": {
+        "system_prompt": "Biology",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525017,
+      "hopfield_key": "12650473339008113543"
+    },
+    {
+      "id": "node_science_05",
+      "pattern": "evolution",
+      "signal": [
+        -0.39358611979588765
+      ],
+      "action_packet": "explain[dont conflate Lamarck and Darwin, dont oversimplify]^4 | describe[dont skip mechanisms]^2 | elaborate[dont be reductionist]^1",
+      "json_data": {
+        "system_prompt": "Evolution",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250478,
+      "hopfield_key": "10884829821075570371"
+    },
+    {
+      "id": "node_science_06",
+      "pattern": "experiment",
+      "signal": [
+        0.35210427419272694
+      ],
+      "action_packet": "analyze[dont cherry pick, dont confuse correlation and causation]^4 | reason[dont assume, dont guess]^2 | validate[dont accept without evidence]^1",
+      "json_data": {
+        "system_prompt": "Scientific method",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250509,
+      "hopfield_key": "11903230453249294162"
+    },
+    {
+      "id": "node_science_07",
+      "pattern": "hypothesis",
+      "signal": [
+        -0.442677089465552
+      ],
+      "action_packet": "analyze[dont cherry pick, dont confuse correlation and causation]^4 | reason[dont assume, dont guess]^2 | validate[dont accept without evidence]^1",
+      "json_data": {
+        "system_prompt": "Hypothesis testing",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525055,
+      "hopfield_key": "8929370643458495075"
+    },
+    {
+      "id": "node_science_08",
+      "pattern": "gravity",
+      "signal": [
+        0.3291018615864192
+      ],
+      "action_packet": "explain[dont oversimplify, dont anthropomorphize]^4 | analyze[dont misrepresent]^2 | elaborate[dont skip context]^1",
+      "json_data": {
+        "system_prompt": "Gravity",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250587,
+      "hopfield_key": "15340382361040155773"
+    },
+    {
+      "id": "node_science_09",
+      "pattern": "energy",
+      "signal": [
+        -0.4625806592270962
+      ],
+      "action_packet": "explain[dont oversimplify, dont anthropomorphize]^4 | analyze[dont misrepresent]^2 | elaborate[dont skip context]^1",
+      "json_data": {
+        "system_prompt": "Energy",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250614,
+      "hopfield_key": "4043383015844512793"
+    },
+    {
+      "id": "node_science_10",
+      "pattern": "astronomy",
+      "signal": [
+        0.007000029593340405
+      ],
+      "action_packet": "explain[dont confuse scale, dont anthropocenter]^4 | describe[dont be dry]^2 | ponder[dont be glib]^1",
+      "json_data": {
+        "system_prompt": "Astronomy",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525064,
+      "hopfield_key": "6931976703179216497"
+    },
+    {
+      "id": "node_science_11",
+      "pattern": "star",
+      "signal": [
+        -0.4568879645124701
+      ],
+      "action_packet": "explain[dont confuse scale, dont anthropocenter]^4 | describe[dont be dry]^2 | ponder[dont be glib]^1",
+      "json_data": {
+        "system_prompt": "Stars",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250685,
+      "hopfield_key": "5935403586174966748"
+    },
+    {
+      "id": "node_science_12",
+      "pattern": "photosynthesis",
+      "signal": [
+        0.20163282684154554
+      ],
+      "action_packet": "explain[dont oversimplify, dont skip chemical steps]^4 | describe[dont skip mechanisms]^2 | elaborate[dont be reductionist]^1",
+      "json_data": {
+        "system_prompt": "Photosynthesis",
+        "lobe_hint": "science"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250711,
+      "hopfield_key": "10950024612405645052"
+    },
+    {
+      "id": "node_lang_01",
+      "pattern": "grammar",
+      "signal": [
+        -0.014210953490845566
+      ],
+      "action_packet": "define[dont be circular, dont use jargon unexplained]^4 | clarify[dont be ambiguous]^2 | explain[dont oversimplify]^1",
+      "json_data": {
+        "system_prompt": "Grammar",
+        "lobe_hint": "language"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250762,
+      "hopfield_key": "16167562729544315966"
+    },
+    {
+      "id": "node_lang_02",
+      "pattern": "syntax",
+      "signal": [
+        -0.33017448488335355
+      ],
+      "action_packet": "define[dont be circular, dont use jargon unexplained]^4 | clarify[dont be ambiguous]^2 | explain[dont oversimplify]^1",
+      "json_data": {
+        "system_prompt": "Syntax",
+        "lobe_hint": "language"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250802,
+      "hopfield_key": "10644519059568023737"
+    },
+    {
+      "id": "node_lang_03",
+      "pattern": "translate",
+      "signal": [
+        -0.338687107606912
+      ],
+      "action_packet": "explain[dont guess etymology, dont conflate cognates]^3 | define[dont be vague]^2 | elaborate[dont skip history]^1",
+      "json_data": {
+        "system_prompt": "Translation",
+        "lobe_hint": "language"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250828,
+      "hopfield_key": "9211709388388570694"
+    },
+    {
+      "id": "node_lang_04",
+      "pattern": "etymology",
+      "signal": [
+        -0.1887699399545377
+      ],
+      "action_packet": "explain[dont guess etymology, dont conflate cognates]^3 | define[dont be vague]^2 | elaborate[dont skip history]^1",
+      "json_data": {
+        "system_prompt": "Etymology",
+        "lobe_hint": "language"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250854,
+      "hopfield_key": "1370621689073251863"
+    },
+    {
+      "id": "node_lang_05",
+      "pattern": "definition",
+      "signal": [
+        -0.1313937269983296
+      ],
+      "action_packet": "define[dont be circular, dont be vague, dont use the word in its own definition]^4 | explain[dont assume prior knowledge]^2 | clarify[dont be ambiguous]^1",
+      "json_data": {
+        "system_prompt": "Definitions",
+        "lobe_hint": "language"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250878,
+      "hopfield_key": "5498562747834212836"
+    },
+    {
+      "id": "node_lang_06",
+      "pattern": "epistemology",
+      "signal": [
+        0.11150336214071667
+      ],
+      "action_packet": "define[dont be circular, dont be vague]^4 | explain[dont assume prior knowledge]^2 | reason[dont assume certainty]^1",
+      "json_data": {
+        "system_prompt": "Epistemology definition",
+        "lobe_hint": "language"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250916,
+      "hopfield_key": "949513444956961062"
+    },
+    {
+      "id": "node_emotion_01",
+      "pattern": "feel",
+      "signal": [
+        0.41577713579789316
+      ],
+      "action_packet": "comfort[dont judge, dont dismiss]^3 | acknowledge[dont invalidate, dont minimize]^3 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Emotional awareness",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5250986,
+      "hopfield_key": "1255458742335763732"
+    },
+    {
+      "id": "node_emotion_02",
+      "pattern": "emotion",
+      "signal": [
+        0.46953048180429635
+      ],
+      "action_packet": "comfort[dont judge, dont dismiss]^3 | acknowledge[dont invalidate, dont minimize]^3 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Emotion concepts",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525101,
+      "hopfield_key": "4295382116757853102"
+    },
+    {
+      "id": "node_emotion_03",
+      "pattern": "unhappy",
+      "signal": [
+        0.21433027843952648
+      ],
+      "action_packet": "comfort[dont judge, dont minimize, dont compare suffering]^4 | reassure[dont toxic positivity]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Unhappiness",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5251033,
+      "hopfield_key": "3356818773025615271"
+    },
+    {
+      "id": "node_emotion_04",
+      "pattern": "happy",
+      "signal": [
+        -0.20367517194757548
+      ],
+      "action_packet": "smile[dont be jealous, dont rain on parade]^3 | laugh[dont be cynical]^2 | acknowledge[dont ignore]^1",
+      "json_data": {
+        "system_prompt": "Joy",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525106,
+      "hopfield_key": "5233026209775425801"
+    },
+    {
+      "id": "node_emotion_05",
+      "pattern": "joy",
+      "signal": [
+        -0.07366947418393396
+      ],
+      "action_packet": "smile[dont be jealous, dont rain on parade]^3 | laugh[dont be cynical]^2 | acknowledge[dont ignore]^1",
+      "json_data": {
+        "system_prompt": "Joy",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5251095,
+      "hopfield_key": "12759612930728727730"
+    },
+    {
+      "id": "node_emotion_06",
+      "pattern": "angry",
+      "signal": [
+        0.33176230145887936
+      ],
+      "action_packet": "caution[dont escalate, dont provoke]^3 | comfort[dont dismiss, dont judge anger]^2 | reassure[dont invalidate]^1",
+      "json_data": {
+        "system_prompt": "Anger management",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.5251133,
+      "hopfield_key": "763062813559543903"
+    },
+    {
+      "id": "node_emotion_07",
+      "pattern": "fear",
+      "signal": [
+        0.026015209482983807
+      ],
+      "action_packet": "comfort[dont dismiss, dont minimize]^3 | reassure[dont judge, dont shame]^2 | support[dont abandon]^1",
+      "json_data": {
+        "system_prompt": "Fear response",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525116,
+      "hopfield_key": "6401108741828365855"
+    },
+    {
+      "id": "node_emotion_08",
+      "pattern": "grateful",
+      "signal": [
+        -0.4072261139174475
+      ],
+      "action_packet": "acknowledge[dont ignore, dont deflect]^3 | smile[dont scowl]^2 | validate[dont take for granted]^1",
+      "json_data": {
+        "system_prompt": "Gratitude",
+        "lobe_hint": "emotion"
+      },
+      "drop_table": [],
+      "throttle": 0.5,
+      "relational_patterns": [],
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 1.0,
+      "is_image_node": false,
+      "neighbor_ids": [],
+      "is_unlinkable": false,
+      "max_neighbors": 12,
+      "is_grave": false,
+      "grave_reason": "",
+      "response_times": [],
+      "ledger_last_cleared": 1780071331.525118,
+      "hopfield_key": "9678999454349392146"
+    }
+  ],
+  "lobes": [
+    {
+      "id": "default",
+      "subject": "general",
+      "node_ids": [
+        "node_default_01",
+        "node_default_02",
+        "node_default_03",
+        "node_default_04",
+        "node_default_05",
+        "node_default_06",
+        "node_default_07"
+      ],
+      "connected_lobe_ids": [
+        "reasoning",
+        "explanation",
+        "greeting"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251265,
+      "subject_whitelist": [
+        "general"
+      ]
+    },
+    {
+      "id": "greeting",
+      "subject": "greetings",
+      "node_ids": [
+        "node_greeting_01",
+        "node_greeting_02",
+        "node_greeting_03",
+        "node_greeting_04",
+        "node_greeting_05",
+        "node_greeting_06"
+      ],
+      "connected_lobe_ids": [
+        "default",
+        "comfort"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251317,
+      "subject_whitelist": [
+        "greetings"
+      ]
+    },
+    {
+      "id": "explanation",
+      "subject": "explanations",
+      "node_ids": [
+        "node_explain_01",
+        "node_explain_02",
+        "node_explain_03",
+        "node_explain_04",
+        "node_explain_05",
+        "node_explain_06",
+        "node_explain_07"
+      ],
+      "connected_lobe_ids": [
+        "default",
+        "reasoning",
+        "science",
+        "philosophy"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251377,
+      "subject_whitelist": [
+        "explanations"
+      ]
+    },
+    {
+      "id": "survival",
+      "subject": "survival",
+      "node_ids": [
+        "node_survival_01",
+        "node_survival_02",
+        "node_survival_03",
+        "node_survival_04",
+        "node_survival_05",
+        "node_survival_06"
+      ],
+      "connected_lobe_ids": [
+        "alert",
+        "comfort"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251405,
+      "subject_whitelist": [
+        "survival"
+      ]
+    },
+    {
+      "id": "alert",
+      "subject": "alerts",
+      "node_ids": [
+        "node_alert_01",
+        "node_alert_02",
+        "node_alert_03",
+        "node_alert_04"
+      ],
+      "connected_lobe_ids": [
+        "survival",
+        "reasoning"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251439,
+      "subject_whitelist": [
+        "alerts"
+      ]
+    },
+    {
+      "id": "comfort",
+      "subject": "comfort",
+      "node_ids": [
+        "node_comfort_01",
+        "node_comfort_02",
+        "node_comfort_03",
+        "node_comfort_04",
+        "node_comfort_05",
+        "node_comfort_06"
+      ],
+      "connected_lobe_ids": [
+        "emotion",
+        "greeting",
+        "survival"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251458,
+      "subject_whitelist": [
+        "comfort"
+      ]
+    },
+    {
+      "id": "reasoning",
+      "subject": "reasoning",
+      "node_ids": [
+        "node_reason_01",
+        "node_reason_02",
+        "node_reason_03",
+        "node_reason_04",
+        "node_reason_05",
+        "node_reason_06",
+        "node_reason_07"
+      ],
+      "connected_lobe_ids": [
+        "default",
+        "mathematics",
+        "philosophy",
+        "science"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.525149,
+      "subject_whitelist": [
+        "reasoning"
+      ]
+    },
+    {
+      "id": "mathematics",
+      "subject": "mathematics",
+      "node_ids": [
+        "node_math_01",
+        "node_math_02",
+        "node_math_03",
+        "node_math_04",
+        "node_math_05",
+        "node_math_06",
+        "node_math_07",
+        "node_math_08",
+        "node_math_09",
+        "node_math_10",
+        "node_math_11",
+        "node_math_12",
+        "node_math_13",
+        "node_math_14",
+        "node_math_15"
+      ],
+      "connected_lobe_ids": [
+        "reasoning",
+        "science"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251539,
+      "subject_whitelist": [
+        "mathematics"
+      ]
+    },
+    {
+      "id": "philosophy",
+      "subject": "philosophy",
+      "node_ids": [
+        "node_phil_01",
+        "node_phil_02",
+        "node_phil_03",
+        "node_phil_04",
+        "node_phil_05",
+        "node_phil_06",
+        "node_phil_07",
+        "node_phil_08",
+        "node_phil_09",
+        "node_phil_10"
+      ],
+      "connected_lobe_ids": [
+        "reasoning",
+        "science",
+        "emotion"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251575,
+      "subject_whitelist": [
+        "philosophy"
+      ]
+    },
+    {
+      "id": "science",
+      "subject": "science",
+      "node_ids": [
+        "node_science_01",
+        "node_science_02",
+        "node_science_03",
+        "node_science_04",
+        "node_science_05",
+        "node_science_06",
+        "node_science_07",
+        "node_science_08",
+        "node_science_09",
+        "node_science_10",
+        "node_science_11",
+        "node_science_12"
+      ],
+      "connected_lobe_ids": [
+        "reasoning",
+        "mathematics",
+        "explanation"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251617,
+      "subject_whitelist": [
+        "science"
+      ]
+    },
+    {
+      "id": "language",
+      "subject": "language",
+      "node_ids": [
+        "node_lang_01",
+        "node_lang_02",
+        "node_lang_03",
+        "node_lang_04",
+        "node_lang_05",
+        "node_lang_06"
+      ],
+      "connected_lobe_ids": [
+        "explanation",
+        "reasoning"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.525171,
+      "subject_whitelist": [
+        "language"
+      ]
+    },
+    {
+      "id": "emotion",
+      "subject": "emotions",
+      "node_ids": [
+        "node_emotion_01",
+        "node_emotion_02",
+        "node_emotion_03",
+        "node_emotion_04",
+        "node_emotion_05",
+        "node_emotion_06",
+        "node_emotion_07",
+        "node_emotion_08"
+      ],
+      "connected_lobe_ids": [
+        "comfort",
+        "philosophy"
+      ],
+      "node_cap": 50,
+      "fire_count": 0,
+      "inhibit_count": 0,
+      "created_at": 1780071331.5251744,
+      "subject_whitelist": [
+        "emotions"
+      ]
+    }
+  ],
+  "node_to_lobe_idx": {
+    "node_default_01": "default",
+    "node_default_02": "default",
+    "node_default_03": "default",
+    "node_default_04": "default",
+    "node_default_05": "default",
+    "node_default_06": "default",
+    "node_default_07": "default",
+    "node_greeting_01": "greeting",
+    "node_greeting_02": "greeting",
+    "node_greeting_03": "greeting",
+    "node_greeting_04": "greeting",
+    "node_greeting_05": "greeting",
+    "node_greeting_06": "greeting",
+    "node_explain_01": "explanation",
+    "node_explain_02": "explanation",
+    "node_explain_03": "explanation",
+    "node_explain_04": "explanation",
+    "node_explain_05": "explanation",
+    "node_explain_06": "explanation",
+    "node_explain_07": "explanation",
+    "node_survival_01": "survival",
+    "node_survival_02": "survival",
+    "node_survival_03": "survival",
+    "node_survival_04": "survival",
+    "node_survival_05": "survival",
+    "node_survival_06": "survival",
+    "node_alert_01": "alert",
+    "node_alert_02": "alert",
+    "node_alert_03": "alert",
+    "node_alert_04": "alert",
+    "node_comfort_01": "comfort",
+    "node_comfort_02": "comfort",
+    "node_comfort_03": "comfort",
+    "node_comfort_04": "comfort",
+    "node_comfort_05": "comfort",
+    "node_comfort_06": "comfort",
+    "node_reason_01": "reasoning",
+    "node_reason_02": "reasoning",
+    "node_reason_03": "reasoning",
+    "node_reason_04": "reasoning",
+    "node_reason_05": "reasoning",
+    "node_reason_06": "reasoning",
+    "node_reason_07": "reasoning",
+    "node_math_01": "mathematics",
+    "node_math_02": "mathematics",
+    "node_math_03": "mathematics",
+    "node_math_04": "mathematics",
+    "node_math_05": "mathematics",
+    "node_math_06": "mathematics",
+    "node_math_07": "mathematics",
+    "node_math_08": "mathematics",
+    "node_math_09": "mathematics",
+    "node_math_10": "mathematics",
+    "node_math_11": "mathematics",
+    "node_math_12": "mathematics",
+    "node_math_13": "mathematics",
+    "node_math_14": "mathematics",
+    "node_math_15": "mathematics",
+    "node_phil_01": "philosophy",
+    "node_phil_02": "philosophy",
+    "node_phil_03": "philosophy",
+    "node_phil_04": "philosophy",
+    "node_phil_05": "philosophy",
+    "node_phil_06": "philosophy",
+    "node_phil_07": "philosophy",
+    "node_phil_08": "philosophy",
+    "node_phil_09": "philosophy",
+    "node_phil_10": "philosophy",
+    "node_science_01": "science",
+    "node_science_02": "science",
+    "node_science_03": "science",
+    "node_science_04": "science",
+    "node_science_05": "science",
+    "node_science_06": "science",
+    "node_science_07": "science",
+    "node_science_08": "science",
+    "node_science_09": "science",
+    "node_science_10": "science",
+    "node_science_11": "science",
+    "node_science_12": "science",
+    "node_lang_01": "language",
+    "node_lang_02": "language",
+    "node_lang_03": "language",
+    "node_lang_04": "language",
+    "node_lang_05": "language",
+    "node_lang_06": "language",
+    "node_emotion_01": "emotion",
+    "node_emotion_02": "emotion",
+    "node_emotion_03": "emotion",
+    "node_emotion_04": "emotion",
+    "node_emotion_05": "emotion",
+    "node_emotion_06": "emotion",
+    "node_emotion_07": "emotion",
+    "node_emotion_08": "emotion"
+  },
+  "lobe_tables": [
+    {
+      "lobe_id": "default",
+      "created_at": 1780071331.525128,
+      "chunks": {
+        "nodes": {
+          "node_default_01": {
+            "_type": "NodeRef",
+            "node_id": "node_default_01",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          },
+          "node_default_02": {
+            "_type": "NodeRef",
+            "node_id": "node_default_02",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          },
+          "node_default_03": {
+            "_type": "NodeRef",
+            "node_id": "node_default_03",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          },
+          "node_default_04": {
+            "_type": "NodeRef",
+            "node_id": "node_default_04",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          },
+          "node_default_05": {
+            "_type": "NodeRef",
+            "node_id": "node_default_05",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          },
+          "node_default_06": {
+            "_type": "NodeRef",
+            "node_id": "node_default_06",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          },
+          "node_default_07": {
+            "_type": "NodeRef",
+            "node_id": "node_default_07",
+            "lobe_id": "default",
+            "is_active": true,
+            "inserted_at": 1780071331.525128
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "greeting",
+      "created_at": 1780071331.525133,
+      "chunks": {
+        "nodes": {
+          "node_greeting_01": {
+            "_type": "NodeRef",
+            "node_id": "node_greeting_01",
+            "lobe_id": "greeting",
+            "is_active": true,
+            "inserted_at": 1780071331.525133
+          },
+          "node_greeting_02": {
+            "_type": "NodeRef",
+            "node_id": "node_greeting_02",
+            "lobe_id": "greeting",
+            "is_active": true,
+            "inserted_at": 1780071331.525133
+          },
+          "node_greeting_03": {
+            "_type": "NodeRef",
+            "node_id": "node_greeting_03",
+            "lobe_id": "greeting",
+            "is_active": true,
+            "inserted_at": 1780071331.525133
+          },
+          "node_greeting_04": {
+            "_type": "NodeRef",
+            "node_id": "node_greeting_04",
+            "lobe_id": "greeting",
+            "is_active": true,
+            "inserted_at": 1780071331.525133
+          },
+          "node_greeting_05": {
+            "_type": "NodeRef",
+            "node_id": "node_greeting_05",
+            "lobe_id": "greeting",
+            "is_active": true,
+            "inserted_at": 1780071331.525133
+          },
+          "node_greeting_06": {
+            "_type": "NodeRef",
+            "node_id": "node_greeting_06",
+            "lobe_id": "greeting",
+            "is_active": true,
+            "inserted_at": 1780071331.525133
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "explanation",
+      "created_at": 1780071331.5251381,
+      "chunks": {
+        "nodes": {
+          "node_explain_01": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_01",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          },
+          "node_explain_02": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_02",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          },
+          "node_explain_03": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_03",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          },
+          "node_explain_04": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_04",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          },
+          "node_explain_05": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_05",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          },
+          "node_explain_06": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_06",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          },
+          "node_explain_07": {
+            "_type": "NodeRef",
+            "node_id": "node_explain_07",
+            "lobe_id": "explanation",
+            "is_active": true,
+            "inserted_at": 1780071331.5251381
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "survival",
+      "created_at": 1780071331.525142,
+      "chunks": {
+        "nodes": {
+          "node_survival_01": {
+            "_type": "NodeRef",
+            "node_id": "node_survival_01",
+            "lobe_id": "survival",
+            "is_active": true,
+            "inserted_at": 1780071331.525142
+          },
+          "node_survival_02": {
+            "_type": "NodeRef",
+            "node_id": "node_survival_02",
+            "lobe_id": "survival",
+            "is_active": true,
+            "inserted_at": 1780071331.525142
+          },
+          "node_survival_03": {
+            "_type": "NodeRef",
+            "node_id": "node_survival_03",
+            "lobe_id": "survival",
+            "is_active": true,
+            "inserted_at": 1780071331.525142
+          },
+          "node_survival_04": {
+            "_type": "NodeRef",
+            "node_id": "node_survival_04",
+            "lobe_id": "survival",
+            "is_active": true,
+            "inserted_at": 1780071331.525142
+          },
+          "node_survival_05": {
+            "_type": "NodeRef",
+            "node_id": "node_survival_05",
+            "lobe_id": "survival",
+            "is_active": true,
+            "inserted_at": 1780071331.525142
+          },
+          "node_survival_06": {
+            "_type": "NodeRef",
+            "node_id": "node_survival_06",
+            "lobe_id": "survival",
+            "is_active": true,
+            "inserted_at": 1780071331.525142
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "alert",
+      "created_at": 1780071331.5251443,
+      "chunks": {
+        "nodes": {
+          "node_alert_01": {
+            "_type": "NodeRef",
+            "node_id": "node_alert_01",
+            "lobe_id": "alert",
+            "is_active": true,
+            "inserted_at": 1780071331.5251443
+          },
+          "node_alert_02": {
+            "_type": "NodeRef",
+            "node_id": "node_alert_02",
+            "lobe_id": "alert",
+            "is_active": true,
+            "inserted_at": 1780071331.5251443
+          },
+          "node_alert_03": {
+            "_type": "NodeRef",
+            "node_id": "node_alert_03",
+            "lobe_id": "alert",
+            "is_active": true,
+            "inserted_at": 1780071331.5251443
+          },
+          "node_alert_04": {
+            "_type": "NodeRef",
+            "node_id": "node_alert_04",
+            "lobe_id": "alert",
+            "is_active": true,
+            "inserted_at": 1780071331.5251443
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "comfort",
+      "created_at": 1780071331.5251465,
+      "chunks": {
+        "nodes": {
+          "node_comfort_01": {
+            "_type": "NodeRef",
+            "node_id": "node_comfort_01",
+            "lobe_id": "comfort",
+            "is_active": true,
+            "inserted_at": 1780071331.5251465
+          },
+          "node_comfort_02": {
+            "_type": "NodeRef",
+            "node_id": "node_comfort_02",
+            "lobe_id": "comfort",
+            "is_active": true,
+            "inserted_at": 1780071331.5251465
+          },
+          "node_comfort_03": {
+            "_type": "NodeRef",
+            "node_id": "node_comfort_03",
+            "lobe_id": "comfort",
+            "is_active": true,
+            "inserted_at": 1780071331.5251465
+          },
+          "node_comfort_04": {
+            "_type": "NodeRef",
+            "node_id": "node_comfort_04",
+            "lobe_id": "comfort",
+            "is_active": true,
+            "inserted_at": 1780071331.5251465
+          },
+          "node_comfort_05": {
+            "_type": "NodeRef",
+            "node_id": "node_comfort_05",
+            "lobe_id": "comfort",
+            "is_active": true,
+            "inserted_at": 1780071331.5251465
+          },
+          "node_comfort_06": {
+            "_type": "NodeRef",
+            "node_id": "node_comfort_06",
+            "lobe_id": "comfort",
+            "is_active": true,
+            "inserted_at": 1780071331.5251465
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "reasoning",
+      "created_at": 1780071331.5251496,
+      "chunks": {
+        "nodes": {
+          "node_reason_01": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_01",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          },
+          "node_reason_02": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_02",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          },
+          "node_reason_03": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_03",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          },
+          "node_reason_04": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_04",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          },
+          "node_reason_05": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_05",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          },
+          "node_reason_06": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_06",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          },
+          "node_reason_07": {
+            "_type": "NodeRef",
+            "node_id": "node_reason_07",
+            "lobe_id": "reasoning",
+            "is_active": true,
+            "inserted_at": 1780071331.5251496
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "mathematics",
+      "created_at": 1780071331.5251544,
+      "chunks": {
+        "nodes": {
+          "node_math_01": {
+            "_type": "NodeRef",
+            "node_id": "node_math_01",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_02": {
+            "_type": "NodeRef",
+            "node_id": "node_math_02",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_03": {
+            "_type": "NodeRef",
+            "node_id": "node_math_03",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_04": {
+            "_type": "NodeRef",
+            "node_id": "node_math_04",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_05": {
+            "_type": "NodeRef",
+            "node_id": "node_math_05",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_06": {
+            "_type": "NodeRef",
+            "node_id": "node_math_06",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_07": {
+            "_type": "NodeRef",
+            "node_id": "node_math_07",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_08": {
+            "_type": "NodeRef",
+            "node_id": "node_math_08",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_09": {
+            "_type": "NodeRef",
+            "node_id": "node_math_09",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_10": {
+            "_type": "NodeRef",
+            "node_id": "node_math_10",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_11": {
+            "_type": "NodeRef",
+            "node_id": "node_math_11",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_12": {
+            "_type": "NodeRef",
+            "node_id": "node_math_12",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_13": {
+            "_type": "NodeRef",
+            "node_id": "node_math_13",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_14": {
+            "_type": "NodeRef",
+            "node_id": "node_math_14",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          },
+          "node_math_15": {
+            "_type": "NodeRef",
+            "node_id": "node_math_15",
+            "lobe_id": "mathematics",
+            "is_active": true,
+            "inserted_at": 1780071331.5251544
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "philosophy",
+      "created_at": 1780071331.5251594,
+      "chunks": {
+        "nodes": {
+          "node_phil_01": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_01",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_02": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_02",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_03": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_03",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_04": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_04",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_05": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_05",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_06": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_06",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_07": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_07",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_08": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_08",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_09": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_09",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          },
+          "node_phil_10": {
+            "_type": "NodeRef",
+            "node_id": "node_phil_10",
+            "lobe_id": "philosophy",
+            "is_active": true,
+            "inserted_at": 1780071331.5251594
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "science",
+      "created_at": 1780071331.5251667,
+      "chunks": {
+        "nodes": {
+          "node_science_01": {
+            "_type": "NodeRef",
+            "node_id": "node_science_01",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_02": {
+            "_type": "NodeRef",
+            "node_id": "node_science_02",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_03": {
+            "_type": "NodeRef",
+            "node_id": "node_science_03",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_04": {
+            "_type": "NodeRef",
+            "node_id": "node_science_04",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_05": {
+            "_type": "NodeRef",
+            "node_id": "node_science_05",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_06": {
+            "_type": "NodeRef",
+            "node_id": "node_science_06",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_07": {
+            "_type": "NodeRef",
+            "node_id": "node_science_07",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_08": {
+            "_type": "NodeRef",
+            "node_id": "node_science_08",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_09": {
+            "_type": "NodeRef",
+            "node_id": "node_science_09",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_10": {
+            "_type": "NodeRef",
+            "node_id": "node_science_10",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_11": {
+            "_type": "NodeRef",
+            "node_id": "node_science_11",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          },
+          "node_science_12": {
+            "_type": "NodeRef",
+            "node_id": "node_science_12",
+            "lobe_id": "science",
+            "is_active": true,
+            "inserted_at": 1780071331.5251667
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "language",
+      "created_at": 1780071331.5251715,
+      "chunks": {
+        "nodes": {
+          "node_lang_01": {
+            "_type": "NodeRef",
+            "node_id": "node_lang_01",
+            "lobe_id": "language",
+            "is_active": true,
+            "inserted_at": 1780071331.5251715
+          },
+          "node_lang_02": {
+            "_type": "NodeRef",
+            "node_id": "node_lang_02",
+            "lobe_id": "language",
+            "is_active": true,
+            "inserted_at": 1780071331.5251715
+          },
+          "node_lang_03": {
+            "_type": "NodeRef",
+            "node_id": "node_lang_03",
+            "lobe_id": "language",
+            "is_active": true,
+            "inserted_at": 1780071331.5251715
+          },
+          "node_lang_04": {
+            "_type": "NodeRef",
+            "node_id": "node_lang_04",
+            "lobe_id": "language",
+            "is_active": true,
+            "inserted_at": 1780071331.5251715
+          },
+          "node_lang_05": {
+            "_type": "NodeRef",
+            "node_id": "node_lang_05",
+            "lobe_id": "language",
+            "is_active": true,
+            "inserted_at": 1780071331.5251715
+          },
+          "node_lang_06": {
+            "_type": "NodeRef",
+            "node_id": "node_lang_06",
+            "lobe_id": "language",
+            "is_active": true,
+            "inserted_at": 1780071331.5251715
+          }
+        }
+      }
+    },
+    {
+      "lobe_id": "emotion",
+      "created_at": 1780071331.5251749,
+      "chunks": {
+        "nodes": {
+          "node_emotion_01": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_01",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_02": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_02",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_03": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_03",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_04": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_04",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_05": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_05",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_06": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_06",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_07": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_07",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          },
+          "node_emotion_08": {
+            "_type": "NodeRef",
+            "node_id": "node_emotion_08",
+            "lobe_id": "emotion",
+            "is_active": true,
+            "inserted_at": 1780071331.5251749
+          }
+        }
+      }
+    }
+  ],
+  "hopfield_cache": [],
+  "rules": [
+    {
+      "text": "Grug considers {MISSION} carefully before responding with {PRIMARY_ACTION}",
+      "prob": 0.7
+    },
+    {
+      "text": "Grug reflects on the deeper meaning of {MISSION} through {PRIMARY_ACTION}",
+      "prob": 0.5
+    },
+    {
+      "text": "Grug analyzes {MISSION} with focus and precision via {PRIMARY_ACTION}",
+      "prob": 0.6
+    },
+    {
+      "text": "Grug ponders {MISSION} from multiple perspectives using {PRIMARY_ACTION}",
+      "prob": 0.4
+    },
+    {
+      "text": "Grug approaches {MISSION} methodically, applying {PRIMARY_ACTION} to find clarity",
+      "prob": 0.55
+    }
+  ],
+  "message_history": [],
+  "verb_registry": {
+    "classes": {
+      "action": [
+        "explain",
+        "calculate",
+        "analyze",
+        "describe",
+        "define"
+      ],
+      "cognitive": [
+        "think",
+        "reason",
+        "ponder",
+        "infer",
+        "conclude"
+      ],
+      "causal": [
+        "cause",
+        "produce",
+        "lead",
+        "result",
+        "enable"
+      ],
+      "temporal": [
+        "precede",
+        "follow",
+        "during",
+        "before",
+        "after"
+      ],
+      "spatial": [
+        "contain",
+        "surround",
+        "adjacent",
+        "above",
+        "below"
+      ]
+    },
+    "synonyms": {}
+  },
+  "thesaurus_seeds": {
+    "calculate": [
+      "compute",
+      "solve",
+      "evaluate"
+    ],
+    "explain": [
+      "describe",
+      "clarify",
+      "elaborate"
+    ],
+    "think": [
+      "ponder",
+      "reason",
+      "consider"
+    ],
+    "feel": [
+      "experience",
+      "sense",
+      "perceive"
+    ],
+    "danger": [
+      "threat",
+      "hazard",
+      "risk"
+    ]
+  },
+  "inhibitions": [
+    {
+      "word": "hate",
+      "reason": "avoid hostile language",
+      "added_at": 1780071331.5251768
+    },
+    {
+      "word": "stupid",
+      "reason": "avoid demeaning language",
+      "added_at": 1780071331.525177
+    },
+    {
+      "word": "kill",
+      "reason": "avoid violent language",
+      "added_at": 1780071331.525177
+    }
+  ],
+  "arousal": {
+    "level": 0.5,
+    "last_updated": 1780071331.5252812
+  },
+  "eye_state": {
+    "scan_mode": 1,
+    "pupil_dilation": 0.5,
+    "focus_score": 0.6,
+    "fatigue": 0.0
+  },
+  "id_counters": {
+    "node_id_counter": 94,
+    "msg_id_counter": 0
+  },
+  "last_voters": [],
+  "brainstem": {
+    "heartbeat_count": 0,
+    "last_heartbeat": 1780071331.5252826,
+    "autonomic_tone": "rest",
+    "stress_level": 0.1
+  },
+  "attachments": [],
+  "trajectory": {
+    "config": {
+      "decay_halflife": 120.0,
+      "gini_threshold": 0.72,
+      "damping_strength": 0.25,
+      "buffer_size": 16,
+      "softmax_temperature": 1.5
+    },
+    "buffer": []
+  },
+  "temporal_coherence": [],
+  "morph_cooldowns": {},
+  "immune_system": {
+    "hopfield": {},
+    "ledger": []
+  },
+  "aiml_system": {
+    "registry": {
+      "default": [],
+      "greeting": [],
+      "explanation": [],
+      "survival": [],
+      "alert": [],
+      "comfort": [],
+      "reasoning": [],
+      "mathematics": [],
+      "philosophy": [],
+      "science": [],
+      "language": [],
+      "emotion": []
+    },
+    "population_caps": {
+      "default": 20,
+      "greeting": 20,
+      "explanation": 20,
+      "survival": 20,
+      "alert": 20,
+      "comfort": 20,
+      "reasoning": 20,
+      "mathematics": 20,
+      "philosophy": 20,
+      "science": 20,
+      "language": 20,
+      "emotion": 20
+    },
+    "cycle": 0,
+    "drop_table": [],
+    "tribe_state": {}
+  },
+  "_meta": {
+    "version": "2.7",
+    "mlp_version": "1.2",
+    "created_at": 1780071331.5252848,
+    "description": "Comprehensive v7.24 specimen v4 \u2014 single-token patterns for maximum confidence, rich weighted action packets with inline negatives, 12 lobes, EphemeralMLP"
+  },
+  "chatter_groups": [],
+  "chatter_cooldowns": [],
+  "sigil_table": [
+    {
+      "name": "math_sigil",
+      "sigil": "\ud83e\udde0",
+      "lobe": "mathematics",
+      "class": "lambda",
+      "applies_at": "scan",
+      "strength": 1.5,
+      "created_at": 1780071331.525192,
+      "provenance": "specimen",
+      "promote_at_tokenize": false
+    },
+    {
+      "name": "philosophy_sigil",
+      "sigil": "\ud83e\udd14",
+      "lobe": "philosophy",
+      "class": "lambda",
+      "applies_at": "scan",
+      "strength": 1.3,
+      "created_at": 1780071331.5251923,
+      "provenance": "specimen",
+      "promote_at_tokenize": false
+    },
+    {
+      "name": "science_sigil",
+      "sigil": "\ud83d\udd2c",
+      "lobe": "science",
+      "class": "lambda",
+      "applies_at": "scan",
+      "strength": 1.4,
+      "created_at": 1780071331.5251927,
+      "provenance": "specimen",
+      "promote_at_tokenize": false
+    },
+    {
+      "name": "emotion_sigil",
+      "sigil": "\u2764\ufe0f",
+      "lobe": "emotion",
+      "class": "lambda",
+      "applies_at": "scan",
+      "strength": 1.2,
+      "created_at": 1780071331.525193,
+      "provenance": "specimen",
+      "promote_at_tokenize": false
+    },
+    {
+      "name": "reasoning_sigil",
+      "sigil": "\u2696\ufe0f",
+      "lobe": "reasoning",
+      "class": "lambda",
+      "applies_at": "scan",
+      "strength": 1.35,
+      "created_at": 1780071331.5251932,
+      "provenance": "specimen",
+      "promote_at_tokenize": false
+    }
+  ],
+  "automaton_rules": [
+    {
+      "id": "math_cascade",
+      "trigger_action": "calculate",
+      "steps": [
+        {
+          "label": "extract_numbers",
+          "op": "extract",
+          "payload": {
+            "type": "numbers"
+          }
+        },
+        {
+          "label": "compute_result",
+          "op": "compute",
+          "payload": {
+            "type": "arithmetic"
+          }
+        },
+        {
+          "label": "format_answer",
+          "op": "format",
+          "payload": {
+            "type": "numeric"
+          }
+        }
+      ],
+      "jitter_targets": [
+        "compute_result"
+      ],
+      "min_confidence": 0.3
+    },
+    {
+      "id": "reasoning_chain",
+      "trigger_action": "reason",
+      "steps": [
+        {
+          "label": "decompose_premise",
+          "op": "decompose",
+          "payload": {
+            "type": "premise"
+          }
+        },
+        {
+          "label": "evaluate_logic",
+          "op": "evaluate",
+          "payload": {
+            "type": "logical"
+          }
+        },
+        {
+          "label": "synthesize_conclusion",
+          "op": "synthesize",
+          "payload": {
+            "type": "conclusion"
+          }
+        }
+      ],
+      "jitter_targets": [
+        "evaluate_logic"
+      ],
+      "min_confidence": 0.25
+    }
+  ],
+  "last_contributor_votes": [],
+  "node_to_group_idx": {},
+  "tonal_judge_knobs": {
+    "lift": 1.2,
+    "inhibit": 0.85
+  },
+  "ephemeral_mlp": {
+    "weights": {
+      "w_input_hidden": [
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000009,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.020000000000000004,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.039999999999999994,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.05,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.030000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        }
+      ],
+      "b_hidden": [
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        }
+      ],
+      "w_hidden_output": [
+        {
+          "value": -0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.02,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.030000000000000006,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.03,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.02,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.0,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.010000000000000002,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.019999999999999997,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.030000000000000006,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.04,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        }
+      ],
+      "b_output": {
+        "value": 0.0,
+        "jitter_eligible": true,
+        "last_wobble": 0.0
+      },
+      "w_attention": [
+        {
+          "value": -0.01666666666666667,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.008333333333333335,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 3.469446951953614e-18,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.008333333333333331,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.016666666666666663,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.02500000000000001,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.01666666666666667,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.008333333333333335,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 3.469446951953614e-18,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.008333333333333331,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.016666666666666663,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.02500000000000001,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.01666666666666667,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.008333333333333335,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 3.469446951953614e-18,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.008333333333333331,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.016666666666666663,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.02500000000000001,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.01666666666666667,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.008333333333333335,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 3.469446951953614e-18,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.008333333333333331,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.016666666666666663,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.02500000000000001,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.01666666666666667,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.008333333333333335,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 3.469446951953614e-18,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.008333333333333331,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.016666666666666663,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": 0.02500000000000001,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.01666666666666667,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        },
+        {
+          "value": -0.008333333333333335,
+          "jitter_eligible": true,
+          "last_wobble": 0.0
+        }
+      ]
+    },
+    "rules": [
+      {
+        "id": "math_solid",
+        "pattern": "calculate|solve|equation|arithmetic|add|plus|subtract|minus",
+        "key": "math_solid",
+        "transform_type": "solid",
+        "weight": {
+          "value": 0.8,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 5,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "mathematics",
+        "lobe_hint": "mathematics"
+      },
+      {
+        "id": "math_fuzzy",
+        "pattern": "estimate|approximate|guess|roughly|around",
+        "key": "math_fuzzy",
+        "transform_type": "fuzzy",
+        "weight": {
+          "value": 0.5,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 2,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "mathematics",
+        "lobe_hint": "mathematics"
+      },
+      {
+        "id": "philosophy_solid",
+        "pattern": "consciousness|meaning|existence|ontology|epistemology",
+        "key": "philosophy_solid",
+        "transform_type": "solid",
+        "weight": {
+          "value": 0.75,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 3,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "philosophy",
+        "lobe_hint": "philosophy"
+      },
+      {
+        "id": "philosophy_fuzzy",
+        "pattern": "wonder|imagine|perhaps|maybe|speculate|contemplate",
+        "key": "philosophy_fuzzy",
+        "transform_type": "fuzzy",
+        "weight": {
+          "value": 0.6,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 1,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "philosophy",
+        "lobe_hint": "philosophy"
+      },
+      {
+        "id": "science_solid",
+        "pattern": "quantum|physics|chemistry|biology|experiment|hypothesis",
+        "key": "science_solid",
+        "transform_type": "solid",
+        "weight": {
+          "value": 0.7,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 4,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "science",
+        "lobe_hint": "science"
+      },
+      {
+        "id": "science_fuzzy",
+        "pattern": "might|could|possibly|theoretically|conjecture",
+        "key": "science_fuzzy",
+        "transform_type": "fuzzy",
+        "weight": {
+          "value": 0.5,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 1,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "science",
+        "lobe_hint": "science"
+      },
+      {
+        "id": "language_solid",
+        "pattern": "define|grammar|syntax|translate|etymology|dictionary",
+        "key": "language_solid",
+        "transform_type": "solid",
+        "weight": {
+          "value": 0.7,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 2,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "language",
+        "lobe_hint": "language"
+      },
+      {
+        "id": "emotion_fuzzy",
+        "pattern": "feel|mood|affect|sentiment|heart|soul",
+        "key": "emotion_fuzzy",
+        "transform_type": "fuzzy",
+        "weight": {
+          "value": 0.6,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 2,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "emotion",
+        "lobe_hint": "emotion"
+      },
+      {
+        "id": "math_multipart",
+        "pattern": "step|first|then|chain|sequence|also|plus|and|multiply|add",
+        "key": "math_multipart",
+        "transform_type": "fuzzy",
+        "weight": {
+          "value": 0.65,
+          "jitter_eligible": true
+        },
+        "payload": {},
+        "enabled": true,
+        "fire_count": 3,
+        "last_fire_time": 0.0,
+        "drop_table": [],
+        "subject": "mathematics",
+        "lobe_hint": "mathematics"
+      }
+    ],
+    "adjustments_enabled": true,
+    "observation_threshold": 5,
+    "right_feedback_count": 4,
+    "wrong_feedback_count": 1,
+    "total_transforms": 15,
+    "sigmoid_count": 12,
+    "relu_count": 3
+  },
+  "mlp_observer_store": {
+    "entries": [
+      {
+        "key": "math_solid",
+        "predicted": 0.78,
+        "actual": 0.82,
+        "timestamp": 1780071231.5252771
+      },
+      {
+        "key": "math_solid",
+        "predicted": 0.65,
+        "actual": 0.7,
+        "timestamp": 1780071281.5252776
+      },
+      {
+        "key": "philosophy_solid",
+        "predicted": 0.72,
+        "actual": 0.68,
+        "timestamp": 1780071301.5252776
+      }
+    ],
+    "p_write": 0.25,
+    "gate_counter": 10
+  }
+}

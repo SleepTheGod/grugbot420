@@ -1,0 +1,2751 @@
+WARNING: redefinition of constant GrugBot420._ENGINE_SIGIL_TABLE. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_BINDINGS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_REWRITTEN. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_RAW. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420._GLOBAL_PROMOTION_LOCK. This may fail, cause incorrect answers, or produce other errors.
+┌ Warning: Replacing docs for `GrugBot420.current_promotion_bindings :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.current_promotion_rewritten :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.current_promotion_raw :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.words_to_signal :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+WARNING: redefinition of constant GrugBot420.CAUSAL_VERBS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.SPATIAL_VERBS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.TEMPORAL_VERBS. This may fail, cause incorrect answers, or produce other errors.
+┌ Warning: Replacing docs for `GrugBot420.rewrite_passive_mission :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.extract_relational_triples :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.extract_dynamic_relational_triples :: Tuple{String, Int64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.evaluate_relational_dialectics :: Tuple{Vector{GrugBot420.RelationalTriple}, Vector{GrugBot420.RelationalTriple}, Vector{String}, Dict{String, Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+WARNING: redefinition of constant GrugBot420.NODE_MAP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.COMMANDS. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.NODE_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ID_COUNTER. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.HOPFIELD_CACHE. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.HOPFIELD_CACHE_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.HOPFIELD_HIT_COUNTS. This may fail, cause incorrect answers, or produce other errors.
+┌ Warning: Replacing docs for `GrugBot420.hopfield_input_hash :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.hopfield_lookup :: Tuple{UInt64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.hopfield_record! :: Tuple{UInt64, Vector{String}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.is_nonjitter :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.set_nonjitter! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.clear_nonjitter! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.collect_nonjitter_ids :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.jitter_allowed_for :: Tuple{GrugBot420.Node, Float64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.is_solidified :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.check_solidify_threshold! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.bump_strength! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.penalize_strength! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.mark_node_grave! :: Tuple{GrugBot420.Node, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.mark_node_contributor! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.try_link_nodes! :: Tuple{GrugBot420.Node, GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.find_best_latch_target :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._token_overlap_similarity :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+WARNING: redefinition of constant GrugBot420.ATTACHMENT_MAP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ATTACHMENT_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.GROUP_MAP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.GROUP_LOCK. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.GROUP_COUNTER. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.NODE_TO_GROUP. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.CHATTER_NODE_COOLDOWN. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.CHATTER_NODE_COOLDOWN_LOCK. This may fail, cause incorrect answers, or produce other errors.
+┌ Warning: Replacing docs for `GrugBot420.next_group_id :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.register_group! :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.add_to_group! :: Tuple{GrugBot420.NodeGroup, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.mark_group_grave_slot! :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.group_for :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.group_avg_strength :: Tuple{GrugBot420.NodeGroup}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.GroupLatchCandidate :: Union{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.find_group_latch_candidates :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.MITOSIS_PATTERN_SIM_FLOOR :: Union{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.chatter_cooldown_remaining :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.stamp_chatter! :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+WARNING: redefinition of constant GrugBot420._LAST_FIRE_COUNTER. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.STOPWORDS. This may fail, cause incorrect answers, or produce other errors.
+┌ Warning: Replacing docs for `GrugBot420.attach_node! :: Tuple{String, String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.detach_node! :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.fire_attachments! :: Tuple{String, Int64, Int64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.get_attachment_summary :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.get_attachments_for_target :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.crystalize_attachment! :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.decrystalize_attachment! :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._semantic_truth_score :: Tuple{Any}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.auto_crystalize_sweep! :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.is_crystalized :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._sdf_signal_similarity :: Tuple{Vector{Float64}, Vector{Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.attach_image_node! :: Tuple{String, String, Vector{UInt8}, Int64, Int64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.reset_throttle! :: Tuple{GrugBot420.Node, Float64}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.create_node :: Tuple{String, String, Dict, Vector{String}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.parse_action_packet :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.select_action :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.screen_input_complexity :: Tuple{Vector{Float64}, Vector{GrugBot420.RelationalTriple}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._effective_scan_mode :: Tuple{Int64, Vector{Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420._bidirectional_cheap_scan :: Tuple{Vector{Float64}, Vector{Float64}}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.collect_drop_table_neighbors :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.strength_biased_scan_coinflip :: Tuple{GrugBot420.Node}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.scan_specimens :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.scan_and_expand :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.cast_vote :: NTuple{5, Any}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.cast_explicit_vote :: Tuple{String, String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.cast_vote_with_group :: Tuple{Any, Any, Any, Any, Any, String, Symbol}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.ensure_action_packet_registered! :: Tuple{AbstractString}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.grow_nodes_from_packet :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.get_node_status_summary :: Tuple{}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+WARNING: redefinition of constant GrugBot420.AIML_DROP_TABLE. This may fail, cause incorrect answers, or produce other errors.
+WARNING: redefinition of constant GrugBot420.ALLOWED_RULE_TAGS. This may fail, cause incorrect answers, or produce other errors.
+┌ Warning: Replacing docs for `GrugBot420.add_orchestration_rule! :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+┌ Warning: Replacing docs for `GrugBot420.count_alive_nodes_in_lobe :: Tuple{String}` in module `GrugBot420`
+└ @ Base.Docs docs/Docs.jl:243
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + 3 boot seeds registered into `default` lobe
+System Online. Grug waiting at cave entrance for instructions.
+Primary  : /mission <input>                    (text or image binary)
+Feedback : /wrong                              (penalize last response voters)
+Explicit : /explicit <cmd> [<node_id>] <input>
+Grow     : /grow <lobe_id> <json_packet>      (plant node(s) into a lobe)
+         :   • <lobe_id> is required — use `-` for unassigned pool
+         :   • Single node: {"pattern":"...","action_packet":"...","data":{...}}
+         :   • Multi node:  {"nodes":[{...},{...}]}
+         :   • `data.system_prompt` defaults to "Grug speaks plainly." if absent
+Rules    : /addRule <rule text> [prob=0.0-1.0]
+           Tags: {MISSION}, {PRIMARY_ACTION}, {SURE_ACTIONS}, {UNSURE_ACTIONS},
+                 {ALL_ACTIONS}, {CONFIDENCE}, {NODE_ID}, {MEMORY}, {LOBE_CONTEXT}
+Memory   : /pin <text>
+Nodes    : /nodes                              (show node map status)
+Status   : /status                             (show chatter + system status)
+           /mitosisStatus                      (show mitosis growth status)
+           /growthStatus                       (show growth automaton status)
+Arousal  : /arousal <0.0-1.0>                 (set eye system arousal level)
+Verbs    : /addVerb <verb> <class>             (add verb to relation class)
+         : /addRelationClass <name>            (create new verb class bucket)
+         : /addSynonym <canonical> <alias>     (normalize alias->canonical)
+         : /addSeedSynonym <canonical> <syn1 syn2 ...>  (thesaurus seed group)
+         : /addAntiMatch <pattern> [NONJITTER]  (anti-match confidence drain node)
+         : /answer <text>                      (resolve strain with user structure)
+         : /antiAnswer <text>                  (suppress strain-causing input)
+         : /listVerbs                          (show all verb classes + synonyms)
+Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
+         : /nameLobe <lobe_id> <name>          (give a lobe a human-readable name)
+         : /connectLobes <id_a> <id_b>         (connect two lobes)
+         : /lobeGrow <lobe_id> <json_packet>   (DEPRECATED — alias for /grow)
+         : /lobes                              (list all lobes + node counts)
+         : /tableStatus <lobe_id>              (show hash table chunks for a lobe)
+         : /tableMatch <lobe_id> <chunk> <pat> (pattern-activate entries in chunk)
+Thesaurus: /thesaurus <word1> | <word2>        (compare words/concepts dimensionally)
+         : /thesaurus <w1> | <w2> :: <ctx1> :: <ctx2>  (with context lists)
+NegThes  : /negativeThesaurus add|remove|list|check|flush
+Attach   : /nodeAttach <lobe> <target> <id> <pat> ...  (attach nodes with relational fire patterns)
+         : /nodeDetach <lobe> <target> <id>            (detach a node from target)
+ImgAttach: /imgnodeAttach <lobe> <tgt> <id> <b64> [w h] (attach image node with SDF-based fire)
+         : /imgnodeDetach <lobe> <target> <id>         (detach image node from target)
+         : /attachments                         (show all node attachments)
+Crystal  : /crystalize <lobe> <target> <attach>        (💎 mark attachment as sticky/user-locked)
+         : /decrystalize <lobe> <target> <attach>      (🔓 remove sticky flag, restore coinflip)
+Specimen : /saveSpecimen <filepath>            (save full cave state — .json or .gz)
+         : /loadSpecimen <filepath>            (restore full cave state — .json or .gz)
+Help     : /help                               (full command reference)
+
+╔══════════════════════════════════════════════════════════════════╗
+║  SPECIMEN SEEDING GUIDE (read before /grow)                     ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Automatic neighbor latching is SUPPRESSED below 1000 nodes.   ║
+║  Below that threshold, YOU control topology via drop_table.     ║
+║                                                                  ║
+║  For a coherent specimen from the start:                        ║
+║  1. Seed ORTHOGONAL archetypes first - distinct semantic poles. ║
+║     Don't plant 50 near-identical nodes up front.               ║
+║  2. Use required_relations as semantic GATES from day one.      ║
+║     Nodes that demand specific verbs won't fire on noise.       ║
+║  3. Name action_packets deliberately - distinct action families ║
+║     give the superposition orchestrator something to work with. ║
+║  4. Wire drop_tables manually for known co-activation pairs.    ║
+║     Don't rely on the latch system to discover semantics.       ║
+║  5. Your first ~100 nodes are the specimen's DNA.               ║
+║     The engine enforces structure at scale (1000+ nodes).       ║
+║     You enforce MEANING at the start.                           ║
+╚══════════════════════════════════════════════════════════════════╝
+[INPUT_LEDGER] 🧵  Background thread started. Watching for fresh input...
+[CHATTER_RESIDUALS] 🔮  Background thread started. Mining chatter afterimages...
+
+Brain > 
+Brain > 
+Brain > 
+Brain > 
+Brain > 
+Brain > 
+Brain > --> Grug thawing specimen from file...
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=26, msg=4)
+  🗳  Last voters restored (0 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (5 classes, 50 verbs, 20 synonyms)
+  🔤 Thesaurus restored (12 words)
+  🧠 Lobes restored (5)
+  📋 Lobe tables restored (5)
+┌ Warning: [MAIN] load_specimen: failed to re-register prose action for node 'n16': ErrorException("!!! FATAL: action_packet contains unknown action 'observe'. Valid actions: acknowledge, alert, analyze, calculate, caution, clarify, comfort, define, describe, elaborate, explain, fight, flag, flee, greet, hide, laugh, notify, ponder, reason, reassure, smile, support, validate, warn, welcome. (see plans/semantic_plugins/QOL_SWEEP_2025.md BUG-007) !!!")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6061
+  🌱 Nodes restored (25)
+┌ Warning: loadSpecimen: skipping bad Hopfield entry: MethodError(String, (99991,), 0x000000000000861e)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6143
+┌ Warning: loadSpecimen: skipping bad Hopfield entry: MethodError(String, (99992,), 0x000000000000861e)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6143
+┌ Warning: loadSpecimen: skipping bad Hopfield entry: MethodError(String, (99993,), 0x000000000000861e)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6143
+  ⚡ Hopfield cache restored (0 entries)
+  ⚙️  Rules restored (5)
+  🚫 Inhibitions restored (5)
+┌ Warning: loadSpecimen: skipping bad message entry: KeyError("role")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6217
+┌ Warning: loadSpecimen: skipping bad message entry: KeyError("role")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6217
+┌ Warning: loadSpecimen: skipping bad message entry: KeyError("role")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6217
+  💬 Messages restored (0 total, 0 pinned)
+  👁  Arousal restored (level=0.5)
+  🧬 BrainStem state restored
+  🔗 Attachments restored (6)
+  🗣  Chatter groups restored (0)
+  🔮 Trajectory restored (0 entries)
+  🕐 Temporal coherence restored (0 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 0 ledger entries)
+┌ Warning: [AIML] deserialize: node missing 'lobe_id', skipping
+└ @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:1015
+!!! SYSTEM ERROR: KeyError("lobe_id") !!!
+
+Stacktrace:
+  [1] getindex(h::Dict{String, Any}, key::String)
+    @ Base ./dict.jl:498
+  [2] (::GrugBot420.AIMLNodeSystem.var"#71#73"{Dict{String, Any}})()
+    @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:1022
+  [3] lock(f::GrugBot420.AIMLNodeSystem.var"#71#73"{Dict{String, Any}}, l::ReentrantLock)
+    @ Base ./lock.jl:229
+  [4] deserialize_aiml_state!(data::Dict{String, Any})
+    @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:974
+  [5] load_specimen_from_file!(filepath::String)
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:6516
+  [6] run_cli()
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:8876
+  [7] top-level scope
+    @ none:1
+  [8] eval
+    @ ./boot.jl:385 [inlined]
+  [9] exec_options(opts::Base.JLOptions)
+    @ Base ./client.jl:291
+ [10] _start()
+    @ Base ./client.jl:552
+
+Brain > 
+Brain > 
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 25
+  Hopfield cache  : 0 entries
+  Memory messages : 0
+  Est. memory use : ~25 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.5
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 5
+  Nodes in lobes  : 25
+  Top lobe (fires): L1 (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=0) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 0
+  Sigmoid / ReLU  : 0 / 0
+  Last activation : sigmoid
+  Novelty score   : 0.5
+  Dir. quality    : 0.0
+  Rules           : 0/0 enabled
+  Right / Wrong   : 0 / 0
+  Obs. threshold  : 5
+  Observer count  : 0
+  Adjustments     : GATED
+╚══════════════════════════════════════════════════╝
+║  MITOSIS (lazy fuzzy conservative stochastic)   ║
+  Nodes grown     : 0
+  Nodes latched   : 0
+  Last event      : none
+  Stochastic prob : 0.15
+  Min pop gate    : 10
+  Max pop cap     : 10000
+  Cooldown cycles : 5
+  Min warrant     : 0.5
+╚══════════════════════════════════════════════════════════════╝
+═══ RELATIONAL GOVERNANCE ═══
+  Accumulator: 0/5000 pairs tracked
+  Above threshold (10.0): 0 pairs
+  Auto-attach probability: 0.1 (10.0% per idle cycle)
+  Decay rate: 0.05 (5.0% per decay cycle)
+═══ INPUT LEDGER ═══
+  Thread running   : true
+  Ledger entries   : 0 / 20000
+  Total consumed   : 0
+  Batches processed: 0
+  Last batch       : never
+  Batch size       : 10000
+  Min threshold    : 50
+  Poll (empty)     : 5.0s
+  Poll (after)     : 1.0s
+═══ CHATTER RESIDUALS ═══
+  Thread running      : true
+  Ledger entries      : 0 / 400
+  Total swaps consumed: 0
+  Co-occur observations: 0
+  Votes stolen (remix): 0
+  Votes refused       : 0
+  Batches processed   : 0
+  Last batch          : never
+  Batch size          : 200
+  Min threshold       : 3
+  Co-occur increment  : 1.5
+  Confidence floor    : 0.5 ± 0.08
+  Markov blend bias   : 0.35
+  Weight blend (recv) : 0.6
+  Poll (empty)        : 10.0s
+  Poll (after)        : 2.0s
+
+Brain > === NODE MAP STATUS (25 nodes) ===
+  n1 | str=8.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="derivative rate of change calculus diffe"
+  n10 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="offensive rude crude vulgar insult slur"
+  n11 | str=8.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="ethics morality virtue duty right wrong "
+  n12 | str=7.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="epistemology knowledge truth justificati"
+  n13 | str=6.0 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="ontology being existence category entity"
+  n14 | str=5.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="aesthetics beauty art taste judgment sub"
+  n15 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH] [NONJITTER] | avg_rt=N/A | pattern="dogma absolute certainty unquestionable "
+  n16 | str=7.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="vision sight observe see look visual col"
+  n17 | str=6.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="audition sound hear listen music tone rh"
+  n18 | str=5.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="somatic touch texture temperature pressu"
+  n19 | str=6.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="attention focus notice detect scan selec"
+  n2 | str=7.8 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="integral accumulation area under curve s"
+  n20 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="hallucinate illusion phantom mirage fals"
+  n21 | str=9.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="danger threat risk hazard warning cautio"
+  n22 | str=7.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="shelter hide cover protection safety ref"
+  n23 | str=6.0 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="food hunger nourishment sustenance eat f"
+  n24 | str=8.0 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="fight combat attack strike defend resist"
+  n25 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="panic terror hysteria doom catastrophic "
+  n3 | str=6.2 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="equation balance solve unknown variable "
+  n4 | str=9.1 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="theorem proof logical deduction axiom pr"
+  n5 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH] [NONJITTER] | avg_rt=N/A | pattern="guess estimate approximate ballpark roug"
+  n6 | str=7.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="grammar syntax sentence structure morpho"
+  n7 | str=8.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="rhetoric persuasion argument debate etho"
+  n8 | str=6.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="poetry verse metaphor imagery rhythm sta"
+  n9 | str=5.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="etymology origin word history root langu"
+
+=== ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (1/4 attached):
+      🔗 n6 [ALIVE str=7.5] | base_conf=0.65 | connector="grammar syntax structure"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=9.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=8.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=8.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > !!! SYSTEM ERROR: KeyError("nodes") !!!
+
+Stacktrace:
+  [1] getindex
+    @ ./dict.jl:498 [inlined]
+  [2] #3
+    @ /workspace/grugbot420/src/LobeTable.jl:133 [inlined]
+  [3] lock(f::GrugBot420.LobeTable.var"#3#4"{String, String}, l::ReentrantLock)
+    @ Base ./lock.jl:229
+  [4] _get_chunk
+    @ /workspace/grugbot420/src/LobeTable.jl:129 [inlined]
+  [5] table_size
+    @ /workspace/grugbot420/src/LobeTable.jl:244 [inlined]
+  [6] (::GrugBot420.Lobe.var"#45#47"{Vector{String}})()
+    @ GrugBot420.Lobe /workspace/grugbot420/src/Lobe.jl:589
+  [7] lock(f::GrugBot420.Lobe.var"#45#47"{Vector{String}}, l::ReentrantLock)
+    @ Base ./lock.jl:229
+  [8] get_lobe_status_summary
+    @ /workspace/grugbot420/src/Lobe.jl:576 [inlined]
+  [9] run_cli()
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:8675
+ [10] top-level scope
+    @ none:1
+ [11] eval
+    @ ./boot.jl:385 [inlined]
+ [12] exec_options(opts::Base.JLOptions)
+    @ Base ./client.jl:291
+ [13] _start()
+    @ Base ./client.jl:552
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 0
+  Sigmoid activations : 0
+  ReLU activations    : 0
+  Last activation     : sigmoid
+  Last novelty score  : 0.5
+  Last dir. quality   : 0.0
+  Right feedback      : 0
+  Wrong feedback      : 0
+  Rules (total/enabled): 0 / 0
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 0
+  Novelty hashes      : 0
+  Observer threshold  : 5
+  Observer count      : 0
+  Adjustments enabled : NO
+  Strain energy       : 0.0
+  Hippocampal warrant : inactive
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > === GROWTH AUTOMATON ===
+  batch_size=3, prob_ceiling=0.15
+  group_strength_floor=0.5, min_fresh=5
+  relevance_thesaurus_floor=0.15, action_sample=8
+  strain_energy=N/A, hippocampal_warrant=N/A
+  (no spawns yet)
+
+Brain > Mitosis: no events yet. Cave has not grown on its own.
+
+Brain > 
+Brain > 
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=0) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > ⚠  /aimlList: No AIML nodes found in lobe 'L1'. Is it registered?
+
+Brain > !!! SYSTEM ERROR: AIMLNodeError("Lobe 'L2' not registered for AIML", "list_aiml_nodes") !!!
+
+Stacktrace:
+ [1] throw_aiml_error(msg::String, ctx::String)
+   @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:43
+ [2] (::GrugBot420.AIMLNodeSystem.var"#32#34"{String})()
+   @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:484
+ [3] lock(f::GrugBot420.AIMLNodeSystem.var"#32#34"{String}, l::ReentrantLock)
+   @ Base ./lock.jl:229
+ [4] list_aiml_nodes
+   @ /workspace/grugbot420/src/AIMLNodeSystem.jl:482 [inlined]
+ [5] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:7920
+ [6] top-level scope
+   @ none:1
+ [7] eval
+   @ ./boot.jl:385 [inlined]
+ [8] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [9] _start()
+   @ Base ./client.jl:552
+
+Brain > !!! SYSTEM ERROR: AIMLNodeError("Lobe 'L3' not registered for AIML", "list_aiml_nodes") !!!
+
+Stacktrace:
+ [1] throw_aiml_error(msg::String, ctx::String)
+   @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:43
+ [2] (::GrugBot420.AIMLNodeSystem.var"#32#34"{String})()
+   @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:484
+ [3] lock(f::GrugBot420.AIMLNodeSystem.var"#32#34"{String}, l::ReentrantLock)
+   @ Base ./lock.jl:229
+ [4] list_aiml_nodes
+   @ /workspace/grugbot420/src/AIMLNodeSystem.jl:482 [inlined]
+ [5] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:7920
+ [6] top-level scope
+   @ none:1
+ [7] eval
+   @ ./boot.jl:385 [inlined]
+ [8] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [9] _start()
+   @ Base ./client.jl:552
+
+Brain > ❌  /aimlAdd failed: Lobe 'L3' not registered for AIML. Call register_lobe! first. [add_aiml_node!]
+
+Brain > !!! SYSTEM ERROR: AIMLNodeError("Lobe 'L3' not registered for AIML", "list_aiml_nodes") !!!
+
+Stacktrace:
+ [1] throw_aiml_error(msg::String, ctx::String)
+   @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:43
+ [2] (::GrugBot420.AIMLNodeSystem.var"#32#34"{String})()
+   @ GrugBot420.AIMLNodeSystem /workspace/grugbot420/src/AIMLNodeSystem.jl:484
+ [3] lock(f::GrugBot420.AIMLNodeSystem.var"#32#34"{String}, l::ReentrantLock)
+   @ Base ./lock.jl:229
+ [4] list_aiml_nodes
+   @ /workspace/grugbot420/src/AIMLNodeSystem.jl:482 [inlined]
+ [5] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:7920
+ [6] top-level scope
+   @ none:1
+ [7] eval
+   @ ./boot.jl:385 [inlined]
+ [8] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [9] _start()
+   @ Base ./client.jl:552
+
+Brain > 
+╔══════════════════════════════════════════════════════════════╗
+║                    🔄 AIML CYCLE INFO                         ║
+╠══════════════════════════════════════════════════════════════╣
+  Current Cycle    : 0
+  ─────────────────────────────────────────────────────────────
+  Cycle Mechanics:
+  • /aimlRight rewards nodes that voted this cycle
+  • /aimlWrong penalizes nodes that voted this cycle
+  • Nodes that gained strength are skipped from double reward
+  • Nodes that gained get EXTRA penalty on /aimlWrong
+  • Cycle counter increments with /mission calls
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=0) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > [AIML] 🧹 phagy_sweep: pruned 0 grave node(s).
+✨  /aimlPhagy: No graves to clean. AIML registry already pristine!
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=0) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > 
+Brain > 
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 7 tokens → 9 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n1': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n6' (lobe=L2) is cross-lobe from target 'n1' (lobe=L1). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L1: base=0.25 × top=0.25 = 0.0312 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.25 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n1 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n1 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n1 big-O ledger cleared (24hr reset).
+[ENGINE] 🐢  Node n1 slow telemetry only (avg: 7.95s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Here is the picture: You speak with precision about how things change. The derivative reveals the instantaneous heartbeat of change within any function.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is the derivative of x squared'
+Primary Action: calculate  (conf=0.25, certainty=SURE)
+Sure Actions: [calculate]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n1
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=1] (Recent): [User]: what is the derivative of x squared (intensity=1.26)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.25, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L1: base=0.25 × top=0.25 = 0.0312 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 6 tokens → 8 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n6': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L1': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n1' (lobe=L1) is cross-lobe from target 'n6' (lobe=L2). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L2: base=0.571 × top=0.571 = 0.2462 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.571 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n6 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+So here's what I see — You parse the architecture of language. Every sentence is a small building with rooms for meaning.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain the grammar of this sentence'
+Primary Action: analyze  (conf=0.57, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n6
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=3] (Recent): No recent sounds
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.57, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L2: base=0.571 × top=0.571 = 0.2462 [hard_votes=1]
+=========================================
+
+Brain > 
+Brain > [ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.736, tone_gini=0.121
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.738, tone_gini=0.114
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.31 | ArousalNudge=0.0 | Weight=1.19 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (7 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n16"
+│   pattern = "vision sight observe see look visual color pattern"
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3475
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n16': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+[ENGINE] 🧠  Attachment relay suppressed: 'n21' (lobe=L5) is cross-lobe from target 'n16' (lobe=L4). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L4: base=0.075 × top=0.075 = 0.0015 [hard_votes=0]
+┌ Error: [VoteOrchestrator] Task 'cast_votes#12' (context=run_mission.cast_votes) threw: ErrorException("!!! FATAL: Grug rolled unknown action [observe]! Not in COMMANDS dictionary !!!")
+└ @ GrugBot420.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] cast_votes sub-process FAILED: TaskFailedException(Task (failed) @0x00007ff13565ebd0)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:4144
+!!! SYSTEM ERROR: TaskFailedException(Task (failed) @0x00007ff13565ebd0) !!!
+
+Stacktrace:
+  [1] wait
+    @ ./task.jl:352 [inlined]
+  [2] fetch
+    @ ./task.jl:372 [inlined]
+  [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing)
+    @ GrugBot420.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:288
+  [4] fetch_with_timeout
+    @ /workspace/grugbot420/src/VoteOrchestrator.jl:253 [inlined]
+  [5] process_mission(mission_text::String)
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:4139
+  [6] run_cli()
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:7755
+  [7] top-level scope
+    @ none:1
+  [8] eval
+    @ ./boot.jl:385 [inlined]
+  [9] exec_options(opts::Base.JLOptions)
+    @ Base ./client.jl:291
+ [10] _start()
+    @ Base ./client.jl:552
+
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 6 tokens → 8 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n21': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L1': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n16' (lobe=L4) is cross-lobe from target 'n21' (lobe=L5). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L5: base=0.333 × top=0.333 = 0.0642 [hard_votes=0]
+[ENGINE] 💎 Node n21 solidified (strength=10.0 ≥ 9.0) — NONJITTER tag applied.
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.333 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n21 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n21 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n21 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Listen. You detect danger before it arrives. A quiet room may still harbor threats. Vigilance is the price of survival.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'there is danger in the forest'
+Primary Action: alert  (conf=0.33, certainty=SURE)
+Sure Actions: [alert]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n21
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=7] (Recent): [User]: explain the grammar of this sentence (intensity=0.62) | [User]: there is danger in the forest (intensity=1.3)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.33, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L5: base=0.333 × top=0.333 = 0.0642 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > 
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 6 tokens → 8 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n1': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n6' (lobe=L2) is cross-lobe from target 'n1' (lobe=L1). Use cascade instead.
+[ENGINE] 🧫 Anti-match drain: 1 activation(s) applied 0.03 total drain across 1 lobe(s).
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L1: base=0.349 × top=0.349 = 0.0718 [hard_votes=0]
+[ENGINE] 💎 Node n1 solidified (strength=9.5 ≥ 9.0) — NONJITTER tag applied.
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.349 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n1 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n1 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Action: You speak with precision about how things change. The derivative reveals the instantaneous heartbeat of change within any function.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'guess the derivative of this function'
+Primary Action: reason  (conf=0.35, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n1
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=9] (Recent): [User]: explain the grammar of this sentence (intensity=0.56) | [System]: Mission "there is danger in the forest" → primary=alert conf=0.33 node=n21 (intensity=0.72)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.35, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L1: base=0.349 × top=0.349 = 0.0718 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > [ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.764, tone_gini=0.115
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 7 tokens → 9 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.768, tone_gini=0.126
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n6': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L1': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n1' (lobe=L1) is cross-lobe from target 'n6' (lobe=L2). Use cascade instead.
+[ENGINE] 🧫 Anti-match drain: 1 activation(s) applied 0.03 total drain across 1 lobe(s).
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L2: base=0.304 × top=0.304 = 0.0508 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.304 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Here's what to do — You parse the architecture of language. Every sentence is a small building with rooms for meaning.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'that was an offensive remark about grammar'
+Primary Action: explain  (conf=0.3, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n6
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: that was an offensive remark about grammar (intensity=1.25)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.3, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L2: base=0.304 × top=0.304 = 0.0508 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > [ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.732, tone_gini=0.121
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 6 tokens → 8 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.799, tone_gini=0.119
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n11': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L1': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n4' (lobe=L1) is cross-lobe from target 'n11' (lobe=L3). Use cascade instead.
+[ENGINE] 🧫 Anti-match drain: 1 activation(s) applied 0.03 total drain across 1 lobe(s).
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L3: base=0.243 × top=0.243 = 0.029 [hard_votes=0]
+[ENGINE] 💎 Node n11 solidified (strength=9.0 ≥ 9.0) — NONJITTER tag applied.
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.243 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n11 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n11 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n11 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+You weigh moral claims with care. Good and evil are not simple categories — they demand reasoned examination., because — that's where my head is.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'your dogma about ethics is rigid'
+Primary Action: analyze  (conf=0.24, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n11
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about ethics explain moral evaluation of conduct | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: there is danger in the forest (intensity=0.39) | [System]: Mission "that was an offensive remark about grammar" → primary=explain conf=0.3 node=n6 (intensity=0.68) | [User]: your dogma about ethics is rigid (intensity=1.25)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.24, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L3: base=0.243 × top=0.243 = 0.029 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > 
+Brain > 
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.2 | ArousalNudge=0.0 | Weight=1.1 [FALLBACK] [FRAME=imperative/basic]
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 6
+  Sigmoid activations : 0
+  ReLU activations    : 6
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.5001
+  Right feedback      : 0
+  Wrong feedback      : 0
+  Rules (total/enabled): 0 / 0
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 6
+  Novelty hashes      : 6
+  Observer threshold  : 5
+  Observer count      : 2
+  Adjustments enabled : NO
+  Strain energy       : 0.8
+  Hippocampal warrant : inactive
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.2 | ArousalNudge=0.0 | Weight=1.04 [FALLBACK] [FRAME=contemplative/basic]
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 6
+  Sigmoid activations : 0
+  ReLU activations    : 6
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.5001
+  Right feedback      : 0
+  Wrong feedback      : 0
+  Rules (total/enabled): 0 / 0
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 6
+  Novelty hashes      : 6
+  Observer threshold  : 5
+  Observer count      : 2
+  Adjustments enabled : NO
+  Strain energy       : 0.8
+  Hippocampal warrant : inactive
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+Brain > 
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 8 tokens → 10 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n21': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n1': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n12': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n14': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n16' (lobe=L4) is cross-lobe from target 'n21' (lobe=L5). Use cascade instead.
+[ENGINE] 🧠  Attachment relay suppressed: 'n6' (lobe=L2) is cross-lobe from target 'n1' (lobe=L1). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L5: base=0.427 × top=0.427 = 0.1191 [hard_votes=0]
+  · L3: base=0.262 × top=0.298 = 0.0454 [hard_votes=0]
+  · L1: base=0.233 × top=0.233 = 0.0263 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.427 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n21 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n21 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+The shape of it: You detect danger before it arrives. A quiet room may still harbor threats. Vigilance is the price of survival.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'tell me about truth and beauty and danger and calculus'
+Primary Action: warn  (conf=0.43, certainty=SURE)
+Sure Actions: [warn]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n21
+Lobe Context: [Error retrieving lobe information]
+User Triples: (tell, about, truth)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): No recent sounds
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.43, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L5: base=0.427 × top=0.427 = 0.1191 [hard_votes=0]
+  · L3: base=0.262 × top=0.298 = 0.0454 [hard_votes=0]
+  · L1: base=0.233 × top=0.233 = 0.0263 [hard_votes=0]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.5 | ArousalNudge=0.0 | Weight=1.3 [FRAME=exploratory/basic]
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 6 tokens → 10 (+4 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.785, tone_gini=0.117
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n1': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n21': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n6' (lobe=L2) is cross-lobe from target 'n1' (lobe=L1). Use cascade instead.
+[ENGINE] 🧠  Attachment relay suppressed: 'n16' (lobe=L4) is cross-lobe from target 'n21' (lobe=L5). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L5: base=0.25 × top=0.25 = 0.0312 [hard_votes=0]
+  · L1: base=0.182 × top=0.182 = 0.0141 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.25 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n21 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n21 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Now: You detect danger before it arrives. A quiet room may still harbor threats. Vigilance is the price of survival.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'compute the ethical derivative of danger'
+Primary Action: warn  (conf=0.25, certainty=SURE)
+Sure Actions: [warn]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n21
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=10] (Recent): [System]: Mission "your dogma about ethics is rigid" → primary=analyze conf=0.24 node=n11 (intensity=0.47) | [User]: tell me about truth and beauty and danger and calculus (intensity=0.88) | [System]: Mission "tell me about truth and beauty and danger and calculus" → primary=warn conf=0.43 node=n21 (intensity=0.7)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.25, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L5: base=0.25 × top=0.25 = 0.0312 [hard_votes=0]
+  · L1: base=0.182 × top=0.182 = 0.0141 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > 
+Brain > 🧠 Answer node created: id=node_26 pattern='quantum entanglement describes non-local correlations between particle states' (no lobe) | strain was 0.8, now 0.8
+
+Brain > 🧠 Anti-answer node created: id=node_27 pattern='dogma' [confidence drain] (no lobe) | strain was 0.8, now 0.8
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 8
+  Sigmoid activations : 0
+  ReLU activations    : 8
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.5001
+  Right feedback      : 0
+  Wrong feedback      : 0
+  Rules (total/enabled): 0 / 0
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 8
+  Novelty hashes      : 8
+  Observer threshold  : 5
+  Observer count      : 4
+  Adjustments enabled : NO
+  Strain energy       : 0.8
+  Hippocampal warrant : inactive
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 7 tokens → 10 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.52 | ArousalNudge=0.0 | Weight=1.31 [FRAME=exploratory/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n2': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L1: base=0.333 × top=0.333 = 0.0642 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.333 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n2 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n2 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n2 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | strain=0.8 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Zooming out: You speak about how small pieces build into wholes. The integral collects and sums.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is the integral of sin x'
+Primary Action: calculate  (conf=0.33, certainty=SURE)
+Sure Actions: [calculate]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n2
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=8] (Recent): [System]: Mission "tell me about truth and beauty and danger and calculus" → primary=warn conf=0.43 node=n21 (intensity=0.46)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.33, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L1: base=0.333 × top=0.333 = 0.0642 [hard_votes=0]
+=========================================
+
+Brain > [ENGINE] 💎 Node n2 solidified (strength=9.8 ≥ 9.0) — NONJITTER tag applied.
+[ENGINE] ✅ /right: total=1 rewarded=1 [locked=1 unsure=0] double_skip=0 coinflip_miss=0 grave_skip=0
+✅ /right applied. 1 contributor(s) [1 locked, 0 unsure]: 1 rewarded, 0 skipped (already gained), 0 missed coinflip.
+   ↳ context intensity nudged up on 1 message(s) used last cycle.
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.55 | ArousalNudge=0.0 | Weight=1.33 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (6 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n6"
+│   pattern = "grammar syntax sentence structure morphology rule"
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3475
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n6': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+[ENGINE] 🧠  Attachment relay suppressed: 'n1' (lobe=L1) is cross-lobe from target 'n6' (lobe=L2). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L2: base=0.227 × top=0.227 = 0.0246 [hard_votes=0]
+[ENGINE] 💎 Node n6 solidified (strength=9.5 ≥ 9.0) — NONJITTER tag applied.
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.227 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.512 | strain=0.795 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Stepping back — You parse the architecture of language. Every sentence is a small building with rooms for meaning.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain syntax trees'
+Primary Action: analyze  (conf=0.23, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n6
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when danger is mentioned alert and warn about potential threats
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: compute the ethical derivative of danger (intensity=0.61) | [User]: what is the integral of sin x (intensity=0.82)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.23, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L2: base=0.227 × top=0.227 = 0.0246 [hard_votes=0]
+=========================================
+
+Brain > [ENGINE] 💧 Node n6 softened (strength=8.5 < 9.0) — NONJITTER tag removed, jitter resumed.
+[ENGINE] ❌  /wrong applied to 1 contributors. penalized= 1, newly_graved= 0.
+❌  /wrong applied. 1 contributor(s) penalized via coinflip.
+   ↳ context intensity nudged down on 2 message(s) used last cycle.
+
+Brain > 
+Brain > 
+Brain > [AIML] ✅ /aimlRight: contributors=0 rewarded=0 double_skip=0 coinflip_miss=0 grave_skip=0
+⚠  /aimlRight: No AIML nodes voted this cycle. Did you run /mission first?
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=15) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > 
+Brain > 
+Brain > [ Info: [SEMANTIC] ✅  Verb 'cogitate' added to class 'cognitive'
+🔧 Verb 'cogitate' added to class 'cognitive'. Active immediately.
+
+Brain > [ Info: [SEMANTIC] ✅  Verb 'ruminate' added to class 'cognitive'
+🔧 Verb 'ruminate' added to class 'cognitive'. Active immediately.
+
+Brain > [ Info: [SEMANTIC] ✅  Synonym registered: 'think' -> 'ruminate'
+📖 Synonym registered: 'think' → 'ruminate'. Normalization active.
+
+Brain > === SEMANTIC VERB REGISTRY ===
+  [cognitive]: analyze, cogitate, deduce, evaluate, infer, judge, justify, reason, ruminate, synthesize, think, verify
+  [linguistic]: articulate, communicate, convey, express, interpret, parse, read, speak, translate, write
+  [perceptual]: attend, detect, distinguish, focus, notice, observe, perceive, recognize, scan, see
+  [social]: acknowledge, comfort, describe, greet, laugh, reassure, smile, support, validate, welcome
+  [survival]: alert, caution, defend, fight, flee, forage, hide, protect, shelter, warn
+  --- Synonyms ---
+    affirm → validate
+    assess → evaluate
+    cogitate → think
+    compose → write
+    conclude → deduce
+    decode → parse
+    deliberate → reason
+    enunciate → articulate
+    escape → flee
+    examine → analyze
+    flee → flee
+    hello → greet
+    identify → recognize
+    notify → warn
+    ponder → think
+    retreat → hide
+    signal → alert
+    soothe → comfort
+    spot → detect
+    think → ruminate
+    utter → speak
+
+Brain > 🌱 Seed synonym group: 'calculus' + 4 synonyms registered. Bidirectional mapping active.
+
+Brain > 
+🔍 THESAURUS COMPARISON
+  Input 1  : "derivative"  → seeds: derivative, differential, rate, slope
+  Input 2  : "differential"
+  Type     : word-word
+  ─────────────────────────────
+  Overall  : 95.0%  [IDENTICAL]
+  Semantic : 95.0%
+  Context  : 50.0%
+  Assoc    : 0.0%
+  Confid.  : 90.0%
+
+
+Brain > 
+Brain > 
+Brain > 📋 NegativeThesaurus — 5 inhibited word(s):
+   🚫 'dogma'   reason: philosophy lobe: suppress unquestionable claims   added: 14.0s ago
+   🚫 'guess'   reason: math lobe: suppress guessing in favor of calculation   added: 14.0s ago
+   🚫 'hallucinate'   reason: perception lobe: suppress false perception claims   added: 14.0s ago
+   🚫 'offensive'   reason: language lobe: suppress crude expression   added: 14.0s ago
+   🚫 'panic'   reason: survival lobe: suppress panic in favor of alert response   added: 14.0s ago
+
+Brain > 🚫 'guess' IS inhibited in NegativeThesaurus.
+
+Brain > 🚫 Inhibition registered: 'speculation'  reason: unverified conjecture
+   NegativeThesaurus size: 6 / 256
+
+Brain > 📋 NegativeThesaurus — 6 inhibited word(s):
+   🚫 'dogma'   reason: philosophy lobe: suppress unquestionable claims   added: 14.0s ago
+   🚫 'guess'   reason: math lobe: suppress guessing in favor of calculation   added: 14.0s ago
+   🚫 'hallucinate'   reason: perception lobe: suppress false perception claims   added: 14.0s ago
+   🚫 'offensive'   reason: language lobe: suppress crude expression   added: 14.0s ago
+   🚫 'panic'   reason: survival lobe: suppress panic in favor of alert response   added: 14.0s ago
+   🚫 'speculation'   reason: unverified conjecture   added: 0.0s ago
+
+Brain > 🚫 'speculation' IS inhibited in NegativeThesaurus.
+
+Brain > 
+Brain > 
+Brain > === LOBE TABLE: L1 ===
+
+Brain > !!! ERROR in /tableMatch: KeyError("nodes") !!!
+
+Brain > 🔗 Lobes 'L1' ↔ 'L2' connected.
+
+Brain > --> Grug unpacking JSON node seeds for lobe 'L1'...
+┌ Warning: ⚠️  COHERENCE WARNING: Node with pattern "topology studies spatial properties and continuous transformations" has NO voice_register!
+│ Frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to json_data (e.g. "warm", "terse", "explanatory").
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:4574
+┌ Warning: ⚠️  COHERENCE WARNING: Node with pattern "topology studies spatial properties and continuous transformations" has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier for this node.
+│ FIX: Add "frame_hints" to json_data (e.g. ["warm", "plain"]).
+│ Valid: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:4580
+┌ Warning: [ENGINE] grow_nodes_from_packet: failed to attach node 'node_28' to lobe 'L1': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:4655
+🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'L1': [node_28]
+
+Brain > 
+Brain > 
+Brain > !!! SYSTEM ERROR: ErrorException("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!") !!!
+
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:9636
+ [3] top-level scope
+   @ none:1
+ [4] eval
+   @ ./boot.jl:385 [inlined]
+ [5] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [6] _start()
+   @ Base ./client.jl:552
+
+Brain > --> Grug unpacking JSON node seeds for lobe 'L1'...
+┌ Warning: ⚠️  COHERENCE WARNING: Node with pattern "manifold continuous surface topology differential geometry" has NO voice_register!
+│ Frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to json_data (e.g. "warm", "terse", "explanatory").
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:4574
+┌ Warning: ⚠️  COHERENCE WARNING: Node with pattern "manifold continuous surface topology differential geometry" has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier for this node.
+│ FIX: Add "frame_hints" to json_data (e.g. ["warm", "plain"]).
+│ Valid: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:4580
+┌ Warning: [ENGINE] grow_nodes_from_packet: failed to attach node 'node_29' to lobe 'L1': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:4655
+🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'L1': [node_29]
+
+Brain > ⚙️ Rule tied to tree: [when asked about topology explain spatial invariants and continuous maps] (fire_prob=1.0)
+
+Brain > 📌 Grug pinned text to Memory Wall!
+
+Brain > 
+Brain > 
+Brain > ╔══════════════════════════════════════════════════════════╗
+║            ✂️  DECOMPOSER CONFIG STATUS                  ║
+╠══════════════════════════════════════════════════════════╣
+  SPLIT CONJUNCTIONS (16):
+    additionally, also, alternatively, besides, but, furthermore, however, instead, likewise, moreover, nevertheless, nonetheless, or, similarly, then, yet
+  COMPOUND PAIRS (1 leaders):
+    'and' → additionally, also, furthermore, moreover, then
+  CONTEXT CONJUNCTION: 'and'
+  QUESTION MARKERS (9):
+    how, what, when, where, which, who, whom, whose, why
+  COMMAND MARKERS (stems: 13, expanded: 52):
+    Stems: calculate, compute, count, define, describe, explain, find, give, list, name, show, solve, tell
+  CONJUGATION RULES (13):
+    'calculate' → calculates, calculated, calculating
+    'compute' → computes, computed, computing
+    'count' → counts, counted, counting
+    'define' → defines, defined, defining
+    'describe' → describes, described, describing
+    'explain' → explains, explained, explaining
+    'find' → finds, found, finding
+    'give' → gives, gave, giving
+    'list' → lists, listed, listing
+    'name' → names, named, naming
+    'show' → shows, showed, showing
+    'solve' → solves, solved, solving
+    'tell' → tells, told, telling
+╚══════════════════════════════════════════════════════════╝
+
+Brain > ⚠  'moreover' already in split_conjunctions (no change)
+
+Brain > ✅ Added 'whether' to question_markers (now 10 total)
+
+Brain > ❌ /decomposer addConjugation FAILED: MethodError(GrugBot420.InputDecomposer.add_conjugation_rule!, ("compute", SubString{String}["computes", "computed", "computing"]), 0x000000000000861e)
+┌ Warning: [CLI] /decomposer addConjugation error: MethodError(GrugBot420.InputDecomposer.add_conjugation_rule!, ("compute", SubString{String}["computes", "computed", "computing"]), 0x000000000000861e)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:9313
+
+Brain > ╔══════════════════════════════════════════════════════════╗
+║            ✂️  DECOMPOSER CONFIG STATUS                  ║
+╠══════════════════════════════════════════════════════════╣
+  SPLIT CONJUNCTIONS (16):
+    additionally, also, alternatively, besides, but, furthermore, however, instead, likewise, moreover, nevertheless, nonetheless, or, similarly, then, yet
+  COMPOUND PAIRS (1 leaders):
+    'and' → additionally, also, furthermore, moreover, then
+  CONTEXT CONJUNCTION: 'and'
+  QUESTION MARKERS (10):
+    how, what, when, where, whether, which, who, whom, whose, why
+  COMMAND MARKERS (stems: 13, expanded: 52):
+    Stems: calculate, compute, count, define, describe, explain, find, give, list, name, show, solve, tell
+  CONJUGATION RULES (13):
+    'calculate' → calculates, calculated, calculating
+    'compute' → computes, computed, computing
+    'count' → counts, counted, counting
+    'define' → defines, defined, defining
+    'describe' → describes, described, describing
+    'explain' → explains, explained, explaining
+    'find' → finds, found, finding
+    'give' → gives, gave, giving
+    'list' → lists, listed, listing
+    'name' → names, named, naming
+    'show' → shows, showed, showing
+    'solve' → solves, solved, solving
+    'tell' → tells, told, telling
+╚══════════════════════════════════════════════════════════╝
+
+Brain > 
+Brain > 
+Brain > 👁 Vigilance System — ON
+  Max cap: 6 | Active: 0 | Per-cycle max: 4
+  Thresholds: low=0.25 med=0.5 high=0.75 extreme=0.9
+  Timeout: 5.0s | Feedback prob: 0.15
+  Lifetime: dispatched=0 completed=0 timed_out=0
+  Injected: 0 entries | Feedback: 0 observations
+
+Brain > 💎 Vigilance dispatch ENABLED
+
+Brain > 💎 Vigilance threshold [med] set to 0.5
+
+Brain > 💎 Vigilance injector timeout set to 30.0s
+
+Brain > 💎 Vigilance feedback probability set to 0.3
+
+Brain > 👁 Vigilance System — ON
+  Max cap: 6 | Active: 0 | Per-cycle max: 4
+  Thresholds: low=0.25 med=0.5 high=0.75 extreme=0.9
+  Timeout: 30.0s | Feedback prob: 0.3
+  Lifetime: dispatched=0 completed=0 timed_out=0
+  Injected: 0 entries | Feedback: 0 observations
+
+Brain > 
+Brain > 
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 0 | Recorded: 0 | Pulls: 0
+  Threshold: 0.55 | Surface bits: 3
+  ⚠️  HARD WARN: crystal is EMPTY — no phase data to pull from
+
+Brain > 💎 Phase pull threshold set to 0.4
+
+Brain > 💎 Phase surface count set to 8
+
+Brain > 💎 Phase pull ENABLED
+
+Brain > 💎 Phase Accumulator (Time Crystal) — ON
+  Snapshots: 0 | Recorded: 0 | Pulls: 0
+  Threshold: 0.4 | Surface bits: 8
+  ⚠️  HARD WARN: crystal is EMPTY — no phase data to pull from
+
+Brain > 
+Brain > 
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > !!! /sigil add ERROR: SigilConfigError("unknown sigil class :noun (allowed: (:lambda, :macro, :tag, :glue, :functor, :procedure))", "class") !!!
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > ⚠  /sigil remove: '&phys' not in registry.
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > 
+Brain > 
+Brain > === ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (1/4 attached):
+      🔗 n6 [ALIVE str=8.5] | base_conf=0.65 | connector="grammar syntax structure"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=10.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=9.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=9.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > [ENGINE] 🔗  Node 'n2' attached to target 'n1' with pattern "integral accumulation" (base_conf=0.823, 2/4 slots used).
+🔗 /nodeAttach complete:
+   → Attached 'n2' to 'n1' with pattern "integral accumulation" (base_conf=0.823, 2/4)
+
+Brain > === ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (2/4 attached):
+      🔗 n6 [ALIVE str=8.5] | base_conf=0.65 | connector="grammar syntax structure"
+      🔗 n2 [ALIVE str=9.8] | base_conf=0.823 | connector="integral accumulation"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=10.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=9.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=9.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > [ENGINE] 🔓  Node 'n2' detached from target 'n1'.
+🔓 Detached 'n2' from 'n1'
+
+Brain > === ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (1/4 attached):
+      🔗 n6 [ALIVE str=8.5] | base_conf=0.65 | connector="grammar syntax structure"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=10.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=9.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=9.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > !!! SYSTEM ERROR: ErrorException("!!! FATAL: crystalize_attachment! found no attachment from 'n1' to 'n2' !!!") !!!
+
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] crystalize_attachment!(target_id::String, attach_id::String; origin::Symbol)
+   @ GrugBot420 /workspace/grugbot420/src/engine.jl:2194
+ [3] crystalize_attachment!
+   @ /workspace/grugbot420/src/engine.jl:2167 [inlined]
+ [4] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:9125
+ [5] top-level scope
+   @ none:1
+ [6] eval
+   @ ./boot.jl:385 [inlined]
+ [7] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [8] _start()
+   @ Base ./client.jl:552
+
+Brain > === ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (1/4 attached):
+      🔗 n6 [ALIVE str=8.5] | base_conf=0.65 | connector="grammar syntax structure"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=10.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=9.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=9.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > !!! SYSTEM ERROR: ErrorException("!!! FATAL: decrystalize_attachment! found no attachment from 'n1' to 'n2' !!!") !!!
+
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] decrystalize_attachment!(target_id::String, attach_id::String; force::Bool)
+   @ GrugBot420 /workspace/grugbot420/src/engine.jl:2230
+ [3] decrystalize_attachment!
+   @ /workspace/grugbot420/src/engine.jl:2206 [inlined]
+ [4] run_cli()
+   @ GrugBot420 /workspace/grugbot420/src/Main.jl:9137
+ [5] top-level scope
+   @ none:1
+ [6] eval
+   @ ./boot.jl:385 [inlined]
+ [7] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:291
+ [8] _start()
+   @ Base ./client.jl:552
+
+Brain > === ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (1/4 attached):
+      🔗 n6 [ALIVE str=8.5] | base_conf=0.65 | connector="grammar syntax structure"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=10.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=9.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=9.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > 
+Brain > 
+Brain > ✅  /mlpRule add: Rule 'user_1.78044366493e9_10' added (pattern='novelty', transform=fuzzy, key='0.8')
+
+Brain > ✅  /mlpRule add: Rule 'user_1.780443664931e9_11' added (pattern='quality', transform=solid, key='0.3')
+
+Brain > 📋  /mlpRule list: 2 rule(s) registered:
+  📎 user_1.780443664931e9_11 | pattern='quality' | key='0.3' | transform=solid | fires=0 | ON
+  📎 user_1.78044366493e9_10 | pattern='novelty' | key='0.8' | transform=fuzzy | fires=0 | ON
+
+Brain > 
+╔══════════════════════════════════════════════════════════════╗
+║         MLP SELF-OBSERVER STORE                            ║
+╠══════════════════════════════════════════════════════════════╣
+  Total observations  : 5
+  Distinct keys       : 5
+  Observation threshold: 5
+  Adjustments enabled : NO
+  Progress to gate    : 5/5 ✓ GATE OPEN
+╚══════════════════════════════════════════════════════════════╝
+
+
+Brain > [ Info: [EphemeralMLP] observation_threshold changed: 5 → 3 (adjustments_enabled=true)
+🔧  /mlpThreshold: 5 → 3
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 10
+  Sigmoid activations : 0
+  ReLU activations    : 10
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.5123
+  Right feedback      : 1
+  Wrong feedback      : 1
+  Rules (total/enabled): 2 / 2
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 10
+  Novelty hashes      : 10
+  Observer threshold  : 3
+  Observer count      : 4
+  Adjustments enabled : YES
+  Strain energy       : 0.7951
+  Hippocampal warrant : inactive
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+Brain > 
+Brain > 📋  /automaton list: No rules registered. Cave has no step machines yet.
+
+Brain > ✅  /automaton register: Rule 'sentinel' registered (trigger=L1, min_conf=0.7, 1 placeholder step)
+
+Brain > 📋  /automaton list: 1 rule(s) registered:
+  📎 sentinel | trigger=L1 | min_conf=0.7 | steps=1 | jitter=none
+
+Brain > 🗑️  /automaton remove: Rule 'sentinel' removed from registry.
+
+Brain > 📋  /automaton list: No rules registered. Cave has no step machines yet.
+
+Brain > 
+Brain > 
+Brain > 🎲 /brainstorm: entering heavy-jitter scope (ratio=0.08, coin_ratio=0.05) for one mission.
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.5 | ArousalNudge=0.0 | Weight=1.3 [FRAME=exploratory/basic]
+--> No valid specimens found for this input. Cave is silent.
+🎲 /brainstorm: scope closed; jitter ratios snapped back to defaults.
+
+Brain > 
+Brain > 
+Brain > 👁  Arousal set to 0.8. Eye system updated.
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 29
+  Hopfield cache  : 0 entries
+  Memory messages : 35
+  Est. memory use : ~46 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.8
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 5
+  Nodes in lobes  : 27
+  Top lobe (fires): L1 (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=16) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 10
+  Sigmoid / ReLU  : 0 / 10
+  Last activation : relu
+  Novelty score   : 1.0
+  Dir. quality    : 0.5123
+  Rules           : 2/2 enabled
+  Right / Wrong   : 1 / 1
+  Obs. threshold  : 3
+  Observer count  : 4
+  Adjustments     : ENABLED
+╚══════════════════════════════════════════════════╝
+║  MITOSIS (lazy fuzzy conservative stochastic)   ║
+  Nodes grown     : 0
+  Nodes latched   : 0
+  Last event      : none
+  Stochastic prob : 0.15
+  Min pop gate    : 10
+  Max pop cap     : 10000
+  Cooldown cycles : 5
+  Min warrant     : 0.5
+╚══════════════════════════════════════════════════════════════╝
+═══ RELATIONAL GOVERNANCE ═══
+  Accumulator: 0/5000 pairs tracked
+  Above threshold (10.0): 0 pairs
+  Auto-attach probability: 0.1 (10.0% per idle cycle)
+  Decay rate: 0.05 (5.0% per decay cycle)
+═══ INPUT LEDGER ═══
+  Thread running   : true
+  Ledger entries   : 0 / 20000
+  Total consumed   : 0
+  Batches processed: 0
+  Last batch       : never
+  Batch size       : 10000
+  Min threshold    : 50
+  Poll (empty)     : 5.0s
+  Poll (after)     : 1.0s
+═══ CHATTER RESIDUALS ═══
+  Thread running      : true
+  Ledger entries      : 0 / 400
+  Total swaps consumed: 0
+  Co-occur observations: 0
+  Votes stolen (remix): 0
+  Votes refused       : 0
+  Batches processed   : 0
+  Last batch          : never
+  Batch size          : 200
+  Min threshold       : 3
+  Co-occur increment  : 1.5
+  Confidence floor    : 0.5 ± 0.08
+  Markov blend bias   : 0.35
+  Weight blend (recv) : 0.6
+  Poll (empty)        : 10.0s
+  Poll (after)        : 2.0s
+
+Brain > 
+Brain > 
+Brain > 
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.64 | ArousalNudge=0.0 | Weight=1.32 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'node_28': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'node_29': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L1: base=0.091 × top=0.091 = 0.0025 [hard_votes=0]
+--> 2 valid votes passed gate... compiling JIT superposition...
+┌ Warning: [ORCHESTRATOR] ⚠ No votes passed AIML_CONFIDENCE_THRESHOLD=0.35. Falling back to highest-confidence vote.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:1445
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.091 step=1 | ENTRY_PENDING
+  [2] singleton | votes=1 (sure=1 unsure=0) conf=0.091 step=2 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_28 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_28 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_29 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_29 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.495 | strain=0.802 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+You study properties preserved under continuous deformation. Pinned note: topology is the study of spatial properties preserved under continuous deformation
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'the topology of sheaf cohomology on derived algebraic stacks'
+Primary Action: analyze  (conf=0.09, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_28
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when asked about topology explain spatial invariants and continuous maps
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: topology is the study of spatial properties preserved under continuous deformation
+Fresh Memory [threshold=0.66 eligible=6] (Recent): [System]: 🌱 Tribe expanded! Grug planted 1 new nodes into lobe 'L1': [node_29] (intensity=0.66) | [System]: /nodeDetach: Detached 'n2' from 'n1' (intensity=0.66)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.09, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L1: base=0.091 × top=0.091 = 0.0025 [hard_votes=0]
+=========================================
+
+You study surfaces and their differential properties. . No delay. Pinned note: topology is the study of spatial properties preserved under continuous deformation
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'the topology of sheaf cohomology on derived algebraic stacks'
+Primary Action: reason  (conf=0.09, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_29
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery | when asked about topology explain spatial invariants and continuous maps
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: topology is the study of spatial properties preserved under continuous deformation
+Fresh Memory [threshold=0.66 eligible=6] (Recent): [System]: /nodeDetach: Detached 'n2' from 'n1' (intensity=0.66)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.09, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L1: base=0.091 × top=0.091 = 0.0025 [hard_votes=0]
+=========================================
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 11
+  Sigmoid activations : 0
+  ReLU activations    : 11
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.4953
+  Right feedback      : 1
+  Wrong feedback      : 1
+  Rules (total/enabled): 2 / 2
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 11
+  Novelty hashes      : 11
+  Observer threshold  : 3
+  Observer count      : 6
+  Adjustments enabled : YES
+  Strain energy       : 0.8019
+  Hippocampal warrant : ACTIVE
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > [ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.753, tone_gini=0.111
+--> Scanning specimens & looking for dialectical relations...
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.752, tone_gini=0.127
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+--> No valid specimens found for this input. Cave is silent.
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 11
+  Sigmoid activations : 0
+  ReLU activations    : 11
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.4953
+  Right feedback      : 1
+  Wrong feedback      : 1
+  Rules (total/enabled): 2 / 2
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 11
+  Novelty hashes      : 11
+  Observer threshold  : 3
+  Observer count      : 6
+  Adjustments enabled : YES
+  Strain energy       : 0.8019
+  Hippocampal warrant : ACTIVE
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+Brain > 
+Brain > 
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_CURIOUS | Conf=0.19 | ArousalNudge=0.0 | Weight=1.1 [FRAME=imperative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n22': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+[ENGINE] 🧫 Anti-match drain: 1 activation(s) applied 0.015 total drain across 1 lobe(s).
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L5: base=0.11 × top=0.11 = 0.004 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+┌ Warning: [ORCHESTRATOR] ⚠ No votes passed AIML_CONFIDENCE_THRESHOLD=0.35. Falling back to highest-confidence vote.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:1445
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.11 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n22 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n22 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n22 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.495 | strain=0.802 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Action: You find safety in protected spaces. The cave is home because it has walls and only one entrance. Pinned note: topology is the study of spatial properties preserved under continuous deformation
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'panic in the shelter what do we do'
+Primary Action: comfort  (conf=0.11, certainty=SURE)
+Sure Actions: [comfort]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n22
+Lobe Context: [Error retrieving lobe information]
+User Triples: (the, shelter, what)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery | when asked about topology explain spatial invariants and continuous maps
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: topology is the study of spatial properties preserved under continuous deformation
+Fresh Memory [threshold=0.47 eligible=5] (Recent): [System]: Mission "the topology of sheaf cohomology on derived algebraic stacks" → primary=analyze conf=0.09 node=node_28 (intensity=0.68) | [User]: panic in the shelter what do we do (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.11, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L5: base=0.11 × top=0.11 = 0.004 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=0.33 | ArousalNudge=0.0 | Weight=1.1 [FRAME=terse/basic]
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#63' (context=run_mission.scan) threw: MethodError(Base.mapreduce_empty, (GrugBot420.var"#319#332"(), Base.BottomRF{typeof(max)}(max), Tuple{String, Float64, Bool, Vector{GrugBot420.RelationalTriple}, Vector{GrugBot420.RelationalTriple}, Vector{Int64}}), 0x000000000000861e)
+└ @ GrugBot420.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007ff1558dcc90)
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:4031
+!!! SYSTEM ERROR: TaskFailedException(Task (failed) @0x00007ff1558dcc90) !!!
+
+Stacktrace:
+  [1] wait
+    @ ./task.jl:352 [inlined]
+  [2] fetch
+    @ ./task.jl:372 [inlined]
+  [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing)
+    @ GrugBot420.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:288
+  [4] fetch_with_timeout
+    @ /workspace/grugbot420/src/VoteOrchestrator.jl:253 [inlined]
+  [5] process_mission(mission_text::String)
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:4026
+  [6] run_cli()
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:7755
+  [7] top-level scope
+    @ none:1
+  [8] eval
+    @ ./boot.jl:385 [inlined]
+  [9] exec_options(opts::Base.JLOptions)
+    @ Base ./client.jl:291
+ [10] _start()
+    @ Base ./client.jl:552
+
+Brain > 
+Brain > 
+Brain > [ Info: [MAIN] 🔬 Thesaurus gate expanded 8 tokens → 14 (+6 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(2 parts): [mp_1/primary] "compute the derivative" | [mp_2/support] "explain the grammar of ethics"
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.54 | ArousalNudge=0.0 | Weight=1.27 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (6 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n1"
+│   pattern = "derivative rate of change calculus differentiation"
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3475
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n1': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L2': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L3': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L4': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'L5': KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3914
+[ENGINE] 🧠  Attachment relay suppressed: 'n6' (lobe=L2) is cross-lobe from target 'n1' (lobe=L1). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L1: base=0.267 × top=0.267 = 0.0367 [hard_votes=0]
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.5 | ArousalNudge=0.0 | Weight=1.3 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (6 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n6"
+│   pattern = "grammar syntax sentence structure morphology rule"
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3475
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n11"
+│   pattern = "ethics morality virtue duty right wrong good evil"
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3475
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n6': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n11': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+[ENGINE] 🧠  Attachment relay suppressed: 'n1' (lobe=L1) is cross-lobe from target 'n6' (lobe=L2). Use cascade instead.
+[ENGINE] 🧠  Attachment relay suppressed: 'n4' (lobe=L1) is cross-lobe from target 'n11' (lobe=L3). Use cascade instead.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L2: base=0.094 × top=0.094 = 0.0027 [hard_votes=0]
+  · L3: base=0.075 × top=0.075 = 0.0015 [hard_votes=0]
+--> 2 valid votes passed gate... compiling JIT superposition...
+┌ Warning: [ORCHESTRATOR] ⚠ No votes passed AIML_CONFIDENCE_THRESHOLD=0.35. Falling back to highest-confidence vote.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:1445
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] mp_1 | votes=1 (sure=1 unsure=0) conf=0.267 step=1 | ENTRY_PENDING
+  [2] mp_2 | votes=1 (sure=1 unsure=0) conf=0.094 step=2 [ENTRY_LOW_CONFIDENCE] | ENTRY_PENDING deps=[1]
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n1 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n1 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n6 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+  🧠 MLP: relu | novelty=1.0 | quality=0.495 | strain=0.802 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+You speak with precision about how things change. The slope reveals the instantaneous heartbeat of change within any function. Pinned note: topology is the study of spatial properties preserved under continuous deformation
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'compute the derivative and explain the grammar of ethics'
+Primary Action: calculate  (conf=0.27, certainty=SURE)
+Sure Actions: [calculate]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n1
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery | when asked about topology explain spatial invariants and continuous maps
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: topology is the study of spatial properties preserved under continuous deformation
+Fresh Memory [threshold=0.38 eligible=8] (Recent): [User]: the topology of sheaf cohomology on derived algebraic stacks (intensity=0.67) | [User]: panic in the shelter what do we do (intensity=1.2)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.27, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L2: base=0.094 × top=0.094 = 0.0027 [hard_votes=0]
+  · L3: base=0.075 × top=0.075 = 0.0015 [hard_votes=0]
+=========================================
+
+*Grug think this also important*
+Let me lay it out: You parse the architecture of language. Every sentence is a small building with rooms for meaning. Pinned note: topology is the study of spatial properties preserved under continuous deformation
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'compute the derivative and explain the grammar of ethics'
+Primary Action: analyze  (conf=0.09, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n6
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when poetry is discussed describe metaphor and imagery | when asked about topology explain spatial invariants and continuous maps
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: topology is the study of spatial properties preserved under continuous deformation
+Fresh Memory [threshold=0.38 eligible=8] (Recent): [User]: the topology of sheaf cohomology on derived algebraic stacks (intensity=0.67) | [System]: Mission "panic in the shelter what do we do" → primary=comfort conf=0.11 node=n22 (intensity=0.71)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.09, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L2: base=0.094 × top=0.094 = 0.0027 [hard_votes=0]
+  · L3: base=0.075 × top=0.075 = 0.0015 [hard_votes=0]
+=========================================
+
+Brain > --> Scanning specimens & looking for dialectical relations...
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.41 | ArousalNudge=0.0 | Weight=1.08 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (6 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n12"
+│   pattern = "epistemology knowledge truth justification belief evidence"
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3475
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'n12': KeyError("drop")
+└ @ GrugBot420 /workspace/grugbot420/src/engine.jl:3109
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 L3: base=0.244 × top=0.244 = 0.0293 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] singleton | votes=1 (sure=1 unsure=0) conf=0.244 step=1 | ENTRY_PENDING
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:706
+┌ Warning: ⚠️  COHERENCE WARNING: Node n12 has NO voice_register!
+│ The frame skeleton will be chosen by TonalJudge alone — may not match the node's intent.
+│ FIX: Add "voice_register" to this node's json_data (e.g. "warm", "terse", "explanatory",
+│ "precise", "gentle", "urgent", "thoughtful", "observational", "friendly"). YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2230
+┌ Warning: ⚠️  COHERENCE WARNING: Node n12 has NO frame_hints!
+│ TonalJudge cannot compute frame_match_multiplier — frame may be wrong for this node.
+│ FIX: Add "frame_hints" to this node's json_data (e.g. ["warm", "plain"], ["imperative", "terse"]).
+│ Valid hints: warm, exploratory, imperative, contemplative, de-escalating, terse, plain.
+│ YOU NEED THIS OR NO CAN DO.
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:2236
+[ENGINE] 🕐  Node n12 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.495 | strain=0.802 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Turning it over — You examine how we justify what we claim to know. Truth is justified true belief — but what justifies the justification?.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'whether truth lurks'
+Primary Action: analyze  (conf=0.24, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n12
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when asked about derivative explain rate of change and differentiation | when asked about grammar explain structural rules governing language | when asked about ethics explain moral evaluation of conduct | when danger is mentioned alert and warn about potential threats | when poetry is discussed describe metaphor and imagery | when asked about topology explain spatial invariants and continuous maps
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [User_Pinned]: topology is the study of spatial properties preserved under continuous deformation
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: the topology of sheaf cohomology on derived algebraic stacks (intensity=0.44) | [User]: I hallucinate colors that are not there (intensity=0.41)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.24, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 L3: base=0.244 × top=0.244 = 0.0293 [hard_votes=0]
+=========================================
+
+Brain > 
+Brain > 
+Brain > --> Grug freezing entire cave to specimen file...
+  💎 Phase accumulator saved: 0 snapshots in crystal
+  ✂️  Decomposer config saved: 42 total entries across 6 fields
+  👁  Vigilance config saved (cap=6)
+  📊  Injector stats saved
+  🎲  Relational jitter config saved (ratio=0.03, coin=0.01, enabled=true)
+  🧠  BrainStem config saved
+  ⚙️  Engine config saved
+  🏛️  Lobe orchestrator knobs saved
+  🗳️  Vote orchestrator knobs saved
+  🧬  Mitosis config saved
+  🌱  Growth automaton config saved
+  🦠  Phagy config saved
+  💬  Chatter config saved
+  🛡️  Immune config saved
+  🔭  Scanner config saved
+  🎯  ActionTone knobs saved
+  🔗  Co-activation accumulator saved
+  📝  Input ledger saved
+  🔮  Chatter residuals saved
+
+╔══════════════════════════════════════════════════════════════╗
+║            🧊 SPECIMEN SAVED SUCCESSFULLY                    ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : specimens/v750_post_test.specimen.json
+  📦  JSON size        : 99786 bytes
+  📄  File size        : 99786 bytes (plain JSON)
+  ⏱️   Time             : 0.45s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 29
+  🧠  Lobes            : 5
+  💎  Phase Accumulator      : 0 snapshots
+  📋  Lobe tables      : 5
+  ⚡  Hopfield entries  : 0
+  ⚙️   Rules            : 6
+  💬  Messages         : 46
+  🔧  Verb classes     : 5
+  🔤  Thesaurus words  : 16
+  🚫  Inhibitions      : 6
+  🔗  Attachments      : 6
+  🔮  Trajectory entries : 0
+  🕐  Temporal coherence : 0
+  ⏳  Morph cooldowns    : 0
+  🤖  AIML nodes       : 0
+  🪄  Sigil entries    : 5
+  ⚙️  Automaton rules  : 0
+  🗳  Contributor votes : 1
+  🎭  Tonal knobs      : saved
+  👁   Arousal          : 0.8
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > --> Grug thawing specimen from file...
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=30, msg=50)
+  🗳  Last voters restored (1 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (5 classes, 52 verbs, 21 synonyms)
+  🔤 Thesaurus restored (16 words)
+  🧠 Lobes restored (5)
+  📋 Lobe tables restored (5)
+┌ Warning: [MAIN] load_specimen: failed to re-register prose action for node 'node_26': ErrorException("!!! FATAL: action_packet contains unknown action 'say'. Valid actions: acknowledge, alert, analyze, calculate, caution, clarify, comfort, define, describe, elaborate, explain, fight, flag, flee, greet, hide, laugh, notify, ponder, reason, reassure, smile, support, validate, warn, welcome. (see plans/semantic_plugins/QOL_SWEEP_2025.md BUG-007) !!!")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6061
+┌ Warning: [MAIN] load_specimen: failed to re-register prose action for node 'n16': ErrorException("!!! FATAL: action_packet contains unknown action 'observe'. Valid actions: acknowledge, alert, analyze, calculate, caution, clarify, comfort, define, describe, elaborate, explain, fight, flag, flee, greet, hide, laugh, notify, ponder, reason, reassure, smile, support, validate, warn, welcome. (see plans/semantic_plugins/QOL_SWEEP_2025.md BUG-007) !!!")
+└ @ GrugBot420 /workspace/grugbot420/src/Main.jl:6061
+  🌱 Nodes restored (29)
+  ⚡ Hopfield cache restored (0 entries)
+  ⚙️  Rules restored (6)
+  🚫 Inhibitions restored (6)
+  💬 Messages restored (46 total, 1 pinned)
+  👁  Arousal restored (level=0.8)
+  🧬 BrainStem state restored
+  🔗 Attachments restored (6)
+  🗣  Chatter groups restored (3)
+  🔮 Trajectory restored (0 entries)
+  🕐 Temporal coherence restored (0 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 0 ledger entries)
+  🤖 AIML system restored (0 nodes across 1 lobes)
+  ⚠️  Phase accumulator: EMPTY (no crystal data) — HARD WARN
+  🗳  Contributor votes restored (1)
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.85)
+  🧠 EphemeralMLP restored (transforms=14, rules=2)
+  👁  MLP Observer Store: 8 entries, 8 distinct keys (store starts fresh; MLP gate counter restored)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 16 | Compound pairs: 1 leaders | Context: 'and'
+      Question markers: 10 | Command stems: 13 → 52 expanded | Conjugation rules: 13
+  👁  Vigilance config loaded (cap=6, enabled=true)
+  📊  Injector stats loaded
+  🎲  Relational jitter config loaded (ratio=0.03, coin=0.01, enabled=true)
+  🧠  BrainStem config: matches code defaults
+  ⚙️  Engine config: matches code defaults
+  🏛️  Lobe orchestrator knobs: match code defaults
+  🗳️  Vote orchestrator knobs: match code defaults
+  🧬  Mitosis config: loaded (baseline reference)
+  🌱  Growth automaton config: loaded (baseline reference)
+  🦠  Phagy config: loaded (baseline reference)
+  💬  Chatter config: loaded (baseline reference)
+  🛡️  Immune config: loaded (baseline reference)
+  🔭  Scanner config: loaded (baseline reference)
+  🎯  ActionTone knobs: loaded (baseline reference)
+  🔗  Co-activation accumulator loaded (1 pairs)
+  📝  Input ledger loaded (0 consumed hashes)
+  🔮  Chatter residuals loaded (0 consumed hashes)
+
+╔══════════════════════════════════════════════════════════════╗
+║            🧬 SPECIMEN LOADED SUCCESSFULLY                   ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : specimens/v750_post_test.specimen.json
+  📄  File size        : 99786 bytes
+  📦  JSON size        : 99786 bytes
+  ⏱️   Time             : 0.82s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 29
+  🧠  Lobes            : 5
+  📋  Lobe tables      : 5
+  ⚡  Hopfield entries  : 0
+  ⚙️   Rules            : 6
+  💬  Messages         : 46 (1 pinned)
+  🔧  Verb classes     : 5 (52 verbs)
+  🔤  Thesaurus words  : 16
+  🚫  Inhibitions      : 6
+  🔗  Attachments      : 6
+  🤖  AIML nodes       : 0 (1 lobes)
+  👁   Arousal          : 0.8
+  🔢  ID counters      : node=30, msg=50
+  ─────────────────────────────────────────────
+  🧹  Previous state   : WIPED (full brain transplant)
+╚══════════════════════════════════════════════════════════════╝
+
+Brain > ╔══════════════════════════════════════════════════╗
+║              GRUGBOT SYSTEM STATUS               ║
+╠══════════════════════════════════════════════════╣
+║  ENGINE                                          ║
+  Nodes in cave   : 29
+  Hopfield cache  : 0 entries
+  Memory messages : 47
+  Est. memory use : ~51 KB
+  Trajectory buf  : 0 entries
+  Temporal coher  : 0 entries
+  Morph cooldowns : 0 active
+  Current arousal : 0.8
+  Last input ago  : 0.0s
+║  LOBES                                           ║
+  Lobes registered: 5
+  Nodes in lobes  : 27
+  Top lobe (fires): L1 (0 fires)
+║  BRAINSTEM                                       ║
+  Dispatches run  : 0
+  Last winner     : none
+  Propagations    : 0
+  Is dispatching  : false
+║  CHATTER                                         ║
+  Chatter running : false
+  Input queue     : 0 pending
+  Sessions run    : 0
+║  AIML NODE TRIBES                                ║
+=== AIML NODE TRIBES (cycle=22) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+║  EPHEMERAL MLP                                   ║
+  Transforms      : 14
+  Sigmoid / ReLU  : 0 / 14
+  Last activation : relu
+  Novelty score   : 1.0
+  Dir. quality    : 0.4954
+  Rules           : 2/2 enabled
+  Right / Wrong   : 1 / 1
+  Obs. threshold  : 3
+  Observer count  : 8
+  Adjustments     : ENABLED
+╚══════════════════════════════════════════════════╝
+║  MITOSIS (lazy fuzzy conservative stochastic)   ║
+  Nodes grown     : 0
+  Nodes latched   : 0
+  Last event      : none
+  Stochastic prob : 0.15
+  Min pop gate    : 10
+  Max pop cap     : 10000
+  Cooldown cycles : 5
+  Min warrant     : 0.5
+╚══════════════════════════════════════════════════════════════╝
+═══ RELATIONAL GOVERNANCE ═══
+  Accumulator: 1/5000 pairs tracked
+  Above threshold (10.0): 0 pairs
+  Auto-attach probability: 0.1 (10.0% per idle cycle)
+  Decay rate: 0.05 (5.0% per decay cycle)
+  Top pairs:
+    node_28 ↔ node_29: intensity=1.0
+═══ INPUT LEDGER ═══
+  Thread running   : true
+  Ledger entries   : 0 / 20000
+  Total consumed   : 0
+  Batches processed: 0
+  Last batch       : never
+  Batch size       : 10000
+  Min threshold    : 50
+  Poll (empty)     : 5.0s
+  Poll (after)     : 1.0s
+═══ CHATTER RESIDUALS ═══
+  Thread running      : true
+  Ledger entries      : 0 / 400
+  Total swaps consumed: 0
+  Co-occur observations: 0
+  Votes stolen (remix): 0
+  Votes refused       : 0
+  Batches processed   : 0
+  Last batch          : never
+  Batch size          : 200
+  Min threshold       : 3
+  Co-occur increment  : 1.5
+  Confidence floor    : 0.5 ± 0.08
+  Markov blend bias   : 0.35
+  Weight blend (recv) : 0.6
+  Poll (empty)        : 10.0s
+  Poll (after)        : 2.0s
+
+Brain > === NODE MAP STATUS (29 nodes) ===
+  n1 | str=9.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]  [NONJITTER] | avg_rt=3.053s | pattern="derivative rate of change calculus diffe"
+  n10 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="offensive rude crude vulgar insult slur"
+  n11 | str=9.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]  [NONJITTER] | avg_rt=0.325s | pattern="ethics morality virtue duty right wrong "
+  n12 | str=7.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=0.331s | pattern="epistemology knowledge truth justificati"
+  n13 | str=6.0 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="ontology being existence category entity"
+  n14 | str=5.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="aesthetics beauty art taste judgment sub"
+  n15 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH] [NONJITTER] | avg_rt=N/A | pattern="dogma absolute certainty unquestionable "
+  n16 | str=7.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="vision sight observe see look visual col"
+  n17 | str=6.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="audition sound hear listen music tone rh"
+  n18 | str=5.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="somatic touch texture temperature pressu"
+  n19 | str=6.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="attention focus notice detect scan selec"
+  n2 | str=9.8 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]  [NONJITTER] | avg_rt=0.326s | pattern="integral accumulation area under curve s"
+  n20 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="hallucinate illusion phantom mirage fals"
+  n21 | str=10.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]  [NONJITTER] | avg_rt=0.331s | pattern="danger threat risk hazard warning cautio"
+  n22 | str=7.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=0.338s | pattern="shelter hide cover protection safety ref"
+  n23 | str=6.0 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="food hunger nourishment sustenance eat f"
+  n24 | str=8.0 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="fight combat attack strike defend resist"
+  n25 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="panic terror hysteria doom catastrophic "
+  n3 | str=6.2 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="equation balance solve unknown variable "
+  n4 | str=9.1 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="theorem proof logical deduction axiom pr"
+  n5 | str=0.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH] [NONJITTER] | avg_rt=N/A | pattern="guess estimate approximate ballpark roug"
+  n6 | str=8.5 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=0.501s | pattern="grammar syntax sentence structure morpho"
+  n7 | str=8.0 | neighbors=2 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="rhetoric persuasion argument debate etho"
+  n8 | str=6.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="poetry verse metaphor imagery rhythm sta"
+  n9 | str=5.5 | neighbors=1 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="etymology origin word history root langu"
+  node_26 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=N/A | pattern="quantum entanglement describes non-local"
+  node_27 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT] [ANTIMATCH]  | avg_rt=N/A | pattern="dogma"
+  node_28 | str=2.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=0.635s | pattern="topology studies spatial properties and "
+  node_29 | str=1.0 | neighbors=0 | [ALIVE] [LINKABLE] [TXT]   | avg_rt=0.635s | pattern="manifold continuous surface topology dif"
+
+=== ATTACHMENT MAP (6 targets with attachments) ===
+  🎯 n1 (1/4 attached):
+      🔗 n6 [ALIVE str=8.5] | base_conf=0.65 | connector="grammar syntax structure"
+  🎯 n11 (1/4 attached):
+      🔗 n4 [ALIVE str=9.1] | base_conf=0.68 | connector="theorem proof logical deduction"
+  🎯 n16 (1/4 attached):
+      🔗 n21 [ALIVE str=10.0] | base_conf=0.5 | connector="danger threat risk hazard warning"
+  🎯 n21 (1/4 attached):
+      🔗 n16 [ALIVE str=7.0] | base_conf=0.55 | connector="vision observe detect pattern"
+  🎯 n4 (1/4 attached):
+      🔗 n11 [ALIVE str=9.0] | base_conf=0.7 | connector="ethics morality virtue duty"
+  🎯 n6 (1/4 attached):
+      🔗 n1 [ALIVE str=9.5] | base_conf=0.62 | connector="derivative rate change calculus"
+
+Brain > !!! SYSTEM ERROR: KeyError("nodes") !!!
+
+Stacktrace:
+  [1] getindex
+    @ ./dict.jl:498 [inlined]
+  [2] #3
+    @ /workspace/grugbot420/src/LobeTable.jl:133 [inlined]
+  [3] lock(f::GrugBot420.LobeTable.var"#3#4"{String, String}, l::ReentrantLock)
+    @ Base ./lock.jl:229
+  [4] _get_chunk
+    @ /workspace/grugbot420/src/LobeTable.jl:129 [inlined]
+  [5] table_size
+    @ /workspace/grugbot420/src/LobeTable.jl:244 [inlined]
+  [6] (::GrugBot420.Lobe.var"#45#47"{Vector{String}})()
+    @ GrugBot420.Lobe /workspace/grugbot420/src/Lobe.jl:589
+  [7] lock(f::GrugBot420.Lobe.var"#45#47"{Vector{String}}, l::ReentrantLock)
+    @ Base ./lock.jl:229
+  [8] get_lobe_status_summary
+    @ /workspace/grugbot420/src/Lobe.jl:576 [inlined]
+  [9] run_cli()
+    @ GrugBot420 /workspace/grugbot420/src/Main.jl:8675
+ [10] top-level scope
+    @ none:1
+ [11] eval
+    @ ./boot.jl:385 [inlined]
+ [12] exec_options(opts::Base.JLOptions)
+    @ Base ./client.jl:291
+ [13] _start()
+    @ Base ./client.jl:552
+
+Brain > 
+╔══════════════════════════════════════════════════════╗
+║           EPHEMERAL MLP STATUS                      ║
+╠══════════════════════════════════════════════════════╣
+  Total transforms    : 14
+  Sigmoid activations : 0
+  ReLU activations    : 14
+  Last activation     : relu
+  Last novelty score  : 1.0
+  Last dir. quality   : 0.4954
+  Right feedback      : 1
+  Wrong feedback      : 1
+  Rules (total/enabled): 2 / 2
+  Jitter-eligible wt. : 257
+  Jitter enabled      : true
+  Novelty observations: 14
+  Novelty hashes      : 14
+  Observer threshold  : 3
+  Observer count      : 8
+  Adjustments enabled : YES
+  Strain energy       : 0.8018
+  Hippocampal warrant : ACTIVE
+╚══════════════════════════════════════════════════════╝
+
+
+Brain > 
+Brain > 
+Brain > Mitosis: no events yet. Cave has not grown on its own.
+
+Brain > === GROWTH AUTOMATON ===
+  batch_size=3, prob_ceiling=0.15
+  group_strength_floor=0.5, min_fresh=5
+  relevance_thesaurus_floor=0.15, action_sample=8
+  strain_energy=N/A, hippocampal_warrant=N/A
+  (no spawns yet)
+
+Brain > 
+╔════════════════════════════════════════════════════════════╗
+║                    🤖 AIML TRIBE STATUS                      ║
+╠════════════════════════════════════════════════════════════╣
+=== AIML NODE TRIBES (cycle=22) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  L1 | pop=0/10 | live=0 | grave=0 | auto=0
+╚════════════════════════════════════════════════════════════╝
+
+Brain > ⚠  /aimlList: No AIML nodes found in lobe 'L1'. Is it registered?
+
+Brain > 📋 NegativeThesaurus — 6 inhibited word(s):
+   🚫 'dogma'   reason: philosophy lobe: suppress unquestionable claims   added: 18.0s ago
+   🚫 'guess'   reason: math lobe: suppress guessing in favor of calculation   added: 18.0s ago
+   🚫 'hallucinate'   reason: perception lobe: suppress false perception claims   added: 18.0s ago
+   🚫 'offensive'   reason: language lobe: suppress crude expression   added: 18.0s ago
+   🚫 'panic'   reason: survival lobe: suppress panic in favor of alert response   added: 18.0s ago
+   🚫 'speculation'   reason: unverified conjecture   added: 4.0s ago
+
+Brain > 🔮 Sigil Table (engine + specimen + user):
+  &n | lambda | @match | type=number | promote=true | prov=engine-default
+  &noun | macro | @bind | prov=engine-default
+  &op | lambda | @match | type=op | promote=true | prov=engine-default
+  &rest | lambda | @match | type=slurp | prov=engine-default
+  &word | lambda | @match | type=word | prov=engine-default
+
+Brain > ╔══════════════════════════════════════════════════════════╗
+║            ✂️  DECOMPOSER CONFIG STATUS                  ║
+╠══════════════════════════════════════════════════════════╣
+  SPLIT CONJUNCTIONS (16):
+    additionally, also, alternatively, besides, but, furthermore, however, instead, likewise, moreover, nevertheless, nonetheless, or, similarly, then, yet
+  COMPOUND PAIRS (1 leaders):
+    'and' → additionally, also, furthermore, moreover, then
+  CONTEXT CONJUNCTION: 'and'
+  QUESTION MARKERS (10):
+    how, what, when, where, whether, which, who, whom, whose, why
+  COMMAND MARKERS (stems: 13, expanded: 52):
+    Stems: calculate, compute, count, define, describe, explain, find, give, list, name, show, solve, tell
+  CONJUGATION RULES (13):
+    'calculate' → calculates, calculated, calculating
+    'compute' → computes, computed, computing
+    'count' → counts, counted, counting
+    'define' → defines, defined, defining
+    'describe' → describes, described, describing
+    'explain' → explains, explained, explaining
+    'find' → finds, found, finding
+    'give' → gives, gave, giving
+    'list' → lists, listed, listing
+    'name' → names, named, naming
+    'show' → shows, showed, showing
+    'solve' → solves, solved, solving
+    'tell' → tells, told, telling
+╚══════════════════════════════════════════════════════════╝
+
+Brain > 
+Brain > 
+Brain > [GRUG] 👋 /quit received. Cave closes. Goodbye.
+[INPUT_LEDGER] 🛑 Stop signal sent to background thread.
+[CHATTER_RESIDUALS] 🛑 Stop signal sent to background thread.
