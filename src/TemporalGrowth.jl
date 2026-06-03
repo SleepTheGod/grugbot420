@@ -907,7 +907,12 @@ function run_growth_automaton!(;
             # find candidates → filter by strength floor → random pick from eligible.
             if group_latch_fn !== nothing && add_to_group_fn !== nothing
                 try
-                    candidates = group_latch_fn(pattern; node_map=node_map, node_lock=node_lock)
+                    # GRUG v7.56a: Check if the newly grown node is a time node.
+                    # Time nodes only latch to time-node groups; non-time nodes only
+                    # latch to non-time-node groups. Pure label isolation gate.
+                    grown_node = get(node_map, new_id, nothing)
+                    grown_is_time = !isnothing(grown_node) && get(grown_node.json_data, "time_node", false) === true
+                    candidates = group_latch_fn(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=grown_is_time)
                     if !isempty(candidates)
                         # GRUG: Filter by group strength floor.
                         eligible = filter(c -> c.avg_strength >= GROUP_STRENGTH_FLOOR, candidates)

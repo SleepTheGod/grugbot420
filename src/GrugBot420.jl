@@ -235,6 +235,7 @@ include("Main.jl")
 export @coinflip, bias
 export cheap_scan, medium_scan, high_res_scan, big_number_small_number_coherence
 export NONJITTER_TAG, is_nonjitter, set_nonjitter!, clear_nonjitter!, collect_nonjitter_ids,
+       is_time_node
        JITTER_CONFIDENCE_FLOOR, jitter_allowed_for
 export STRENGTH_SOLIDIFY_THRESHOLD, is_solidified, check_solidify_threshold!
 export detect_image_binary, image_to_sdf_params, SDFParams, apply_sdf_jitter

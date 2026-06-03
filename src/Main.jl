@@ -8175,8 +8175,8 @@ function maybe_run_idle()
             node_to_lobe_idx      = Lobe.NODE_TO_LOBE_IDX,
             create_node_fn        = create_node,
             add_to_group_fn       = add_to_group!,
-            group_latch_fn        = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK) ->
-                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock),
+            group_latch_fn        = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
             link_to_group_member_fn = link_to_group_member,
             immune_gate_fn        = (pattern, data) -> begin
                 json_text = JSON.json(Dict("pattern" => pattern, "data" => data))

@@ -872,6 +872,17 @@ function is_nonjitter(node::Node)::Bool
 end
 
 """
+    is_time_node(node::Node)::Bool
+
+GRUG v7.56a: Returns true if this node is a time node. Time nodes are regular
+nodes that carry `time_node=true` in their json_data. They cluster into
+time-node-only groups. No special code path — pure label gate.
+"""
+function is_time_node(node::Node)::Bool
+    return get(node.json_data, "time_node", false) === true
+end
+
+"""
     set_nonjitter!(node::Node)
 
 GRUG: Tag rock as NONJITTER. Idempotent — calling twice leaves the vector
@@ -1446,12 +1457,15 @@ mutable struct NodeGroup
                                      #       the slot is filled.
     max_occupancy::Int               # GRUG: Cap on members. Graved nodes create vacancies below this.
                                      #       New nodes can join if length(members) < max_occupancy.
+    is_time_node_group::Bool         # GRUG v7.56a: True when seed node is a time node. Time nodes
+                                     #       can ONLY pair into groups with other time nodes. Non-time
+                                     #       nodes can only join non-time-node groups. Pure label gate.
 end
 
 # GRUG: Backwards-friendly constructor. Most callers only know id+seed.
-# Calls the default inner constructor (8 positional fields) provided by Julia.
-NodeGroup(id::String, seed_node_id::String, centroid_pattern::String) =
-    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, GROUP_MAX_OCCUPANCY)
+# Calls the default inner constructor (9 positional fields) provided by Julia.
+NodeGroup(id::String, seed_node_id::String, centroid_pattern::String; is_time_node_group::Bool=false) =
+    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, GROUP_MAX_OCCUPANCY, is_time_node_group)
 
 # NOTE: No explicit 8-arg outer constructor needed — Julia's default inner
 # constructor already provides NodeGroup(id, members, centroid_pattern,
@@ -1509,7 +1523,10 @@ function register_group!(seed_node::Node)::NodeGroup
         end
 
         gid = next_group_id()
-        grp = NodeGroup(gid, seed_node.id, seed_node.pattern)
+        # GRUG v7.56a: If seed is a time node, this group is a time-node group.
+        # Time nodes can ONLY pair into groups with other time nodes.
+        is_tng = is_time_node(seed_node)
+        grp = NodeGroup(gid, seed_node.id, seed_node.pattern; is_time_node_group=is_tng)
         GROUP_MAP[gid] = grp
         NODE_TO_GROUP[seed_node.id] = gid
         return grp
@@ -1535,6 +1552,19 @@ function add_to_group!(group::NodeGroup, node_id::String)::Bool
         # Exception: has_grave_slot means a vacancy exists, so one extra can fill it.
         if length(group.members) >= group.max_occupancy && !group.has_grave_slot
             return false
+        end
+        # GRUG v7.56a: Time-node group isolation. Time nodes can ONLY pair
+        # into groups with other time nodes. Non-time nodes can only join
+        # non-time-node groups. Cross-type join = silent reject (returns false).
+        # This is the core grouping constraint for time nodes — they cluster
+        # together and never mix with regular nodes in groups.
+        joining_node = get(NODE_MAP, node_id, nothing)
+        if !isnothing(joining_node)
+            node_is_time = is_time_node(joining_node)
+            grp_is_time = group.is_time_node_group
+            if node_is_time != grp_is_time
+                return false
+            end
         end
         push!(group.members, node_id)
         NODE_TO_GROUP[node_id] = group.id
@@ -1623,7 +1653,7 @@ struct GroupLatchCandidate
 end
 
 """
-    find_group_latch_candidates(pattern::String; node_map, node_lock)::Vector{GroupLatchCandidate}
+    find_group_latch_candidates(pattern::String; node_map, node_lock, requesting_node_is_time::Bool=false)::Vector{GroupLatchCandidate}
 
 GRUG: For mitosis autogrowth: find ALL related groups for a new node to join.
 Each candidate carries pre-computed avg_strength. The caller picks one at
@@ -1636,15 +1666,23 @@ Criteria:
   - has_grave_slot groups get a +0.5 similarity boost (vacancy to fill)
   - Group centroid must have some token overlap with the new node's pattern
   - avg_strength is pre-computed for the caller's strength floor filter
+  - v7.56a: time-node isolation — time nodes only see time-node groups,
+    non-time nodes only see non-time-node groups (requesting_node_is_time gate)
   - Empty vector = no related group found
 """
-function find_group_latch_candidates(pattern::String; node_map, node_lock)::Vector{GroupLatchCandidate}
+function find_group_latch_candidates(pattern::String; node_map, node_lock, requesting_node_is_time::Bool=false)::Vector{GroupLatchCandidate}
     candidates = GroupLatchCandidate[]
 
     lock(GROUP_LOCK) do
         for (gid, grp) in GROUP_MAP
             # GRUG: Full group = no room. Skip.
             if length(grp.members) >= grp.max_occupancy
+                continue
+            end
+
+            # GRUG v7.56a: Time-node group isolation. Time nodes only see
+            # time-node groups, non-time nodes only see non-time-node groups.
+            if grp.is_time_node_group != requesting_node_is_time
                 continue
             end
 
@@ -2691,6 +2729,9 @@ function create_node(
     #   - If we latched onto an existing partner: join that partner group.
     #     If the partner has no group (predates v7.19), seed a fresh group on
     #     the partner first, then join.
+    #   - v7.56a: Time-node isolation — if add_to_group! rejects the join
+    #     (time node trying to join non-time group or vice versa), the node
+    #     seeds its own group instead.
     #   - If we did not latch (small map, no candidates, or partner full):
     #     seed a new group with this node as the founder.
     # Image nodes and anti-match nodes do not chatter — skip groups.
@@ -2705,7 +2746,12 @@ function create_node(
                     end
                 end
                 if !isnothing(partner_grp)
-                    add_to_group!(partner_grp, id)
+                    joined = add_to_group!(partner_grp, id)
+                    # GRUG v7.56a: If join was rejected (time-node isolation gate),
+                    # seed a new group for this node instead of leaving it groupless.
+                    if !joined
+                        register_group!(new_node)
+                    end
                 else
                     register_group!(new_node)
                 end
