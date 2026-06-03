@@ -3047,7 +3047,7 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
     strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
     output = "$(reason_preamble)$memory_hint\n" *
              "🤔 $question_text\n" *
-             "   → Use /answer <explanation> to teach me about this, or /antiAnswer <text> to suppress it. (strain=$strain_now)"
+             "   → Use /answer [@lobe_id] <explanation> to teach me (optionally into a lobe), or /antiAnswer [@lobe_id] <text> to suppress it. (strain=$strain_now)"
 
     # GRUG: Write a SelfObserver entry so the subconscious knows we asked.
     try
@@ -3300,11 +3300,13 @@ Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addSynonym <canonical> <alias>     (normalize alias->canonical)
          : /addSeedSynonym <canonical> <syn1 syn2 ...>  (thesaurus seed group)
          : /addAntiMatch <pattern> [NONJITTER]  (anti-match confidence drain node)
-         : /answer <text>                      (resolve strain with user structure)
-         : /antiAnswer <text>                  (suppress strain-causing input)
+         : /answer [@lobe_id] <text>           (resolve strain with user structure)
+         : /antiAnswer [@lobe_id] <text>       (suppress strain-causing input)
          : /listVerbs                          (show all verb classes + synonyms)
 Hippo    : When cave is empty, system asks a question. Use /answer or
-         : /antiAnswer to resolve. This completes the hippocampal cycle:
+         : /antiAnswer to resolve. Optionally target a lobe with @lobe_id:
+         :   /answer @physics energy is conserved   → puts answer in "physics" lobe
+         :   /answer energy is conserved             → no lobe (unassigned)
          : strain → ask → you answer → strain resolved.
 Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
          : /nameLobe <lobe_id> <name>          (give a lobe a human-readable name)
@@ -3378,14 +3380,14 @@ const HELP_MSG = """
 ║  /addSynonym <canon> <alias> Register synonym normalization  ║
 ║  /addSeedSynonym <can> <syns> Register thesaurus seed group   ║
 ║  /addAntiMatch <pattern>    Anti-match confidence drain node  ║
-║  /answer <text>            Resolve strain with structure      ║
-║  /antiAnswer <text>        Suppress strain-causing input      ║
+║  /answer [@lobe] <text>   Resolve strain, optionally into lobe  ║
+║  /antiAnswer [@lobe] <text> Suppress strain, optionally into lobe ║
 ║  /listVerbs                 Show verb registry               ║
 ║                                                              ║
 ║  HIPPOCAMPAL ASK-CYCLE                                      ║
 ║  Empty cave → system asks question → /answer resolves strain ║
-║  /answer <text>            Teach system about unknown input  ║
-║  /antiAnswer <text>        Suppress strain-causing pattern   ║
+║  /answer [@lobe] <text>   Teach system, optionally into lobe ║
+║  /antiAnswer [@lobe] <text> Suppress strain, optionally into lobe ║
 ║                                                              ║
 ║  LOBES & TABLES                                              ║
 ║  /newLobe <id> <subject>    Create new subject partition     ║
@@ -7798,8 +7800,8 @@ function run_cli()
             m_addsynonym  = match(r"^/addSynonym\s+(\S+)\s+(\S+)\s*$",     line)
             m_addseedsyn  = match(r"^/addSeedSynonym\s+(\S+)\s+(.+)$",      line)
             m_addantimatch= match(r"^/addAntiMatch\s+(.+)$",                 line)
-            m_answer      = match(r"^/answer\s+(.+)$",                         line)  # GRUG v7.50
-            m_antianswer  = match(r"^/antiAnswer\s+(.+)$",                     line)  # GRUG v7.50
+            m_answer      = match(r"^/answer(?:\s+@(\S+))?\s+(.+)$",                       line)  # GRUG v7.51: optional @lobe_id
+            m_antianswer  = match(r"^/antiAnswer(?:\s+@(\S+))?\s+(.+)$",                   line)  # GRUG v7.51: optional @lobe_id
             m_listverbs   = match(r"^/listVerbs\s*$",                        line)
             # GRUG: Lobe management commands
             m_newlobe     = match(r"^/newLobe\s+(\S+)\s+(.+)$",               line)
@@ -8669,58 +8671,93 @@ elseif !isnothing(m_right)
             # that caused the question is being resolved. Dampen it. Also clear
             # _HIPPOCAMPAL_PENDING_ASK so the next empty-cave event can set a new one.
             elseif !isnothing(m_answer)
-                ans_raw = String(strip(m_answer.captures[1]))
+                # GRUG v7.51: /answer [@lobe_id] <text>
+                # Optional @lobe_id targets the answer to a specific lobe.
+                #   /answer @physics energy is conserved in closed systems
+                #   /answer the sky is blue because of rayleigh scattering   (no lobe)
+                ans_lobe_raw = m_answer.captures[1]  # may be Nothing if no @lobe_id
+                ans_raw      = String(strip(m_answer.captures[2]))
                 if isempty(ans_raw)
-                    println("!!! FATAL: /answer needs text. Example: /answer the sky is blue because of rayleigh scattering !!!")
+                    println("!!! FATAL: /answer needs text. Example: /answer @physics energy is conserved, or /answer the sky is blue !!!")
                 else
-                    # GRUG: IMMUNE GATE — answer nodes are stored structure!
-                    if !immune_gate("/answer", ans_raw; is_critical=false)
-                        println("⛔ /answer blocked by immune system.")
-                    else
-                        # GRUG v7.51: Dampen strain — the user is resolving the deficit.
-                        dampen_result = try
-                            EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
-                        catch e
-                            @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
-                            nothing
-                        end
-
-                        # GRUG v7.51: Clear the pending ask — question has been answered.
-                        pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                            old = _HIPPOCAMPAL_PENDING_ASK[]
-                            _HIPPOCAMPAL_PENDING_ASK[] = ""
-                            old
-                        end
-
-                        # GRUG: Create a regular node from the user's answer.
-                        # Pattern = the answer text, action = "reason^1" (standard response action).
-                        # Tag it with hippocampal metadata so we know where it came from.
-                        ans_data = Dict{String,Any}(
-                            "growth_source"     => "hippocampal_answer",
-                            "hippocampal_born"  => string(round(time(), digits=3)),
-                            "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
-                            # GRUG v7.51: AIML requires system_prompt in every node's json_data.
-                            # Answer nodes get a simple voice: "I learned this from a question."
-                            "system_prompt"     => "Grug. I learned this from a question. I reason about what I was taught.",
-                            "voice_register"    => "plain",
-                            "frame_hints"       => ["plain", "exploratory"],
-                        )
-                        # GRUG v7.51: If there was a pending ask, tag the answer with what it resolved.
-                        if !isempty(pending_ask_text)
-                            ans_data["resolved_ask"] = pending_ask_text
-                        end
-                        ans_id = create_node(lowercase(strip(ans_raw)), "reason^1", ans_data, String[])
-                        lobe_tag = let l = Lobe.find_lobe_for_node(ans_id)
-                            isnothing(l) ? " (no lobe)" : " (lobe: $l)"
-                        end
-                        strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
-                        strain_msg = if dampen_result !== nothing
-                            "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
+                    # GRUG v7.51: Validate lobe if specified.
+                    target_lobe_ans = if !isnothing(ans_lobe_raw)
+                        lobe_candidate = String(ans_lobe_raw)
+                        if !haskey(Lobe.LOBE_REGISTRY, lobe_candidate)
+                            println("⚠  /answer: lobe '@$lobe_candidate' does not exist. Use /newLobe first, or omit @lobe_id. Answer NOT created.")
+                            nothing  # signal: abort
+                        elseif Lobe.lobe_is_full(lobe_candidate)
+                            println("!!! LOBE FULL: Lobe '$lobe_candidate' has reached its node cap. Answer NOT created. Use /newLobe to add a new lobe. !!!")
+                            nothing  # signal: abort
                         else
-                            "strain now $strain_now"
+                            lobe_candidate
                         end
-                        resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
-                        println("🧠 Answer node created: id=$ans_id pattern='$(lowercase(strip(ans_raw)))'$lobe_tag | $strain_msg$resolve_msg")
+                    else
+                        nothing  # no lobe targeting
+                    end
+                    if target_lobe_ans !== nothing || isnothing(ans_lobe_raw)
+                        # Either a valid lobe was found, or no lobe was specified.
+                        # (If ans_lobe_raw was set but invalid, target_lobe_ans is nothing AND
+                        #  ans_lobe_raw is NOT nothing — skip this block via the else branch.)
+                        # GRUG: IMMUNE GATE — answer nodes are stored structure!
+                        if !immune_gate("/answer", ans_raw; is_critical=false)
+                            println("⛔ /answer blocked by immune system.")
+                        else
+                            # GRUG v7.51: Dampen strain — the user is resolving the deficit.
+                            dampen_result = try
+                                EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
+                            catch e
+                                @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
+                                nothing
+                            end
+
+                            # GRUG v7.51: Clear the pending ask — question has been answered.
+                            pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                old = _HIPPOCAMPAL_PENDING_ASK[]
+                                _HIPPOCAMPAL_PENDING_ASK[] = ""
+                                old
+                            end
+
+                            # GRUG: Create a regular node from the user's answer.
+                            # Pattern = the answer text, action = "reason^1" (standard response action).
+                            # Tag it with hippocampal metadata so we know where it came from.
+                            ans_data = Dict{String,Any}(
+                                "growth_source"     => "hippocampal_answer",
+                                "hippocampal_born"  => string(round(time(), digits=3)),
+                                "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
+                                # GRUG v7.51: AIML requires system_prompt in every node's json_data.
+                                # Answer nodes get a simple voice: "I learned this from a question."
+                                "system_prompt"     => "Grug. I learned this from a question. I reason about what I was taught.",
+                                "voice_register"    => "plain",
+                                "frame_hints"       => ["plain", "exploratory"],
+                            )
+                            # GRUG v7.51: If there was a pending ask, tag the answer with what it resolved.
+                            if !isempty(pending_ask_text)
+                                ans_data["resolved_ask"] = pending_ask_text
+                            end
+                            ans_id = create_node(lowercase(strip(ans_raw)), "reason^1", ans_data, String[])
+
+                            # GRUG v7.51: Assign answer node to the specified lobe (if any).
+                            if !isnothing(target_lobe_ans)
+                                try
+                                    Lobe.add_node_to_lobe!(target_lobe_ans, ans_id)
+                                catch e
+                                    @warn "[MAIN] /answer: failed to assign node $ans_id to lobe '$target_lobe_ans': $e"
+                                end
+                            end
+
+                            lobe_tag = let l = Lobe.find_lobe_for_node(ans_id)
+                                isnothing(l) ? " (no lobe)" : " (lobe: $l)"
+                            end
+                            strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
+                            strain_msg = if dampen_result !== nothing
+                                "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
+                            else
+                                "strain now $strain_now"
+                            end
+                            resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
+                            println("🧠 Answer node created: id=$ans_id pattern='$(lowercase(strip(ans_raw)))'$lobe_tag | $strain_msg$resolve_msg")
+                        end
                     end
                 end
 
@@ -8733,59 +8770,92 @@ elseif !isnothing(m_right)
             # GRUG v7.51: Also DAMPENS STRAIN and CLEARS the pending ask.
             # Same as /answer — the user is resolving the strain event.
             elseif !isnothing(m_antianswer)
-                anti_raw = String(strip(m_antianswer.captures[1]))
+                # GRUG v7.51: /antiAnswer [@lobe_id] <text>
+                # Optional @lobe_id targets the anti-answer to a specific lobe.
+                #   /antiAnswer @moderation no slurs allowed
+                #   /antiAnswer offensive content   (no lobe)
+                anti_lobe_raw = m_antianswer.captures[1]  # may be Nothing if no @lobe_id
+                anti_raw      = String(strip(m_antianswer.captures[2]))
                 if isempty(anti_raw)
-                    println("!!! FATAL: /antiAnswer needs text. Example: /antiAnswer offensive content !!!")
+                    println("!!! FATAL: /antiAnswer needs text. Example: /antiAnswer @moderation no slurs, or /antiAnswer offensive content !!!")
                 else
-                    # GRUG: IMMUNE GATE — anti-answer nodes are stored structure!
-                    if !immune_gate("/antiAnswer", anti_raw; is_critical=false)
-                        println("⛔ /antiAnswer blocked by immune system.")
-                    else
-                        # GRUG v7.51: Dampen strain — the user is resolving the deficit.
-                        dampen_result = try
-                            EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
-                        catch e
-                            @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
-                            nothing
-                        end
-
-                        # GRUG v7.51: Clear the pending ask — question has been anti-answered.
-                        pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                            old = _HIPPOCAMPAL_PENDING_ASK[]
-                            _HIPPOCAMPAL_PENDING_ASK[] = ""
-                            old
-                        end
-
-                        # GRUG: Create an anti-match node that drains confidence.
-                        # Same mechanism as /addAntiMatch but tagged as hippocampal.
-                        anti_data = Dict{String,Any}(
-                            "required_relations" => String[],
-                            "growth_source"      => "hippocampal_anti_answer",
-                            "hippocampal_born"   => string(round(time(), digits=3)),
-                            "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
-                            # GRUG v7.51: Anti-match nodes don't fire through AIML but include
-                            # system_prompt for consistency in case they're ever inspected.
-                            "system_prompt"      => "Grug. I suppress what I was told to suppress. I do not reason about this.",
-                            "voice_register"     => "terse",
-                            "frame_hints"        => ["terse"],
-                        )
-                        # GRUG v7.51: If there was a pending ask, tag the anti-answer with what it resolved.
-                        if !isempty(pending_ask_text)
-                            anti_data["resolved_ask"] = pending_ask_text
-                        end
-                        anti_id = create_node(lowercase(strip(anti_raw)), "ponder^1", anti_data, String[];
-                                              is_antimatch_node=true)
-                        lobe_tag = let l = Lobe.find_lobe_for_node(anti_id)
-                            isnothing(l) ? " (no lobe)" : " (lobe: $l)"
-                        end
-                        strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
-                        strain_msg = if dampen_result !== nothing
-                            "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
+                    # GRUG v7.51: Validate lobe if specified.
+                    target_lobe_anti = if !isnothing(anti_lobe_raw)
+                        lobe_candidate = String(anti_lobe_raw)
+                        if !haskey(Lobe.LOBE_REGISTRY, lobe_candidate)
+                            println("⚠  /antiAnswer: lobe '@$lobe_candidate' does not exist. Use /newLobe first, or omit @lobe_id. Anti-answer NOT created.")
+                            nothing  # signal: abort
+                        elseif Lobe.lobe_is_full(lobe_candidate)
+                            println("!!! LOBE FULL: Lobe '$lobe_candidate' has reached its node cap. Anti-answer NOT created. Use /newLobe to add a new lobe. !!!")
+                            nothing  # signal: abort
                         else
-                            "strain now $strain_now"
+                            lobe_candidate
                         end
-                        resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
-                        println("🧠 Anti-answer node created: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | $strain_msg$resolve_msg")
+                    else
+                        nothing  # no lobe targeting
+                    end
+                    if target_lobe_anti !== nothing || isnothing(anti_lobe_raw)
+                        # Either a valid lobe was found, or no lobe was specified.
+                        # GRUG: IMMUNE GATE — anti-answer nodes are stored structure!
+                        if !immune_gate("/antiAnswer", anti_raw; is_critical=false)
+                            println("⛔ /antiAnswer blocked by immune system.")
+                        else
+                            # GRUG v7.51: Dampen strain — the user is resolving the deficit.
+                            dampen_result = try
+                                EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
+                            catch e
+                                @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
+                                nothing
+                            end
+
+                            # GRUG v7.51: Clear the pending ask — question has been anti-answered.
+                            pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                old = _HIPPOCAMPAL_PENDING_ASK[]
+                                _HIPPOCAMPAL_PENDING_ASK[] = ""
+                                old
+                            end
+
+                            # GRUG: Create an anti-match node that drains confidence.
+                            # Same mechanism as /addAntiMatch but tagged as hippocampal.
+                            anti_data = Dict{String,Any}(
+                                "required_relations" => String[],
+                                "growth_source"      => "hippocampal_anti_answer",
+                                "hippocampal_born"   => string(round(time(), digits=3)),
+                                "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
+                                # GRUG v7.51: Anti-match nodes don't fire through AIML but include
+                                # system_prompt for consistency in case they're ever inspected.
+                                "system_prompt"      => "Grug. I suppress what I was told to suppress. I do not reason about this.",
+                                "voice_register"     => "terse",
+                                "frame_hints"        => ["terse"],
+                            )
+                            # GRUG v7.51: If there was a pending ask, tag the anti-answer with what it resolved.
+                            if !isempty(pending_ask_text)
+                                anti_data["resolved_ask"] = pending_ask_text
+                            end
+                            anti_id = create_node(lowercase(strip(anti_raw)), "ponder^1", anti_data, String[];
+                                                  is_antimatch_node=true)
+
+                            # GRUG v7.51: Assign anti-answer node to the specified lobe (if any).
+                            if !isnothing(target_lobe_anti)
+                                try
+                                    Lobe.add_node_to_lobe!(target_lobe_anti, anti_id)
+                                catch e
+                                    @warn "[MAIN] /antiAnswer: failed to assign node $anti_id to lobe '$target_lobe_anti': $e"
+                                end
+                            end
+
+                            lobe_tag = let l = Lobe.find_lobe_for_node(anti_id)
+                                isnothing(l) ? " (no lobe)" : " (lobe: $l)"
+                            end
+                            strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
+                            strain_msg = if dampen_result !== nothing
+                                "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
+                            else
+                                "strain now $strain_now"
+                            end
+                            resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
+                            println("🧠 Anti-answer node created: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | $strain_msg$resolve_msg")
+                        end
                     end
                 end
 
