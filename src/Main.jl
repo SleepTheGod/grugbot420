@@ -6330,6 +6330,15 @@ function save_specimen_to_file!(filepath::String)::String
         "key_count"     => SelfObserver.key_count(_MLP_OBSERVER_STORE)
     )
 
+    # GRUG v9: Save the cached Phi for coherence delta tracking.
+    # Without this, the MLP loses its last-known coherence field value on reload,
+    # so the first cycle after load computes a bogus delta-Phi (0.0 -> current,
+    # instead of saved-Phi -> current). The brain should remember where coherence
+    # was when it went to sleep, so it can correctly measure change on wake.
+    specimen["mlp_cached_phi"] = Dict{String, Any}(
+        "last_phi" => get(_MLP_CACHED_PHI, :last_phi, 0.0)
+    )
+
     specimen["_meta"] = Dict{String, Any}(
         "version"    => "2.11",
         "saved_at"   => time(),
@@ -6971,7 +6980,7 @@ function load_specimen_from_file!(filepath::String)::String
                         "trajectory", "temporal_coherence", "morph_cooldowns", "immune_system", "aiml_system", "_meta",
                         "chatter_groups", "chatter_cooldowns",
                         "sigil_table", "automaton_rules", "last_contributor_votes", "node_to_group_idx", "tonal_judge_knobs",
-                        "ephemeral_mlp", "mlp_observer_store",
+                        "ephemeral_mlp", "mlp_observer_store", "mlp_cached_phi",
                         "phase_accumulator", "format", "version", "decomposer_config",
                         "vigilance_config", "injector_stats", "relational_jitter_config",
                         "brainstem_config", "engine_config", "lobe_orchestrator_knobs",
@@ -7007,7 +7016,7 @@ function load_specimen_from_file!(filepath::String)::String
              "scanner_config", "action_tone_knobs",
              "fanout_config", "hippocampal_pending_ask", "admin_session",
              "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
-             "coherence_config"]
+             "coherence_config", "mlp_cached_phi"]
         if haskey(specimen, k) && !isa(specimen[k], Dict)
             push!(validation_errors, "'$k' must be an object")
         end
@@ -8119,6 +8128,17 @@ function load_specimen_from_file!(filepath::String)::String
         obs_entries = get(obs_data, "total_entries", 0)
         obs_keys = get(obs_data, "key_count", 0)
         println("  👁  MLP Observer Store: $obs_entries entries, $obs_keys distinct keys (store starts fresh; MLP gate counter restored)")
+    end
+
+    # GRUG v9: Restore cached Phi for coherence delta tracking.
+    # Without this, the first cycle after load would see a delta-Phi of
+    # (current - 0.0) instead of (current - last_known), producing a
+    # bogus coherence "spike" on the first observation. Old specimens
+    # without this key simply keep the default 0.0 — no harm done.
+    if haskey(specimen, "mlp_cached_phi") && isa(specimen["mlp_cached_phi"], Dict)
+        _saved_phi = Float64(get(specimen["mlp_cached_phi"], "last_phi", 0.0))
+        _MLP_CACHED_PHI[:last_phi] = _saved_phi
+        println("  🧠 MLP cached Phi restored (last_phi=$_saved_phi)")
     end
 
     # ─── 4.26 DECOMPOSER CONFIG (v7.28) ──────────────────────────────
