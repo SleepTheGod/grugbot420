@@ -6566,6 +6566,40 @@ function save_specimen_to_file!(filepath::String)::String
     catch e
         @warn "[MAIN] save_specimen: FAILED to serialize phagy rules ref: $e"
     end
+    # ── 47. TIME ORIENTATION CONFIG (v8.1) ───────────────────────────────────
+    # GRUG v8.1: Save the global time orientation state. When a time sigil
+    # (&now/&before/&next) was active at save time, the orientation and its
+    # metadata survive reload. Also save a per-node time orientation index
+    # so the engine can reconnect time nodes to their sigils on reload.
+    try
+        _time_orient, _time_meta = current_time_orientation()
+        specimen["time_orientation_config"] = Dict{String,Any}(
+            "global_orientation" => _time_orient,
+            "global_meta"       => _time_meta,
+            # GRUG v8.1: Build an index of all time nodes with their orientations.
+            # This lets the load path reconnect nodes to time sigils.
+            "time_node_index"   => begin
+                _tni = Dict{String,Any}()
+                lock(NODE_LOCK) do
+                    for (nid, node) in NODE_MAP
+                        if get(node.json_data, "time_node", false) && haskey(node.json_data, "time_orientation")
+                            _tni[nid] = Dict{String,Any}(
+                                "orientation" => node.json_data["time_orientation"],
+                                "sigil"       => get(node.json_data, "time_sigil", ""),
+                                "pattern"     => node.pattern
+                            )
+                        end
+                    end
+                end
+                _tni
+            end
+        )
+        _tni_count = length(specimen["time_orientation_config"]["time_node_index"])
+        println("  ⏳  Time orientation config saved (global=$_time_orient, $_tni_count oriented time nodes)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize time orientation config: $e"
+    end
+
     # ── SERIALIZE ────────────────────────────────────────────────────
     # GRUG: Convert to JSON string. If filepath ends in .gz, gzip compress.
     # If .json (or anything else), write plain JSON — no gzip needed, works
@@ -6624,6 +6658,7 @@ function save_specimen_to_file!(filepath::String)::String
     _traj_buf = get(trajectory_data, "buffer", [])
     push!(lines, "  🔮  Trajectory entries : $(length(_traj_buf))")
     push!(lines, "  🕐  Temporal coherence : $(length(tcl_list))")
+    push!(lines, "  ⏳  Time orientation   : $(try get(specimen["time_orientation_config"], "global_orientation", "none") catch _ "none" end) (oriented nodes: $(try length(get(specimen["time_orientation_config"], "time_node_index", Dict())) catch _ 0 end))")
     push!(lines, "  ⏳  Morph cooldowns    : $(length(cooldown_data))")
     # GRUG: Show AIML stats if aiml_system was saved
     # GRUG 7.12-FIX: serialize_aiml_state()["registry"] is a
@@ -6757,7 +6792,8 @@ function load_specimen_from_file!(filepath::String)::String
                         "co_activation", "input_ledger", "chatter_residuals",
                         "fanout_config", "hippocampal_pending_ask", "admin_session",
                         "lobe_orch_last", "chatter_cursor", "answer_mode_config",
-                        "phagy_rules_ref"])
+                        "phagy_rules_ref",
+                        "time_orientation_config"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -6781,7 +6817,7 @@ function load_specimen_from_file!(filepath::String)::String
              "chatter_config", "immune_config",
              "scanner_config", "action_tone_knobs",
              "fanout_config", "hippocampal_pending_ask", "admin_session",
-             "lobe_orch_last", "chatter_cursor", "answer_mode_config"]
+             "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config"]
         if haskey(specimen, k) && !isa(specimen[k], Dict)
             push!(validation_errors, "'$k' must be an object")
         end
@@ -8380,6 +8416,61 @@ function load_specimen_from_file!(filepath::String)::String
         @warn "[MAIN] load_specimen: failed to restore phagy rules ref: $e"
     end
 
+    # ── 4.47 TIME ORIENTATION CONFIG (v8.1) ──────────────────────────────────
+    # GRUG v8.1: Restore global time orientation state. When a time sigil
+    # (&now/&before/&next) was active at save time, the orientation and its
+    # metadata are restored so the engine can reason temporally from the jump.
+    # Also process the time_node_index to reconnect nodes to their sigils.
+    try
+        if haskey(specimen, "time_orientation_config")
+            _toc = specimen["time_orientation_config"]
+            if isa(_toc, Dict)
+                # Restore global time orientation state
+                _g_orient = String(get(_toc, "global_orientation", "none"))
+                _g_meta = get(_toc, "global_meta", Dict{String,Any}())
+                if _g_orient != "none"
+                    lock(_GLOBAL_PROMOTION_LOCK) do
+                        _GLOBAL_TIME_ORIENTATION[] = (_g_orient, _g_meta)
+                    end
+                    println("  ⏳  Time orientation config loaded (global=$_g_orient)")
+                else
+                    println("  ⏳  Time orientation config loaded (global=none, no active orientation)")
+                end
+                # GRUG v8.1: Process time_node_index — for each oriented time node,
+                # verify the orientation field exists in the loaded node's json_data.
+                # The json_data is already restored by the node loading phase, so
+                # the time_orientation and time_sigil fields should already be there.
+                # This is a verification pass + logging.
+                _tni = get(_toc, "time_node_index", Dict{String,Any}())
+                if isa(_tni, Dict) && !isempty(_tni)
+                    _verified = 0
+                    for (nid, info) in _tni
+                        if isa(info, Dict)
+                            _orient = get(info, "orientation", "")
+                            _sigil  = get(info, "sigil", "")
+                            # Verify the node exists and has the orientation
+                            lock(NODE_LOCK) do
+                                if haskey(NODE_MAP, nid)
+                                    _node_orient = get(NODE_MAP[nid].json_data, "time_orientation", "")
+                                    if _node_orient == _orient
+                                        _verified += 1
+                                    else
+                                        @warn "[MAIN] load_specimen: time node $nid orientation mismatch (index=$_orient, node=$_node_orient)"
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    println("  ⏳  Time node orientation index: $_verified/$(length(_tni)) nodes verified")
+                end
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore time orientation config: $e"
+        println("  ⚠️  Time orientation config: FAILED to load (time sigils will still work via default_registry)")
+    end
+
+
     # PHASE 5: BUILD SUMMARY SCROLL
     # ══════════════════════════════════════════════════════════════════════
 
@@ -8406,6 +8497,7 @@ function load_specimen_from_file!(filepath::String)::String
     push!(lines, "  🔤  Thesaurus words  : $(get(counts, "thesaurus_words", 0))")
     push!(lines, "  🚫  Inhibitions      : $(get(counts, "inhibitions", 0))")
     push!(lines, "  🔗  Attachments      : $(get(counts, "attachments", 0))")
+    push!(lines, "  ⏳  Time orientation  : $(try get(specimen["time_orientation_config"], "global_orientation", "none") catch _ "none" end)")
     push!(lines, "  🤖  AIML nodes       : $(get(counts, "aiml_nodes", 0)) ($(get(counts, "aiml_lobes", 0)) lobes)")
     push!(lines, "  👁   Arousal          : $(EyeSystem.get_arousal())")
     push!(lines, "  🔢  ID counters      : node=$(ID_COUNTER[]), msg=$(MSG_ID_COUNTER[])")
@@ -10115,8 +10207,14 @@ elseif !isnothing(m_right)
                                 # follows, while, when) means the required_relations gate
                                 # is satisfied structurally — the engine knows this is a
                                 # time-coherent task before any pattern matching.
-                                # Format: "/answer :time subject | object"
-                                # Example: "/answer :time present | future"
+                                # GRUG v8.1: Optional 3rd field = orientation (past/present/future).
+                                # If provided, the time node carries time_orientation in json_data
+                                # so the save/load pipeline can reconnect it to &now/&before/&next
+                                # sigils on reload. Without orientation, the node is a generic
+                                # temporal node (no specific time sigil association).
+                                # Format: "/answer :time subject | object [ | orientation]"
+                                # Example: "/answer :time fire | warm | past"
+                                # Example: "/answer :time now | next_step | present"
                                 time_parts = [strip(String(s)) for s in split(ans_content, "|")]
                                 time_parts = filter(!isempty, time_parts)
                                 if length(time_parts) < 2
@@ -10124,6 +10222,19 @@ elseif !isnothing(m_right)
                                 else
                                     subj = time_parts[1]
                                     obj  = time_parts[2]
+                                    # GRUG v8.1: Optional 3rd part = orientation (past/present/future).
+                                    # If provided, the node is associated with the corresponding
+                                    # time sigil (&before=past, &now=present, &next=future).
+                                    time_orient_raw = length(time_parts) >= 3 ? strip(time_parts[3]) : ""
+                                    time_orient = ""
+                                    if !isempty(time_orient_raw)
+                                        tol = lowercase(time_orient_raw)
+                                        if tol in ("past", "present", "future")
+                                            time_orient = tol
+                                        else
+                                            println("⚠️  /answer :time orientation '$time_orient_raw' not recognized (use past/present/future). Node created without orientation.")
+                                        end
+                                    end
                                     # GRUG: Always use &temporal — it's the whole point of :time mode.
                                     rel_for_triple = "&temporal"
                                     rel_for_display = SigilRegistry.expand_relation_sigil(_ENGINE_SIGIL_TABLE, "temporal")
@@ -10131,6 +10242,16 @@ elseif !isnothing(m_right)
                                     time_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
                                     time_data["answer_mode"] = "time"
                                     time_data["time_node"] = true
+                                    # GRUG v8.1: Store orientation in json_data so it survives
+                                    # save/load. When this node is loaded, the engine can
+                                    # reconnect it to the right time sigil (&before/&now/&next).
+                                    if !isempty(time_orient)
+                                        time_data["time_orientation"] = time_orient
+                                        # GRUG v8.1: Also store the sigil name that this
+                                        # orientation maps to, so reload can directly bind.
+                                        time_orient_to_sigil = Dict("past" => "before", "present" => "now", "future" => "next")
+                                        time_data["time_sigil"] = time_orient_to_sigil[time_orient]
+                                    end
                                     time_data["noun_anchors"] = [lowercase(subj), lowercase(obj)]
                                     time_data["required_relations"] = [rel_for_triple]
                                     time_data["seeded_triple"] = Dict(
@@ -10138,13 +10259,14 @@ elseif !isnothing(m_right)
                                         "relation"  => rel_for_triple,
                                         "object"    => lowercase(obj),
                                     )
-                                    time_data["system_prompt"] = "Grug. I learned this from a question about time. I know that $(lowercase(subj)) $(rel_for_triple) $(lowercase(obj)). I reason about temporal relationships."
+                                    time_data["system_prompt"] = "Grug. I learned this from a question about time. I know that $(lowercase(subj)) $(rel_for_triple) $(lowercase(obj)). I reason about temporal relationships.$(isempty(time_orient) ? "" : " My temporal orientation is $(time_orient) — I reason about the $(time_orient == "past" ? "what has already happened" : time_orient == "present" ? "what is happening right now" : "what may come next").")"
                                     time_data["voice_register"] = "plain"
                                     time_data["frame_hints"] = ["plain", "exploratory"]
                                     # GRUG v7.53: Fan-out for time — primary + shadow nodes.
                                     nid, shadow_ids, lobe_tag = _plant_answer_cluster(subj, "reason^1", time_data, target_lobe_ans, "time")
                                     shadow_msg = !isempty(shadow_ids) ? " +$(length(shadow_ids)) shadows [$(join(shadow_ids, ", "))]" : ""
-                                    println("🕐 Answer [:time]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))' (temporal: $(join(rel_for_display[1:min(3,length(rel_for_display))], " | "))…)$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
+                                    orient_msg = !isempty(time_orient) ? " orient=$time_orient" : ""
+                                    println("⏳ Answer [:time]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))'$orient_msg (temporal: $(join(rel_for_display[1:min(3,length(rel_for_display))], " | "))…)$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
                                 end
 
                             elseif ans_mode == "proc"
