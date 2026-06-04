@@ -4501,14 +4501,18 @@ function scan_and_expand(input_text::String;
     # seam tokens for the cascade handoff. Simple approach: tokens in the input
     # that aren't in any matched node's pattern. This is the "cut off where it
     # didn't match" the user was talking about.
-    input_tokens = Set(split(lowercase(input_text)))
+    # GRUG v8.1: Use String[] not SubString{String}[] for input_tokens.
+    # split() returns SubString{String} which causes TypeError when passed
+    # as unmatched_tail (declared Vector{String}) to fire_cascades!.
+    # Converting up front keeps the set difference type-consistent.
+    input_tokens = Set(String.(split(lowercase(input_text))))
     matched_tokens = Set{String}()
     for (id, conf, antimatch, u_trips, n_trips, ichunks) in expanded
         if !antimatch
             node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
             if !isnothing(node)
                 for tok in split(lowercase(node.pattern))
-                    push!(matched_tokens, tok)
+                    push!(matched_tokens, String(tok))
                 end
             end
         end

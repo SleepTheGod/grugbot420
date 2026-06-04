@@ -1,0 +1,58 @@
+# ============================================
+# GrugBot v8.1 Comprehensive Interactive Test
+# ============================================
+
+# --- Phase 1: Load the v8.1 specimen ---
+/loadSpecimen comprehensive_specimen_v81.json
+
+# --- Phase 2: System Status Check ---
+/status
+
+# --- Phase 3: General Conversation ---
+hello grug
+what is grug favorite thing to do
+tell grug about the cave
+
+# --- Phase 4: Time Sigil Tests ---
+# Test &now (present orientation)
+&now what is happening right now
+&now grug is feeling what today
+
+# Test &before (past orientation)
+&before what happened before the fire
+&before grug remember what about the old days
+
+# Test &next (future orientation)
+&next what comes after winter
+&next grug will do what when spring comes
+
+# --- Phase 5: Knowledge & Reasoning ---
+how does grug make fire
+what does grug know about hunting
+when does the sun rise
+what is the best season for gathering food
+
+# --- Phase 6: Multi-topic / Lobe Cross-talk ---
+grug want to know about spring and summer seasons
+what connects hunting and feasting
+how does fire help with cooking meat
+
+# --- Phase 7: Mathematical Reasoning ---
+what is 3 + 5
+grug count to ten
+
+# --- Phase 8: Emotional / Social ---
+grug hungry
+grug feel happy when what happens
+grug angry when what happens
+
+# --- Phase 9: Time Orientation Commands ---
+/answer :time fire | warm | past
+/answer :time winter | cold | present
+/answer :time spring | growth | future
+
+# --- Phase 10: Final Status & Save ---
+/status
+/nodes
+/saveSpecimen v81_test_output_specimen.json
+/quit
