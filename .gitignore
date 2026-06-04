@@ -5,15 +5,6 @@
 deps/build.log
 Manifest.toml
 
-# Specimen files (user-generated persistence snapshots)
-*.specimen.gz
-# Exception: ship the curated example specimen
-!grugbot420_comprehensive.specimen.gz
-# Exception: ship the default specimen that auto-loads on first boot
-!grug-binary/default.specimen.gz
-# Exception: ship kitchen-sink demo specimens
-!specimen_demo/**/*.specimen.gz
-
 # OS artifacts
 .DS_Store
 Thumbs.db
@@ -29,33 +20,84 @@ Thumbs.db
 /tmp/
 *.tmp
 
-# Working notes (not for distribution)
-todo.md
-# Session / interaction artifacts (generated per test run)
-interact_session_v7*.sh
+# Python cache
+__pycache__/
+*.pyc
+
+# ── ONE-OFF UTILITY SCRIPTS (not for distribution) ──
 parse_*.py
-analyze_v7*.py
+analyze_*.py
 fix_*.py
 replace_*.py
 add_*.py
+build_*.py
+build_*.sh
+check_*.py
+compare_*.py
+extract_*.py
+generate_*.py
 build_conversation_log.py
-generate_conversation_log.py
 build_comprehensive_specimen.sh
-__pycache__/
 
-# Conversation / session logs (generated per test run)
+# ── SESSION / INTERACTION SHELL SCRIPTS (ephemeral) ──
+interact_session*.sh
+run_interaction*.sh
+run_mission_session.sh
+run_comprehensive_test.sh
+run_v727_test.sh
+
+# ── CONVERSATION / SESSION LOGS (generated per test run) ──
 CONVERSATION_LOG_*.md
-DATA_CONVERTER_DESIGN.md
+CONVERSATION_*.md
+CHATLOG_*.md
+CHAT_LOG_*.md
+MISSION_CONVERSATION_*.md
+session_input*.txt
+session_output*.txt
+session_raw_output*.txt
+full_run_output*.log
+mission_session_raw.txt
+specimen_v2_build.log
+test_all_governance.txt
+test_comprehensive_raw.txt
+test_output_raw.txt
+test_results_*.json
+
+# ── STALE DESIGN / NOTES MD FILES ──
+AIML_CONTRIBUTOR_UPDATE.md
+APPEND_MODE_GUIDE.md
+NODE_CONTRIBUTOR_UPDATE.md
+FULL_COHERENCE_FIXES.md
 DECOHERENCE_FIX_LOG.md
 HARDCORE_GRUG_SESSION_LOG.md
 NEURAL_PHYSICS.md
 PSEUDOCODE_EXECUTION_DESIGN.md
 SPECIMEN_TEST_INTERACTIONS_*.md
-session_input*.txt
-session_output_*.txt
-session_raw_output*.txt
+DATA_CONVERTER_DESIGN.md
+QOL_BACKLOG.md
+autogrowth_telemetry_*.md
+telemetry_log_*.md
+todo_v7*.md
+CONVERSATION_LOG_*.md
+CONVERSATION_*.md
 
-# Specimen session artifacts
+# ── ONE-OFF TEST SCRIPTS AND REPORTS ──
+v*_comprehensive_test.jl
+v*_test_report.md
+v*_interaction_log.txt
+
+# ── SPECIMEN FILES ──
+# Keep the canonical specimens tracked; ignore everything else
+*.specimen.gz
+!grug-binary/default.specimen.gz
+hardcore_grug_specimen.json
+test_specimen.json
+v*_test_output_specimen.json
+v*_interaction_log.txt
+v*_test_inputs.txt
+v*_test_output.log
+
+# ── SPECIMEN SESSION ARTIFACTS ──
 specimens/v7*_conversation_log.md
 specimens/v7*_interaction_raw.log
 specimens/v7*_interacted.specimen.json
@@ -64,6 +106,8 @@ specimens/v7*_session_raw.log
 specimens/v7*_post_session.specimen.json
 specimens/v7*_comprehensive.specimen.json
 specimens/v7*_build_verification.md
+specimens/v7*_raw_test*.log
+specimens/v7*_raw_governance.log
 specimens/comprehensive_v7*.specimen.json
 specimens/test_comprehensive_*.specimen.json
 specimens/test_session_output*.specimen.json
@@ -71,3 +115,24 @@ specimens/mission_session_output.specimen.json
 specimens/v5_*.log
 specimens/v5_*.md
 specimens/hardcore_grug_v1.json
+specimens/v7*_decoherence_*.md
+
+# ── STALE JULIA ONE-OFF SCRIPTS ──
+test_interaction_v*.jl
+test_idle_systems_*.jl
+test_mitosis*.jl
+test_mlp_*.jl
+test_smoke_relational.jl
+test_v727_session.jl
+test_verify.jl
+autogrowth_runner.jl
+conversation_runner.jl
+create_comprehensive_specimen.jl
+interact_with_specimen.jl
+run_session.jl
+specimen_io.jl
+full_specimen_conversation.jl
+
+# ── WORKING NOTES (not for distribution) ──
+todo.md
+v734_test/

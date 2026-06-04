@@ -4366,9 +4366,9 @@ function scan_and_expand(input_text::String;
     # scanner does — cascade gates need to see the same token universe the
     # matcher does, otherwise sigil tokens (&n, &op) wouldn't gate properly.
     cascade_input_tokens = try
-        Set(t for t in split(lowercase(strip(promoted_text))) if !(t in STOPWORDS))
+        Set(String(t) for t in split(lowercase(strip(promoted_text))) if !(t in STOPWORDS))
     catch
-        Set{SubString{String}}()
+        Set{String}()
     end
 
     # GRUG: Track which IDs are already in the result set to avoid duplicates

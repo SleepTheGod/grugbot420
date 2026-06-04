@@ -159,6 +159,83 @@ if !isdefined(@__MODULE__, :TemporalGrowth)
     using .TemporalGrowth
 end
 
+# GRUG: FullLobeScanner needed for scanner_config save/load (section 37/4.37).
+# When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
+if !isdefined(@__MODULE__, :FullLobeScanner)
+    include("FullLobeScanner.jl")
+    using .FullLobeScanner
+end
+
+# GRUG: SigilRegistry needed for sigil_table save/load and time orientation.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :SigilRegistry)
+    include("SigilRegistry.jl")
+    using .SigilRegistry
+end
+
+# GRUG: VoteOrchestrator needed for vote_orchestrator_knobs save/load.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :VoteOrchestrator)
+    include("VoteOrchestrator.jl")
+    using .VoteOrchestrator
+end
+
+# GRUG: RelationalJitter needed for relational_jitter_config save/load.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :RelationalJitter)
+    include("RelationalJitter.jl")
+    using .RelationalJitter
+end
+
+# GRUG: AIMLNodeSystem needed for aiml_system save/load.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :AIMLNodeSystem)
+    include("AIMLNodeSystem.jl")
+    using .AIMLNodeSystem
+end
+
+# GRUG: TonalJudge needed for tonal_judge_knobs save/load.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :TonalJudge)
+    include("TonalJudge.jl")
+    using .TonalJudge
+end
+
+# GRUG: ActionTonePredictor needed for action_tone_knobs save/load.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :ActionTonePredictor)
+    include("ActionTonePredictor.jl")
+    using .ActionTonePredictor
+end
+
+# GRUG: ImmuneThreadPool needed for immune_config save/load.
+# When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
+if !isdefined(@__MODULE__, :ImmuneThreadPool)
+    include("ImmuneThreadPool.jl")
+    using .ImmuneThreadPool
+end
+
+# GRUG: SemanticVerbs needed for verb_registry save/load.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :SemanticVerbs)
+    include("SemanticVerbs.jl")
+    using .SemanticVerbs
+end
+
+# GRUG: ArithmeticEngine needed for arithmetic bindings.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :ArithmeticEngine)
+    include("ArithmeticEngine.jl")
+    using .ArithmeticEngine
+end
+
+# GRUG: SigilPromoter needed for sigil promotion logic.
+# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
+if !isdefined(@__MODULE__, :SigilPromoter)
+    include("SigilPromoter.jl")
+    using .SigilPromoter
+end
+
 using Base64: base64decode
 using SHA: sha256
 using JSON

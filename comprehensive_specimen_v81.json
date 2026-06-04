@@ -3032,46 +3032,8 @@
       "chatter_count": 0
     }
   ],
-  "temporal_coherence": [
-    {
-      "from_node": "node_53",
-      "to_node": "node_54",
-      "relation": "precedes",
-      "strength": 0.8
-    },
-    {
-      "from_node": "node_55",
-      "to_node": "node_56",
-      "relation": "precedes",
-      "strength": 0.7
-    },
-    {
-      "from_node": "node_58",
-      "to_node": "node_59",
-      "relation": "precedes",
-      "strength": 0.6
-    },
-    {
-      "from_node": "node_60",
-      "to_node": "node_64",
-      "relation": "precedes",
-      "strength": 0.5
-    }
-  ],
-  "inhibitions": [
-    {
-      "node_id": "node_1",
-      "inhibited_id": "node_2",
-      "strength": 0.3,
-      "reason": "competing patterns"
-    },
-    {
-      "node_id": "node_10",
-      "inhibited_id": "node_15",
-      "strength": 0.2,
-      "reason": "antimatch guard"
-    }
-  ],
+  "temporal_coherence": [],
+  "inhibitions": [],
   "verb_registry": {
     "classes": {
       "temporal": [
