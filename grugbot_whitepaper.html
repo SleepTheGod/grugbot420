@@ -4437,7 +4437,7 @@ BRIDGE_MAP[B] receive the unmatched tail from B's perspective. Both directions w
     &nbsp;&nbsp;<code>seam_tokens::Vector{String}</code> &mdash; tokens at the match boundary; populated at bridge time or dynamically at fire time<br>
     &nbsp;&nbsp;<code>base_confidence::Float64</code> &mdash; JIT-baked symmetric pattern overlap + partner strength bonus<br>
     &nbsp;&nbsp;<code>source_lobe::String</code> &mdash; lobe ID of the node that created this entry (provenance)<br>
-    &nbsp;&nbsp;<code>is_crystalized::Bool</code> &mdash; if true, skip the strength-biased coinflip &mdash; always fire<br>
+    &nbsp;&nbsp;<code>is_crystalized::Bool</code> &mdash; if true, high-confidence votes skip coinflip (deterministic pass-through); low-confidence votes still flip<br>
     &nbsp;&nbsp;<code>crystal_origin::Symbol</code> &mdash; <code>:user</code> (manual /crystalize), <code>:auto</code> (semantic-truth triggered), or <code>:none</code>
 </div>
 
@@ -4457,9 +4457,9 @@ compatibility throughout the codebase.
     <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
     <tr><td><code>MAX_BRIDGES</code></td><td>4</td><td>Hard cap on bridge partners per node (bidirectional: both sides count)</td></tr>
     <tr><td><code>RELAY_CONF_JITTER_SIGMA</code></td><td>0.05</td><td>Stochastic jitter applied to pre-baked confidence at fire time</td></tr>
-    <tr><td><code>CRYSTAL_AUTO_STRENGTH_FLOOR</code></td><td>5.0</td><td>Partner strength &ge; this for auto-crystallize eligibility</td></tr>
-    <tr><td><code>CRYSTAL_AUTO_SEMANTIC_FLOOR</code></td><td>0.7</td><td>Semantic truth score &ge; this for auto-crystallize eligibility</td></tr>
-    <tr><td><code>CRYSTAL_AUTO_REVOKE_FLOOR</code></td><td>3.0</td><td>Auto-crystal revoked if partner strength drops below this</td></tr>
+    <tr><td><code>CRYSTAL_AUTO_STRENGTH_FLOOR</code></td><td>5.0</td><td>Both source AND partner strength &ge; this for auto-crystallize eligibility</td></tr>
+    <tr><td><code>CRYSTAL_AUTO_SEMANTIC_FLOOR</code></td><td>0.7</td><td>Both source AND partner semantic truth &ge; this for auto-crystallize eligibility</td></tr>
+    <tr><td><code>CRYSTAL_AUTO_REVOKE_FLOOR</code></td><td>3.0</td><td>Auto-crystal revoked if EITHER side's strength drops below this</td></tr>
 </table>
 
 <h3>JIT Confidence Baking (Bidirectional)</h3>
@@ -4510,9 +4510,14 @@ The firing pipeline for each bridge entry is:
         (<code>ACTIVE_FIRE_CAP = 1000</code>).</li>
     <li><strong>Alive check:</strong> partner must exist in <code>NODE_MAP</code> and not be grave.
         Stale bridges (partner deleted/graved) are silently skipped.</li>
-    <li><strong>Strength-biased coinflip:</strong> same formula as scan coinflip. Strong partners fire
-        more often. Weak ones still have a floor chance. <strong>Crystalized bridges skip the coinflip
-        entirely</strong> &mdash; they always fire.</li>
+    <li><strong>Confidence-biased bridge coinflip:</strong> <code>confidence_biased_bridge_coinflip(partner_ref, br.base_confidence)</code>
+        biases the relay coinflip by both partner strength and the bridge's base_confidence relative to
+        <code>AIML_CONFIDENCE_THRESHOLD</code>. High-confidence bridges fire more reliably. Weak ones
+        still get a floor chance (20%). <strong>Crystalized bridges with confidence &ge;
+        <code>AIML_CONFIDENCE_THRESHOLD</code></strong> skip the coinflip entirely &mdash; deterministic
+        pass-through for high-confidence votes. <strong>Crystalized bridges with low confidence</strong>
+        still flip &mdash; confidence must be earned, even for crystal bonds.
+        Non-crystalized bridges always flip with the confidence-biased formula.</li>
     <li><strong>JIT confidence with jitter:</strong> <code>max(0.1, base_confidence + jitter)</code>.
         NONJITTER nodes get zero jitter. Floor of 0.1 ensures bridged nodes always have <em>some</em>
         voice in the quorum.</li>
@@ -4532,17 +4537,21 @@ for the generative pipeline. The old <code>fire_attachments!</code> is a backwar
 <p>
 <code>crystalize_bridge!(node_a, node_b; origin=:user)</code> marks a bridge as crystalized on both
 sides (bidirectional). Origin must be <code>:user</code> (manual) or <code>:auto</code> (automated).
-Crystalized bridges skip the strength-biased coinflip and always fire. The <code>crystal_origin</code>
+Crystalized bridges with high-confidence votes (&ge; <code>AIML_CONFIDENCE_THRESHOLD</code>) skip the
+coinflip and fire deterministically. Crystalized bridges with low-confidence votes still flip &mdash;
+confidence must be earned, even for crystal bonds. The <code>crystal_origin</code>
 field tracks provenance &mdash; manual marks are never revoked by the auto-sweep.
 </p>
 <p>
 <code>auto_crystalize_sweep!()</code> walks every bridge in <code>BRIDGE_MAP</code> and auto-crystallizes
-bridges whose partner node has both strength &ge; <code>CRYSTAL_AUTO_STRENGTH_FLOOR</code> and semantic truth
-score &ge; <code>CRYSTAL_AUTO_SEMANTIC_FLOOR</code>. The semantic truth score (<code>_semantic_truth_score</code>)
+bridges where <strong>both the source AND partner nodes</strong> have strength &ge; <code>CRYSTAL_AUTO_STRENGTH_FLOOR</code>
+and semantic truth score &ge; <code>CRYSTAL_AUTO_SEMANTIC_FLOOR</code>. Both sides must be strong &mdash; it takes
+two proven nodes to form a crystal bond. One strong side is not enough; this prevents weak nodes from free-riding
+on a strong partner's crystal status. The semantic truth score (<code>_semantic_truth_score</code>)
 measures how well a node's relational triples are anchored: fraction of triples with registered relation-class
 verbs, plus bonus for <code>required_relations</code> and non-empty <code>relation_weights</code>.
-Auto-crystallized bridges whose partner strength drops below <code>CRYSTAL_AUTO_REVOKE_FLOOR</code> are
-de-crystallized. The sweep uses a <strong>3-step snapshot approach</strong> to avoid nested lock acquisition
+Auto-crystallized bridges are de-crystallized if <strong>either side's</strong> strength drops below
+<code>CRYSTAL_AUTO_REVOKE_FLOOR</code> &mdash; crystal is a mutual commitment that both sides must maintain. The sweep uses a <strong>3-step snapshot approach</strong> to avoid nested lock acquisition
 (see &sect;15.44 Concurrency Model).
 </p>
 
@@ -4619,7 +4628,10 @@ carry signals in both directions, with the seam tokens encoding <em>which</em> s
     <code>jit_conf_b_to_a = token_overlap(pattern_a, pattern_b) + (strength_a / STRENGTH_CAP) &times; 0.5</code>
     <p><strong>At fire time:</strong></p>
     <code>confidence = max(0.1, base_confidence + jitter)</code> where <code>jitter = jitter_allowed ? randn() &times; RELAY_CONF_JITTER_SIGMA : 0.0</code>
-    <p><strong>Crystalized bridges:</strong> skip coinflip, always fire. Confidence still applies jitter unless NONJITTER.</p>
+    <p><strong>Confidence-biased bridge coinflip:</strong></p>
+    <code>bridge_prob = 0.20 + (partner_strength / STRENGTH_CAP) &times; 0.50 + max(0, (base_conf &minus; AIML_CONFIDENCE_THRESHOLD) / (1.0 &minus; AIML_CONFIDENCE_THRESHOLD)) &times; 0.30</code><br>
+    <em>Range: weakest+low-conf = 20%, average+at-threshold = 45%, average+high-conf = 65.8%, strongest+high-conf = 100%</em>
+    <p><strong>Crystalized bridges with high confidence</strong> (&ge; <code>AIML_CONFIDENCE_THRESHOLD</code>): skip coinflip, fire deterministically. <strong>Crystalized bridges with low confidence</strong>: still flip &mdash; confidence must be earned. Confidence still applies jitter unless NONJITTER.</p>
 </div>
 
 <h3>Lobe Score (Averages Curve) <span class="new-badge">v7.24</span></h3>
@@ -4830,7 +4842,7 @@ The signal is not in the wire. Only the computation is. And the computation was 
     <tr><th>Command</th><th>Description</th></tr>
     <tr><td><code>/nodeBridge <node_a> <node_b> [seam_tokens...]</code></td><td>Create bidirectional bridge between two nodes. Seam tokens = match-boundary payload (optional). Max 4 bridges per node.</td></tr>
     <tr><td><code>/nodeUnbridge <node_a> <node_b></code></td><td>Remove bidirectional bridge. Both sides deleted. No half-bridges.</td></tr>
-    <tr><td><code>/crystalize <node_a> <node_b></code></td><td>Mark bridge as crystalized (always fires, skips coinflip). Origin = :user. Never auto-revoked.</td></tr>
+    <tr><td><code>/crystalize <node_a> <node_b></code></td><td>Mark bridge as crystalized. High-confidence votes (&ge; AIML_CONFIDENCE_THRESHOLD) skip coinflip; low-confidence votes still flip. Origin = :user. Never auto-revoked.</td></tr>
     <tr><td><code>/decrystalize <node_a> <node_b></code></td><td>Remove crystalize mark from bridge. Returns to normal coinflip gating.</td></tr>
     <tr><td><code>/bridges</code></td><td>Show full bridge map &mdash; all nodes with bridges, partner status, crystalize state, source lobe, base confidence, seam tokens.</td></tr>
     <tr><td><code>/nodeAttach <target> <id> <pattern></code></td><td>Backward-compat wrapper: splits pattern into seam tokens, calls /nodeBridge internally.</td></tr>
@@ -4994,10 +5006,18 @@ fails the parent <code>@testset</code>.
         activating node's scan to bridged partners, enabling cascade across pattern boundaries. Confidence
         relay uses pre-baked <code>base_confidence</code> with optional jitter. Deduplication via
         <code>fired_set::Set{String}</code>. Hard cap: <code>ACTIVE_FIRE_CAP = 1000</code> via shared
-        <code>FireCounter</code> in VoteOrchestrator.</li>
+        <code>FireCounter</code> in VoteOrchestrator.<br>
+        <strong>v8.0 confidence-biased coinflip:</strong> Bridge relay coinflips now use
+        <code>confidence_biased_bridge_coinflip(node, bridge_confidence)</code>, which biases by both
+        partner strength and the bridge's base_confidence relative to <code>AIML_CONFIDENCE_THRESHOLD</code>.
+        This replaces the old <code>strength_biased_scan_coinflip</code> (strength-only). Crystalized bridges
+        with confidence &ge; <code>AIML_CONFIDENCE_THRESHOLD</code> skip the coinflip entirely (deterministic
+        pass-through); crystalized bridges with low confidence still flip.</li>
         <li><strong>Crystalize system.</strong> Bridges can be &ldquo;crystalized&rdquo; &mdash; locked
         against accidental deletion during specimen save/load cycles. <code>auto_crystalize_sweep!</code>
-        runs on high-strength node pairs using the same 3-step snapshot discipline.
+        requires <strong>both source AND partner</strong> nodes to exceed strength and semantic thresholds
+        for auto-crystallization &mdash; one strong side is not enough. Revocation triggers if either side
+        drops below the revoke floor. Uses the same 3-step snapshot discipline.
         <code>/crystalize</code> and <code>/decrystalize</code> CLI commands for manual control.</li>
         <li><strong>ChatterMode v8.0 rewrite.</strong> Group-based 2&times;2 steal+remix with Markov remix
         (<code>MARKOV_CROSSOVER_RATE = 0.35</code>). Replaces the old single-group gossip model with

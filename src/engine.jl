@@ -2229,12 +2229,26 @@ function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
             partner_lobe = something(Lobe.find_lobe_for_node(br.partner_id), "")
             is_cross_lobe = source_lobe != "" && partner_lobe != "" && source_lobe != partner_lobe
 
-            # GRUG: STRENGTH-BIASED COINFLIP! Same formula as scan coinflip.
-            # Strong partners fire more often. Weak ones still have a chance.
-            # CRYSTALIZE: crystalized bridges SKIP the coinflip — always fire.
-            if !br.is_crystalized && !strength_biased_scan_coinflip(partner_ref)
-                # Lost the coinflip. Partner stays dormant this round.
-                continue
+            # GRUG v8.0: CONFIDENCE-BIASED BRIDGE COINFLIP! Not the same as scan
+            # coinflip anymore. Bridge relays now bias by BOTH partner strength AND
+            # the bridge's base_confidence relative to AIML_CONFIDENCE_THRESHOLD.
+            # High-confidence bridges fire more reliably. Weak ones still get a chance.
+            # CRYSTALIZE: crystalized bridges with high-confidence votes SKIP the
+            # coinflip entirely (deterministic pass-through). Crystalized bridges with
+            # LOW-confidence votes still flip — confidence must be earned.
+            # NON-CRYSTALIZE: always flip, biased by strength + confidence.
+            if br.is_crystalized
+                # Crystalized bridge: skip coinflip ONLY for high-confidence votes.
+                # Low-confidence crystalized votes still flip (must earn certainty).
+                if br.base_confidence < VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD &&
+                   !confidence_biased_bridge_coinflip(partner_ref, br.base_confidence)
+                    continue
+                end
+            else
+                # Non-crystalized bridge: always flip, biased by strength + confidence.
+                if !confidence_biased_bridge_coinflip(partner_ref, br.base_confidence)
+                    continue
+                end
             end
 
             # GRUG: JIT CONFIDENCE — pre-baked at bridge time, just apply jitter now!
@@ -2561,16 +2575,20 @@ function auto_crystalize_sweep!()::Tuple{Int, Int}
         snapshots
     end
     
-    # Step 2: Read partner node data under NODE_LOCK (no BRIDGE_LOCK held)
-    partner_data = Dict{String, Tuple{Bool, Float64, Float64}}()  # partner_id => (is_grave, strength, semantic_truth)
+    # Step 2: Read source AND partner node data under NODE_LOCK (no BRIDGE_LOCK held)
+    # GRUG v8.0: Both sides must be strong for auto-crystallization. Previously
+    # only the partner was checked — now source node must also exceed the floor.
+    node_data = Dict{String, Tuple{Bool, Float64, Float64}}()  # node_id => (is_grave, strength, semantic_truth)
     lock(NODE_LOCK) do
-        for (_node_id, _br, partner_id) in bridge_snapshots
-            if !haskey(partner_data, partner_id)
-                partner = get(NODE_MAP, partner_id, nothing)
-                if isnothing(partner)
-                    partner_data[partner_id] = (true, 0.0, 0.0)  # treat missing as grave
-                else
-                    partner_data[partner_id] = (partner.is_grave, partner.strength, _semantic_truth_score(partner))
+        for (node_id, _br, partner_id) in bridge_snapshots
+            for nid in (node_id, partner_id)
+                if !haskey(node_data, nid)
+                    n = get(NODE_MAP, nid, nothing)
+                    if isnothing(n)
+                        node_data[nid] = (true, 0.0, 0.0)  # treat missing as grave
+                    else
+                        node_data[nid] = (n.is_grave, n.strength, _semantic_truth_score(n))
+                    end
                 end
             end
         end
@@ -2584,13 +2602,20 @@ function auto_crystalize_sweep!()::Tuple{Int, Int}
             if !(br in current_bridges)
                 continue
             end
-            
-            pd = get(partner_data, partner_id, (true, 0.0, 0.0))
+
+            sd = get(node_data, node_id, (true, 0.0, 0.0))
+            source_is_grave, source_strength, source_semantic = sd
+            source_is_grave && continue
+
+            pd = get(node_data, partner_id, (true, 0.0, 0.0))
             partner_is_grave, partner_strength, partner_semantic = pd
             partner_is_grave && continue
 
             if br.is_crystalized && br.crystal_origin == :auto
-                if partner_strength < CRYSTAL_AUTO_REVOKE_FLOOR
+                # GRUG v8.0: Revoke if EITHER side drops below revoke floor.
+                # Crystallization is a mutual commitment — both sides must maintain strength.
+                if source_strength < CRYSTAL_AUTO_REVOKE_FLOOR ||
+                   partner_strength < CRYSTAL_AUTO_REVOKE_FLOOR
                     br.is_crystalized = false
                     br.crystal_origin = :none
                     # GRUG: Also decrystalize the partner side (bidirectional)
@@ -2604,7 +2629,13 @@ function auto_crystalize_sweep!()::Tuple{Int, Int}
                     revoked += 1
                 end
             elseif !br.is_crystalized
-                if partner_strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
+                # GRUG v8.0: BOTH source AND partner must exceed thresholds.
+                # It takes two strong nodes to form a crystal bond — one strong
+                # side isn't enough. This prevents weak nodes from free-riding
+                # on a strong partner's crystal status.
+                if source_strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
+                   source_semantic >= CRYSTAL_AUTO_SEMANTIC_FLOOR &&
+                   partner_strength >= CRYSTAL_AUTO_STRENGTH_FLOOR &&
                    partner_semantic >= CRYSTAL_AUTO_SEMANTIC_FLOOR
                     br.is_crystalized = true
                     br.crystal_origin = :auto
@@ -3504,6 +3535,40 @@ function strength_biased_scan_coinflip(node::Node)::Bool
     bonus_prob = 0.70
     scan_prob  = base_prob + (node.strength / STRENGTH_CAP) * bonus_prob
     return rand() < clamp(scan_prob, 0.0, 1.0)
+end
+
+#=
+    confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
+
+GRUG v8.0: Bridge relay coinflip biased by BOTH strength AND confidence.
+Unlike strength_biased_scan_coinflip (scan-time, strength-only), this is the
+relay-time coinflip for CascadeBridge handoffs. The confidence bias comes from
+the bridge's base_confidence relative to AIML_CONFIDENCE_THRESHOLD.
+
+When bridge_confidence >= AIML_CONFIDENCE_THRESHOLD, the node gets a bonus
+proportional to how far above threshold it is. When below threshold, the base
+strength-only formula applies (no penalty — low-confidence bridges still get
+a fair shake via strength alone).
+
+Probability formula:
+  base_prob  = 0.20   (same floor as scan coinflip)
+  strength_bonus = (node.strength / STRENGTH_CAP) * 0.50
+  conf_bonus     = max(0, (bridge_confidence - AIML_CONFIDENCE_THRESHOLD) / (1.0 - AIML_CONFIDENCE_THRESHOLD)) * 0.30
+  bridge_prob = base_prob + strength_bonus + conf_bonus
+
+Range analysis (AIML_CONFIDENCE_THRESHOLD = 0.35):
+  - Weakest, low-conf (str=0, conf=0.1): 20% + 0% + 0% = 20%
+  - Average, at-threshold (str=5, conf=0.35): 20% + 25% + 0% = 45%
+  - Average, high-conf (str=5, conf=0.8): 20% + 25% + 20.8% = 65.8%
+  - Strongest, high-conf (str=10, conf=1.0): 20% + 50% + 30% = 100%
+=#
+function confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
+    base_prob       = 0.20
+    strength_bonus  = (node.strength / STRENGTH_CAP) * 0.50
+    conf_range      = 1.0 - VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD
+    conf_bonus      = max(0.0, (bridge_confidence - VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD) / conf_range) * 0.30
+    bridge_prob     = base_prob + strength_bonus + conf_bonus
+    return rand() < clamp(bridge_prob, 0.0, 1.0)
 end
 
 # ==============================================================================
