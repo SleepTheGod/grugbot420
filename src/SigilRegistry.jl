@@ -961,6 +961,79 @@ function default_registry()::SigilTable
                    "approximates", "is_like"],
         provenance="engine-default")
 
+    # ── GRUG v8.1: TIME NODE SIGILS ──
+    # Time coherence signaling for temporal orientation. Three base entries
+    # that the user can extend by registering more :macro/:tone sigils with
+    # their own lexicons and params. When the promoter rewrites a temporal
+    # word (e.g. "now" → "&now"), the binding carries :orientation and
+    # :vote_flags in params. Downstream, the engine reads these flags from
+    # the binding to signal the orchestrator and hippocampal lever.
+    #
+    # The :tone applies_at domain means these sigils participate in the
+    # tone/reasoning-mode layer, not the pattern-matching layer. They
+    # don't change WHAT the system answers — they change HOW it reasons.
+    #
+    # Vote flags: :reflect (past), :assess (present), :project (future).
+    # These are booleans that the orchestrator reads to determine which
+    # AIML reasoning mode to activate for the response.
+
+    register_sigil!(t;
+        name="now",
+        class=:macro,
+        applies_at=:tone,
+        lexicon=["now", "currently", "right now", "what now",
+                 "whats happening", "current state", "presently",
+                 "at the moment", "at present"],
+        params=Dict(
+            "orientation"  => "present",
+            "vote_flags"   => Dict("reflect" => false, "assess" => true, "project" => false),
+            "signal"       => ["assess_current"]
+        ),
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> t in ["now", "currently", "right now",
+                                       "what now", "whats happening",
+                                       "current state", "presently",
+                                       "at the moment", "at present"]))
+
+    register_sigil!(t;
+        name="before",
+        class=:macro,
+        applies_at=:tone,
+        lexicon=["before", "earlier", "previously", "what happened",
+                 "in the past", "back then", "beforehand", "formerly",
+                 "lately", "recently"],
+        params=Dict(
+            "orientation"  => "past",
+            "vote_flags"   => Dict("reflect" => true, "assess" => false, "project" => false),
+            "signal"       => ["reflect_past"]
+        ),
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> t in ["before", "earlier", "previously",
+                                       "what happened", "in the past",
+                                       "back then", "beforehand", "formerly",
+                                       "lately", "recently"]))
+
+    register_sigil!(t;
+        name="next",
+        class=:macro,
+        applies_at=:tone,
+        lexicon=["next", "after", "later", "what will", "whats next",
+                 "in the future", "going forward", "soon", "eventually",
+                 "afterward", "upcoming"],
+        params=Dict(
+            "orientation"  => "future",
+            "vote_flags"   => Dict("reflect" => false, "assess" => false, "project" => true),
+            "signal"       => ["project_future"]
+        ),
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> t in ["next", "after", "later", "what will",
+                                       "whats next", "in the future",
+                                       "going forward", "soon", "eventually",
+                                       "afterward", "upcoming"]))
+
     return t
 end
 

@@ -1651,7 +1651,38 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         error("!!! FATAL: Node dictionary missing 'system_prompt'! Grug confused! !!!")
     end
 
+    # GRUG v8.1: TIME ORIENTATION — read from engine's cross-task stash.
+    # When a time sigil (&now/&before/&next) fired during promotion, this
+    # carries the orientation + vote_flags into the AIML context so the
+    # response can reason temporally (reflect past, assess present, project future).
+    time_orient, time_meta = current_time_orientation()
+    time_directive = ""
+    if time_orient != "none"
+        vote_flags = get(time_meta, "vote_flags", Dict{String,Any}())
+        signal_list = get(time_meta, "signal", String[])
+        sigil_name = get(time_meta, "sigil_name", "?")
+        # Build a temporal reasoning directive appended to the voice.
+        # vote_flags tell us WHICH temporal mode is active:
+        #   &now    → assess=true  (evaluate current state)
+        #   &before → reflect=true (look back at what happened)
+        #   &next   → project=true (reason forward about what comes next)
+        mode_parts = String[]
+        if get(vote_flags, "reflect", false) == true; push!(mode_parts, "reflect on what has already happened"); end
+        if get(vote_flags, "assess", false) == true;  push!(mode_parts, "assess the current situation right now"); end
+        if get(vote_flags, "project", false) == true; push!(mode_parts, "project forward about what may come next"); end
+        if !isempty(mode_parts)
+            time_directive = " Temporal reasoning active ($(time_orient) orientation via &$(sigil_name)): $(join(mode_parts, "; "))."
+        end
+        @info "[MAIN v8.1] Time orientation in payload: $(time_orient), directive='$(time_directive)'"
+    end
+
     system_prompt = context["system_prompt"]
+    # GRUG v8.1: Append temporal reasoning directive to system prompt.
+    # This makes the voice carry the temporal orientation so downstream
+    # synthesis reasons in the right time mode (past/present/future).
+    if !isempty(time_directive)
+        system_prompt = system_prompt * time_directive
+    end
     neg_str       = isempty(primary_vote.negatives) ? "None" : join(primary_vote.negatives, ", ")
 
     memory_ctx = extract_aiml_memory_context()
@@ -2932,6 +2963,13 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         end
     catch e
         println(payload_io, "Lobe Curve: <telemetry error: $e>")
+    end
+    # GRUG v8.1: Time orientation telemetry — shows whether a time sigil
+    # fired this cycle and what temporal reasoning mode is active.
+    if time_orient != "none"
+        println(payload_io, "Time Orientation: $(time_orient) (sigil=$(get(time_meta, "sigil_name", "?")), flags=$(get(time_meta, "vote_flags", Dict{String,Any}())))")
+    else
+        println(payload_io, "Time Orientation: none")
     end
     print(payload_io, "=========================================")
 

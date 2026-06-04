@@ -148,6 +148,11 @@ const _GLOBAL_PROMOTION_REWRITTEN::Base.RefValue{String} = Ref("")
 const _GLOBAL_PROMOTION_RAW::Base.RefValue{String} = Ref("")
 const _GLOBAL_PROMOTION_LOCK::ReentrantLock = ReentrantLock()
 
+# GRUG v8.1: Time orientation — same pattern as promotion bindings.
+# scan_and_expand writes; generate_aiml_payload reads across Task boundaries.
+const _TIME_ORIENTATION_KEY::Symbol = :grugbot420_time_orientation
+const _GLOBAL_TIME_ORIENTATION::Base.RefValue{Tuple{String,Dict{String,Any}}} = Ref(("none", Dict{String,Any}()))
+
 """
     current_promotion_bindings() -> Vector{SigilPromoter.SigilBinding}
 
@@ -209,6 +214,26 @@ indexes into the raw token stream.
 """
 function current_promotion_raw()::Union{String,Nothing}
     return get(task_local_storage(), _PROMOTION_RAW_KEY, nothing)
+end
+
+"""
+    current_time_orientation() -> Tuple{String,Dict{String,Any}}
+
+Return the time orientation extracted from the most recent `scan_and_expand`
+call. Returns (orientation_string, metadata_dict). Orientation is one of
+"past", "present", "future", or "none" when no time sigil was detected.
+
+Reads from module-level Ref first (survives Task boundaries), then falls
+back to task-local storage.
+"""
+function current_time_orientation()::Tuple{String,Dict{String,Any}}
+    global_orient = lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_TIME_ORIENTATION[]
+    end
+    if global_orient[1] != "none"
+        return global_orient
+    end
+    return get(task_local_storage(), _TIME_ORIENTATION_KEY, ("none", Dict{String,Any}()))
 end
 
 # ==============================================================================
@@ -880,6 +905,76 @@ time-node-only groups. No special code path — pure label gate.
 """
 function is_time_node(node::Node)::Bool
     return get(node.json_data, "time_node", false) === true
+end
+
+# ── GRUG v8.1: TIME COHERENCE SIGNALING ──────────────────────────────
+# Time sigils (&now, &before, &next) are :macro/:tone entries in the
+# sigil registry. When the promoter rewrites a temporal word (e.g. "now"
+# → "&now"), the resulting SigilBinding carries the sigil entry's params
+# dict, which includes :orientation and :vote_flags. These functions
+# extract that orientation from the current promotion bindings and make
+# it available to the AIML payload generator and hippocampal lever.
+#
+# The three orientations and their vote flags:
+#   past    → reflect=true,  assess=false, project=false
+#   present → reflect=false, assess=true,  project=false
+#   future  → reflect=false, assess=false, project=true
+#
+# Time nodes that fire during a cascade read these flags to determine
+# which AIML reasoning mode to activate. The hippocampal lever uses
+# orientation to decide whether to pull past context (reflect), assess
+# current state (assess), or project forward (project).
+
+const TIME_SIGIL_NAMES = Set{String}(["now", "before", "next"])
+
+"""
+    extract_time_orientation(bindings) -> (orientation::String, vote_flags::Dict)
+
+GRUG v8.1: Scan promotion bindings for time sigil entries. Returns the
+orientation and vote_flags from the FIRST time sigil binding found. If no
+time sigil binding is present, returns ("none", empty Dict). Multiple time
+sigils in one input are possible but the first one wins (the system orients
+toward the first temporal signal the user sends).
+"""
+function extract_time_orientation(bindings::Vector{SigilPromoter.SigilBinding})::Tuple{String,Dict{String,Any}}
+    for b in bindings
+        if b.name in TIME_SIGIL_NAMES
+            # Look up the sigil entry to read params
+            entry = SigilRegistry.lookup_sigil(_ENGINE_SIGIL_TABLE, b.name)
+            if entry.params !== nothing
+                orientation = get(entry.params, "orientation", "none")
+                vote_flags  = get(entry.params, "vote_flags", Dict{String,Any}())
+                signal_list = get(entry.params, "signal", String[])
+                return (orientation, Dict{String,Any}(
+                    "orientation" => orientation,
+                    "vote_flags"  => vote_flags,
+                    "signal"      => signal_list,
+                    "sigil_name"  => b.name,
+                    "surface"     => b.surface
+                ))
+            end
+        end
+    end
+    return ("none", Dict{String,Any}())
+end
+
+"""
+    has_time_orientation(bindings) -> Bool
+
+GRUG v8.1: Returns true if any binding in the list is a time sigil.
+"""
+function has_time_orientation(bindings::Vector{SigilPromoter.SigilBinding})::Bool
+    return any(b -> b.name in TIME_SIGIL_NAMES, bindings)
+end
+
+"""
+    time_vote_flags(orientation_data) -> Dict
+
+GRUG v8.1: Extract just the vote_flags from time orientation data.
+Returns empty Dict if no time orientation is present.
+"""
+function time_vote_flags(orientation_data::Dict{String,Any})::Dict{String,Any}
+    return get(orientation_data, "vote_flags", Dict{String,Any}())
 end
 
 """
@@ -4176,6 +4271,19 @@ function scan_and_expand(input_text::String;
         _GLOBAL_PROMOTION_RAW[]        = input_text
         _GLOBAL_PROMOTION_REWRITTEN[]  = promoted_text
         _GLOBAL_PROMOTION_BINDINGS[]   = promotion_bindings
+    end
+
+    # GRUG v8.1: TIME ORIENTATION — extract temporal orientation from promotion
+    # bindings and stash it the same way (task-local + global Ref). When a time
+    # sigil (&now/&before/&next) fired, this carries orientation + vote_flags
+    # downstream to generate_aiml_payload and the hippocampal lever.
+    time_orient, time_meta = extract_time_orientation(promotion_bindings)
+    task_local_storage(_TIME_ORIENTATION_KEY, (time_orient, time_meta))
+    lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_TIME_ORIENTATION[] = (time_orient, time_meta)
+    end
+    if time_orient != "none"
+        @info "[ENGINE v8.1] Time orientation detected: $(time_orient) (sigil=$(get(time_meta, "sigil_name", "?")), surface='$(get(time_meta, "surface", ""))')"
     end
 
     # GRUG: From here on, scan_specimens and the cascade gates see the
