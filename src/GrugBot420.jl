@@ -37,6 +37,13 @@ using .SemanticVerbs
 include("ActionTonePredictor.jl")
 using .ActionTonePredictor
 
+# GRUG: CoherenceField — scalar field Φ over the entire activation state,
+# with bounded-depth gradient ΔΦ for vote-routing modulation. Weight=0.0
+# (off) by default; no influence on existing behavior until user explicitly
+# enables via /coherenceConfig weight 0.05. See plans/v9_command_levers.md.
+include("CoherenceField.jl")
+using .CoherenceField
+
 include("TonalJudge.jl")
 using .TonalJudge
 

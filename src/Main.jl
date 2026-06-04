@@ -208,6 +208,14 @@ if !isdefined(@__MODULE__, :ActionTonePredictor)
     using .ActionTonePredictor
 end
 
+# GRUG: CoherenceField — scalar field Φ over activation state + gradient ΔΦ for
+# vote-routing modulation. Included in GrugBot420.jl after ActionTonePredictor.
+# Guard prevents double-include when Main.jl is loaded standalone.
+if !isdefined(@__MODULE__, :CoherenceField)
+    include("CoherenceField.jl")
+    using .CoherenceField
+end
+
 # GRUG: ImmuneThreadPool needed for immune_config save/load.
 # When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
 if !isdefined(@__MODULE__, :ImmuneThreadPool)
@@ -4365,6 +4373,19 @@ const HELP_MSG = """
   /vigilance timeout <f>         Set injector timeout (1.0-30.0s)
   /vigilance feedback <f>        Set injector feedback probability (0.0-1.0)
 ║                                                              ║
+║  COHERENCE FIELD (v9 — quantum-emulation attractor control) ║
+║  /coherence                    Show field value Φ + status   ║
+║  /coherenceGradient <node>     Show ΔΦ for candidate node    ║
+║  /coherenceField               Detailed field breakdown      ║
+║  /coherenceConfig              Show config (weight, depth)    ║
+║  /coherenceConfig weight <f>   Set routing weight (0=off)    ║
+║  /coherenceConfig depth <n>    Set gradient walk depth (1-3)  ║
+║  /coherenceConfig decay <f>    Set activation decay rate      ║
+║  /coherenceConfig recency <f>  Set recency window (seconds)  ║
+║  /coherenceConfig reset        Reset to defaults (weight=0)  ║
+║    WARNING: weight > 0 enables attractor dynamics!           ║
+║    Start low (0.05). >0.3 risks quantum Zeno state-lock.    ║
+║                                                              ║
 ║  ADMIN COMMANDS (password protected)                         ║
 ║  /login <password>           Authenticate as admin           ║
 ║  /logout                     End admin session               ║
@@ -6677,6 +6698,21 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize time orientation config: $e"
     end
 
+
+    # ── 26. COHERENCE FIELD CONFIG ──────────────────────────────────────────
+    # GRUG v9: Save the CoherenceField config so routing weight survives reload.
+    # Weight=0.0 (off) by default; only non-default values are saved.
+    try
+        _cf_cfg = CoherenceField.coherence_config_to_dict()
+        if !isempty(_cf_cfg)
+            specimen["coherence_config"] = _cf_cfg
+            println("  🔗  CoherenceField config saved (weight=$(_cf_cfg["weight"]))")
+        end
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize coherence config: $e"
+    end
+
+
     # ── SERIALIZE ────────────────────────────────────────────────────
     # GRUG: Convert to JSON string. If filepath ends in .gz, gzip compress.
     # If .json (or anything else), write plain JSON — no gzip needed, works
@@ -6894,7 +6930,8 @@ function load_specimen_from_file!(filepath::String)::String
              "chatter_config", "immune_config",
              "scanner_config", "action_tone_knobs",
              "fanout_config", "hippocampal_pending_ask", "admin_session",
-             "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config"]
+             "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
+             "coherence_config"]
         if haskey(specimen, k) && !isa(specimen[k], Dict)
             push!(validation_errors, "'$k' must be an object")
         end
@@ -8548,6 +8585,23 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
 
+
+    # ── 26b. COHERENCE FIELD CONFIG ─────────────────────────────────────────
+    # GRUG v9: Restore CoherenceField config so routing weight survives reload.
+    try
+        if haskey(specimen, "coherence_config")
+            _cc = specimen["coherence_config"]
+            if isa(_cc, Dict)
+                CoherenceField.coherence_config_from_dict!(_cc)
+                _w = get(_cc, "weight", 0.0)
+                println("  🔗  CoherenceField config loaded (weight=$_w)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore coherence config: $e"
+        println("  ⚠️  CoherenceField config: FAILED to load (defaults will apply)")
+    end
+
     # PHASE 5: BUILD SUMMARY SCROLL
     # ══════════════════════════════════════════════════════════════════════
 
@@ -9279,6 +9333,20 @@ function run_cli()
             m_sigillist   = match(r"^/sigil\s+list\s*$",                                    line)
             m_sigiladd    = match(r"^/sigil\s+add\s+(\S+)\s+(\S+)\s+(\S+)(?:\s+(.+))?\s*$", line)
             m_sigilremove = match(r"^/sigil\s+remove\s+(\S+)\s*$",                          line)
+            # GRUG v9: CoherenceField command levers — expose implicit computations.
+            #   /coherence                          — show field value Φ + status
+            #   /coherenceGradient <node_id>        — show ΔΦ for candidate node
+            #   /coherenceField                     — detailed field breakdown
+            #   /coherenceConfig                    — show config (weight, depth, decay, etc.)
+            #   /coherenceConfig weight <float>      — set routing weight (0.0=off, max 0.5)
+            #   /coherenceConfig depth <int>         — set gradient walk depth (1-3)
+            #   /coherenceConfig decay <float>       — set activation decay rate
+            #   /coherenceConfig recency <float>     — set recency window (seconds)
+            #   /coherenceConfig reset               — reset to defaults (weight=0.0)
+            m_coherence         = match(r"^/coherence\s*$",                                   line)
+            m_coherence_grad    = match(r"^/coherenceGradient\s+(\S+)\s*$",                   line)
+            m_coherence_field   = match(r"^/coherenceField\s*$",                             line)
+            m_coherence_config  = match(r"^/coherenceConfig(?:\s+(.+))?\s*$",                 line)
             m_help         = match(r"^/help\s*$",                                       line)
             
             if !isnothing(m_help)
@@ -11636,6 +11704,184 @@ elseif !isnothing(m_right)
                         msg = "🗑  Sigil &$sigil_name removed (was prov=$(entry.provenance))."
                         println(msg)
                         add_message_to_history!("System", msg, false)
+                    end
+                end
+
+
+            # ── GRUG v9: CoherenceField command levers ──────────────────────────
+            # These expose the implicit coherence field Φ and gradient ΔΦ that
+            # the system already computes internally. Weight=0.0 (off) by default
+            # so these are read-only diagnostics until the operator enables routing.
+
+            elseif !isnothing(m_coherence)
+                # /coherence — show current field value Φ + summary
+                lock(NODE_LOCK) do
+                    phi = CoherenceField.compute_field(NODE_MAP; force=true)
+                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    if cfg.weight ≈ 0.0
+                        println("Φ = $(round(phi; digits=4))  [routing OFF — weight=0.0]")
+                        println("  Use /coherenceConfig weight 0.05 to enable gradient routing")
+                    else
+                        println("Φ = $(round(phi; digits=4))  [routing ON — weight=$(cfg.weight)]")
+                    end
+                    println("  Nodes: $(length(NODE_MAP)), cached Φ: $(round(cfg.cached_phi; digits=4)) (age: $(round(time() - cfg.cache_timestamp; digits=1))s)")
+                end
+
+            elseif !isnothing(m_coherence_grad)
+                # /coherenceGradient <node_id> — show ΔΦ for a candidate node
+                target_id = String(strip(m_coherence_grad.captures[1]))
+                lock(NODE_LOCK) do
+                    if !haskey(NODE_MAP, target_id)
+                        println("⚠  /coherenceGradient: node '$target_id' not found in NODE_MAP")
+                    else
+                        delta = CoherenceField.compute_delta(target_id, NODE_MAP, BRIDGE_MAP; force=true)
+                        direction = delta > 0 ? "↑ COHERENT (positive contribution)" : delta < 0 ? "↓ DECOHERENT (negative contribution)" : "— NEUTRAL"
+                        cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                        println("ΔΦ($target_id) = $(round(delta; digits=6))  $direction")
+                        if cfg.weight ≈ 0.0
+                            println("  [routing OFF — this gradient has NO effect on voting]")
+                        else
+                            impact = cfg.weight * delta
+                            println("  Vote impact: weight×ΔΦ = $(round(impact; digits=6))")
+                        end
+                    end
+                end
+
+            elseif !isnothing(m_coherence_field)
+                # /coherenceField — detailed field breakdown
+                lock(NODE_LOCK) do
+                    status = CoherenceField.coherence_field_status(NODE_MAP; force=true)
+                    phi = status["phi"]
+                    n_nodes = status["n_nodes"]
+                    n_active = status["n_active"]
+                    n_coherent = status["n_coherent"]
+                    top5 = status["top_contributors"]
+                    bot5 = status["bottom_contributors"]
+                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+
+                    println("╔══════════════════════════════════════╗")
+                    println("║     COHERENCE FIELD STATUS (v9)      ║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Φ = $(rpad(round(phi; digits=4), 28))║")
+                    println("║  Nodes: $(rpad("$n_nodes total, $n_active active, $n_coherent coherent", 29))║")
+                    println("║  Weight: $(rpad("$(cfg.weight) (max=$(CoherenceField.COHERENCE_WEIGHT_MAX))", 28))║")
+                    println("║  Depth: $(rpad("$(cfg.depth) (max=$(CoherenceField.COHERENCE_DEPTH_MAX))", 28))║")
+                    println("║  Decay: $(rpad("$(cfg.decay)", 28))║")
+                    println("║  Recency: $(rpad("$(cfg.recency_window)s", 28))║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Top contributors:                   ║")
+                    for tc in top5
+                        println("║    $(rpad("$(tc["id"]): Φ-contrib=$(round(tc["contribution"]; digits=4))", 37))║")
+                    end
+                    if !isempty(bot5)
+                        println("║  Bottom contributors:                ║")
+                        for bc in bot5
+                            println("║    $(rpad("$(bc["id"]): Φ-contrib=$(round(bc["contribution"]; digits=4))", 37))║")
+                        end
+                    end
+                    println("╚══════════════════════════════════════╝")
+                end
+
+            elseif !isnothing(m_coherence_config)
+                # /coherenceConfig [subcommand [value]]
+                #   (no args)        — show current config
+                #   weight <float>   — set routing weight (0.0=off, max 0.5)
+                #   depth <int>      — set gradient walk depth (1-3)
+                #   decay <float>    — set activation decay rate (0.0-0.1)
+                #   recency <float>  — set recency window in seconds
+                #   reset            — reset all to defaults
+                config_arg = m_coherence_config.captures[1]
+                if isnothing(config_arg) || isempty(strip(String(config_arg)))
+                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    println("CoherenceField config:")
+                    println("  weight    = $(cfg.weight)  (0.0=off, max=$(CoherenceField.COHERENCE_WEIGHT_MAX))")
+                    println("  depth     = $(cfg.depth)  (1-3, max=$(CoherenceField.COHERENCE_DEPTH_MAX))")
+                    println("  decay     = $(cfg.decay)  (0.0-0.1)")
+                    println("  recency   = $(cfg.recency_window)s  (window for 'recently fired')")
+                    println("  cache_ttl = $(cfg.cache_ttl)s")
+                else
+                    parts = split(strip(String(config_arg)))
+                    if isempty(parts)
+                        cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                        println("CoherenceField config: weight=$(cfg.weight), depth=$(cfg.depth), decay=$(cfg.decay), recency=$(cfg.recency_window)s")
+                    elseif String(parts[1]) == "weight"
+                        if length(parts) < 2
+                            println("⚠  /coherenceConfig weight <float> — missing value")
+                        else
+                            val = tryparse(Float64, String(parts[2]))
+                            if isnothing(val)
+                                println("⚠  /coherenceConfig weight: '$(parts[2])' is not a valid float")
+                            else
+                                try
+                                    CoherenceField.set_coherence_config!(:weight, val)
+                                    println("✓  CoherenceField weight = $val")
+                                    if val > 0.0
+                                        println("  ⚡ GRADIENT ROUTING ENABLED — votes will be modulated by ΔΦ")
+                                        if val > 0.3
+                                            println("  ⚠️  WARNING: weight > 0.3 risks quantum Zeno effect (state locking)")
+                                        end
+                                    else
+                                        println("  Gradient routing OFF — weight=0.0")
+                                    end
+                                catch e
+                                    println("⚠  $e")
+                                end
+                            end
+                        end
+                    elseif String(parts[1]) == "depth"
+                        if length(parts) < 2
+                            println("⚠  /coherenceConfig depth <int> — missing value")
+                        else
+                            val = tryparse(Int, String(parts[2]))
+                            if isnothing(val)
+                                println("⚠  /coherenceConfig depth: '$(parts[2])' is not a valid int")
+                            else
+                                try
+                                    CoherenceField.set_coherence_config!(:depth, val)
+                                    println("✓  CoherenceField depth = $val")
+                                catch e
+                                    println("⚠  $e")
+                                end
+                            end
+                        end
+                    elseif String(parts[1]) == "decay"
+                        if length(parts) < 2
+                            println("⚠  /coherenceConfig decay <float> — missing value")
+                        else
+                            val = tryparse(Float64, String(parts[2]))
+                            if isnothing(val)
+                                println("⚠  /coherenceConfig decay: '$(parts[2])' is not a valid float")
+                            else
+                                try
+                                    CoherenceField.set_coherence_config!(:decay, val)
+                                    println("✓  CoherenceField decay = $val")
+                                catch e
+                                    println("⚠  $e")
+                                end
+                            end
+                        end
+                    elseif String(parts[1]) == "recency"
+                        if length(parts) < 2
+                            println("⚠  /coherenceConfig recency <float> — missing value (seconds)")
+                        else
+                            val = tryparse(Float64, String(parts[2]))
+                            if isnothing(val)
+                                println("⚠  /coherenceConfig recency: '$(parts[2])' is not a valid float")
+                            else
+                                try
+                                    CoherenceField.set_coherence_config!(:recency_window, val)
+                                    println("✓  CoherenceField recency_window = $(val)s")
+                                catch e
+                                    println("⚠  $e")
+                                end
+                            end
+                        end
+                    elseif String(parts[1]) == "reset"
+                        CoherenceField.reset_coherence_config!()
+                        println("✓  CoherenceField config reset to defaults (weight=0.0)")
+                    else
+                        println("⚠  /coherenceConfig: unknown subcommand '$(parts[1])'")
+                        println("   Valid: weight, depth, decay, recency, reset")
                     end
                 end
 
