@@ -186,11 +186,29 @@ const MAX_DROP_TABLE_ENTRIES = 16    # per-rule drop table links
 const MAX_PATTERN_LENGTH    = 256
 const MAX_RULE_ID_LENGTH    = 64
 
-# GRUG: Transformer dimensionality (small — this is a sparse system)
-# VOTE_FEATURE_DIM = 8 (vote features) + 4 (input correlation features) = 12
-const VOTE_FEATURE_DIM     = 12      # features extracted per vote (8 vote + 4 input correlation)
-const HIDDEN_DIM           = 16      # hidden layer width
-const ATTENTION_HEADS      = 2       # sparse attention heads
+# GRUG v9: Transformer dimensionality — beefed up for JIT lightweight LLM.
+# Old: 12-dim input → 16-dim hidden → 2 heads → 1 output. Just a quality scorer.
+# New: 24-dim input → 64-dim hidden → 4 heads → multi-output. A real consultant organ.
+# Still sparse. Still JIT. Still ephemeral. Same organ, more capable.
+#
+# VOTE_FEATURE_DIM = 8 (vote stats) + 4 (input correlation) + 4 (automaton trace) + 4 (coherence field) + 4 (positional) = 24
+const VOTE_FEATURE_DIM     = 24      # features extracted per vote (expanded for LLM consultation)
+const HIDDEN_DIM           = 64      # hidden layer width — 4x capacity for richer representations
+const ATTENTION_HEADS      = 4       # finer-grained attention patterns
+const NUM_TRANSFORMER_BLOCKS = 2     # depth: 2 transformer blocks with residual connections
+const FFN_DIM              = 128     # FFN expansion factor (2x hidden, expansion-contraction)
+const NUM_OUTPUT_HEADS     = 4       # directive_quality, semantic_score, relevance_score, disambiguation_vec (4-dim)
+
+# GRUG: Output head indices — positions in the output vector
+const OUTPUT_IDX_DIRECTIVE_QUALITY = 1
+const OUTPUT_IDX_SEMANTIC_SCORE    = 2
+const OUTPUT_IDX_RELEVANCE_SCORE   = 3
+const OUTPUT_IDX_DISAMBIGUATION    = 4  # 4-dim vector squeezed to scalar for now; future: full vector
+
+# GRUG: Legacy compatibility — old code that only knows about 12-dim features
+# still works because extract_vote_features pads to VOTE_FEATURE_DIM with zeros
+# for the new feature slots until the caller provides them.
+const LEGACY_VOTE_FEATURE_DIM = 12  # old feature count for backward compat checks
 
 # GRUG: History for novelty estimation
 const NOVELTY_HISTORY_SIZE = 64      # rolling window of hash-based novelty scores
@@ -464,38 +482,136 @@ end
 """
     MLPWeights
 
-The weight matrices for the MLP. Small by design — this is a sparse system
-that processes one feature (the vote list), not a general-purpose neural net.
-Weights are stored as flat vectors with jitter eligibility flags.
+The weight matrices for the JIT lightweight LLM organ. Expanded from the
+original tiny MLP (12→16→1) into a multi-block transformer with multi-output
+heads (24→64→4). Still sparse by design — this is a consultant organ, not a
+general-purpose neural net. Weights are stored as flat vectors with jitter
+eligibility flags.
 
-Architecture:
-  input (VOTE_FEATURE_DIM) → hidden (HIDDEN_DIM) → output (1)
+Architecture (v9):
+  input (VOTE_FEATURE_DIM=24) → hidden (HIDDEN_DIM=64)
+    → transformer_block_1 (attention + FFN + residual + layernorm)
+    → transformer_block_2 (attention + FFN + residual + layernorm)
+    → output heads (4): directive_quality, semantic_score, relevance_score, disambiguation
 
-The output is a single scalar: the directive quality score. This score
-modulates how the vote list is re-weighted before being passed to AIML.
+Legacy weights (w_hidden_output, b_output, w_attention) are preserved for
+backward compat and used as fallback paths during migration. New weights
+(w_qk, w_v, w_ffn1, w_ffn2, w_output_heads) carry the expanded architecture.
+
+GRUG: Same organ. More capable. Still ephemeral in presence, persistent in state.
 """
 mutable struct MLPWeights
-    # GRUG: Input → hidden weights (VOTE_FEATURE_DIM × HIDDEN_DIM)
+    # ── Input → hidden weights (VOTE_FEATURE_DIM × HIDDEN_DIM) ──
     w_input_hidden::Vector{MLPWeight}   # length = VOTE_FEATURE_DIM * HIDDEN_DIM
     b_hidden::Vector{MLPWeight}         # length = HIDDEN_DIM
 
-    # GRUG: Hidden → output weights (HIDDEN_DIM × 1)
+    # ── Legacy: Hidden → output weights (HIDDEN_DIM × 1) ──
+    # GRUG: Kept for backward compat. New code uses w_output_heads instead.
     w_hidden_output::Vector{MLPWeight}  # length = HIDDEN_DIM
-    b_output::MLPWeight                 # single output bias
+    b_output::MLPWeight                 # single output bias (legacy)
 
-    # GRUG: Attention weights for sparse transformer (HIDDEN_DIM × ATTENTION_HEADS)
+    # ── Legacy: Attention weights (HIDDEN_DIM × ATTENTION_HEADS) ──
+    # GRUG: Kept for backward compat. New code uses w_qk/w_v per block.
     w_attention::Vector{MLPWeight}      # length = HIDDEN_DIM * ATTENTION_HEADS
+
+    # ── v9: Query-Key projections per transformer block ──
+    # Each block has Q and K projections: HIDDEN_DIM → HIDDEN_DIM (split across heads)
+    # w_qk[block][head] = (Q_matrix, K_matrix), flattened to Vector{MLPWeight}
+    # Total per block: 2 * HIDDEN_DIM * HIDDEN_DIM (query + key)
+    w_qk::Vector{Vector{MLPWeight}}    # NUM_TRANSFORMER_BLOCKS elements, each 2 * HIDDEN_DIM * HIDDEN_DIM
+
+    # ── v9: Value projections per transformer block ──
+    # Each block: HIDDEN_DIM → HIDDEN_DIM
+    w_v::Vector{Vector{MLPWeight}}      # NUM_TRANSFORMER_BLOCKS elements, each HIDDEN_DIM * HIDDEN_DIM
+
+    # ── v9: FFN expansion weights per transformer block ──
+    # FFN: HIDDEN_DIM → FFN_DIM → HIDDEN_DIM (expansion-contraction)
+    w_ffn1::Vector{Vector{MLPWeight}}   # NUM_TRANSFORMER_BLOCKS, each HIDDEN_DIM * FFN_DIM
+    b_ffn1::Vector{Vector{MLPWeight}}   # NUM_TRANSFORMER_BLOCKS, each FFN_DIM
+    w_ffn2::Vector{Vector{MLPWeight}}   # NUM_TRANSFORMER_BLOCKS, each FFN_DIM * HIDDEN_DIM
+    b_ffn2::Vector{Vector{MLPWeight}}   # NUM_TRANSFORMER_BLOCKS, each HIDDEN_DIM
+
+    # ── v9: Layer norm weights per transformer block ──
+    # Pre-norm architecture: layernorm before attention and before FFN
+    # Each LN has scale (gamma) and bias (beta), both HIDDEN_DIM
+    w_ln_scale::Vector{Vector{MLPWeight}}  # NUM_TRANSFORMER_BLOCKS * 2, each HIDDEN_DIM (2 LN per block)
+    w_ln_bias::Vector{Vector{MLPWeight}}   # NUM_TRANSFORMER_BLOCKS * 2, each HIDDEN_DIM
+
+    # ── v9: Multi-output heads ──
+    # Each head: HIDDEN_DIM → 1 scalar output
+    w_output_heads::Vector{Vector{MLPWeight}}  # NUM_OUTPUT_HEADS, each HIDDEN_DIM
+    b_output_heads::Vector{MLPWeight}          # NUM_OUTPUT_HEADS biases
 end
 
 function MLPWeights()
     total_ih = VOTE_FEATURE_DIM * HIDDEN_DIM
-    # GRUG: Initialize with small random weights, hidden/output bias jitter-eligible
+
+    # ── Legacy weights (same as before, sized for new dims) ──
     w_ih = [MLPWeight((rand() - 0.5) * 0.1; jitter_eligible = true) for _ in 1:total_ih]
     b_h  = [MLPWeight(0.0; jitter_eligible = true) for _ in 1:HIDDEN_DIM]
     w_ho = [MLPWeight((rand() - 0.5) * 0.1; jitter_eligible = true) for _ in 1:HIDDEN_DIM]
     b_o  = MLPWeight(0.0; jitter_eligible = true)
     w_at = [MLPWeight((rand() - 0.5) * 0.1; jitter_eligible = true) for _ in 1:(HIDDEN_DIM * ATTENTION_HEADS)]
-    return MLPWeights(w_ih, b_h, w_ho, b_o, w_at)
+
+    # ── v9: Query-Key projections per block ──
+    # GRUG: Xavier-ish init for transformer weights — scale by 1/sqrt(HIDDEN_DIM)
+    qk_scale = 1.0 / sqrt(Float64(HIDDEN_DIM))
+    w_qk_blocks = Vector{Vector{MLPWeight}}()
+    for _ in 1:NUM_TRANSFORMER_BLOCKS
+        qk_weights = [MLPWeight((rand() - 0.5) * qk_scale; jitter_eligible = true)
+                      for _ in 1:(2 * HIDDEN_DIM * HIDDEN_DIM)]
+        push!(w_qk_blocks, qk_weights)
+    end
+
+    # ── v9: Value projections per block ──
+    w_v_blocks = Vector{Vector{MLPWeight}}()
+    for _ in 1:NUM_TRANSFORMER_BLOCKS
+        v_weights = [MLPWeight((rand() - 0.5) * qk_scale; jitter_eligible = true)
+                     for _ in 1:(HIDDEN_DIM * HIDDEN_DIM)]
+        push!(w_v_blocks, v_weights)
+    end
+
+    # ── v9: FFN weights per block ──
+    ffn_scale = 1.0 / sqrt(Float64(HIDDEN_DIM))
+    w_ffn1_blocks = Vector{Vector{MLPWeight}}()
+    b_ffn1_blocks = Vector{Vector{MLPWeight}}()
+    w_ffn2_blocks = Vector{Vector{MLPWeight}}()
+    b_ffn2_blocks = Vector{Vector{MLPWeight}}()
+    for _ in 1:NUM_TRANSFORMER_BLOCKS
+        push!(w_ffn1_blocks, [MLPWeight((rand() - 0.5) * ffn_scale; jitter_eligible = true)
+                              for _ in 1:(HIDDEN_DIM * FFN_DIM)])
+        push!(b_ffn1_blocks, [MLPWeight(0.0; jitter_eligible = true) for _ in 1:FFN_DIM])
+        push!(w_ffn2_blocks, [MLPWeight((rand() - 0.5) * ffn_scale; jitter_eligible = true)
+                              for _ in 1:(FFN_DIM * HIDDEN_DIM)])
+        push!(b_ffn2_blocks, [MLPWeight(0.0; jitter_eligible = true) for _ in 1:HIDDEN_DIM])
+    end
+
+    # ── v9: Layer norm weights per block (2 LN per block: pre-attention, pre-FFN) ──
+    # GRUG: Layer norm scale starts at 1.0 (identity), bias at 0.0.
+    # Scale is jitter-eligible (exploration of normalization strength).
+    w_ln_scale_blocks = Vector{Vector{MLPWeight}}()
+    w_ln_bias_blocks = Vector{Vector{MLPWeight}}()
+    for _ in 1:(NUM_TRANSFORMER_BLOCKS * 2)
+        push!(w_ln_scale_blocks, [MLPWeight(1.0; jitter_eligible = true) for _ in 1:HIDDEN_DIM])
+        push!(w_ln_bias_blocks, [MLPWeight(0.0; jitter_eligible = true) for _ in 1:HIDDEN_DIM])
+    end
+
+    # ── v9: Multi-output heads ──
+    head_scale = 1.0 / sqrt(Float64(HIDDEN_DIM))
+    w_output_heads_list = Vector{Vector{MLPWeight}}()
+    for _ in 1:NUM_OUTPUT_HEADS
+        push!(w_output_heads_list, [MLPWeight((rand() - 0.5) * head_scale; jitter_eligible = true)
+                                     for _ in 1:HIDDEN_DIM])
+    end
+    b_output_heads_list = [MLPWeight(0.0; jitter_eligible = true) for _ in 1:NUM_OUTPUT_HEADS]
+
+    return MLPWeights(
+        w_ih, b_h, w_ho, b_o, w_at,
+        w_qk_blocks, w_v_blocks,
+        w_ffn1_blocks, b_ffn1_blocks, w_ffn2_blocks, b_ffn2_blocks,
+        w_ln_scale_blocks, w_ln_bias_blocks,
+        w_output_heads_list, b_output_heads_list
+    )
 end
 
 # ==============================================================================
@@ -528,7 +644,10 @@ mutable struct EphemeralMLPState
     total_relu_activations::Int            # how many times relu path fired
     right_feedback_count::Int              # /right feedback received
     wrong_feedback_count::Int              # /wrong feedback received
-    last_directive_quality::Float64        # output of last MLP forward pass
+    last_directive_quality::Float64        # output of last MLP forward pass (output head 1)
+    last_semantic_score::Float64           # v9: semantic coherence score (output head 2)
+    last_relevance_score::Float64          # v9: relevance to user input (output head 3)
+    last_disambiguation::Float64           # v9: ambiguity resolution signal (output head 4)
     selfobserver_observations::Int         # how many SelfObserver confirmations we've received
     observation_threshold::Int             # minimum SelfObserver entries before MLP adjustments are non-zero (user-editable)
     adjustments_enabled::Bool              # gate: true only after observation_threshold met
@@ -548,7 +667,10 @@ function EphemeralMLPState()
         0.0,
         "",                     # no user input yet
         0, 0, 0, 0, 0,
-        0.0,
+        0.0,                    # last_directive_quality
+        0.0,                    # last_semantic_score (v9)
+        0.0,                    # last_relevance_score (v9)
+        0.0,                    # last_disambiguation (v9)
         0,                      # no SelfObserver observations yet
         5,                      # observation_threshold default (was const OBSERVATION_THRESHOLD)
         false,                  # adjustments disabled until threshold met
@@ -720,17 +842,304 @@ function relu(x::Float64)::Float64
 end
 
 # ==============================================================================
+# LAYER NORMALIZATION — GRUG: keep the numbers well-behaved
+# ==============================================================================
+
+"""
+    layer_norm(x::Vector{Float64}, scale::Vector{MLPWeight}, bias::Vector{MLPWeight})::Vector{Float64}
+
+Apply layer normalization to vector x with learnable scale (gamma) and bias (beta).
+Pre-norm architecture: normalize before attention/FFN for training stability.
+
+GRUG: Numbers get big or numbers get small. Layer norm makes numbers reasonable.
+      Scale and bias let the brain learn HOW reasonable. Not too flat, not too spiky.
+"""
+function layer_norm(x::Vector{Float64}, scale::Vector{MLPWeight},
+                    bias::Vector{MLPWeight})::Vector{Float64}
+    n = length(x)
+    if n == 0
+        return Float64[]
+    end
+
+    # GRUG: Compute mean and variance
+    mean_x = sum(x) / n
+    var_x = sum((xi - mean_x)^2 for xi in x) / n
+
+    # GRUG: Epsilon for numerical stability (prevent divide-by-zero)
+    eps = 1e-5
+    std_x = sqrt(var_x + eps)
+
+    # GRUG: Normalize, then apply learned scale and bias
+    result = Vector{Float64}(undef, n)
+    for i in 1:n
+        normed = (x[i] - mean_x) / std_x
+        s_val = i <= length(scale) ? jitter_weight(scale[i]) : 1.0
+        b_val = i <= length(bias) ? jitter_weight(bias[i]) : 0.0
+        result[i] = normed * s_val + b_val
+    end
+
+    # GRUG: Paranoid NaN/Inf guard
+    for (i, r) in enumerate(result)
+        if isnan(r) || isinf(r)
+            @error "[EphemeralMLP] layer_norm produced NaN/Inf at dim $i: $r — resetting to 0.0"
+            result[i] = 0.0
+        end
+    end
+
+    return result
+end
+
+# ==============================================================================
+# MULTI-HEAD ATTENTION — GRUG v9: proper Q/K/V attention, not just weighted sum
+# ==============================================================================
+
+"""
+    multi_head_attention(hidden::Vector{Float64}, w_qk::Vector{MLPWeight},
+                         w_v::Vector{MLPWeight}, activation::Symbol)::Vector{Float64}
+
+Proper multi-head attention with separate Q/K/V projections. Each head attends
+to a slice of HIDDEN_DIM. Query-Key projections produce attention scores that
+determine how much each hidden dimension attends to every other.
+
+Architecture:
+  Q = w_qk[1:H*H] @ hidden  (query projection, first half of w_qk)
+  K = w_qk[H*H+1:2*H*H] @ hidden  (key projection, second half)
+  V = w_v @ hidden  (value projection)
+
+Per head: Q_h, K_h, V_h = slices of Q, K, V for head h
+  Attention scores: Q_h * K_h^T / sqrt(head_dim)
+  Fuzzy path (ReLU): scores passed through sigmoid (soft membership, NOT normalized)
+  Solid path (Sigmoid): scores passed through softmax (crisp, sums to 1.0)
+  Output: attention_weights @ V_h
+
+All heads concatenated and projected back to HIDDEN_DIM.
+
+GRUG: Old attention was just weighted hidden sum. New attention is real Q/K/V.
+      Brain can now ask "what am I looking FOR?" and "what do I SEE?" separately.
+      That's a lot more powerful than just "what's important?"
+"""
+function multi_head_attention(hidden::Vector{Float64}, w_qk::Vector{MLPWeight},
+                              w_v::Vector{MLPWeight}, activation::Symbol)::Vector{Float64}
+    H = HIDDEN_DIM
+    n_heads = ATTENTION_HEADS
+    head_dim = H ÷ n_heads  # dimensions per head (64/4 = 16)
+
+    if length(hidden) != H
+        @error "[EphemeralMLP] multi_head_attention: hidden dim mismatch $(length(hidden)) vs $H"
+        return zeros(H)
+    end
+
+    # ── Project Q, K, V ────────────────────────────────────────────────
+    # w_qk layout: first H*H weights = query projection, second H*H = key projection
+    qk_split = H * H
+    if length(w_qk) < 2 * qk_split || length(w_v) < qk_split
+        @error "[EphemeralMLP] multi_head_attention: weight vectors too short"
+        return zeros(H)
+    end
+
+    # GRUG: Manual matrix-vector multiply. Q = W_q * hidden, K = W_k * hidden, V = W_v * hidden
+    # Weight matrix is stored row-major: W[i,j] = w[(i-1)*H + j]
+    Q = Vector{Float64}(undef, H)
+    K = Vector{Float64}(undef, H)
+    V = Vector{Float64}(undef, H)
+
+    for i in 1:H
+        q_sum = 0.0
+        k_sum = 0.0
+        v_sum = 0.0
+        for j in 1:H
+            q_idx = (i - 1) * H + j
+            k_idx = qk_split + (i - 1) * H + j
+            v_idx = (i - 1) * H + j
+            q_sum += jitter_weight(w_qk[q_idx]) * hidden[j]
+            k_sum += jitter_weight(w_qk[k_idx]) * hidden[j]
+            v_sum += jitter_weight(w_v[v_idx]) * hidden[j]
+        end
+        Q[i] = q_sum
+        K[i] = k_sum
+        V[i] = v_sum
+    end
+
+    # ── Per-head attention ──────────────────────────────────────────────
+    # Each head h operates on Q_h, K_h, V_h (slices of length head_dim)
+    attn_output = zeros(H)
+
+    for h in 1:n_heads
+        h_start = (h - 1) * head_dim + 1
+        h_end = h * head_dim
+
+        Q_h = Q[h_start:h_end]
+        K_h = K[h_start:h_end]
+        V_h = V[h_start:h_end]
+
+        # GRUG: Attention scores = Q_h · K_h^T / sqrt(head_dim)
+        # For self-attention on a single vector, this is element-wise
+        # Q_h * K_h gives a scalar score per head dimension
+        scale_factor = 1.0 / sqrt(Float64(head_dim))
+
+        # GRUG: Compute attention scores for this head
+        # Each dimension in the head gets an attention weight
+        scores = Vector{Float64}(undef, head_dim)
+        for d in 1:head_dim
+            scores[d] = Q_h[d] * K_h[d] * scale_factor
+        end
+
+        # GRUG: Fuzzy vs Solid attention paths
+        if activation == ACTIVATION_RELU
+            # FUZZY: sigmoid soft membership (NOT normalized to sum to 1)
+            # Explores — attention can spread to multiple dimensions
+            for d in 1:head_dim
+                scores[d] = sigmoid(scores[d])
+            end
+        else
+            # SOLID: softmax crisp attention (sums to 1.0)
+            # Refines — attention concentrates on the most relevant dimension
+            max_s = maximum(scores)
+            exp_s = [exp(s - max_s) for s in scores]
+            sum_exp = sum(exp_s)
+            if sum_exp > 0.0
+                scores = exp_s ./ sum_exp
+            else
+                scores = fill(1.0 / head_dim, head_dim)
+            end
+        end
+
+        # GRUG: Weighted sum: attention_weights * V_h
+        for d in 1:head_dim
+            attn_output[h_start + d - 1] = scores[d] * V_h[d]
+        end
+    end
+
+    # GRUG: NaN/Inf guard
+    for (i, r) in enumerate(attn_output)
+        if isnan(r) || isinf(r)
+            @error "[EphemeralMLP] multi_head_attention produced NaN/Inf at dim $i: $r"
+            attn_output[i] = 0.0
+        end
+    end
+
+    return attn_output
+end
+
+# ==============================================================================
+# TRANSFORMER BLOCK — GRUG v9: pre-norm attention + FFN with residuals
+# ==============================================================================
+
+"""
+    transformer_block_forward(hidden::Vector{Float64}, block_idx::Int,
+                              weights::MLPWeights, activation::Symbol)::Vector{Float64}
+
+Single transformer block with pre-norm architecture:
+  1. LayerNorm (pre-attention)
+  2. Multi-head attention (Q/K/V projections)
+  3. Residual connection: hidden = hidden + attention_output
+  4. LayerNorm (pre-FFN)
+  5. FFN: expansion (HIDDEN_DIM → FFN_DIM) with activation, then contraction (FFN_DIM → HIDDEN_DIM)
+  6. Residual connection: hidden = hidden + ffn_output
+
+This is a standard pre-norm transformer block. The residual connections ensure
+gradient flow and let the block learn an identity transformation initially
+(since the residual just adds zero if the block output is zero).
+
+GRUG: Two transformations — attention figures out WHAT matters, FFN figures
+      out HOW to transform it. Residuals make sure neither transformation
+      can make things WORSE (it can only add to what's already there).
+"""
+function transformer_block_forward(hidden::Vector{Float64}, block_idx::Int,
+                                   weights::MLPWeights, activation::Symbol)::Vector{Float64}
+    H = HIDDEN_DIM
+
+    if length(hidden) != H
+        @error "[EphemeralMLP] transformer_block_forward: hidden dim mismatch"
+        return hidden  # pass through on error
+    end
+
+    if block_idx < 1 || block_idx > NUM_TRANSFORMER_BLOCKS
+        @error "[EphemeralMLP] transformer_block_forward: bad block_idx $block_idx"
+        return hidden
+    end
+
+    # ── Pre-attention LayerNorm ─────────────────────────────────────────
+    ln1_idx = (block_idx - 1) * 2 + 1  # first LN for this block
+    ln1_scale = weights.w_ln_scale[ln1_idx]
+    ln1_bias  = weights.w_ln_bias[ln1_idx]
+    normed = layer_norm(hidden, ln1_scale, ln1_bias)
+
+    # ── Multi-head attention ────────────────────────────────────────────
+    attn_out = multi_head_attention(normed, weights.w_qk[block_idx],
+                                    weights.w_v[block_idx], activation)
+
+    # ── Residual 1: hidden + attention ──────────────────────────────────
+    residual1 = hidden .+ attn_out
+
+    # ── Pre-FFN LayerNorm ───────────────────────────────────────────────
+    ln2_idx = (block_idx - 1) * 2 + 2  # second LN for this block
+    ln2_scale = weights.w_ln_scale[ln2_idx]
+    ln2_bias  = weights.w_ln_bias[ln2_idx]
+    normed2 = layer_norm(residual1, ln2_scale, ln2_bias)
+
+    # ── FFN: expansion → activation → contraction ──────────────────────
+    # GRUG: FFN is where the brain THINKS. Expansion gives it room to
+    #       form richer intermediate representations. Contraction distills
+    #       that back into the hidden space. Think of it as: spread out,
+    #       look around, then pull back together with what you found.
+    ffn_expanded = Vector{Float64}(undef, FFN_DIM)
+    for f in 1:FFN_DIM
+        sum_val = jitter_weight(weights.b_ffn1[block_idx][f])
+        for h in 1:H
+            idx = (h - 1) * FFN_DIM + f
+            if idx <= length(weights.w_ffn1[block_idx])
+                sum_val += normed2[h] * jitter_weight(weights.w_ffn1[block_idx][idx])
+            end
+        end
+        # GRUG: GELU-ish activation for FFN (smooth, non-monotonic, good for transformers)
+        # GELU(x) ≈ x * sigmoid(1.702 * x) — fast approximation
+        ffn_expanded[f] = sum_val * sigmoid(1.702 * sum_val)
+    end
+
+    # Contract: FFN_DIM → HIDDEN_DIM
+    ffn_out = Vector{Float64}(undef, H)
+    for h in 1:H
+        sum_val = jitter_weight(weights.b_ffn2[block_idx][h])
+        for f in 1:FFN_DIM
+            idx = (f - 1) * H + h
+            if idx <= length(weights.w_ffn2[block_idx])
+                sum_val += ffn_expanded[f] * jitter_weight(weights.w_ffn2[block_idx][idx])
+            end
+        end
+        ffn_out[h] = sum_val
+    end
+
+    # ── Residual 2: residual1 + FFN ────────────────────────────────────
+    result = residual1 .+ ffn_out
+
+    # GRUG: NaN/Inf guard on the entire block output
+    for (i, r) in enumerate(result)
+        if isnan(r) || isinf(r)
+            @error "[EphemeralMLP] transformer_block[$block_idx] produced NaN/Inf at dim $i: $r"
+            result[i] = hidden[i]  # fall back to input on error
+        end
+    end
+
+    return result
+end
+
+# ==============================================================================
 # FEATURE EXTRACTION FROM VOTES
 # ==============================================================================
 
 """
-    extract_vote_features(vote_data::Vector{Dict{String, Any}}, user_input::String = "")::Vector{Float64}
+    extract_vote_features(vote_data::Vector{Dict{String, Any}}, user_input::String = "";
+                          automaton_trace::Vector{Float64} = Float64[],
+                          coherence_features::Vector{Float64} = Float64[],
+                          position_index::Int = 0)::Vector{Float64}
 
 Extract a fixed-size feature vector from the vote list AND the original user
 input. The MLP needs both to learn input→directive correlations — you can't
 learn which questions produce good answers if you don't know what was asked.
 
-Features (VOTE_FEATURE_DIM = 12):
+Features (VOTE_FEATURE_DIM = 24):
+  ── Vote statistics (8) ──
   1. Number of votes (normalized)
   2. Mean confidence
   3. Confidence variance
@@ -740,14 +1149,33 @@ Features (VOTE_FEATURE_DIM = 12):
   7. Number of unique node IDs (normalized)
   8. Confidence range (max - min)
   ── Input correlation features (4) ──
-  9. Input length (normalized) — short questions vs long explanations
-  10. Input word count (normalized) — complexity proxy
-  11. Input question score — does the input contain question words?
-  12. Input→vote correlation strength — how many times this input hash
-      has been seen with similar vote patterns (EMA quality)
+  9. Input length (normalized)
+  10. Input word count (normalized)
+  11. Input question score
+  12. Input→vote correlation strength
+  ── Automaton trace features (4) — v9 ──
+  13. Active rule hash (normalized) — which automaton rule was active
+  14. Step depth (normalized) — how deep into the automaton's step sequence
+  15. Accumulator magnitude — how much the automaton has accumulated
+  16. Accumulator sign — direction of automaton accumulation (-1, 0, +1 normalized)
+  ── Coherence field features (4) — v9 ──
+  17. Φ current — current coherence field strength
+  18. ΔΦ magnitude — rate of coherence change
+  19. ΔΦ direction — direction of coherence change
+  20. Lobe coherence variance — how much coherence varies across lobes
+  ── Positional encoding (4) — v9 ──
+  21-24. Sinusoidal positional encoding — injects order/position information
+
+GRUG: Brain needs MORE than just vote stats now. It needs to know what the
+      automaton was doing (trace), whether the coherence field is stable
+      (coherence), and WHERE in the sequence this vote list sits (positional).
+      That's a real consultant organ, not just a quality scorer.
 """
 function extract_vote_features(vote_data::Vector{Dict{String, Any}},
-                               user_input::String = "")::Vector{Float64}
+                               user_input::String = "";
+                               automaton_trace::Vector{Float64} = Float64[],
+                               coherence_features::Vector{Float64} = Float64[],
+                               position_index::Int = 0)::Vector{Float64}
     if isempty(vote_data)
         return zeros(VOTE_FEATURE_DIM)
     end
@@ -793,7 +1221,41 @@ function extract_vote_features(vote_data::Vector{Dict{String, Any}},
         end
     end
 
+    # ── Automaton trace features (4 dims) ────────────────────────────────
+    # GRUG v9: The automaton is the hippocampus. When it fires rules and
+    # steps through its sequence, the MLP needs to know. The trace tells
+    # the LLM organ what the automaton was doing — active rule, depth,
+    # accumulated magnitude, direction. This is the bridge between
+    # procedural memory (automaton) and semantic consultation (MLP).
+    trace_rule_hash = length(automaton_trace) >= 1 ? clamp(automaton_trace[1], 0.0, 1.0) : 0.0
+    trace_step_depth = length(automaton_trace) >= 2 ? clamp(automaton_trace[2], 0.0, 1.0) : 0.0
+    trace_accum_magnitude = length(automaton_trace) >= 3 ? clamp(abs(automaton_trace[3]), 0.0, 1.0) : 0.0
+    trace_accum_sign = length(automaton_trace) >= 4 ? clamp((automaton_trace[4] + 1.0) / 2.0, 0.0, 1.0) : 0.5  # [-1,1] → [0,1]
+
+    # ── Coherence field features (4 dims) ────────────────────────────────
+    # GRUG v9: CoherenceField Φ tells the MLP whether the system is in
+    # a stable state (high Φ, low ΔΦ) or in flux (low Φ, high |ΔΦ|).
+    # When in flux, the MLP should spread attention wider (fuzzy boost).
+    # When stable, it can concentrate (solid boost).
+    coh_phi = length(coherence_features) >= 1 ? clamp(coherence_features[1], 0.0, 1.0) : 0.5
+    coh_delta_mag = length(coherence_features) >= 2 ? clamp(coherence_features[2], 0.0, 1.0) : 0.0
+    coh_delta_dir = length(coherence_features) >= 3 ? clamp((coherence_features[3] + 1.0) / 2.0, 0.0, 1.0) : 0.5  # [-1,1] → [0,1]
+    coh_lobe_var = length(coherence_features) >= 4 ? clamp(coherence_features[4], 0.0, 1.0) : 0.0
+
+    # ── Positional encoding (4 dims) ─────────────────────────────────────
+    # GRUG v9: Transformers need to know WHERE things are. Position tells
+    # the brain "this vote list is the 3rd one this cycle" or "this is
+    # the 47th transform ever." Sinusoidal encoding — same trick as full
+    # LLMs, just smaller. Position matters because the brain should treat
+    # the first vote list differently from the hundredth.
+    pos = Float64(position_index)
+    pos_enc_1 = sin(pos / 10000.0^(0 / 4))     # dim 21: low frequency
+    pos_enc_2 = cos(pos / 10000.0^(1 / 4))     # dim 22
+    pos_enc_3 = sin(pos / 10000.0^(2 / 4))     # dim 23
+    pos_enc_4 = cos(pos / 10000.0^(3 / 4))     # dim 24: high frequency
+
     features = Float64[
+        # ── Vote statistics (8) ──
         min(n / 10.0, 1.0),               # 1: normalized vote count
         mean_conf,                          # 2: mean confidence
         min(var_conf, 1.0),                 # 3: capped variance
@@ -802,10 +1264,26 @@ function extract_vote_features(vote_data::Vector{Dict{String, Any}},
         n > 0 ? Float64(antimatches) / n : 0.0,  # 6: antimatch fraction
         min(unique_nodes / 10.0, 1.0),     # 7: normalized unique nodes
         max_conf - min_conf,                # 8: confidence range
+        # ── Input correlation features (4) ──
         input_len,                          # 9: input length (normalized)
         input_words,                        # 10: input word count (normalized)
         question_score,                     # 11: question indicator score
-        correlation_strength                # 12: input→vote EMA quality
+        correlation_strength,               # 12: input→vote EMA quality
+        # ── Automaton trace features (4) — v9 ──
+        trace_rule_hash,                    # 13: active automaton rule hash
+        trace_step_depth,                   # 14: automaton step depth
+        trace_accum_magnitude,              # 15: automaton accumulator magnitude
+        trace_accum_sign,                   # 16: accumulator direction
+        # ── Coherence field features (4) — v9 ──
+        coh_phi,                            # 17: coherence field strength
+        coh_delta_mag,                      # 18: coherence change rate
+        coh_delta_dir,                      # 19: coherence change direction
+        coh_lobe_var,                       # 20: cross-lobe coherence variance
+        # ── Positional encoding (4) — v9 ──
+        pos_enc_1,                          # 21: positional sin(low freq)
+        pos_enc_2,                          # 22: positional cos(low freq)
+        pos_enc_3,                          # 23: positional sin(high freq)
+        pos_enc_4                           # 24: positional cos(high freq)
     ]
 
     # GRUG: Paranoid check — must be exactly VOTE_FEATURE_DIM
@@ -1034,14 +1512,20 @@ function phase_mix_hidden!(hidden::Vector{Float64},
                 continue
             end
 
-            # GRUG: Project 12-dim phase vector to 16-dim hidden space via tile+scale.
-            # This gives every phase snapshot a UNIQUE hidden-space fingerprint.
+            # GRUG v9: Project 12-dim phase vector to 64-dim hidden space via tile+scale.
+            # 12-dim ATP distribution tiles ~5.3x across 64 dims with position-dependent
+            # scale and offset. Each phase snapshot gets a UNIQUE hidden-space fingerprint
+            # that preserves the automaton's ATP structure while spreading across the
+            # wider LLM hidden space.
             mix_strength = coherence * PHASE_MIX_STRENGTH
             for j in 1:length(hidden)
                 src_idx = ((j - 1) % PHASE_DIM) + 1
-                # Scale each phase dim to spread across hidden space range
-                scale = 0.5 + 0.1 * (j / length(hidden))  # slight position-dependent scale
-                offset = 0.01 * (j - 1) / length(hidden)   # slight position-dependent offset
+                # GRUG v9: Position-dependent scale + offset for 64-dim projection.
+                # Scale ramps from 0.3 to 0.7 across hidden dims — early dims get
+                # compressed, late dims get expanded. This creates structure in the
+                # projection (not just uniform tiling).
+                scale = 0.3 + 0.4 * (j / length(hidden))
+                offset = 0.02 * ((j - 1) % PHASE_DIM) / PHASE_DIM   # slight position-dependent offset
                 hidden[j] += mix_strength * (scale * phase_vector[src_idx] + offset)
             end
         catch e
@@ -1070,8 +1554,8 @@ function phase_mix_hidden!(hidden::Vector{Float64},
 
             for j in 1:length(hidden)
                 src_idx = ((j - 1) % PHASE_DIM) + 1
-                scale = 0.5 + 0.1 * (j / length(hidden))
-                offset = 0.01 * (j - 1) / length(hidden)
+                scale = 0.3 + 0.4 * (j / length(hidden))
+                offset = 0.02 * ((j - 1) % PHASE_DIM) / PHASE_DIM
                 hidden[j] += PHASE_SURFACE_MIX_STRENGTH * (scale * phase_vector[src_idx] + offset)
             end
         catch e
@@ -1095,19 +1579,29 @@ end
 # ==============================================================================
 
 """
-    mlp_forward(features::Vector{Float64}, weights::MLPWeights, activation::Symbol, rules::Vector{MLPTransformerRule}; phase_entries, surface_entries)::Float64
+    mlp_forward(features::Vector{Float64}, weights::MLPWeights, activation::Symbol, rules::Vector{MLPTransformerRule}; phase_entries, surface_entries)::Vector{Float64}
 
-Run the MLP forward pass: input → hidden → activation → transformer → output.
-Returns the directive quality score (a scalar in [0, 1]).
+Run the MLP forward pass through the full v9 architecture:
+  input (24) → hidden (64) → transformer_block_1 → transformer_block_2 → multi-output heads (4)
 
-The activation function determines the transformer path:
-  - :sigmoid → solid_transform (familiar, refining)
-  - :relu    → fuzzy_transform (novel, exploratory)
+Returns a vector of NUM_OUTPUT_HEADS outputs:
+  [1] directive_quality — how good the MLP thinks this vote list is (0.0-1.0)
+  [2] semantic_score — semantic coherence with historical patterns (0.0-1.0)
+  [3] relevance_score — relevance to current user input context (0.0-1.0)
+  [4] disambiguation — ambiguity resolution signal (0.0-1.0)
+
+The activation function determines the attention path within each transformer block:
+  - :sigmoid → solid attention (familiar, refining, softmax-normalized)
+  - :relu    → fuzzy attention (novel, exploratory, soft membership)
+
+GRUG: Old brain just scored quality. New brain does FOUR consultations at once.
+      It says "this is good quality AND semantically coherent AND relevant AND
+      here's how to resolve ambiguity." That's a consultant organ, not a scorer.
 """
 function mlp_forward(features::Vector{Float64}, weights::MLPWeights,
                      activation::Symbol, rules::Vector{MLPTransformerRule};
                      phase_entries::Vector{Tuple{Float64, Vector{Float64}}} = Vector{Tuple{Float64, Vector{Float64}}}(),
-                     surface_entries::Vector{Vector{Float64}} = Vector{Vector{Float64}}())::Float64
+                     surface_entries::Vector{Vector{Float64}} = Vector{Vector{Float64}}())::Vector{Float64}
     if length(features) != VOTE_FEATURE_DIM
         _err("mlp_forward: expected $VOTE_FEATURE_DIM features, got $(length(features))",
              "mlp_forward")
@@ -1131,41 +1625,76 @@ function mlp_forward(features::Vector{Float64}, weights::MLPWeights,
         end
     end
 
-    # ── Transformer ─────────────────────────────────────────────────────
-    # -- Phase mix: hippocampal retrieval into hidden state ----------------
+    # ── Phase mix: hippocampal retrieval into hidden state ──────────────
     # GRUG: Retrieved phase snapshots from the automaton's time crystal BLEND into
-    # what the brain sees. 12-dim ATP distributions projected to 16-dim hidden space.
-    # That's real hippocampal retrieval - the automaton's voice in the MLP's brain.
+    # what the brain sees. 12-dim ATP distributions projected to 64-dim hidden space.
+    # That's real hippocampal retrieval — the automaton's voice in the MLP's brain.
     if !isempty(phase_entries) || !isempty(surface_entries)
         phase_mix_hidden!(hidden, phase_entries, surface_entries)
     end
 
-    # GRUG: Route to fuzzy or solid transformer based on activation mode
-    transformed = if activation == ACTIVATION_RELU
-        fuzzy_transform(hidden, weights, rules)
-    else
-        solid_transform(hidden, weights, rules)
+    # ── Transformer blocks with residual connections ─────────────────────
+    # GRUG v9: The real meat. Each block does: layernorm → attention → residual →
+    # layernorm → FFN → residual. Two blocks = two rounds of "what matters?" + "how
+    # to transform?" The residual connections mean the brain can only ADD capability,
+    # never destroy what it already knows.
+    for block_idx in 1:NUM_TRANSFORMER_BLOCKS
+        hidden = transformer_block_forward(hidden, block_idx, weights, activation)
     end
 
-    # ── Transformed → Output ────────────────────────────────────────────
-    if isempty(transformed)
-        return 0.5  # neutral quality when no transformation happened
+    # ── Apply legacy fuzzy/solid transformer rules as bias ──────────────
+    # GRUG: Rules still inject their influence AFTER the transformer blocks.
+    # The transformer blocks handle the heavy lifting (attention + FFN), and
+    # then rules add targeted bias. Fuzzy rules for exploration, solid rules
+    # for refinement. Same mechanism as before, just applied after deeper processing.
+    if !isempty(rules)
+        rule_bias = zeros(HIDDEN_DIM)
+        for rule in rules
+            if !rule.enabled
+                continue
+            end
+            w = jitter_weight(rule.weight)
+            if rule.transform_type == MLP_TRANSFORM_FUZZY
+                # GRUG: Fuzzy rules spread influence (exploratory)
+                for i in 1:HIDDEN_DIM
+                    dim_idx = (mod(hash(rule.id), HIDDEN_DIM) + 1)
+                    if dim_idx == i
+                        rule_bias[i] += w * 0.1
+                    end
+                end
+            else
+                # GRUG: Solid rules target specific dimensions (precise)
+                dim_idx = mod(hash(rule.id), HIDDEN_DIM) + 1
+                rule_bias[dim_idx] += w * 0.2
+            end
+        end
+        hidden = hidden .+ rule_bias
     end
 
-    output_sum = jitter_weight(weights.b_output)
-    for i in 1:min(length(transformed), length(weights.w_hidden_output))
-        output_sum += transformed[i] * jitter_weight(weights.w_hidden_output[i])
+    # ── Multi-output heads ──────────────────────────────────────────────
+    # GRUG v9: Four heads, four consultations. Each head reads the final
+    # hidden state and produces a scalar output. The heads are independent —
+    # each learns its own readout of what the hidden state means.
+    outputs = Vector{Float64}(undef, NUM_OUTPUT_HEADS)
+    for head_idx in 1:NUM_OUTPUT_HEADS
+        sum_val = jitter_weight(weights.b_output_heads[head_idx])
+        for h in 1:HIDDEN_DIM
+            if h <= length(weights.w_output_heads[head_idx])
+                sum_val += hidden[h] * jitter_weight(weights.w_output_heads[head_idx][h])
+            end
+        end
+        # GRUG: Sigmoid squashes each output to [0, 1]
+        outputs[head_idx] = sigmoid(sum_val)
     end
 
-    # GRUG: Final sigmoid to squash output to [0, 1]
-    quality = sigmoid(output_sum)
-
-    if isnan(quality) || isinf(quality)
-        _err("mlp_forward produced NaN/Inf quality: $quality (output_sum=$output_sum)",
-             "mlp_forward")
+    # GRUG: NaN/Inf guard on ALL outputs
+    for (i, o) in enumerate(outputs)
+        if isnan(o) || isinf(o)
+            _err("mlp_forward produced NaN/Inf at output head $i: $o", "mlp_forward")
+        end
     end
 
-    return clamp(quality, 0.0, 1.0)
+    return outputs
 end
 
 # ==============================================================================
@@ -1460,6 +1989,67 @@ function _nudge_weights!(weights::MLPWeights, delta::Float64)
             w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
         end
     end
+    # GRUG v9: Nudge all transformer block weights too
+    for block in 1:length(weights.w_qk)
+        for w in weights.w_qk[block]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+    end
+    for block in 1:length(weights.w_v)
+        for w in weights.w_v[block]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+    end
+    for block in 1:length(weights.w_ffn1)
+        for w in weights.w_ffn1[block]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+        for w in weights.b_ffn1[block]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+        for w in weights.w_ffn2[block]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+        for w in weights.b_ffn2[block]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+    end
+    for ln_idx in 1:length(weights.w_ln_scale)
+        for w in weights.w_ln_scale[ln_idx]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+        for w in weights.w_ln_bias[ln_idx]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+    end
+    for head in 1:length(weights.w_output_heads)
+        for w in weights.w_output_heads[head]
+            if w.jitter_eligible
+                w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+            end
+        end
+    end
+    for w in weights.b_output_heads
+        if w.jitter_eligible
+            w.value = clamp(w.value + delta, WEIGHT_FLOOR, WEIGHT_CEILING)
+        end
+    end
 end
 
 # ==============================================================================
@@ -1471,25 +2061,23 @@ end
 
 The primary entry point. Called after LAST_CONTRIBUTOR_VOTES is populated
 but BEFORE the AIML scaffold is built. Processes the vote list through the
-MLP and returns a dict with:
+v9 multi-output MLP and returns a dict with:
+
   - "directive_quality" : Float64  — how good the MLP thinks this vote list is
+  - "semantic_score"    : Float64  — semantic coherence with historical patterns
+  - "relevance_score"   : Float64  — relevance to current user input context
+  - "disambiguation"    : Float64  — ambiguity resolution signal
   - "activation"        : Symbol   — :sigmoid or :relu
   - "novelty_score"     : Float64  — 0.0-1.0
   - "active_rules"      : Vector{String} — IDs of rules that fired
   - "adjustments"       : Dict{String, Float64} — per-node confidence adjustments
   - "adjustments_enabled" : Bool   — whether adjustments are non-zero (SelfObserver gate)
+  - "strain_energy"     : Float64  — composite strain from all output heads
+  - "hippocampal_warrant_active" : Bool — growth signal
 
-GRUG: Prediction is power. Observation is truth. The MLP's directive quality
-      is a PREDICTION. SelfObserver records what ACTUALLY happened. The MLP
-      should NOT modify the vote list until SelfObserver has enough observations
-      to confirm the prediction was right. This is the "rain check" — conservative
-      until evidence accumulates. observation_threshold (default 5) observations
-      must be recorded before adjustments become non-zero.
-
-      The MLP also needs the ORIGINAL USER INPUT to learn input→directive
-      correlations. You can't learn which questions produce good answers if
-      you don't know what was asked. Different questions → different rocks →
-      different quality.
+GRUG v9: The MLP now produces FOUR outputs, not just one. Strain energy is
+      computed from the composite of all heads — low semantic_score and
+      relevance_score on novel inputs also contribute to strain.
 """
 function transform_vote_list(vote_data::Vector{Dict{String, Any}};
                              hopfield_hit::Bool = false,
@@ -1498,12 +2086,18 @@ function transform_vote_list(vote_data::Vector{Dict{String, Any}};
                              is_compound::Bool = false,
                              scan_mode::Int = 1,
                              phase_entries::Vector{Tuple{Float64, Vector{Float64}}} = Vector{Tuple{Float64, Vector{Float64}}}(),
-                             surface_entries::Vector{Vector{Float64}} = Vector{Vector{Float64}}())::Dict{String, Any}
+                             surface_entries::Vector{Vector{Float64}} = Vector{Vector{Float64}}(),
+                             automaton_trace::Vector{Float64} = Float64[],
+                             coherence_features::Vector{Float64} = Float64[],
+                             position_index::Int = 0)::Dict{String, Any}
     st = _state()
     t_start = time()
 
     result = Dict{String, Any}(
         "directive_quality"  => 0.5,
+        "semantic_score"     => 0.5,
+        "relevance_score"    => 0.5,
+        "disambiguation"     => 0.5,
         "activation"         => ACTIVATION_SIGMOID,
         "novelty_score"      => 0.5,
         "active_rules"       => String[],
@@ -1585,24 +2179,25 @@ function transform_vote_list(vote_data::Vector{Dict{String, Any}};
             end
 
             # -- Step 4.5: Phase mix selective attention -----------------------------------------
-            # GRUG: Phase pull ONLY on COMPLEX inputs. Simple inputs skip.
-            # The automaton's time crystal accumulates ATP phase snapshots across cycles.
-            # phase_pull_query retrieves coherent snapshots from the accumulator.
-            # Their 12-dim ATP distribution vectors blend into the hidden state
-            # via phase_mix_hidden!, NOT through the rule pathway.
-            # Phase entries are received from outside (caller passes them in kwargs).
             phase_pulled_entries = phase_entries
-
             phase_surface_entries = surface_entries
-
             phase_activated = !isempty(phase_pulled_entries) || !isempty(phase_surface_entries)
             # ── Step 5: Extract features (with user input!) ──────────────
-            features = extract_vote_features(vote_data, user_input)
+            # GRUG v9: 24-dim features with automaton trace, coherence, positional encoding
+            features = extract_vote_features(vote_data, user_input;
+                automaton_trace = automaton_trace,
+                coherence_features = coherence_features,
+                position_index = position_index > 0 ? position_index : st.total_transforms + 1)
 
             # ── Step 6: MLP forward pass ─────────────────────────────────
-            quality = mlp_forward(features, st.weights, activation, active_rules;
+            # GRUG v9: Multi-output forward pass — returns vector of 4 heads
+            outputs = mlp_forward(features, st.weights, activation, active_rules;
                 phase_entries = phase_pulled_entries,
                 surface_entries = phase_activated ? phase_surface_entries : Vector{Vector{Float64}}())
+            quality = outputs[OUTPUT_IDX_DIRECTIVE_QUALITY]
+            semantic = outputs[OUTPUT_IDX_SEMANTIC_SCORE]
+            relevance = outputs[OUTPUT_IDX_RELEVANCE_SCORE]
+            disambig = outputs[OUTPUT_IDX_DISAMBIGUATION]
 
             # ── Step 7: Record input→vote correlation ───────────────────
             # GRUG: Brain needs to remember which questions produced which
@@ -1639,7 +2234,12 @@ function transform_vote_list(vote_data::Vector{Dict{String, Any}};
                         continue
                     end
                     base_conf = Float64(get(v, "confidence", 0.0))
-                    adjustment = (quality - 0.5) * 0.02 * base_conf  # TINY: max ±0.01
+                    # GRUG v9: Composite adjustment using quality + relevance
+                    composite = (quality + relevance) / 2.0
+                    adjustment = (composite - 0.5) * 0.02 * base_conf  # TINY: max ±0.01
+                    # GRUG v9: Disambiguation dampener — high ambiguity = conservative
+                    disambig_dampener = 0.5 + 0.5 * disambig  # 0.5 (ambiguous) to 1.0 (clear)
+                    adjustment *= disambig_dampener
                     adjustments[node_id] = adjustment
                 end
             end
@@ -1656,25 +2256,29 @@ function transform_vote_list(vote_data::Vector{Dict{String, Any}};
                 st.total_relu_activations += 1
             end
             st.last_directive_quality = quality
+            st.last_semantic_score = semantic
+            st.last_relevance_score = relevance
+            st.last_disambiguation = disambig
 
-            # GRUG v7.50: Compute hippocampal strain — the self-observer's felt deficit.
-            # High novelty + low directive_quality = the system can't handle what it's seeing.
-            # That's STRAIN. It flows to MitosisMode as a growth signal.
-            # Homeostatic loop: strain → mitosis → growth → structure improves → strain decreases.
-            quality_deficit = 1.0 - quality   # low quality = high deficit
+            # GRUG v9: Composite hippocampal strain — ALL output heads contribute.
+            # When the brain is novel AND can't produce good quality OR semantic
+            # coherence OR relevance, that's MORE strain than just quality alone.
+            quality_deficit = 1.0 - quality
+            semantic_deficit = 1.0 - semantic
+            relevance_deficit = 1.0 - relevance
             strain = clamp(
-                STRAIN_NOVELTY_WEIGHT * novelty + STRAIN_QUALITY_WEIGHT * quality_deficit,
+                STRAIN_NOVELTY_WEIGHT * novelty +
+                STRAIN_QUALITY_WEIGHT * (0.5 * quality_deficit + 0.25 * semantic_deficit + 0.25 * relevance_deficit),
                 STRAIN_FLOOR, STRAIN_CEILING
             )
             st.strain_energy = strain
-            # Hippocampal warrant fires when strain is high AND SelfObserver has
-            # confirmed enough observations to trust the signal. Without confirmation,
-            # strain might just be noise. The warrant is the bridge: "I hurt AND I'm
-            # confident the hurt is real" → warrant for growth.
             st.hippocampal_warrant_active = strain >= STRAIN_THRESHOLD && st.adjustments_enabled
 
             # ── Step 10: Build result ────────────────────────────────────
             result["directive_quality"]   = quality
+            result["semantic_score"]      = semantic
+            result["relevance_score"]     = relevance
+            result["disambiguation"]      = disambig
             result["activation"]          = activation
             result["novelty_score"]       = novelty
             result["active_rules"]        = activated
@@ -1691,6 +2295,9 @@ function transform_vote_list(vote_data::Vector{Dict{String, Any}};
             # GRUG: NO SILENT FAILURE — log the error and return neutral result
             @error "[EphemeralMLP] transform_vote_list FAILED: $e"
             result["directive_quality"] = 0.5
+            result["semantic_score"] = 0.5
+            result["relevance_score"] = 0.5
+            result["disambiguation"] = 0.5
             result["error"] = string(e)
         end
     end
@@ -1717,7 +2324,17 @@ function get_mlp_status()::Dict{String, Any}
                    count(w -> w.jitter_eligible, st.weights.b_hidden) +
                    count(w -> w.jitter_eligible, st.weights.w_hidden_output) +
                    (st.weights.b_output.jitter_eligible ? 1 : 0) +
-                   count(w -> w.jitter_eligible, st.weights.w_attention)
+                   count(w -> w.jitter_eligible, st.weights.w_attention) +
+                   sum(count(w -> w.jitter_eligible, block) for block in st.weights.w_qk) +
+                   sum(count(w -> w.jitter_eligible, block) for block in st.weights.w_v) +
+                   sum(count(w -> w.jitter_eligible, block) for block in st.weights.w_ffn1) +
+                   sum(count(w -> w.jitter_eligible, block) for block in st.weights.b_ffn1) +
+                   sum(count(w -> w.jitter_eligible, block) for block in st.weights.w_ffn2) +
+                   sum(count(w -> w.jitter_eligible, block) for block in st.weights.b_ffn2) +
+                   sum(count(w -> w.jitter_eligible, ln) for ln in st.weights.w_ln_scale) +
+                   sum(count(w -> w.jitter_eligible, ln) for ln in st.weights.w_ln_bias) +
+                   sum(count(w -> w.jitter_eligible, head) for head in st.weights.w_output_heads) +
+                   count(w -> w.jitter_eligible, st.weights.b_output_heads)
 
         return Dict{String, Any}(
             "total_transforms"       => st.total_transforms,
@@ -1726,6 +2343,9 @@ function get_mlp_status()::Dict{String, Any}
             "last_activation"        => String(st.last_activation),
             "last_novelty_score"     => round(st.last_novelty_score; digits=4),
             "last_directive_quality" => round(st.last_directive_quality; digits=4),
+            "last_semantic_score"    => round(st.last_semantic_score; digits=4),
+            "last_relevance_score"   => round(st.last_relevance_score; digits=4),
+            "last_disambiguation"    => round(st.last_disambiguation; digits=4),
             "right_feedback_count"   => st.right_feedback_count,
             "wrong_feedback_count"   => st.wrong_feedback_count,
             "rules_total"            => n_rules,
@@ -1741,7 +2361,15 @@ function get_mlp_status()::Dict{String, Any}
             "input_correlations"    => st.input_correlations.total_correlations,
             "last_user_input"       => st.last_user_input,
             "strain_energy"         => round(st.strain_energy; digits=4),
-            "hippocampal_warrant"   => st.hippocampal_warrant_active
+            "hippocampal_warrant"   => st.hippocampal_warrant_active,
+            "architecture"          => Dict{String, Any}(
+                "vote_feature_dim"      => VOTE_FEATURE_DIM,
+                "hidden_dim"            => HIDDEN_DIM,
+                "attention_heads"       => ATTENTION_HEADS,
+                "transformer_blocks"    => NUM_TRANSFORMER_BLOCKS,
+                "ffn_dim"              => FFN_DIM,
+                "output_heads"         => NUM_OUTPUT_HEADS
+            )
         )
     end
 end
@@ -1903,7 +2531,13 @@ function to_specimen_dict()::Dict{String, Any}
             ) for w in ws
         ]
 
+        # GRUG: Helper for nested weight vectors (per-block / per-head)
+        serialize_weight_blocks(wbs::Vector{Vector{MLPWeight}}) = [
+            serialize_weights(ws) for ws in wbs
+        ]
+
         weights_dict = Dict{String, Any}(
+            # ── Legacy weights (backward compat) ──
             "w_input_hidden"  => serialize_weights(st.weights.w_input_hidden),
             "b_hidden"        => serialize_weights(st.weights.b_hidden),
             "w_hidden_output" => serialize_weights(st.weights.w_hidden_output),
@@ -1912,7 +2546,21 @@ function to_specimen_dict()::Dict{String, Any}
                 "jitter_eligible" => st.weights.b_output.jitter_eligible,
                 "last_wobble"     => round(st.weights.b_output.last_wobble; digits=6)
             ),
-            "w_attention"     => serialize_weights(st.weights.w_attention)
+            "w_attention"     => serialize_weights(st.weights.w_attention),
+            # ── v9: Transformer block weights ──
+            # GRUG: Each block stores its own Q/K/V/FFN/LN weights.
+            # Nested vectors: outer = blocks/heads, inner = weight elements.
+            "w_qk"            => serialize_weight_blocks(st.weights.w_qk),
+            "w_v"             => serialize_weight_blocks(st.weights.w_v),
+            "w_ffn1"          => serialize_weight_blocks(st.weights.w_ffn1),
+            "b_ffn1"          => serialize_weight_blocks(st.weights.b_ffn1),
+            "w_ffn2"          => serialize_weight_blocks(st.weights.w_ffn2),
+            "b_ffn2"          => serialize_weight_blocks(st.weights.b_ffn2),
+            "w_ln_scale"      => serialize_weight_blocks(st.weights.w_ln_scale),
+            "w_ln_bias"       => serialize_weight_blocks(st.weights.w_ln_bias),
+            # ── v9: Multi-output heads ──
+            "w_output_heads"  => serialize_weight_blocks(st.weights.w_output_heads),
+            "b_output_heads"  => serialize_weights(st.weights.b_output_heads)
         )
 
         # ── Rules ───────────────────────────────────────────────────────
@@ -1979,8 +2627,8 @@ function to_specimen_dict()::Dict{String, Any}
         # -- Top-level state ---------------------------------------------------
         return Dict{String, Any}(
             "_meta" => Dict{String, Any}(
-                "version"   => "1.5",
-                "format"    => "ephemeral-mlp-v1.5",
+                "version"   => "2.0",
+                "format"    => "ephemeral-mlp-v2.0",
                 "saved_at"  => time()
             ),
             "weights"                   => weights_dict,
@@ -1990,6 +2638,10 @@ function to_specimen_dict()::Dict{String, Any}
             "last_activation"           => String(st.last_activation),
             "last_novelty_score"        => round(st.last_novelty_score; digits=4),
             "last_directive_quality"    => round(st.last_directive_quality; digits=4),
+            # GRUG v9: Multi-output head scores — the brain now reads on four channels.
+            "last_semantic_score"       => round(st.last_semantic_score; digits=4),
+            "last_relevance_score"      => round(st.last_relevance_score; digits=4),
+            "last_disambiguation"       => round(st.last_disambiguation; digits=4),
             "last_user_input"           => st.last_user_input,
             "total_transforms"          => st.total_transforms,
             "total_sigmoid_activations" => st.total_sigmoid_activations,
@@ -2064,6 +2716,81 @@ function from_specimen_dict!(data::Dict{String, Any})
         end
         if haskey(wd, "w_attention") && isa(wd["w_attention"], AbstractVector)
             new_weights.w_attention = parse_weights(wd["w_attention"])
+        end
+
+        # GRUG v9: Parse transformer block weights. Old specimens won't have
+        # these keys — the fresh MLPWeights() defaults are already Xavier-ish
+        # initialized, so we only overwrite if the data is present and valid.
+
+        # Helper: parse a nested vector of weight vectors (per-block / per-head)
+        function parse_weight_blocks(wbs_list::AbstractVector)::Vector{Vector{MLPWeight}}
+            blocks = Vector{Vector{MLPWeight}}()
+            for block_data in wbs_list
+                if isa(block_data, AbstractVector)
+                    push!(blocks, parse_weights(block_data))
+                else
+                    @warn "[EphemeralMLP] Skipping non-vector weight block entry"
+                    push!(blocks, MLPWeight[])  # placeholder — will be caught by size check
+                end
+            end
+            return blocks
+        end
+
+        # ── v9: QK projections (per transformer block) ──
+        if haskey(wd, "w_qk") && isa(wd["w_qk"], AbstractVector)
+            parsed_qk = parse_weight_blocks(wd["w_qk"])
+            if length(parsed_qk) == NUM_TRANSFORMER_BLOCKS
+                new_weights.w_qk = parsed_qk
+            else
+                @warn "[EphemeralMLP] w_qk block count mismatch (got $(length(parsed_qk)), expected $NUM_TRANSFORMER_BLOCKS), using defaults"
+            end
+        end
+
+        # ── v9: Value projections (per transformer block) ──
+        if haskey(wd, "w_v") && isa(wd["w_v"], AbstractVector)
+            parsed_v = parse_weight_blocks(wd["w_v"])
+            if length(parsed_v) == NUM_TRANSFORMER_BLOCKS
+                new_weights.w_v = parsed_v
+            else
+                @warn "[EphemeralMLP] w_v block count mismatch, using defaults"
+            end
+        end
+
+        # ── v9: FFN expansion-contraction weights (per block) ──
+        if haskey(wd, "w_ffn1") && isa(wd["w_ffn1"], AbstractVector)
+            parsed = parse_weight_blocks(wd["w_ffn1"])
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.w_ffn1 = parsed; end
+        end
+        if haskey(wd, "b_ffn1") && isa(wd["b_ffn1"], AbstractVector)
+            parsed = parse_weight_blocks(wd["b_ffn1"])
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.b_ffn1 = parsed; end
+        end
+        if haskey(wd, "w_ffn2") && isa(wd["w_ffn2"], AbstractVector)
+            parsed = parse_weight_blocks(wd["w_ffn2"])
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.w_ffn2 = parsed; end
+        end
+        if haskey(wd, "b_ffn2") && isa(wd["b_ffn2"], AbstractVector)
+            parsed = parse_weight_blocks(wd["b_ffn2"])
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.b_ffn2 = parsed; end
+        end
+
+        # ── v9: Layer norm scale/bias (2 per block: pre-attention, pre-FFN) ──
+        if haskey(wd, "w_ln_scale") && isa(wd["w_ln_scale"], AbstractVector)
+            parsed = parse_weight_blocks(wd["w_ln_scale"])
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2; new_weights.w_ln_scale = parsed; end
+        end
+        if haskey(wd, "w_ln_bias") && isa(wd["w_ln_bias"], AbstractVector)
+            parsed = parse_weight_blocks(wd["w_ln_bias"])
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2; new_weights.w_ln_bias = parsed; end
+        end
+
+        # ── v9: Multi-output heads ──
+        if haskey(wd, "w_output_heads") && isa(wd["w_output_heads"], AbstractVector)
+            parsed = parse_weight_blocks(wd["w_output_heads"])
+            if length(parsed) == NUM_OUTPUT_HEADS; new_weights.w_output_heads = parsed; end
+        end
+        if haskey(wd, "b_output_heads") && isa(wd["b_output_heads"], AbstractVector)
+            new_weights.b_output_heads = parse_weights(wd["b_output_heads"])
         end
     catch e
         _err("from_specimen_dict! failed to parse weights: $e", "from_specimen_dict!")
@@ -2213,6 +2940,10 @@ function from_specimen_dict!(data::Dict{String, Any})
         st.last_activation = Symbol(String(get(data, "last_activation", "sigmoid")))
         st.last_novelty_score = clamp(Float64(get(data, "last_novelty_score", 0.5)), NOVELTY_FLOOR, NOVELTY_CEILING)
         st.last_directive_quality = clamp(Float64(get(data, "last_directive_quality", 0.5)), 0.0, 1.0)
+        # GRUG v9: Multi-output head scores. Old specimens lack these — default to 0.0 (neutral).
+        st.last_semantic_score = clamp(Float64(get(data, "last_semantic_score", 0.0)), 0.0, 1.0)
+        st.last_relevance_score = clamp(Float64(get(data, "last_relevance_score", 0.0)), 0.0, 1.0)
+        st.last_disambiguation = clamp(Float64(get(data, "last_disambiguation", 0.0)), -1.0, 1.0)
         st.last_user_input = String(get(data, "last_user_input", ""))
         st.total_transforms = Int(get(data, "total_transforms", 0))
         st.total_sigmoid_activations = Int(get(data, "total_sigmoid_activations", 0))

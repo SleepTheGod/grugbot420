@@ -4818,6 +4818,8 @@ function _pick_from_pool_adaptive(pool::Vector{String},
 end
 
 # GRUG v7.24: SelfObserver store for the EphemeralMLP gate.
+# GRUG v9: Cached Phi for coherence delta computation (persists across cycles).
+const _MLP_CACHED_PHI = Dict{Symbol, Float64}(:last_phi => 0.0)
 # Every MLP transform cycle writes an observation here. Once the store
 # accumulates enough entries (observation_threshold), the MLP's adjustments
 # become non-zero. This prevents hallucinated directives before the brain
@@ -5385,6 +5387,63 @@ function process_mission(mission_text::String)
                 @warn "[MAIN] phase_pull_query failed (non-fatal, MLP runs without phase): $e"
             end
         end  # GRUG: prediction guard — no prediction, no phase pull
+        # GRUG v9: Build automaton trace features for the JIT LLM organ.
+        # The automaton's phase accumulator knows about time-crystal rhythms,
+        # rule depths, and accumulated magnitudes. Feed these into the MLP's
+        # 24-dim input space so the transformer can learn automaton-state-dependent
+        # attention patterns. Ephemeral in presence, persistent in state.
+        _mlp_automaton_trace = try
+            _pa_status = EphemeralAutomaton.phase_pull_status()
+            _crystal_size = Int(get(_pa_status, "crystal_size", 0))
+            _total_pulls = Int(get(_pa_status, "total_pulls", 0))
+            _total_recorded = Int(get(_pa_status, "total_snapshots_recorded", 0))
+            Float64[
+                Float64(_crystal_size % 256) / 256.0,    # rule_hash (normalized crystal fingerprint)
+                min(Float64(_total_pulls) / 100.0, 1.0),  # step_depth (normalized pull depth)
+                min(Float64(_total_recorded) / 500.0, 1.0), # accum_magnitude (normalized accumulation)
+                Float64(sign(Float64(_total_pulls)))       # accum_sign (direction of accumulation)
+            ]
+        catch e
+            @warn "[MAIN] automaton trace computation failed (non-fatal): $e"
+            Float64[0.0, 0.0, 0.0, 0.0]
+        end
+
+        # GRUG v9: Build coherence field features for the JIT LLM organ.
+        # The coherence field tells the MLP about the global brain state:
+        # how coherent are the active nodes? Is coherence rising or falling?
+        # Is there lobe-level variance? These 4 dims let the transformer
+        # learn coherence-dependent attention (e.g. "when coherence is low,
+        # pay more attention to novelty signals").
+        _mlp_coherence_features = try
+            _cf_status = CoherenceField.coherence_field_status(NODE_MAP)
+            _phi_now = Float64(get(_cf_status, "phi", 0.0))
+            _n_coherent = Int(get(_cf_status, "n_coherent", 0))
+            _n_active = Int(get(_cf_status, "n_active", 1))
+            _lobe_coherence = Float64(_n_coherent) / max(1, _n_active)
+            # Delta Phi: compare with cached value (0.0 if no prior)
+            _phi_prev = get!(_MLP_CACHED_PHI, :last_phi, 0.0)
+            _delta_phi = _phi_now - _phi_prev
+            _MLP_CACHED_PHI[:last_phi] = _phi_now
+            Float64[
+                _phi_now,                                        # Phi_current
+                min(abs(_delta_phi), 1.0),                       # Delta_Phi_magnitude
+                Float64(sign(_delta_phi)),                       # Delta_Phi_direction
+                _lobe_coherence                                  # lobe_coherence_variance
+            ]
+        catch e
+            @warn "[MAIN] coherence features computation failed (non-fatal): $e"
+            Float64[0.0, 0.0, 0.0, 0.0]
+        end
+
+        # GRUG v9: Position index for sinusoidal positional encoding.
+        # Increments with each transform cycle so the transformer can learn
+        # temporal patterns (e.g. "later in the conversation = more refined").
+        _mlp_position_index = try
+            Int(get(EphemeralMLP.get_mlp_status(), "total_transforms", 0))
+        catch _
+            0
+        end
+
         mlp_result = EphemeralMLP.transform_vote_list(
             vote_data_for_mlp;
             hopfield_hit = hopfield_hit,
@@ -5393,7 +5452,10 @@ function process_mission(mission_text::String)
             is_compound = is_compound_input,
             scan_mode = _mlp_scan_mode,
             phase_entries = _phase_pulled_entries,
-            surface_entries = _phase_activated ? _phase_surface_entries : Vector{Vector{Float64}}()
+            surface_entries = _phase_activated ? _phase_surface_entries : Vector{Vector{Float64}}(),
+            automaton_trace = _mlp_automaton_trace,
+            coherence_features = _mlp_coherence_features,
+            position_index = _mlp_position_index
         )
         if get(mlp_result, "error", "") == ""
             act = get(mlp_result, "activation", "sigmoid")
@@ -5401,7 +5463,11 @@ function process_mission(mission_text::String)
             qual = round(Float64(get(mlp_result, "directive_quality", 0.5)); digits=3)
             adj_en = Bool(get(mlp_result, "adjustments_enabled", false))
             n_rules = length(get(mlp_result, "active_rules", []))
-            println("  🧠 MLP: $act | novelty=$nov | quality=$qual | strain=$(round(Float64(get(mlp_result, "strain_energy", 0.0)); digits=3)) | rules=$n_rules | adj=$(adj_en ? "ON" : "OFF")")
+            # GRUG v9: Multi-output head readouts. The brain now reads on four channels.
+            sem = round(Float64(get(mlp_result, "semantic_score", 0.5)); digits=3)
+            rel = round(Float64(get(mlp_result, "relevance_score", 0.5)); digits=3)
+            dis = round(Float64(get(mlp_result, "disambiguation", 0.5)); digits=3)
+            println("  🧠 MLP: $act | novelty=$nov | quality=$qual | semantic=$sem | relevance=$rel | disambig=$dis | strain=$(round(Float64(get(mlp_result, "strain_energy", 0.0)); digits=3)) | rules=$n_rules | adj=$(adj_en ? "ON" : "OFF")")
             # GRUG v7.27: Phase pull status — show time crystal retrieval info
             phase_activated = Bool(get(mlp_result, "phase_activated", false))
             phase_pulls = Int(get(mlp_result, "phase_pull_count", 0))
@@ -5422,6 +5488,12 @@ function process_mission(mission_text::String)
                         "activation"         => act,
                         "novelty_score"      => nov,
                         "directive_quality"  => qual,
+                        # GRUG v9: Multi-output head scores in SelfObserver.
+                        # These let the observation threshold gate learn from
+                        # all four channels, not just directive_quality.
+                        "semantic_score"     => sem,
+                        "relevance_score"    => rel,
+                        "disambiguation"     => dis,
                         "adjustments_enabled"=> adj_en,
                         "active_rules"       => n_rules,
                         "user_input_hash"    => string(hash(lowercase(strip(mission_text))))
@@ -9721,6 +9793,15 @@ elseif !isnothing(m_right)
                 println("  Last activation     : $(mlp_st["last_activation"])")
                 println("  Last novelty score  : $(mlp_st["last_novelty_score"])")
                 println("  Last dir. quality   : $(mlp_st["last_directive_quality"])")
+                # GRUG v9: Multi-output head scores — the brain now reads on four channels.
+                println("  Last semantic score : $(mlp_st["last_semantic_score"])")
+                println("  Last relevance score: $(mlp_st["last_relevance_score"])")
+                println("  Last disambiguation : $(mlp_st["last_disambiguation"])")
+                # GRUG v9: Architecture info for operator visibility.
+                _arch = get(mlp_st, "architecture", Dict{String,Any}())
+                if !isempty(_arch)
+                    println("  Architecture        : dim=$(_arch["hidden_dim"]) heads=$(_arch["attention_heads"]) blocks=$(_arch["transformer_blocks"]) ffn=$(_arch["ffn_dim"]) out=$(_arch["output_heads"])")
+                end
                 println("  Right feedback      : $(mlp_st["right_feedback_count"])")
                 println("  Wrong feedback      : $(mlp_st["wrong_feedback_count"])")
                 println("  Rules (total/enabled): $(mlp_st["rules_total"]) / $(mlp_st["rules_enabled"])")
