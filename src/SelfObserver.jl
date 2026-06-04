@@ -46,7 +46,7 @@ using Random
 
 export Microlog, SubconsciousStore, SubconsciousHint
 export SelfObserverError, SelfObserverConfigError, SelfObserverArgumentError
-export observe!, peek_exact, peek_pattern, audit_trail, drop_store!
+export observe!, peek_exact, peek_pattern, audit_trail, drop_store!, drop_keys_by_prefix!
 export reset_audit!, store_size, key_count
 export FUZZY_BUCKETS
 
@@ -971,5 +971,48 @@ store_size(store::SubconsciousStore)::Int = store.total_entries
 Number of distinct keys with at least one microlog. Integer.
 """
 key_count(store::SubconsciousStore)::Int = length(store.table)
+
+"""
+    drop_keys_by_prefix!(store, prefix::AbstractString) -> Int
+
+Remove all entries whose key starts with `prefix`. Returns count of keys dropped.
+Useful for selectively clearing a namespace (e.g., all "error_" entries) without
+nuking the entire store. Also cleans up associated drop-table links.
+"""
+function drop_keys_by_prefix!(store::SubconsciousStore, prefix::AbstractString)::Int
+    lock(store.write_lock)
+    dropped = 0
+    try
+        # Find keys matching prefix
+        keys_to_drop = String[]
+        for k in keys(store.table)
+            if startswith(k, prefix)
+                push!(keys_to_drop, k)
+            end
+        end
+        # Remove entries and count
+        for k in keys_to_drop
+            n = length(store.table[k])
+            delete!(store.table, k)
+            store.total_entries = max(0, store.total_entries - n)
+            dropped += 1
+        end
+        # Clean drop_tables: remove references to dropped keys
+        if !isempty(keys_to_drop)
+            drop_set = Set(keys_to_drop)
+            for (dt_key, dt_vec) in store.drop_tables
+                filter!(v -> !(v in drop_set), dt_vec)
+            end
+            # Remove empty drop_tables entries
+            empty_dt_keys = [k for (k, v) in store.drop_tables if isempty(v)]
+            for k in empty_dt_keys
+                delete!(store.drop_tables, k)
+            end
+        end
+    finally
+        unlock(store.write_lock)
+    end
+    return dropped
+end
 
 end # module SelfObserver

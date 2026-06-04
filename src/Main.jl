@@ -4386,6 +4386,10 @@ const HELP_MSG = """
 ║    WARNING: weight > 0 enables attractor dynamics!           ║
 ║    Start low (0.05). >0.3 risks quantum Zeno state-lock.    ║
 ║                                                              ║
+║  ERROR JOURNAL (v9 — self-observation of runtime errors)     ║
+║  /errors                      Show recent errors from journal║
+║  /errors clear                Clear the error journal        ║
+║                                                              ║
 ║  ADMIN COMMANDS (password protected)                         ║
 ║  /login <password>           Authenticate as admin           ║
 ║  /logout                     End admin session               ║
@@ -9347,6 +9351,7 @@ function run_cli()
             m_coherence_grad    = match(r"^/coherenceGradient\s+(\S+)\s*$",                   line)
             m_coherence_field   = match(r"^/coherenceField\s*$",                             line)
             m_coherence_config  = match(r"^/coherenceConfig(?:\s+(.+))?\s*$",                 line)
+            m_errors            = match(r"^/errors(?:\s+(clear))?\s*$",                       line)
             m_help         = match(r"^/help\s*$",                                       line)
             
             if !isnothing(m_help)
@@ -11885,6 +11890,47 @@ elseif !isnothing(m_right)
                     end
                 end
 
+            elseif !isnothing(m_errors)
+                # /errors [clear] — show or clear the error journal
+                # GRUG: The main catch block writes errors to SelfObserver with tag :error
+                # and prefix "error_". This command reads them back so the specimen
+                # can see its own mistakes. Same store, same pattern as MLP observations.
+                if m_errors.captures[1] !== nothing && String(m_errors.captures[1]) == "clear"
+                    # Wipe all error observations from the store (prefix-matched, not the whole store)
+                    _n_dropped = SelfObserver.drop_keys_by_prefix!(_MLP_OBSERVER_STORE, "error_")
+                    println("✓  Error journal cleared ($(_n_dropped) error entries removed)")
+                else
+                    # Peek at recent errors
+                    _err_hints = SelfObserver.peek_pattern(
+                        _MLP_OBSERVER_STORE,
+                        "errors",          # node_id for error queries
+                        "error_";          # key prefix to match error observations
+                        max_entries = 20,
+                    )
+                    if _err_hints === nothing || isempty(_err_hints)
+                        println("Error journal: (empty — no errors observed)")
+                    else
+                        println("╔══════════════════════════════════════╗")
+                        println("║     ERROR JOURNAL ($(length(_err_hints)) recent)       ║")
+                        println("╠══════════════════════════════════════╣")
+                        for (idx, h) in enumerate(_err_hints)
+                            _exc = get(h.payload_strings, "exception", "???")
+                            _cmd = get(h.payload_strings, "command", "???")
+                            _bt  = get(h.payload_strings, "backtrace_snippet", "")
+                            # Truncate long exceptions for readability
+                            _exc_short = length(_exc) > 80 ? _exc[1:77] * "..." : _exc
+                            println("║  [$idx] $(_exc_short)")
+                            println("║      cmd: $(_cmd)  age: $(h.fuzzy_when)")
+                            if !isempty(_bt) && length(_bt) > 5
+                                _bt_short = length(_bt) > 60 ? _bt[1:57] * "..." : _bt
+                                println("║      bt:  $(_bt_short)")
+                            end
+                        end
+                        println("╚══════════════════════════════════════╝")
+                        println("  Use /errors clear to wipe the journal")
+                    end
+                end
+
             else
                 error("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!")
             end
@@ -11893,6 +11939,32 @@ elseif !isnothing(m_right)
             println("!!! SYSTEM ERROR: $e !!!")
             Base.show_backtrace(stdout, catch_backtrace())
             println()
+            # GRUG v9: Write error to SelfObserver so the specimen can see its own
+            # mistakes via /errors. Same store as MLP observations — vigilance injectors
+            # can probe these too, which means the specimen's context enrichment knows
+            # about recent errors on the next cycle. High salience = errors are memorable.
+            # p_write=1.0 = always write (unlike output observations which are probabilistic).
+            try
+                _bt_frames = catch_backtrace()
+                _bt_snippet = isempty(_bt_frames) ? "" :
+                    join([string(f) for f in _bt_frames[1:min(3, length(_bt_frames))]], " ← ")
+                SelfObserver.observe!(
+                    _MLP_OBSERVER_STORE,
+                    "error_$(round(Int, time() * 1000) % 1_000_000)",
+                    :error,
+                    Dict{String, Any}(
+                        "exception"        => string(e),
+                        "command"          => string(line),
+                        "backtrace_snippet"=> _bt_snippet,
+                    );
+                    p_write    = 1.0,   # always journal errors
+                    salience   = 8.0,   # errors are highly memorable
+                    provenance = :runtime_error,
+                )
+            catch obs_err
+                # Double-fault: error observation itself failed. Don't make it worse.
+                @warn "[MAIN v9] Error journal observe! failed (non-fatal): $obs_err"
+            end
         end
     end
 end
