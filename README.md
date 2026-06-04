@@ -1,9 +1,8 @@
 # 🧠 grugbot420
 
-[![CI](https://github.com/grug-group420/grugbot420/actions/workflows/CI.yml/badge.svg)](https://github.com/grug-group420/grugbot420/actions/workflows/CI.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Julia](https://img.shields.io/badge/Julia-1.9%2B-blue.svg)](https://julialang.org)
-[![Version](https://img.shields.io/badge/version-v7.24-brightgreen.svg)](#whats-new-in-v724)
+[![Version](https://img.shields.io/badge/version-v8.0-brightgreen.svg)](#whats-new-in-v80)
 
 
 A neuromorphic AI engine written in Julia. GrugBot models cognition through competing populations of pattern nodes — not if-else waterfalls, not transformers, not lookup tables. Many rocks compete to be loudest. Loudest rock gets to talk. Sometimes a quiet rock gets lucky (coinflip). That is how Grug think.
