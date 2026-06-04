@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GrugBot Neuromorphic Engine - Technical Whitepaper v7.24</title>
+    <title>GrugBot Neuromorphic Engine - Technical Whitepaper v8.0</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -189,12 +189,13 @@
 </head>
 <body>
 
-<h1>🧠 GrugBot Neuromorphic Engine <span class="version-tag">v7.24</span></h1>
+<h1>🧠 GrugBot Neuromorphic Engine <span class="version-tag">v8.0</span></h1>
 
 <p><strong>Technical Whitepaper & Architecture Reference</strong><br>
 A Julia-based neuromorphic AI engine featuring stochastic pattern scanning, multi-lobe cognitive partitioning,
 lobe-aware prefrontal cortex orchestration, pipe-delimited action packets with inline negatives,
-and self-maintaining phagy cycles.</p>
+self-maintaining phagy cycles, bidirectional cascade bridges, background input mining threads,
+temporal growth automata, vigilance-driven subconscious injection, and hippocampal strain-gated cell division.</p>
 
 <div class="grug-box">
     Cave brain think different from computer brain. Computer brain is IF-ELSE waterfall.
@@ -220,7 +221,7 @@ and self-maintaining phagy cycles.</p>
         <li><a href="#thesaurus">10. Thesaurus: Dimensional Similarity Engine</a></li>
         <li><a href="#phagy">11. Phagy Mode: Self-Maintenance</a></li>
         <li><a href="#eye-system">12. EyeSystem: Visual Processing</a></li>
-        <li><a href="#chatter">13. ChatterMode: Gossip Sessions</a></li>
+        <li><a href="#chatter">13. ChatterMode: Group-Based 2&times;2 Steal+Remix</a> <span class="new-badge">v8.0</span></li>
         <li><a href="#semantic-verbs">14. SemanticVerbs: Runtime Verb Registry</a></li>
         <li><a href="#action-tone">15. ActionTonePredictor: Input Classification</a></li>
         <li><a href="#full-lobe-scanner">15.5 FullLobeScanner: Phase-Gated Lobe Sweep</a> <span class="new-badge">v7.5</span></li>
@@ -239,7 +240,7 @@ and self-maintaining phagy cycles.</p>
         <li><a href="#lobe-topicality">15.18 Lobe Topicality Gate + Semantic-Bridge Exception</a> <span class="new-badge">v7.18</span></li>
         <li><a href="#bnsnc-coherence">15.19 Big-Number / Small-Number Coherence (bidirectional cheap-scan fusion)</a> <span class="new-badge">v7.19</span></li>
         <li><a href="#nonjitter-tag">15.20 Per-Node NONJITTER Tag + End-Confidence Snap-Back Jitter</a> <span class="new-badge">v7.20</span></li>
-        <li><a href="#nonjitter-systemwide">15.21 System-Wide NONJITTER Honor (relational dialectics, attachment relay, full-lobe scanner)</a> <span class="new-badge">v7.21</span></li>
+        <li><a href="#nonjitter-systemwide">15.21 System-Wide NONJITTER Honor (relational dialectics, cascade relay, full-lobe scanner)</a> <span class="new-badge">v7.21</span></li>
         <li><a href="#strength-solidify">15.22 Strength-Driven Solidification (auto-NONJITTER at threshold)</a> <span class="new-badge">v7.22</span></li>
         <li><a href="#input-decomposer">15.23 InputDecomposer: Compound-Query Decomposition</a> <span class="new-badge">v7.23</span></li>
         <li><a href="#multipart-orchestrator">15.24 MultipartOrchestrator: Vote Coalescing per Group</a> <span class="new-badge">v7.23</span></li>
@@ -251,6 +252,18 @@ and self-maintaining phagy cycles.</p>
         <li><a href="#self-observer">15.30 SelfObserver: Subconscious Microlog Store</a> <span class="new-badge">v7.24</span></li>
         <li><a href="#ephemeral-mlp">15.31 EphemeralMLP: Sigmoid/ReLU Vote-List Transformer</a> <span class="new-badge">v7.24</span></li>
         <li><a href="#coherence-fixes">15.32 v7.24 Coherence Fixes (BUG-2v2, BUG-5, BUG-6, BUG-7, BUG-8)</a> <span class="new-badge">v7.24</span></li>
+        <li><a href="#tonal-judge">15.33 TonalJudge: Token Bag + Common-Sense Frame Selection</a> <span class="new-badge">v7.21</span></li>
+        <li><a href="#input-ledger">15.34 InputLedger: Background Thread Mining User Input into Cell Growth Data</a> <span class="new-badge">v7.25</span></li>
+        <li><a href="#chatter-residuals">15.35 ChatterResiduals: Background Thread Mining Chatter Swaps into Relational Data</a> <span class="new-badge">v7.26</span></li>
+        <li><a href="#hippocampal-strain">15.36 Hippocampal Strain &amp; Warrant System</a> <span class="new-badge">v7.50</span></li>
+        <li><a href="#anti-match">15.37 Anti-Match Nodes: Pattern-Activated Confidence Drain</a> <span class="new-badge">v7.49</span></li>
+        <li><a href="#time-nodes">15.38 Time Nodes &amp; Temporal Group Isolation</a> <span class="new-badge">v7.56a</span></li>
+        <li><a href="#relation-sigils">15.39 Relation-Class Sigils: Dynamic Relational Triple Macros</a> <span class="new-badge">v7.55</span></li>
+        <li><a href="#lobe-orchestrator">15.40 LobeOrchestrator: Averages-Curve Lobe Selection</a> <span class="new-badge">v7.25</span></li>
+        <li><a href="#temporal-growth">15.41 TemporalGrowth: Lobe-Aware Ephemeral Node Growth Automaton</a> <span class="new-badge">v7.26</span></li>
+        <li><a href="#relational-governance">15.42 RelationalGovernance: Co-Activation Accumulated Auto-Attach</a> <span class="new-badge">v7.25</span></li>
+        <li><a href="#cascade-bridge">15.43 CascadeBridge: Bidirectional Match-Cascade Handoff System</a> <span class="new-badge">v8.0</span></li>
+        <li><a href="#concurrency-model">15.44 Concurrency Model: Lock Ordering, Snapshots, and the Fire Cap</a> <span class="new-badge">v8.0</span></li>
         <li><a href="#specimen-persistence">16. Specimen Persistence: Full Cave Save/Restore</a> <span class="new-badge">v7.7</span></li>
         <li><a href="#math">17. Formal Mathematics</a></li>
         <li><a href="#ambient-signal">17.5 Signal Presence & Instant Activation</a> <span class="new-badge">v7</span></li>
@@ -403,21 +416,46 @@ User Input
 <table>
     <tr><th>Module</th><th>File</th><th>Depends On</th><th>Lines</th></tr>
     <tr><td>StochasticHelper</td><td>stochastichelper.jl</td><td>Distributions</td><td>168</td></tr>
-    <tr><td>PatternScanner</td><td>patternscanner.jl</td><td>—</td><td>249</td></tr>
-    <tr><td>ImageSDF</td><td>ImageSDF.jl</td><td>—</td><td>460</td></tr>
-    <tr><td>EyeSystem</td><td>EyeSystem.jl</td><td>—</td><td>443</td></tr>
-    <tr><td>ChatterMode</td><td>ChatterMode.jl</td><td>—</td><td>575</td></tr>
-    <tr><td>SemanticVerbs</td><td>SemanticVerbs.jl</td><td>—</td><td>391</td></tr>
-    <tr><td>ActionTonePredictor</td><td>ActionTonePredictor.jl</td><td>—</td><td>562</td></tr>
-    <tr><td>Engine</td><td>engine.jl</td><td>All above + JSON</td><td>1486</td></tr>
-    <tr><td>Lobe</td><td>Lobe.jl</td><td>—</td><td>381</td></tr>
-    <tr><td>LobeTable</td><td>LobeTable.jl</td><td>—</td><td>627</td></tr>
+    <tr><td>PatternScanner</td><td>patternscanner.jl</td><td>&mdash;</td><td>366</td></tr>
+    <tr><td>ImageSDF</td><td>ImageSDF.jl</td><td>&mdash;</td><td>786</td></tr>
+    <tr><td>EyeSystem</td><td>EyeSystem.jl</td><td>&mdash;</td><td>443</td></tr>
+    <tr><td>ChatterMode</td><td>ChatterMode.jl</td><td>&mdash;</td><td>1,149</td></tr>
+    <tr><td>SemanticVerbs</td><td>SemanticVerbs.jl</td><td>&mdash;</td><td>391</td></tr>
+    <tr><td>ActionTonePredictor</td><td>ActionTonePredictor.jl</td><td>&mdash;</td><td>1,768</td></tr>
+    <tr><td>Lobe</td><td>Lobe.jl</td><td>&mdash;</td><td>604</td></tr>
+    <tr><td>LobeTable</td><td>LobeTable.jl</td><td>&mdash;</td><td>636</td></tr>
     <tr><td>BrainStem</td><td>BrainStem.jl</td><td>Lobe</td><td>333</td></tr>
-    <tr><td>InputQueue</td><td>InputQueue.jl</td><td>—</td><td>256</td></tr>
-    <tr><td>Thesaurus</td><td>Thesaurus.jl</td><td>—</td><td>630</td></tr>
-    <tr><td>PhagyMode</td><td>PhagyMode.jl</td><td>—</td><td>611</td></tr>
-    <tr><td>Main (CLI)</td><td>Main.jl</td><td>All above</td><td>1485</td></tr>
+    <tr><td>InputQueue</td><td>InputQueue.jl</td><td>&mdash;</td><td>256</td></tr>
+    <tr><td>Thesaurus</td><td>Thesaurus.jl</td><td>&mdash;</td><td>698</td></tr>
+    <tr><td>PhagyMode</td><td>PhagyMode.jl</td><td>&mdash;</td><td>2,901</td></tr>
+    <tr><td>MitosisMode</td><td>MitosisMode.jl</td><td>&mdash;</td><td>1,493</td></tr>
+    <tr><td>ImmuneSystem</td><td>ImmuneSystem.jl</td><td>&mdash;</td><td>897</td></tr>
+    <tr><td>ImmuneThreadPool</td><td>ImmuneThreadPool.jl</td><td>&mdash;</td><td>1,691</td></tr>
+    <tr><td>FullLobeScanner</td><td>FullLobeScanner.jl</td><td>&mdash;</td><td>844</td></tr>
+    <tr><td>RelationalJitter</td><td>RelationalJitter.jl</td><td>&mdash;</td><td>627</td></tr>
+    <tr><td>AIMLNodeSystem</td><td>AIMLNodeSystem.jl</td><td>RelationalJitter</td><td>1,087</td></tr>
+    <tr><td>VoteOrchestrator</td><td>VoteOrchestrator.jl</td><td>&mdash;</td><td>855</td></tr>
+    <tr><td>MultipartOrchestrator</td><td>MultipartOrchestrator.jl</td><td>VoteOrchestrator</td><td>547</td></tr>
+    <tr><td>InputDecomposer</td><td>InputDecomposer.jl</td><td>&mdash;</td><td>1,185</td></tr>
+    <tr><td>EphemeralAutomaton</td><td>EphemeralAutomaton.jl</td><td>RelationalJitter, PatternScanner</td><td>1,870</td></tr>
+    <tr><td>HippocampalModulator</td><td>HippocampalModulator.jl</td><td>&mdash;</td><td>730</td></tr>
+    <tr><td>SelfObserver</td><td>SelfObserver.jl</td><td>&mdash;</td><td>975</td></tr>
+    <tr><td>SigilRegistry</td><td>SigilRegistry.jl</td><td>&mdash;</td><td>1,168</td></tr>
+    <tr><td>SigilPromoter</td><td>SigilPromoter.jl</td><td>SigilRegistry</td><td>635</td></tr>
+    <tr><td>ArithmeticEngine</td><td>ArithmeticEngine.jl</td><td>SigilPromoter</td><td>439</td></tr>
+    <tr><td>EphemeralMLP</td><td>EphemeralMLP.jl</td><td>&mdash;</td><td>2,241</td></tr>
+    <tr><td>TonalJudge</td><td>TonalJudge.jl</td><td>ActionTonePredictor</td><td>570</td></tr>
+    <tr><td>InputLedger</td><td>InputLedger.jl</td><td>&mdash;</td><td>515</td></tr>
+    <tr><td>ChatterResiduals</td><td>ChatterResiduals.jl</td><td>&mdash;</td><td>1,128</td></tr>
+    <tr><td>LobeOrchestrator</td><td>LobeOrchestrator.jl</td><td>&mdash;</td><td>423</td></tr>
+    <tr><td>TemporalGrowth</td><td>TemporalGrowth.jl</td><td>InputLedger, PatternScanner, EphemeralMLP</td><td>1,060</td></tr>
+    <tr><td>RelationalGovernance</td><td>RelationalGovernance.jl</td><td>&mdash;</td><td>770</td></tr>
+    <tr><td>Engine</td><td>engine.jl</td><td>All above + JSON</td><td>5,239</td></tr>
+    <tr><td>Main (CLI)</td><td>Main.jl</td><td>All above</td><td>11,556</td></tr>
+    <tr><td>GrugBot420</td><td>GrugBot420.jl</td><td>All source modules</td><td>477</td></tr>
 </table>
+
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 
 <!-- ================================================================ -->
 <h2 id="nodes">3. Nodes: The Atomic Unit</h2>
@@ -429,30 +467,69 @@ action packet, strength score, neighbor links, and metadata.</p>
 <pre><code>mutable struct Node
     id::String                    # Unique ID (node_0, node_1, ...)
     pattern::String               # Tokenized text pattern for matching
+    signal::Vector{Float64}       # Numerical signal vector for Pattern Scanner
     action_packet::String         # Pipe-delimited actions with weights + negatives
-    json_data::Dict{String,Any}   # Arbitrary metadata (system_prompt, etc.)
-    neighbor_ids::Vector{String}  # Linked nodes (max 4 → UNLINKABLE)
+    json_data::Dict{String,Any}   # Arbitrary metadata (system_prompt, voice_body, etc.)
+    drop_table::Vector{String}    # Neighbor activation cascade targets
+    throttle::Float64             # Per-node scan rate limiter
+    relational_patterns::Vector{RelationalTriple}  # Subject-relation-object triples
+    required_relations::Vector{String}  # Required relation tags (includes NONJITTER)
+    relation_weights::Dict{String, Float64}  # Per-relation weighting
+
+    # Strength system (apoptosis + stratification)
     strength::Float64             # 0.0 – 10.0 (STRENGTH_CAP)
-    is_grave::Bool                # Dead node (negative reinforcement anchor)
-    grave_reason::String          # Why it died (GRAVED-SLOW, strength→0, etc.)
-    is_unlinkable::Bool           # At max neighbors (4)
-    hopfield_key::UInt64          # Associative memory hash
-    relational_patterns::Vector{RelationalTriple}
-    response_times::Vector{Float64}
+
+    # Node type flags
     is_image_node::Bool           # True if pattern is image SDF data
+    is_antimatch_node::Bool       # v7.49: pattern-activated confidence drain (never votes)
+
+    # Neighbor linking
+    neighbor_ids::Vector{String}  # Linked nodes (max [8,16] rolled per-node → UNLINKABLE)
+    is_unlinkable::Bool           # At max neighbors
+    max_neighbors::Int            # Per-node cap, rolled in [LATCH_PARTNER_CAP_MIN, LATCH_PARTNER_CAP_MAX]
+
+    # Grave tracking
+    is_grave::Bool                # Dead node (negative reinforcement anchor)
+    grave_reason::String          # "STRENGTH_ZERO", "GRAVED-SLOW", or ""
+
+    # Response time ledger (clears every 24 hours)
+    response_times::Vector{Float64}   # Rolling list of response times (seconds)
+    ledger_last_cleared::Float64      # Unix timestamp of last 24hr clear
+
+    # Hopfield cache
+    hopfield_key::UInt64          # Associative memory hash
+
+    # Cycle tracking (for /right, /wrong feedback and over-compensation penalty)
+    fired_this_cycle::Bool            # True if node's vote was used by AIML orchestrator
+    voted_this_cycle::Bool            # True if node voted (may or may not have contributed)
+    gained_this_cycle::Bool           # True if node gained strength this cycle
+    strength_delta_this_cycle::Float64  # Strength change this cycle
 end</code></pre>
+
+<div class="info-box">
+    <strong>v7.56a — Time Nodes:</strong> A node is a <em>time node</em> if <code>json_data["time_node"] === true</code>.
+    Time nodes cluster into time-node-only groups (pure label gate, no special code path).
+    See <a href="#time-nodes">section 15.38</a>.
+</div>
+
+<div class="info-box">
+    <strong>v7.49 — Anti-Match Nodes:</strong> When <code>is_antimatch_node=true</code>, the node activates on
+    pattern match but <strong>never votes</strong> and <strong>drains confidence</strong> from the primary
+    scan pool. See <a href="#anti-match">section 15.37</a>.
+</div>
 
 <h3>Node Lifecycle</h3>
 <table>
     <tr><th>Event</th><th>Effect</th></tr>
-    <tr><td>Creation</td><td>Strength = 1.0, hopfield key computed, auto-latch neighbors (if >1000 nodes)</td></tr>
-    <tr><td>Vote cast</td><td><code>bump_strength!</code> on coinflip → strength increases toward cap (voting alone does not enable reinforcement)</td></tr>
+    <tr><td>Creation</td><td>Strength = 1.0, hopfield key computed, auto-latch neighbors (if &gt;1000 nodes)</td></tr>
+    <tr><td>Vote cast</td><td><code>bump_strength!</code> on coinflip &rarr; strength increases toward cap (voting alone does not enable reinforcement)</td></tr>
     <tr><td>Node fires (contributes)</td><td>Marks <code>fired_this_cycle = true</code>, allowing strength feedback (required for /right and /wrong)</td></tr>
     <tr><td><code>/right</code></td><td>Secondary reinforcement: contributors only, 50% chance to bump strength (no double reward)</td></tr>
-    <tr><td><code>/wrong</code></td><td>Penalize contributors only on coinflip → strength decreases with over-compensation if gained</td></tr>
-    <tr><td>Strength → 0</td><td>Marked <code>is_grave = true</code>, becomes negative anchor</td></tr>
-    <tr><td>Slow response</td><td>Avg time > 5s → GRAVED-SLOW</td></tr>
-    <tr><td>4 neighbors</td><td><code>is_unlinkable = true</code>, rejects further links</td></tr>
+    <tr><td><code>/wrong</code></td><td>Penalize contributors only on coinflip &rarr; strength decreases with over-compensation if gained</td></tr>
+    <tr><td>Strength &rarr; 0</td><td>Marked <code>is_grave = true</code>, becomes negative anchor</td></tr>
+    <tr><td>Slow response</td><td>Avg time &gt; 5s &rarr; GRAVED-SLOW</td></tr>
+    <tr><td>Max neighbors reached</td><td><code>is_unlinkable = true</code>, rejects further links (cap rolled per-node in [8, 16])</td></tr>
+    <tr><td>Anti-match match</td><td>v7.49: <code>is_antimatch_node=true</code> nodes activate on pattern hit but drain confidence instead of voting</td></tr>
 </table>
 
 <h3>Strength-Biased Selection</h3>
@@ -842,55 +919,111 @@ One of six maintenance automata runs per cycle:</p>
 </ol>
 
 <!-- ================================================================ -->
-<h2 id="chatter">13. ChatterMode: Gossip Sessions <span class="new-badge">v7.1</span></h2>
+<h2 id="chatter">13. ChatterMode: Group-Based 2×2 Steal+Remix <span class="new-badge">v8.0</span></h2>
 
-<p>Chatter sessions simulate "dreaming" — 50–500 node clones are placed in a gossip pool
-where weak nodes drift toward strong neighbors. This creates directional knowledge flow:
-strong nodes signal, weak nodes learn. Chatter only fires for mature specimens with 1000+
-nodes. New specimens do not chatter.</p>
-
-<h3>Population Gate</h3>
-<p>Chatter requires a minimum of <strong>1000 alive non-image nodes</strong>. Below this threshold,
-the specimen is too young for idle gossip — topology is still under direct user control via
-<code>/grow</code> and drop_table wiring. Chatter would destabilize immature specimens.</p>
-
-<h3>Idle Timer (Shared with Phagy)</h3>
-<p>Both chatter and phagy share the <strong>same slow idle timer</strong>: 120 seconds default,
-±30s jitter band. Idle events fire between 90s and 150s apart. A 50/50 coinflip decides
-chatter vs phagy. This is much slower than v7 (was 30s ±5s).</p>
-
-<h3>Group Size</h3>
-<p>Each chatter round selects <strong>50–500</strong> nodes (was 100–800 in v7). If fewer than
-50 eligible nodes exist, the floor is set to whatever is available (use entire population as ceiling).</p>
-
-<h3>Weak-Only Morph</h3>
-<p>Only receivers <strong>strictly weaker</strong> than the sender can accept a pattern blend.
-Strong nodes signal but never change themselves. This creates directional knowledge flow:
-proven nodes teach, unproven nodes learn. Receiver strength is compared using the original
-un-jittered value, not the chatter-jittered value.</p>
-
-<h3>Once-Per-Day Morph Limit</h3>
-<p>Each node can only morph <strong>once every 24 hours</strong> (86,400 seconds). Tracked via
-<code>MORPH_COOLDOWN_MAP</code> (node_id → last_morph_timestamp). This prevents runaway drift
-where a weak node gets blended every chatter round and loses its original identity entirely.
-After morphing, the node is locked for 24 hours before it can morph again.</p>
-
-<h3>Gossip Rules</h3>
-<ul>
-    <li><strong>Anti-collision:</strong> nodes can\'t exchange with themselves or repeat exchanges in one round</li>
-    <li><strong>Sender coinflip:</strong> 50/50 chance to initiate gossip per clone</li>
-    <li><strong>Strength gate:</strong> receiver must be weaker than sender (original strength)</li>
-    <li><strong>Cooldown gate:</strong> receiver must not have morphed in the last 24 hours</li>
-    <li><strong>Biased copy:</strong> copy probability [0.3, 0.8] scales with sender strength</li>
-    <li><strong>Pattern blending:</strong> tokens from sender pattern are injected into receiver (blend factor [0.1, 0.4])</li>
-    <li><strong>Action packet blending:</strong> vote slots are slightly mixed (0.5× blend factor)</li>
-    <li><strong>User input during chatter:</strong> queued via INPUT_QUEUE, drained after session completion</li>
-</ul>
+<div class="grug-box">
+    <p>Old chatter: weak nodes drift toward strong. One way. Slow. Boring. New chatter:
+    TWO nodes steal from TWO other nodes at same time. Then they REMIX what they stole
+    using Markov chain — not random noise, real structure-preserving remix. Like two
+    cave-people raiding two neighbors' fire-pits, taking the best embers, and building
+    a NEW fire that is shaped like both but is neither. That is 2×2 steal+remix. Group
+    based, not solo. Structure preserved, not dissolved. Much better dream.</p>
+</div>
 
 <div class="academic-box">
-    <strong>v7.1 Chatter Summary:</strong> Idle timer 120s ±30s (shared with phagy). Population gate: 1000+ nodes.
-    Group size: 50–500. Weak-only morph with 24h cooldown. Strong nodes signal, weak nodes learn.
-    Directional knowledge flow prevents strong-node drift and weak-node identity loss.
+    <p><strong>Module:</strong> <code>src/ChatterMode.jl</code> (~1,300 lines).
+    Complete rewrite from v7.1 gossip sessions to v8.0 group-based 2×2 steal+remix architecture.
+    Chatter sessions now operate on small groups (8–16 nodes sampled from the population),
+    forming 2×2 steal pairs within each group. Stolen vote-action names are remixed via
+    a Markov chain before being grafted onto the receiver. Session lifecycle is fully
+    structured with per-session state tracking.</p>
+    <p><strong>Exports:</strong> <code>ChatterNodeClone</code>, <code>ChatterSession</code>,
+    <code>run_chatter_session!</code>, <code>chatter_session_summary</code>.</p>
+</div>
+
+<h3>Population Gate</h3>
+<p>Chatter requires a minimum of <strong>MIN_POPULATION_FOR_CHATTER = 1000</strong> alive non-image nodes.
+Below this threshold the specimen is too young — topology is still under direct user control.
+New specimens skip chatter entirely.</p>
+
+<h3>Group Sampling</h3>
+<p>Instead of the v7.1 approach of placing 50–500 clones into a flat gossip pool, v8.0 samples
+<strong>CHATTER_GROUP_SAMPLE_MIN = 8</strong> to <strong>CHATTER_GROUP_SAMPLE_MAX = 16</strong> nodes
+into a <em>group</em>. Each group is an independent interaction context — nodes within a group
+interact with each other, not with nodes in other groups. Multiple groups may run in a single
+chatter session. Group size is rolled uniformly in [8, 16] per session.</p>
+
+<h3>ChatterNodeClone</h3>
+<table>
+    <tr><th>Field</th><th>Role</th></tr>
+    <tr><td><code>source_id::String</code></td><td>Original node ID this clone was copied from</td></tr>
+    <tr><td><code>pattern_tokens::Vector{String}</code></td><td>Tokenized pattern of the source node</td></tr>
+    <tr><td><code>vote_actions::Vector{String}</code></td><td>Action names from the source node's action packet</td></tr>
+    <tr><td><code>strength::Float64</code></td><td>Snapshot of source node strength at clone time</td></tr>
+    <tr><td><code>has_stolen::Bool</code></td><td>Whether this clone has already stolen this session</td></tr>
+    <tr><td><code>stolen_actions::Vector{String}</code></td><td>Actions acquired via steal operations</td></tr>
+</table>
+
+<h3>2×2 Steal Mechanics</h3>
+<p>Within each group, nodes are sorted by strength descending. The top half form <em>stealer</em>
+pairs and the bottom half form <em>target</em> pairs. Each stealer pair picks a target pair
+and steals one action from each target. The steal is probabilistic: a stealer copies the
+highest-weighted action from its target with probability proportional to the target's strength.
+This means strong targets are more likely to have their actions noticed and stolen — a
+directional knowledge flow consistent with the v7.1 principle that proven patterns propagate,
+but now in a structured group context rather than a solo gossip exchange.</p>
+
+<h3>Markov Remix</h3>
+<p>After stealing, each stealer pair's combined actions (original + stolen) are remixed through
+a <strong>Markov chain</strong> with <code>MARKOV_CROSSOVER_RATE = 0.35</code>. The Markov chain
+preserves <em>local sequence structure</em> — adjacent actions in the original action packet are
+likely to remain adjacent in the remix — while introducing controlled variation. This is
+fundamentally different from the v7.1 approach of injecting random tokens from the sender's
+pattern into the receiver's pattern with a flat blend factor. The Markov remix ensures that
+stolen knowledge is structurally coherent: the remixed action packet is a <em>rearrangement</em>
+of meaningful subsequences, not a random shuffle.</p>
+
+<h3>ChatterSession Lifecycle</h3>
+<p>A <code>ChatterSession</code> struct tracks the full lifecycle:</p>
+<ol>
+    <li><strong>Group formation:</strong> Sample 8–16 nodes from the alive non-image population. Clone each into a <code>ChatterNodeClone</code>.</li>
+    <li><strong>Strength sort:</strong> Sort clones by strength descending within the group.</li>
+    <li><strong>2×2 pairing:</strong> Top half = stealers, bottom half = targets. Pair stealer[i] with target[i].</li>
+    <li><strong>Steal phase:</strong> Each stealer copies one action from its paired target (probabilistic, strength-weighted).</li>
+    <li><strong>Remix phase:</strong> Stealer pairs' combined actions are Markov-remixed with crossover rate 0.35.</li>
+    <li><strong>Graft phase:</strong> Remixed actions are grafted onto the original node's action packet (append, no overwrite).</li>
+    <li><strong>Grave sweep:</strong> Nodes that were grav-ed during the session are cleaned from the clone pool.</li>
+    <li><strong>User input queue:</strong> Any user input that arrived during the session is queued via <code>INPUT_QUEUE</code> and drained after session completion.</li>
+</ol>
+
+<h3>Key Constants</h3>
+<table>
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>MIN_POPULATION_FOR_CHATTER</code></td><td>1000</td><td>Population gate below which chatter is skipped</td></tr>
+    <tr><td><code>CHATTER_GROUP_SAMPLE_MIN</code></td><td>8</td><td>Minimum group size per session</td></tr>
+    <tr><td><code>CHATTER_GROUP_SAMPLE_MAX</code></td><td>16</td><td>Maximum group size per session</td></tr>
+    <tr><td><code>MARKOV_CROSSOVER_RATE</code></td><td>0.35</td><td>Probability of crossing over to the paired stealer's action sequence during Markov remix</td></tr>
+</table>
+
+<h3>Design Rationale</h3>
+<p>The v7.1 gossip model had three structural weaknesses. First, the weak-only morph gate
+meant that only weak nodes changed, creating a one-directional flow that could not discover
+novel <em>combinations</em> of proven patterns. Second, the flat blend factor (0.1–0.4 random
+token injection) destroyed local sequence structure — the token order that encodes meaningful
+subsequences in the action packet was not preserved. Third, the 24-hour morph cooldown was a
+coarse-grained throttle that prevented rapid iteration when the specimen was actively being
+shaped by user feedback. The v8.0 group-based 2×2 steal+remix addresses all three: pairs
+allow mutual influence (both stealer and target contribute to the remix), Markov chains
+preserve local sequence structure, and the group-based format naturally limits the rate of
+change per node (a node can only be in one group per session, and each session steals at most
+one action per target pair).</p>
+
+<div class="academic-box">
+    <strong>v8.0 Chatter Summary:</strong> Group-based 2×2 steal+remix. Population gate: 1000+ nodes.
+    Group size: 8–16. Stealer pairs steal actions from target pairs (strength-weighted).
+    Markov remix (crossover 0.35) preserves local action sequence structure.
+    No morph cooldown — group size and steal probability naturally throttle change rate.
+    ChatterResiduals (§15.35) mines the swap history for relational co-occurrence data.
 </div>
 
 <!-- ================================================================ -->
@@ -1131,7 +1264,7 @@ AIML vote selection. <strong>No silent failures, no unbounded parallelism, no co
 <h3>Global Fire Counter</h3>
 <p>
 A single atomic <code>FireCounter</code> is shared across the entire engine. Every fire path &mdash; pattern
-scan, relational fire, drop-table, attachment relay, lobe cascade &mdash; must successfully call
+scan, relational fire, drop-table, cascade relay, lobe cascade &mdash; must successfully call
 <code>try_claim_fire_slot!(fc)</code> before igniting. Failed claim means cap is full; the caller
 either skips that fire or queues for the next cycle. Enforcement is unified, so no single subsystem
 can monopolize concurrency budget.
@@ -2127,14 +2260,14 @@ non-pattern-based bridges holds:</p>
     A muted-lobe node that requires <code>transforms</code> can still vote if a physics-lobe node
     also requires <code>transforms</code>.</li>
 
-    <li><strong>/nodeAttach bridge.</strong> The node is attached &mdash; via
-    <code>attach_node!</code> &mdash; either <em>to</em> a node in an eligible lobe, or
-    <em>from</em> a node in an eligible lobe. Attachment is an explicit operator-issued
+    <li><strong>Bridge (formerly /nodeAttach).</strong> The node is bridged &mdash; via
+    <code>bridge_nodes!</code> &mdash; either <em>to</em> a node in an eligible lobe, or
+    <em>from</em> a node in an eligible lobe. A bridge is an explicit operator-issued
     cross-lobe relation, so it short-circuits the gate even when no verb or triple matches.</li>
 </ol>
 
 <p>Failure to cross <em>any</em> of these bridges drops the node from the vote pool entirely.
-The gate runs after all three expansion passes (drop-table, cross-lobe cascade, attachment
+The gate runs after all three expansion passes (drop-table, cross-lobe cascade, cascade
 relay) so muted-lobe nodes introduced by cascade or relay are also filtered.</p>
 
 <h3>Telemetry</h3>
@@ -2143,7 +2276,7 @@ relay) so muted-lobe nodes introduced by cascade or relay are also filtered.</p>
 
 <div class="code-block">
 <pre>Muted Lobes: [cooking_lobe, music_lobe]
-Bridged Nodes: [n_042@cooking_lobe(verb_bridge:transforms), n_097@music_lobe(attach_in:n_phys_5)]</pre>
+Bridged Nodes: [n_042@cooking_lobe(verb_bridge:transforms), n_097@music_lobe(bridge_in:n_phys_5)]</pre>
 </div>
 
 <p>Telemetry is recorded in two <code>Ref</code>s (<code>_LAST_MUTED_LOBES</code>,
@@ -2159,7 +2292,7 @@ never accumulate across missions.</p>
     <li><strong>[B]</strong> end-to-end physics mission mutes cooking lobe and drops its nodes when no bridge exists.</li>
     <li><strong>[C]</strong> shared <code>required_relations</code> verb reinstates a muted node via the verb-bridge path.</li>
     <li><strong>[D]</strong> bridged node confidence is exactly <code>orig &times; BRIDGED_NODE_CONF_WEIGHT</code>.</li>
-    <li><strong>[E]</strong> <code>/nodeAttach</code> reinstates a muted node even with zero verb overlap.</li>
+    <li><strong>[E]</strong> <code>/nodeBridge</code> (formerly /nodeAttach) reinstates a muted node even with zero verb overlap.</li>
     <li><strong>[F]</strong> telemetry <code>Ref</code>s reset per mission (no accumulation).</li>
 </ol>
 
@@ -2403,7 +2536,7 @@ and hot-path performance (>1M <code>is_nonjitter</code> calls/second). All asser
 <div class="grug-box">
     <p>v7.20 gave grug the NONJITTER tag. But tag only worked in ONE place &mdash; post-fusion
     jitter inside <code>_bidirectional_cheap_scan</code>. If tagged rock went through relational
-    scoring, or attachment relay, or full-lobe scanner, jitter still hit it. That is a lie.
+    scoring, or cascade relay, or full-lobe scanner, jitter still hit it. That is a lie.
     If rock has NONJITTER tag, rock should NEVER wiggle, anywhere. v7.21 makes the tag mean
     what it says: honored EVERYWHERE a node-scoped jitter touches the system.</p>
 </div>
@@ -2418,9 +2551,9 @@ node-scoped jitter in at least three other places:</p>
     <li><strong><code>evaluate_relational_dialectics</code></strong> (engine.jl) &mdash;
     per-triple <code>jitter_weight</code> and <code>jitter_score</code> from
     <code>RelationalJitter</code>, plus a final orthogonal-penalty dampener jitter.</li>
-    <li><strong><code>fire_attachments!</code> relay</strong> (engine.jl) &mdash; Gaussian
+    <li><strong><code>fire_cascades!</code> relay</strong> (engine.jl) &mdash; Gaussian
     synaptic-noise jitter (<code>randn() * RELAY_CONF_JITTER_SIGMA</code>) added on top of
-    each attached node's pre-baked base confidence at fire time.</li>
+    each bridged node's pre-baked base confidence at fire time.</li>
     <li><strong><code>FullLobeScanner.gather_candidates!</code> / <code>activate_candidates!</code></strong>
     (FullLobeScanner.jl) &mdash; <code>slight_jitter</code> applied to similarity scores during
     candidate gathering and activation confidence during the activation pass.</li>
@@ -2441,8 +2574,8 @@ canonical-form anchors, calibration nodes, and seed nodes.</p>
 So we check once up front &mdash; <code>nonjitter = NONJITTER_TAG in required_relations</code>
 &mdash; and pre-select an identity pass-through (<code>jitter_w = nonjitter ? identity :
 RelationalJitter.jitter_weight</code>) instead of branching inside the hot double-loop. The
-same trick is used in <code>fire_attachments!</code> where <code>attach_node_ref</code> is
-already fetched from <code>NODE_MAP</code>: we query <code>is_nonjitter(attach_node_ref)</code>
+same trick is used in <code>fire_cascades!</code> where <code>bridge_node_ref</code> is
+already fetched from <code>NODE_MAP</code>: we query <code>is_nonjitter(bridge_node_ref)</code>
 and zero out the Gaussian draw if tagged.</p>
 
 <p><strong>Strategy B &mdash; id-set plumbing where the scanner doesn't see Node objects.</strong>
@@ -2518,10 +2651,10 @@ The tag is skipped for requirement checks, honored for jitter gating, and everyo
         <td><strong>Gated via <code>required_relations</code> check</strong></td>
     </tr>
     <tr>
-        <td><code>fire_attachments!</code> synaptic relay</td>
+        <td><code>fire_cascades!</code> cascade relay</td>
         <td><code>randn() * RELAY_CONF_JITTER_SIGMA</code></td>
         <td>NOT gated</td>
-        <td><strong>Gated via <code>is_nonjitter(attach_node_ref)</code></strong></td>
+        <td><strong>Gated via <code>is_nonjitter(bridge_node_ref)</code></strong></td>
     </tr>
     <tr>
         <td><code>FullLobeScanner.gather_candidates!</code> candidate score</td>
@@ -2608,7 +2741,7 @@ to qualify as a solid anchor.</p>
     <li><strong>Node starts jittering.</strong> Fresh nodes spawn with
     <code>strength = 1.0</code> by default. Below threshold, NONJITTER is off, all
     node-scoped jitter sites (v7.21) produce bounded micro-variance on confidence, relational
-    scores, attachment relay, and full-lobe scanner candidate/activation energy.</li>
+    scores, cascade relay, and full-lobe scanner candidate/activation energy.</li>
 
     <li><strong>Node earns strength</strong> via <code>bump_strength!</code>
     (<code>/right</code> feedback, successful fires, coinflip wins on use). When the bump
@@ -2852,7 +2985,7 @@ sub-spans. Threshold is one shared chunk index by default.</p>
 </ul>
 
 <!-- ================================================================ -->
-<h2 id="ephemeral-automaton">15.25 EphemeralAutomaton: ATP-Callable JIT Step Machine <span class="new-badge">v7.23</span></h2>
+<h2 id="ephemeral-automaton">15.25 EphemeralAutomaton: ATP-Callable JIT Step Machine <span class="new-badge">v7.29</span></h2>
 
 <div class="grug-box">
     <p>Most rocks just react. Question come in, rock match pattern, rock shout
@@ -2862,17 +2995,25 @@ sub-spans. Threshold is one shared chunk index by default.</p>
     tiny rule-set, lives only for one question, dies after. NOT a sub-population.
     NOT persistent. NO strength. NO grave. Pure working-memory loop.
     Basal-ganglia (ATP) decides if escalate.</p>
+    <p>Now grug also REMEMBER between cycles. Phase crystal not lost when cycle
+    ends &mdash; accumulator keeps it for next time. And when context weight
+    is heavy, grug send PROBE into subconscious to look for hidden answers.
+    Vigilance system watch, ContextInjectorAgent search, TonalJudge decide
+    if probe result is worth bringing to surface.</p>
 </div>
 
 <div class="academic-box">
-    <p><strong>Module:</strong> <code>src/EphemeralAutomaton.jl</code> (369 lines).
+    <p><strong>Module:</strong> <code>src/EphemeralAutomaton.jl</code> (~1,800 lines).
     Rules are persistent in a process-wide registry; <em>traces</em> are not.
     Each call returns a fresh <code>AutomatonTrace</code> whose lifetime is the
-    caller's. No cross-call state, no nodes created.</p>
+    caller's. No cross-call state, no nodes created. The v7.27 PhaseAccumulator
+    and v7.29 Vigilance System extend the base machine with cross-cycle memory
+    and context-driven subconscious probing.</p>
     <p><strong>Exports:</strong> <code>AutomatonRule</code>, <code>AutomatonStep</code>,
-    <code>AutomatonTrace</code>, <code>register_automaton_rule!</code>,
-    <code>run_automaton</code>, <code>find_matching_rule</code>,
-    <code>run_for_action_family</code>.</p>
+    <code>AutomatonTrace</code>, <code>PhaseAccumulator</code>, <code>PhaseSnapshot</code>,
+    <code>VigilanceConfig</code>, <code>ContextInjectorAgent</code>, <code>InjectorDisposition</code>,
+    <code>register_automaton_rule!</code>, <code>run_automaton</code>,
+    <code>find_matching_rule</code>, <code>run_for_action_family</code>.</p>
 </div>
 
 <h3>Lifecycle</h3>
@@ -2880,14 +3021,64 @@ sub-spans. Threshold is one shared chunk index by default.</p>
     <li>ActionTonePredictor classifies the input as needing escalation.</li>
     <li><code>find_matching_rule</code> queries the registry for a rule whose
     pattern-trigger matches the current promotion context.</li>
-    <li><code>run_automaton</code> walks the rule&rsquo;s ordered <code>steps</code>,
-    feeding each step the previous step&rsquo;s output. Output values listed in
+    <li><code>run_automaton</code> walks the rule's ordered <code>steps</code>,
+    feeding each step the previous step's output. Output values listed in
     <code>step.jitter_targets</code> pass through <code>RelationalJitter.jitter_value</code>.
     Step indices, operator names, and final-state booleans are NEVER jittered.</li>
     <li>Trace and final state are returned to the caller. The trace carries
-    every step&rsquo;s input, output, and rule ID for downstream inspection
+    every step's input, output, and rule ID for downstream inspection
     (debug + telemetry). Then it goes out of scope and is garbage-collected.</li>
 </ol>
+
+<h3>PhaseAccumulator <span class="new-badge">v7.27</span></h3>
+<p>The PhaseAccumulator provides <strong>cross-cycle crystal memory</strong> for the
+automaton. Before v7.27, each automaton invocation started from a blank slate &mdash;
+no memory of what phase the crystal was in when the last cycle ended. The PhaseAccumulator
+stores a <code>PhaseSnapshot</code> at the end of each cycle containing:</p>
+<ul>
+    <li><strong>Phase index</strong> &mdash; which step in the rule's ordered sequence was active when the cycle ended</li>
+    <li><strong>Accumulated values</strong> &mdash; numeric accumulator states from the rule's hidden variables</li>
+    <li><strong>Timestamp</strong> &mdash; when the snapshot was taken, for aging / expiry</li>
+</ul>
+<p>On the next cycle, if the same rule fires again, the accumulator injects the prior
+snapshot as the initial state, so the automaton <em>resumes</em> rather than <em>restarts</em>.
+This is critical for multi-cycle automata where the step sequence must progress across
+cycle boundaries (e.g., a vigilance probe that requires three consecutive cycles to
+converge). Snapshots older than a configurable expiry threshold are pruned on each
+accumulation cycle to prevent unbounded growth.</p>
+
+<h3>Vigilance System <span class="new-badge">v7.29</span></h3>
+<p>The Vigilance System extends the automaton with <strong>context-driven subconscious probing</strong>.
+When the automaton's context weight exceeds a configured threshold, it dispatches a
+<code>ContextInjectorAgent</code> to probe the subconscious (SelfObserver microlog store) for
+relevant patterns that the normal scan path may have missed.</p>
+
+<h4>Vigilance Weight Tiers</h4>
+<table>
+    <tr><th>Tier</th><th>Weight</th><th>Behavior</th></tr>
+    <tr><td><code>VIGILANCE_FLOOR</code></td><td>0.0</td><td>No probing. Default for familiar inputs.</td></tr>
+    <tr><td><code>VIGILANCE_LOW</code></td><td>0.25</td><td>Occasional probe. Low-priority agent dispatch.</td></tr>
+    <tr><td><code>VIGILANCE_MEDIUM</code></td><td>0.50</td><td>Regular probing. Medium-priority dispatch.</td></tr>
+    <tr><td><code>VIGILANCE_HIGH</code></td><td>0.75</td><td>Aggressive probing. High-priority dispatch.</td></tr>
+    <tr><td><code>VIGILANCE_EXTREME</code></td><td>0.90</td><td>Maximum probing. Agent runs with extended timeout.</td></tr>
+</table>
+
+<h4>ContextInjectorAgent</h4>
+<p>Each agent dispatch is an ephemeral JIT probe with:</p>
+<ul>
+    <li><strong><code>InjectorDisposition</code></strong> &mdash; a biased lens that determines which
+    regions of the SelfObserver store to probe first. Dispositions are constructed from the current
+    TonalJudge frame hint, so a WARM frame probes emotional/concrete micrologs while an EXPLORATORY
+    frame probes abstract/structural micrologs.</li>
+    <li><strong>Timeout</strong> &mdash; <code>INJECTOR_TIMEOUT_SECONDS = 5.0</code>. Agents that
+    do not return within the timeout are silently dropped (no blocking of the main automaton).</li>
+    <li><strong>Cap</strong> &mdash; <code>AUTOMATON_MAX_CAP_DEFAULT = 6</code> concurrent agents
+    at any time. Additional dispatches are queued until a slot opens.</li>
+</ul>
+<p>The agent's output is a set of <em>injector hints</em> that are grafted onto the vote list
+as low-confidence supplementary signals. The main scan path is never overridden &mdash; the
+injector can only add, never replace. If the injector finds nothing relevant, it returns an
+empty set and the cycle proceeds as if the vigilance system were not present.</p>
 
 <h3>Jitter Contract</h3>
 <p>Per-step opt-in: the rule author lists field names in <code>jitter_targets</code>.
@@ -2908,7 +3099,7 @@ exploration on accumulator values.</p>
 </ul>
 
 <!-- ================================================================ -->
-<h2 id="hippocampal-modulator">15.26 HippocampalModulator: Action-Log Sequencing &amp; Vote Scoping <span class="new-badge">v7.23</span></h2>
+<h2 id="hippocampal-modulator">15.26 HippocampalModulator: Confidence-Ordered Action-Log Dispatch <span class="new-badge">v7.48</span></h2>
 
 <div class="grug-box">
     <p>Old way: votes go straight to AIML. All votes, all at once, good luck
@@ -2919,14 +3110,22 @@ exploration on accumulator values.</p>
     votes. Log is numbered. Entry 1 happen before entry 2. Entry 2 can see
     entry 1's output. That is step coherence. Hippocampus does NOT think.
     Hippocampus ORDERS. Log wiped every cycle. Born empty, dies empty.</p>
+    <p>Even newer way: not just ordered &mdash; <strong>confidence-ordered</strong>.
+    Sure entries go first. Low-confidence entries get reserved steps in case
+    they become relevant. Non-winners don't just disappear &mdash; they get
+    ADDITIVE entries that nudge the AIML without stealing the microphone. Every
+    voice is heard, but the loudest speak first.</p>
 </div>
 
 <div class="academic-box">
-    <p><strong>Module:</strong> <code>src/HippocampalModulator.jl</code> (436 lines).
+    <p><strong>Module:</strong> <code>src/HippocampalModulator.jl</code> (~700 lines).
     Implements a transient action-log buffer inspired by hippocampal replay /
-    sequencing. Decouples vote production from vote consumption.</p>
-    <p><strong>Exports:</strong> <code>ActionEntry</code>, <code>ActionLog</code>,
-    <code>ActionLogStatus</code> (<code>ENTRY_PENDING</code> /
+    sequencing. Decouples vote production from vote consumption. The v7.47
+    confidence-ordered dispatch and v7.48 non-winner additive entries extend
+    the base v7.23 log with structured priority and graceful fallback for
+    low-confidence objectives.</p>
+    <p><strong>Exports:</strong> <code>ActionEntry</code>, <code>ActionEntryType</code>,
+    <code>ActionLog</code>, <code>ActionLogStatus</code> (<code>ENTRY_PENDING</code> /
     <code>ENTRY_EXECUTING</code> / <code>ENTRY_DONE</code> /
     <code>ENTRY_FAILED</code>), <code>create_action_log!</code>,
     <code>wipe_action_log!</code>, <code>add_entry!</code>,
@@ -2934,7 +3133,7 @@ exploration on accumulator values.</p>
     <code>fail_entry!</code>, <code>modulate_objectives!</code>.</p>
 </div>
 
-<h3>Entry Shape</h3>
+<h3>Entry Shape (v7.47+)</h3>
 <table>
     <tr><th>Field</th><th>Role</th></tr>
     <tr><td><code>id::Int</code></td><td>Monotonic, log-local. Earlier IDs execute first.</td></tr>
@@ -2942,24 +3141,73 @@ exploration on accumulator values.</p>
     <tr><td><code>scoped_votes::Vector{Vote}</code></td><td>Only the votes that belong to this objective &mdash; no cross-contamination from sibling entries.</td></tr>
     <tr><td><code>prior_context::Dict</code></td><td>Outputs of completed earlier entries, for pronoun resolution and reference-back.</td></tr>
     <tr><td><code>status::ActionLogStatus</code></td><td>Lifecycle state machine.</td></tr>
+    <tr><td><code>entry_type::ActionEntryType</code></td><td>v7.48: classification governing dispatch priority and AIML treatment.</td></tr>
+    <tr><td><code>confidence::Float64</code></td><td>v7.47: peak confidence of the entry's scoped votes, used for confidence-ordered dispatch.</td></tr>
+    <tr><td><code>reserved_step::Bool</code></td><td>v7.47: true if this entry was pre-allocated a slot in the AIML dispatch sequence.</td></tr>
 </table>
+
+<h3>Confidence-Ordered Dispatch <span class="new-badge">v7.47</span></h3>
+<p>Before v7.47, entries were dispatched in log-creation order (monotonic ID). This meant
+that a low-confidence entry created early could block a high-confidence entry created later.
+v7.47 reorders the pending queue so that entries with higher <code>confidence</code> execute
+first. Each entry carries its own <code>confidence</code> field (computed from the peak
+confidence of its scoped votes at <code>add_entry!</code> time), and entries with
+<code>reserved_step = true</code> are guaranteed a slot in the dispatch sequence regardless
+of their confidence rank. The ordering rule is: reserved entries first (in confidence order),
+then unreserved entries (in confidence order). This ensures that high-certainty objectives
+are always processed before uncertain ones, while critical reserved objectives are never
+crowded out by noisy high-confidence entries from other objectives.</p>
+
+<h3>Non-Winner Additive Entries <span class="new-badge">v7.48</span></h3>
+<p>Before v7.48, only the <em>winner</em> of each multipart objective group received an
+action-log entry. All other candidates were silently dropped. v7.48 introduces three
+entry types that govern how non-winners are treated:</p>
+<table>
+    <tr><th>Type</th><th>Condition</th><th>AIML Treatment</th></tr>
+    <tr><td><code>ENTRY_SURE</code></td><td>Winner with confidence &ge; <code>LOW_CONFIDENCE_FRACTION &times; max_conf</code></td><td>Full dispatch: all AIML rules, all voice directives, full scaffold.</td></tr>
+    <tr><td><code>ENTRY_LOW_CONFIDENCE</code></td><td>Winner but confidence &lt; <code>LOW_CONFIDENCE_FRACTION &times; max_conf</code> (<code>LOW_CONFIDENCE_FRACTION = 0.65</code>)</td><td>Reduced dispatch: scaffold includes an UNSURE hedge, fewer AIML rule activations, shorter output.</td></tr>
+    <tr><td><code>ENTRY_ADDITIVE</code></td><td>Non-winner with confidence above threshold</td><td>Additive nudge: no scaffold, no voice, just a confidence-weighted hint appended to the winner's context. The non-winner's pattern is injected as a <em>supporting signal</em> in the winner's AIML payload.</td></tr>
+</table>
+<p>This three-tier system means that every vote above threshold has <em>some</em> influence
+on the final output &mdash; winners lead, low-confidence winners hedge, and strong
+non-winners add supporting context. No vote above threshold is completely silenced.</p>
+
+<h3>Relay Confidence Discount <span class="new-badge">v7.48</span></h3>
+<p>Votes from relayed nodes (those that fired via the CascadeBridge cascade system rather
+than direct pattern scan) receive a confidence discount. The <code>is_relay</code> flag on the
+Vote struct causes the HippocampalModulator to apply a multiplicative discount to the entry's
+confidence before ranking. This prevents relay-chain amplification where a cascade of
+bridges creates an artificially high confidence that crowds out genuine primary-scan
+entries. The discount factor is applied at <code>add_entry!</code> time and is visible in
+the entry's <code>confidence</code> field for debugging.</p>
 
 <h3>Ordering Rules</h3>
 <p><code>modulate_objectives!</code> resolves hard dependencies first
 (pronoun antecedents, output references) and applies soft preferences
 (user-extensible ordering rules &mdash; slot exists, hooks open). The
-output is a topologically sorted list of <code>ActionEntry</code> values.
+output is a topologically sorted list of <code>ActionEntry</code> values,
+then reordered by confidence within each topological level (v7.47).
 AIML consumes them via <code>next_pending!</code> in a loop, calling
 <code>complete_entry!</code> after each render. The log is wiped at cycle
 boundaries via <code>wipe_action_log!</code> &mdash; same ephemeral discipline
 as <code>gained_this_cycle</code>.</p>
 
+<h3>ActionLog Transient Buffer</h3>
+<p>The <code>ActionLog</code> is a transient buffer: it is created fresh at the start of each
+mission cycle, populated during scan and vote processing, consumed by the AIML orchestrator,
+and wiped at cycle end. No log state persists between cycles. This is the same ephemeral
+discipline as the cycle-tracking fields on the Node struct, and it ensures that the
+hippocampal dispatch is always responsive to the <em>current</em> input, not contaminated
+by stale objectives from prior cycles.</p>
+
 <h3>Test Coverage</h3>
 <p><code>test_hippocampal_modulator.jl</code> exercises log creation,
 entry add / pending / done state transitions, scoped-vote isolation
 (votes from one entry are invisible to another), wipe correctness across
-cycles, error throws on out-of-order completion, and end-to-end
-<code>modulate_objectives!</code> ordering with cross-entry dependencies.</p>
+cycles, error throws on out-of-order completion, end-to-end
+<code>modulate_objectives!</code> ordering with cross-entry dependencies,
+confidence-ordered dispatch (v7.47), additive entry injection (v7.48),
+and relay confidence discount (v7.48).</p>
 
 <!-- ================================================================ -->
 <h2 id="sigil-registry">15.27 SigilRegistry: Typed Symbolic Handle Kernel <span class="new-badge">v7.24</span></h2>
@@ -3342,12 +3590,46 @@ transformer weight (with jitter); marked wrong decreases it. Tests in
 <code>test_right_feedback_tiered.jl</code> cover the full reinforcement curve
 including saturation behavior at <code>WEIGHT_CEILING</code>.</p>
 
+<h3>Strain Energy &amp; Hippocampal Warrant <span class="new-badge">v7.50</span></h3>
+<p>The EphemeralMLP now carries two additional fields that couple the vote-list transformer
+to the hippocampal modulation system:</p>
+<ul>
+    <li><strong><code>strain_energy::Float64</code></strong> &mdash; a running measure of how much
+    the current vote list deviates from the MLP's accumulated expectations. Computed as a
+    weighted combination of novelty and quality components:
+    <code>strain = STRAIN_NOVELTY_WEIGHT &times; novelty + STRAIN_QUALITY_WEIGHT &times; (1 - quality)</code>,
+    where <code>STRAIN_NOVELTY_WEIGHT = 0.6</code>, <code>STRAIN_QUALITY_WEIGHT = 0.4</code>,
+    and <code>STRAIN_THRESHOLD = 0.55</code>. When strain exceeds the threshold, the MLP
+    signals that the current vote list is <em>structurally unusual</em> &mdash; either highly novel
+    or of unusually low quality relative to the familiar baseline.</li>
+    <li><strong><code>hippocampal_warrant_active::Bool</code></strong> &mdash; a flag indicating
+    whether the HippocampalModulator has issued a warrant for this cycle. When strain exceeds
+    <code>STRAIN_THRESHOLD</code>, the MLP sets <code>hippocampal_warrant_active = true</code>,
+    which causes the hippocampal dispatch to reserve additional action-log steps for the
+    strained cycle. This is the mechanism by which an unusual vote list triggers deeper
+    hippocampal sequencing: the MLP detects the anomaly and the hippocampus allocates more
+    processing budget.</li>
+</ul>
+<p>The function <code>get_strain_energy(mlp_state)</code> returns the current strain value,
+<code>is_hippocampal_warrant_active(mlp_state)</code> returns the warrant flag, and
+<code>dampen_strain!(mlp_state)</code> decays the strain toward zero between cycles,
+preventing a single unusual cycle from permanently activating the warrant. Strain computation
+is integrated into <code>mlp_forward</code> &mdash; it is computed from the same hidden-layer
+activation that drives the sigmoid/ReLU routing decision, so no separate forward pass is
+needed. PhaseMix in the hidden layer contributes to both the activation routing and the
+strain computation, making the two outputs coherent by construction.</p>
+
 <h3>Specimen Persistence</h3>
 <p>State saves under the <code>"ephemeral_mlp"</code> key in the specimen file
 as a standalone JSON structure. <code>to_specimen_dict</code> /
 <code>from_specimen_dict!</code> are the round-trip pair. Save writes only
 this module's state; load restores only this module's state &mdash; no
-interleaving with other specimen sections. Clean hands.</p>
+interleaving with other specimen sections. Clean hands. The v7.50 additions
+(<code>strain_energy</code>, <code>hippocampal_warrant_active</code>) are serialized
+as part of the MLP state dict. On reload, drift-check strain constants
+(<code>STRAIN_NOVELTY_WEIGHT</code>, <code>STRAIN_QUALITY_WEIGHT</code>,
+<code>STRAIN_THRESHOLD</code>) are validated against current code values &mdash; a
+mismatch emits a warning but does not block loading.</p>
 
 <h3>Test Coverage</h3>
 <ul>
@@ -3357,6 +3639,9 @@ interleaving with other specimen sections. Clean hands.</p>
     <code>from_specimen_dict!</code> bit-equivalent state restore.</li>
     <li>SelfObserver gate: hints below <code>observation_threshold</code> do
     not perturb weights; hints above do.</li>
+    <li>Strain energy: <code>get_strain_energy</code> returns value in [0, 1],
+    <code>is_hippocampal_warrant_active</code> triggers at <code>STRAIN_THRESHOLD = 0.55</code>,
+    <code>dampen_strain!</code> decays toward zero across cycles.</li>
 </ul>
 
 <!-- ================================================================ -->
@@ -3438,7 +3723,594 @@ body fidelity across the full mission suite.</p>
 
 <!-- ================================================================ -->
 <!-- ================================================================ -->
-<h2 id="specimen-persistence">16. Specimen Persistence: Full Cave Save/Restore <span class="new-badge">v7</span></h2>
+
+<!-- ================================================================ -->
+<h2 id="tonal-judge">15.33 TonalJudge: Token Bag + Common-Sense Frame Selection <span class="new-badge">v7.21</span></h2>
+
+<p>
+TonalJudge sits <strong>between</strong> the predictor and the scaffold. It does not replace either.
+It is a structure-preserving translation layer that lifts a <code>PredictionResult</code> into a
+token bag, judges the situation using common-sense mode selection, and emits a single
+<code>FrameHint</code> that downstream scaffolds can dispatch on.
+</p>
+
+<h3>Token Alphabet</h3>
+<p>
+Tokens are intentionally few, typed, and additive. Each token is a triple of
+<code>(category, name, weight)</code>. A reading can carry many tokens of any category, and
+the judge can prefer strong claims over weak ones. The categories are:
+</p>
+<ul>
+    <li><code>TOK_TONE</code> &mdash; hostile, curious, urgent, reflective, declarative, neutral</li>
+    <li><code>TOK_ACTION</code> &mdash; query, command, negate, assert, speculate, escalate</li>
+    <li><code>TOK_FORM</code> &mdash; question_form, imperative_form, fragment, dangling_chain</li>
+    <li><code>TOK_INTENSITY</code> &mdash; high_arousal, low_arousal, concentrated, diffuse</li>
+    <li><code>TOK_COHERENCE</code> &mdash; coherent, incoherent, neutral_coherence</li>
+</ul>
+
+<h3>FrameHint Enum</h3>
+<p>
+The judge's output is one of seven frame hints, each mapping to a generative posture:
+</p>
+<table class="config-table">
+    <tr><th>FrameHint</th><th>Generative Posture</th><th>Trigger Condition</th></tr>
+    <tr><td><code>FRAME_WARM</code></td><td>Affiliative, grounding</td><td>Neutral/curious tone, coherent, low arousal</td></tr>
+    <tr><td><code>FRAME_EXPLORATORY</code></td><td>Open-ended, branching</td><td>Curious tone, query action, low coherence</td></tr>
+    <tr><td><code>FRAME_IMPERATIVE</code></td><td>Directive, concise</td><td>Command/escalate action, high arousal</td></tr>
+    <tr><td><code>FRAME_CONTEMPLATIVE</code></td><td>Reflective, slow</td><td>Reflective tone, assert action, coherent</td></tr>
+    <tr><td><code>FRAME_DE_ESCALATING</code></td><td>Calming, reframing</td><td>Hostile tone, high arousal, incoherent</td></tr>
+    <tr><td><code>FRAME_TERSE</code></td><td>Minimal, factual</td><td>Low arousal, neutral tone, imperative form</td></tr>
+    <tr><td><code>FRAME_PLAIN</code></td><td>Default, no special framing</td><td>Everything else (the autopilot path)</td></tr>
+</table>
+
+<h3>Mode Selection: BASIC vs RELATIONAL</h3>
+<p>
+The judge picks between two modes using <code>pick_mode(reading, obs)</code>:
+</p>
+<ul>
+    <li><strong>BASIC mode</strong> (autopilot): cheap action&rarr;frame lookup, no blending of tone,
+        no observer-state read. Most situations get this path. Mirrors how most of biology is autopilot.</li>
+    <li><strong>RELATIONAL mode</strong> (situational): fires only when the situation has structure to
+        honor &mdash; hostile/urgent/reflective tone, low coherence, dangling chain, big arousal swing.
+        Then the full token bag is spun up and blended with observation reading to pick a frame that
+        respects the felt shape of the moment.</li>
+</ul>
+<p>
+The entry point <code>judge(reading, obs)</code> produces a <code>TonalJudgement</code> containing
+the chosen <code>FrameHint</code>, the mode used, and a reasoning trace. A global
+<code>LAST_JUDGEMENT</code> ref (parallel to <code>LAST_PREDICTION</code>) surfaces the verdict
+for downstream diagnostics. The <code>[FRAME=...]</code> tag in <code>format_prediction_summary</code>
+exposes the chosen frame in the AIML scaffold.
+</p>
+
+<div class="grug-box">
+    <p>TonalJudge is plumbing-only. It ships the token alphabet, the reading builder, the mode picker,
+    and the frame hint &mdash; but does NOT change <code>generate_aiml_payload</code> directly. The
+    scaffold reads the judgement's frame hint and adjusts its generative posture accordingly. Common
+    sense: some situations call for relational coherence, others just call for basics.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="input-ledger">15.34 InputLedger: Background Thread Mining User Input into Cell Growth Data <span class="new-badge">v7.25</span></h2>
+
+<p>
+The user input log IS the data. Every word the user types carries latent structure &mdash; which topics
+cluster together, what relational triples emerge, what concepts co-occur. InputLedger watches
+<code>MESSAGE_HISTORY</code>, consumes ONLY fresh entries (tracked by a hash ledger), and digests them
+into batches that feed mitosis and relational governance. It is the gut that digests input into nutrients
+for cell growth.
+</p>
+
+<h3>Hash Ledger</h3>
+<p>
+The core deduplication mechanism is a <code>Dict{UInt64, Bool}</code> where the key is a hash of
+<code>role|text</code> and the value is always <code>true</code> (consumed). If a hash is NOT in the
+ledger, the entry is fresh. If it IS, the entry has already been digested and is skipped. No input is
+ever double-processed. The ledger is bounded at <code>LEDGER_CAP = 20000</code> (2&times; MESSAGE_HISTORY
+cap of 10k, accounting for replaced/pinned-evicted entries creating new hashes).
+</p>
+
+<h3>Background Thread</h3>
+<p>
+An <code>@async</code> loop runs continuously: walk <code>MESSAGE_HISTORY</code>, skip consumed entries,
+collect fresh entries into a batch. When <code>length(fresh) &ge; MIN_BATCH_THRESHOLD (50)</code>, the
+batch is processed for co-occurrence data (intensity increment <code>INPUT_CO_OCCUR_INCREMENT = 2.0</code>
+&mdash; user-typed co-occurrence is a STRONGER signal than scan-cycle co-firing because the user CHOSE
+to put those concepts together). After processing, entries are marked consumed in the ledger. The thread
+auto-restarts on crash, logs errors but never dies.
+</p>
+
+<h3>Key Constants</h3>
+<table class="config-table">
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>LEDGER_CAP</code></td><td>20000</td><td>Max ledger entries (2&times; MESSAGE_HISTORY cap)</td></tr>
+    <tr><td><code>BATCH_SIZE</code></td><td>10000</td><td>Entries per processing batch</td></tr>
+    <tr><td><code>POLL_INTERVAL_EMPTY</code></td><td>5.0s</td><td>Sleep when no fresh data found</td></tr>
+    <tr><td><code>POLL_INTERVAL_AFTER_BATCH</code></td><td>1.0s</td><td>Shorter sleep after processing (might be more)</td></tr>
+    <tr><td><code>MIN_BATCH_THRESHOLD</code></td><td>50</td><td>Minimum fresh entries to bother processing</td></tr>
+    <tr><td><code>INPUT_CO_OCCUR_INCREMENT</code></td><td>2.0</td><td>Intensity per co-occurrence (stronger than scan co-firing)</td></tr>
+</table>
+
+<div class="grug-box">
+    <p>InputLedger is the primary channel (increment 2.0). The user explicitly put those words together
+    &mdash; that's the strongest co-occurrence signal in the system. No input is ever double-processed.
+    Stale entries are skipped. 10k fresh entries = one batch = fuel for one mitosis cycle. The hash
+    ledger is the guarantee: same message, same hash, consumed once, never again.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="chatter-residuals">15.35 ChatterResiduals: Background Thread Mining Chatter Swaps into Relational Data <span class="new-badge">v7.26</span></h2>
+
+<p>
+When ChatterMode swaps votes into weak nodes, those nodes become "multi-activator randomized types" &mdash;
+their action packets now contain actions from multiple donor families, their patterns fragment under
+accumulated swap pressure, and they lose solid group identity. They become globally UNLINKABLE. But the
+swap itself is DATA: the fact that a weak node accepted a vote swap from a strong donor means those two
+nodes are now relationally entangled, even though the weak node's identity is fragmenting. That
+entanglement is the chatter residual. This module mines it.
+</p>
+
+<h3>Architecture (Mirrors InputLedger)</h3>
+<p>
+ChatterResiduals mirrors InputLedger's architecture but watches <code>CHATTER_LOG</code> instead of
+<code>MESSAGE_HISTORY</code>. The hash ledger key is <code>hash(session_id | node_id | donor_id)</code>,
+the fresh scanner walks <code>CHATTER_LOG</code> skipping consumed swaps, and the batch processor records
+co-occurrence between receiver and donor with <code>CHATTER_CO_OCCUR_INCREMENT = 1.5</code>.
+</p>
+
+<h3>Key Constants</h3>
+<table class="config-table">
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>RESIDUAL_LEDGER_CAP</code></td><td>400</td><td>Max ledger entries (2&times; MAX_CHATTER_LOG)</td></tr>
+    <tr><td><code>RESIDUAL_BATCH_SIZE</code></td><td>200</td><td>Swaps per processing batch</td></tr>
+    <tr><td><code>RESIDUAL_POLL_INTERVAL_EMPTY</code></td><td>10.0s</td><td>Sleep when no fresh swaps (chatter runs ~2min)</td></tr>
+    <tr><td><code>RESIDUAL_POLL_INTERVAL_AFTER_BATCH</code></td><td>2.0s</td><td>Shorter sleep after processing</td></tr>
+    <tr><td><code>RESIDUAL_MIN_BATCH_THRESHOLD</code></td><td>3</td><td>Minimum fresh swaps to bother processing</td></tr>
+    <tr><td><code>CHATTER_CO_OCCUR_INCREMENT</code></td><td>1.5</td><td>Secondary channel (weaker than user input 2.0, stronger than scan co-firing 1.0)</td></tr>
+</table>
+
+<div class="grug-box">
+    <p>InputLedger mines USER INPUT &mdash; the primary channel (2.0 increment). ChatterResiduals mines
+    CHATTER SWAPS &mdash; the secondary channel (1.5 increment). Chatter learns what to chatter about
+    while active. The residual is the afterimage: which nodes gossiped with which, and what fragmentary
+    identity traces they left behind. "Moss on rock, but the moss remembers who brushed against it."</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="hippocampal-strain">15.36 Hippocampal Strain &amp; Warrant System <span class="new-badge">v7.50</span></h2>
+
+<p>
+The Hippocampal Strain &amp; Warrant system (documented in detail in &sect;15.31 EphemeralMLP) adds
+two fields to the <code>EphemeralMLP</code> state that gate whether the hippocampal dispatch path
+should activate for a given node. <strong>Strain energy</strong> measures how far a node's recent
+confidence trajectory has drifted from its baseline &mdash; high strain means the node is being
+pushed in directions its training hasn't prepared it for. <strong>Hippocampal warrant</strong> is a
+boolean that becomes true when strain crosses <code>STRAIN_THRESHOLD = 0.55</code>, signaling that
+the node needs hippocampal reinforcement (reserved dispatch steps, additive confidence entries)
+to avoid catastrophic drift.
+</p>
+
+<h3>Cross-References</h3>
+<ul>
+    <li>Strain energy computation and constants: see &sect;15.31 EphemeralMLP, subsection "Strain Energy &amp; Hippocampal Warrant"</li>
+    <li>Hippocampal dispatch with reserved steps: see &sect;15.26 HippocampalModulator</li>
+    <li>TemporalGrowth reads strain for growth observability: see &sect;15.41 TemporalGrowth</li>
+</ul>
+
+<!-- ================================================================ -->
+<h2 id="anti-match">15.37 Anti-Match Nodes: Pattern-Activated Confidence Drain <span class="new-badge">v7.49</span></h2>
+
+<p>
+Anti-match nodes are a special node class that activates on pattern match but <strong>never votes</strong>
+&mdash; instead they <strong>drain confidence</strong> from regular nodes in the same scan pool. They are
+the system's immune response: when certain patterns should suppress rather than contribute to the response,
+anti-match nodes ensure those patterns pull confidence away from the active quorum.
+</p>
+
+<h3>Node Declaration</h3>
+<p>
+Anti-match nodes are created with <code>is_antimatch_node=true</code> in the <code>create_node</code>
+call. This flag is stored in the <code>Node</code> struct and checked during the scan cycle. Anti-match
+nodes participate in pattern matching normally &mdash; they appear in the expanded set &mdash; but their
+confidence is tagged with <code>antimatch=true</code> in the vote entry tuple.
+</p>
+
+<h3>Confidence Drain Mechanics</h3>
+<p>
+When an anti-match node appears in the expanded set, instead of contributing its confidence to the vote
+pool, it drains confidence from regular (non-anti-match) nodes in the same lobe. The drain rates are:
+</p>
+<div class="math-section">
+    <strong>NONJITTER anti-match nodes</strong> (fixed drain per activation):<br>
+    <code>drain = ANTIMATCH_DRAIN_FIXED = 0.03</code><br><br>
+    <strong>Jittered anti-match nodes</strong> (random drain per activation):<br>
+    <code>drain = rand() &times; ANTIMATCH_DRAIN_MAX_JITTER = rand() &times; 0.05</code>
+</div>
+<p>
+Anti-match nodes have no strength dynamics &mdash; they don't gain or lose strength from firing. They
+don't bump, don't vote, don't get elected. They are pure suppressors.
+</p>
+
+<h3>Use Cases</h3>
+<p>
+Anti-match nodes let the architect declare: <em>"when this pattern matches, the response should move
+AWAY from that topic, not toward it."</em> For example, an anti-match node on "calculate" in a social
+lobe drains confidence from math-adjacent nodes, ensuring the social response isn't pulled toward
+computation. This is the dual of the regular vote system &mdash; where votes add confidence toward
+a topic, anti-match drains pull confidence away from competing topics.
+</p>
+
+<div class="grug-box">
+    <p>Anti-match nodes are the immune system. They don't fight FOR anything &mdash; they fight AGAINST.
+    Pattern-activated suppressors that drain confidence from the wrong kind of activation. No strength
+    dynamics. No voting. Just quiet, persistent suppression of what shouldn't be there.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="time-nodes">15.38 Time Nodes &amp; Temporal Group Isolation <span class="new-badge">v7.56a</span></h2>
+
+<p>
+Time nodes are regular nodes that carry <code>"time_node"=true</code> in their <code>json_data</code>
+dictionary. They are not a separate type &mdash; they are a label gate. When a time node seeds a
+<code>NodeGroup</code>, the group is flagged <code>is_time_node_group=true</code>, and <strong>only
+other time nodes may join</strong>. Regular nodes are excluded from time-node groups, and time nodes
+are excluded from regular groups. This provides temporal group isolation &mdash; time-sensitive patterns
+cluster together without contaminating (or being contaminated by) atemporal knowledge.
+</p>
+
+<h3>Implementation</h3>
+<ul>
+    <li><code>is_time_node(node)</code> checks <code>node.json_data["time_node"] === true</code> &mdash;
+        pure label gate, no special code path.</li>
+    <li><code>NodeGroup</code> carries <code>is_time_node_group::Bool</code>, set at group creation
+        from the seed node's time-node status.</li>
+    <li>Group join validation (<code>try_join_group!</code>) checks <code>grp.is_time_node_group == requesting_node_is_time</code>
+        &mdash; mismatched nodes are rejected.</li>
+    <li>Temporal node creation in <code>Main.jl</code> sets <code>json_data["time_node"] = true</code>
+        when the node is spawned from temporal pattern extraction.</li>
+</ul>
+
+<div class="grug-box">
+    <p>Time nodes are just regular nodes with a flag. The flag gates group membership. That's it.
+    No special firing rules. No special confidence. Just isolation: temporal patterns stay with temporal
+    patterns, atemporal patterns stay with atemporal patterns. Cross-contamination is the enemy of
+    group coherence, and time is the biggest cross-contaminator there is.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="relation-sigils">15.39 Relation-Class Sigils: Dynamic Relational Triple Macros <span class="new-badge">v7.55</span></h2>
+
+<p>
+Relation-class sigils extend the SigilRegistry with a new sigil class (<code>:relation</code>) that
+expands to <strong>alternative relation names</strong> at match time. When a node's relational triples
+contain a relation verb that matches a <code>:relation</code> sigil's expansion list, the sigil
+automatically generates alternative triples using the expanded relation names. This lets the architect
+declare semantic equivalence between relation verbs (e.g. "causes", "produces", "creates") without
+duplicating triples manually.
+</p>
+
+<h3>Sigil Definition</h3>
+<p>
+A <code>:relation</code> sigil is defined with:
+</p>
+<ul>
+    <li><code>class = :relation</code></li>
+    <li><code>applies_at = :relation</code></li>
+    <li><code>expansion</code> = vector of alternative relation name strings</li>
+</ul>
+<p>
+Validation enforces: <code>:relation</code> sigils must carry an expansion list (not empty), must NOT
+carry <code>sigil_type</code> (relation sigils don't have types), and must NOT carry <code>lexicon</code>
+(relation sigils don't have lexicon entries). These constraints keep the relation class pure &mdash;
+it's a macro for alternative verbs, nothing more.
+</p>
+
+<h3>Expansion at Match Time</h3>
+<p>
+<code>expand_relation_sigil(table, name)</code> returns the flat list of alternative relation names.
+When the scanner encounters a relational triple whose verb matches a <code>:relation</code> sigil, the
+expansion is applied: the original triple is kept, and additional triples are generated with each
+alternative relation verb. This is Stage 4 of the sigil pipeline (after lambda, macro, and tag classes
+in Stages 1-3).
+</p>
+
+<div class="grug-box">
+    <p>Relation sigils are relational triple macros. Define &amp;causal = ["causes", "produces", "creates"],
+    and any triple with "causes" automatically gets "produces" and "creates" variants. No manual
+    duplication. The sigil IS the semantic equivalence declaration, and the expansion IS the proof
+    that the equivalence holds at match time.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="lobe-orchestrator">15.40 LobeOrchestrator: Averages-Curve Lobe Selection <span class="new-badge">v7.25</span></h2>
+
+<p>
+LobeOrchestrator replaces the v7.18 "topicality mute gate" with an <strong>averages-curve lobe scoring</strong>
+system. No lobe is muted up-front. Every lobe collects its node-vote confidences, and the lobe with the
+highest score wins the orchestration floor. Runner-up lobes can also fire if they meet the pass-through
+threshold. This produces natural multi-lobe responses without the hard mute/demote cycle of the old system.
+</p>
+
+<h3>Lobe Score Formula</h3>
+<div class="math-section">
+    <code>base_avg = mean(all vote confidences in lobe)</code><br>
+    <code>top_avg = mean(top-K confidences in lobe)</code> where K = <code>TOP_K_FRACTION</code> &times; total votes<br>
+    <code>lobe_score = sqrt(base_avg) &times; top_avg&sup2;</code><br><br>
+    Top averages have exponentially more weight than base averages. A lobe with a few very strong
+    votes outperforms a lobe with many mediocre votes.
+</div>
+
+<h3>Multi-Lobe Pass-Through</h3>
+<p>
+A runner-up lobe fires alongside the winner IF:
+</p>
+<ol>
+    <li><code>lobe_score &ge; MIN_PASS_THROUGH_SCORE (0.10)</code>, AND</li>
+    <li>it has <code>&ge; MIN_WINNING_VOTES_PER_LOBE (2)</code> hard-selected votes (small votes
+        piling up to a high average do NOT count).</li>
+</ol>
+<p>
+Equal scores are broken by 50/50 coinflip. Winner goes first, both still fire.
+</p>
+
+<h3>Hard Fire Batch Cap</h3>
+<p>
+Each lobe fires in batches capped at <code>HARD_FIRE_BATCH_CAP = 1000</code> rows. Winner fires first.
+Runners-up wait their turn and also fire in 1k-capped batches. Cross-talk, bridge, and cascade
+activations from any of these lobes MUST WAIT until the lobe(s) finish, then fire as their own
+1k-capped batch. The <code>FireCounter</code> shared across the entire scan cycle enforces the global
+<code>ACTIVE_FIRE_CAP = 1000</code>.
+</p>
+
+<h3>Default Lobe Demotion</h3>
+<p>
+When any named lobe has hard votes &ge; 1, the <code>default</code> lobe's score is multiplied by
+<code>DEFAULT_LOBE_DEMOTION_FACTOR = 0.5</code>. This prevents greedy boot patterns in the default
+lobe from stealing wins from named lobes on inputs the named lobes obviously own. The default lobe
+can still win if no named lobe has any hard votes, or if its score is more than 2&times; the strongest
+named lobe.
+</p>
+
+<h3>Key Constants</h3>
+<table class="config-table">
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>HARD_FIRE_BATCH_CAP</code></td><td>1000</td><td>Rows-per-batch hard cap</td></tr>
+    <tr><td><code>MIN_PASS_THROUGH_SCORE</code></td><td>0.10</td><td>Lobe score floor for passthrough</td></tr>
+    <tr><td><code>MIN_WINNING_VOTES_PER_LOBE</code></td><td>2</td><td>Hard-selected votes required</td></tr>
+    <tr><td><code>TOP_K_FRACTION</code></td><td>0.5</td><td>Top K = top half by confidence</td></tr>
+    <tr><td><code>HARD_SELECTION_CONF_THRESHOLD</code></td><td>0.5</td><td>A "hard selection" is conf &ge; 0.5</td></tr>
+    <tr><td><code>DEFAULT_LOBE_DEMOTION_FACTOR</code></td><td>0.5</td><td>Default lobe score multiplier when named lobes have votes</td></tr>
+</table>
+
+<h3>Telemetry</h3>
+<p>
+<code>LAST_LOBE_SCORES</code> stores per-lobe (lobe_id, base_avg, top_avg, lobe_score, hard_vote_count)
+for scaffold consumption. <code>LAST_WINNER</code> and <code>LAST_PASSTHROUGH</code> identify which
+lobes fired and in what order.
+</p>
+
+<!-- ================================================================ -->
+<h2 id="temporal-growth">15.41 TemporalGrowth: Lobe-Aware Ephemeral Node Growth Automaton <span class="new-badge">v7.26</span></h2>
+
+<p>
+TemporalGrowth is an automaton that spawns in ONE named lobe at a time, reads fresh user input
+(via InputLedger), extracts vote + pattern activator data, grows a few new nodes, then latches them
+to related groups. The automaton is ephemeral in presence (materializes, runs, evaporates) but its
+state persists via the InputLedger hash. Same pattern as EphemeralAutomaton.
+</p>
+
+<h3>Three Signal Channels</h3>
+<p>
+The automaton routes three signal channels from fresh user input into new node structure:
+</p>
+<ul>
+    <li><strong>VOTES = ACTIONS</strong> &mdash; what the node does when it fires</li>
+    <li><strong>PATTERNS = QUESTIONS</strong> &mdash; what the node responds to</li>
+    <li><strong>SIGILS = INFERENCE</strong> &mdash; how the node binds at match time</li>
+</ul>
+
+<h3>Many-Lever Relevance System</h3>
+<p>
+The automaton has many levers to identify what patterns and actions are relevant to a lobe's topic.
+It does NOT use hardcoded lookup tables. Instead, it reads the lobe's OWN structures:
+</p>
+<ol>
+    <li><strong>Group centroids</strong> &mdash; centroid_pattern = lobe's existing topic DNA</li>
+    <li><strong>Lobe subject whitelist</strong> &mdash; tokens belonging to the lobe's domain</li>
+    <li><strong>Co-occurrence data</strong> &mdash; which nodes co-occur (RelationalGovernance)</li>
+    <li><strong>Thesaurus similarity</strong> &mdash; dimensional proximity between tokens</li>
+    <li><strong>Lobe node patterns/action_packets</strong> &mdash; what the lobe already does</li>
+</ol>
+
+<h3>Growth Pipeline</h3>
+<ol>
+    <li>Find named lobes with enough strength (groups pass <code>GROUP_STRENGTH_FLOOR = 0.5</code>)</li>
+    <li>Pick ONE lobe to spawn in (strongest groups there)</li>
+    <li>Read fresh MESSAGE_HISTORY entries via <code>InputLedger.scan_fresh_entries</code></li>
+    <li>For each fresh user entry, extract pattern via activator-verb bind, filter via many levers</li>
+    <li>Grow up to <code>GROWTH_BATCH_SIZE = 3</code> new nodes</li>
+    <li>Latch new nodes to related groups (<code>find_group_latch_candidates</code> filtered by
+        <code>MITOSIS_GROUP_STRENGTH_FLOOR</code>, random pick from eligible)</li>
+    <li>Evaporate. Ledger remembers what was consumed.</li>
+</ol>
+
+<h3>Key Constants</h3>
+<table class="config-table">
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>GROWTH_BATCH_SIZE</code></td><td>3</td><td>Max nodes per automaton spawn (conservative)</td></tr>
+    <tr><td><code>GROWTH_PROBABILITY_CEILING</code></td><td>0.15</td><td>Stochastic gate ceiling per idle cycle</td></tr>
+    <tr><td><code>GROUP_STRENGTH_FLOOR</code></td><td>0.5</td><td>Group avg_strength floor for latching</td></tr>
+    <tr><td><code>MIN_FRESH_ENTRIES</code></td><td>5</td><td>Minimum fresh entries before materializing</td></tr>
+    <tr><td><code>RELEVANCE_THESAURUS_FLOOR</code></td><td>0.15</td><td>Minimum thesaurus similarity for relevance</td></tr>
+    <tr><td><code>ACTION_SAMPLE_SIZE</code></td><td>8</td><td>Nodes to sample for lobe action inference</td></tr>
+    <tr><td><code>MAX_ACTION_NAMES</code></td><td>3</td><td>Action names carried into new node's action_packet</td></tr>
+</table>
+
+<div class="grug-box">
+    <p>TemporalGrowth is the growth engine. It reads what the user is saying, figures out which lobe
+    cares about that topic, grows a few nodes there, and latches them to existing groups. Low fidelity
+    without losing result &mdash; minimal machinery, same outcome. Structures do the understanding.
+    Automaton just routes.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="relational-governance">15.42 RelationalGovernance: Co-Activation Accumulated Auto-Attach <span class="new-badge">v7.25</span></h2>
+
+<p>
+RelationalGovernance implements Hebbian learning at the topology level: <em>"neurons that fire together
+wire together."</em> But biology doesn't rush this. Synaptic strengthening happens over REPEATED
+co-activation, not single coincidences. One co-firing is noise. Ten is a signal. A hundred is a bond
+worth making permanent. This module observes co-activation during scan cycles, accumulates intensity
+in a bounded dictionary, and automatically bridges nodes when the data justifies it.
+</p>
+
+<h3>Co-Activation Accumulator</h3>
+<p>
+<code>CO_ACC</code> is a <code>Dict{Tuple{String,String}, Float64}</code> mapping unordered node pairs
+to their accumulated co-activation intensity. Thread-safe via <code>CO_ACC_LOCK</code>. Bounded at
+<code>CO_ACC_MAX_PAIRS = 5000</code> &mdash; when full, weakest pairs are evicted.
+</p>
+
+<h3>Observation</h3>
+<p>
+<code>observe_co_firing!</code> is called after each scan cycle with the list of nodes that fired
+together. For each pair, intensity is incremented. If the pair is new, it's inserted. If the
+accumulator is full, the weakest existing pair is evicted first. Token overlap computation is done
+<strong>outside</strong> <code>CO_ACC_LOCK</code> to avoid nesting with <code>NODE_LOCK</code> &mdash;
+the mutation happens under <code>CO_ACC_LOCK</code> only.
+</p>
+
+<h3>Decay</h3>
+<p>
+Intensity decays at <code>CO_ACC_DECAY_RATE = 0.05</code> per decay cycle. Pairs that stop co-firing
+fade to zero and get evicted. This prevents stale pairs from triggering auto-bridging.
+</p>
+
+<h3>Auto-Attach (DISABLED in v8.0)</h3>
+<p>
+The <code>_auto_attach_best_candidate!</code> function, which automatically bridged nodes whose
+co-activation intensity crossed <code>AUTO_ATTACH_THRESHOLD = 10.0</code>, has been <strong>commented
+out</strong> in v8.0. The idle cycle in <code>run_relational_governance!</code> now only runs observation
+and decay; the auto-attach step is skipped. This was disabled because the automatic bridge creation
+was producing too many low-quality bridges that cluttered the topology. The co-activation data is
+still collected and decayed &mdash; it may be re-enabled with stricter criteria in a future version.
+</p>
+
+<h3>Key Constants</h3>
+<table class="config-table">
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>CO_ACC_MAX_PAIRS</code></td><td>5000</td><td>Maximum pairs tracked in accumulator</td></tr>
+    <tr><td><code>CO_ACC_DECAY_RATE</code></td><td>0.05</td><td>Fraction of intensity lost per decay cycle</td></tr>
+    <tr><td><code>AUTO_ATTACH_THRESHOLD</code></td><td>10.0</td><td>Intensity for auto-attach (currently disabled)</td></tr>
+    <tr><td><code>AUTO_ATTACH_PROB</code></td><td>0.10</td><td>Stochastic lever per idle cycle (currently disabled)</td></tr>
+</table>
+
+<div class="grug-box">
+    <p>RelationalGovernance is moss on rock. It watches what fires together, remembers the pattern,
+    and &mdash; when the data is overwhelming &mdash; wires them together. SLOW. LAZY. CONSERVATIVE.
+    But in v8.0, the auto-attach is turned off. The moss still grows (observation + decay still run),
+    but it doesn't crawl anywhere yet. Better to watch than to make junk bridges.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="cascade-bridge-section">15.43 CascadeBridge: Bidirectional Match-Cascade Handoff System <span class="new-badge">v8.0</span></h2>
+
+<p>
+The CascadeBridge system is documented in detail in &sect;16.5 as part of the Specimen Persistence
+and Relational Fire subsystem. This section provides the subsystem-level summary. The CascadeBridge
+replaces the v7.3 one-directional <code>AttachedNode</code>/<code>ATTACHMENT_MAP</code> architecture
+with a <strong>bidirectional match-cascade handoff</strong>. The key innovation is the
+<code>unmatched_tail</code> parameter in <code>fire_cascades!</code>: when a source lobe's scanner
+matches a node but cannot match certain tokens, those leftover tokens become the bridge payload that
+is handed off to the partner lobe's scanner. The match boundary IS the seam. No fabricated connector
+pattern. No middleman.
+</p>
+
+<h3>Cross-References</h3>
+<ul>
+    <li>Full CascadeBridge documentation: &sect;16.5</li>
+    <li>Concurrency model (snapshot approach, lock ordering): &sect;15.44</li>
+    <li>Specimen persistence (bridges key): &sect;16</li>
+    <li>VoteOrchestrator FireCounter (ACTIVE_FIRE_CAP=1000): &sect;15.26</li>
+</ul>
+
+<!-- ================================================================ -->
+<h2 id="concurrency-model">15.44 Concurrency Model: Lock Ordering, Snapshots, and the Fire Cap <span class="new-badge">v8.0</span></h2>
+
+<p>
+The GRUG engine runs multiple concurrent tasks: the main scan cycle, background ledger threads
+(InputLedger, ChatterResiduals), auto-crystallize sweeps, and the chatter/residual processing loops.
+With <code>ACTIVE_FIRE_CAP = 1000</code> and bidirectional bridge mutations happening during scan
+cycles, deadlock prevention and lock ordering discipline are critical.
+</p>
+
+<h3>Lock Ordering Convention</h3>
+<p>
+The system enforces a strict lock acquisition order to prevent deadlocks:
+</p>
+<div class="math-section">
+    <strong>NODE_LOCK &rarr; BRIDGE_LOCK</strong> (always this order, never reversed)<br><br>
+    <strong>CO_ACC_LOCK</strong> is standalone &mdash; never acquired while holding NODE_LOCK or BRIDGE_LOCK<br><br>
+    <strong>_LEDGER_LOCK</strong> (InputLedger/ChatterResiduals) is standalone &mdash; never nested with engine locks
+</div>
+<p>
+Any code that needs both NODE_LOCK and BRIDGE_LOCK must acquire NODE_LOCK first, then BRIDGE_LOCK.
+The reverse order causes deadlock: if Task A holds BRIDGE_LOCK waiting for NODE_LOCK, and Task B holds
+NODE_LOCK waiting for BRIDGE_LOCK, both wait forever. The convention is enforced by code review and
+validated by the 3-step snapshot approach.
+</p>
+
+<h3>3-Step Snapshot Approach</h3>
+<p>
+When a function needs data protected by two different locks (e.g., bridge data under BRIDGE_LOCK and
+node data under NODE_LOCK), it uses the 3-step snapshot approach instead of nested lock acquisition:
+</p>
+<ol>
+    <li><strong>Snapshot under Lock A:</strong> Acquire Lock A, copy the needed data into local
+        variables, release Lock A. The copy is an immutable snapshot &mdash; no concurrent
+        modification can affect it.</li>
+    <li><strong>Read under Lock B:</strong> Acquire Lock B, read the needed data using the snapshot
+        from step 1 as context, release Lock B.</li>
+    <li><strong>Apply mutations under Lock A:</strong> Re-acquire Lock A, apply the mutations
+        computed in step 2, release Lock A. Verify the data hasn't changed since step 1
+        (the entry still exists, the bridge still connects the same nodes).</li>
+</ol>
+<p>
+This pattern is used by <code>get_bridge_summary()</code>, <code>auto_crystalize_sweep!()</code>,
+and <code>fire_cascades!</code> (which snapshots the bridge vector under BRIDGE_LOCK before iterating
+under NODE_LOCK). The cost is an extra lock acquisition, but the benefit is zero deadlock risk.
+</p>
+
+<h3>FireCounter: Shared Active Cap</h3>
+<p>
+The <code>FireCounter</code> struct in VoteOrchestrator provides a thread-safe shared counter for
+the active fire cap. Each scan cycle creates a <code>FireCounter(cycle_id, ACTIVE_FIRE_CAP=1000)</code>.
+Every node fire &mdash; primary scan, cascade handoff, bridge relay &mdash; increments the same counter.
+When <code>fire_cap_reached(fc)</code> returns true, ALL fires stop for that cycle. This is the
+biological attention bottleneck: the engine cannot process more than 1000 active nodes per scan cycle,
+regardless of how many bridges, lobes, or attachments are competing for attention.
+</p>
+
+<h3>CO_ACC_LOCK Isolation</h3>
+<p>
+The RelationalGovernance co-activation accumulator lock (<code>CO_ACC_LOCK</code>) is intentionally
+isolated from the NODE_LOCK/BRIDGE_LOCK hierarchy. The <code>observe_co_firing!</code> function
+computes token overlaps <strong>outside</strong> CO_ACC_LOCK (avoiding NODE_LOCK nesting), then
+mutates CO_ACC under CO_ACC_LOCK only. This isolation means co-activation observation never competes
+with bridge creation or node mutation for lock ordering.
+</p>
+
+<div class="grug-box">
+    <p>Lock ordering is the law. NODE_LOCK before BRIDGE_LOCK, always. No exceptions. The snapshot
+    approach is how you follow the law when you need data from both locks &mdash; copy under one,
+    read under the other, apply under the first. Extra lock acquisition, zero deadlock risk. The
+    fire cap is the population control: 1000 nodes per cycle, shared counter, no exceptions. The
+    CO_ACC lock is the isolated cell block &mdash; it never touches the main locks, so it can't
+    deadlock against them. Discipline keeps the system alive.</p>
+</div>
+
+
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script><h2 id="specimen-persistence">16. Specimen Persistence: Full Cave Save/Restore <span class="new-badge">v7</span></h2>
 
 <div class="grug-box">
     <p>Grug build cave for YEARS. Thousands of rocks. Hundreds of rules. Brain full of knowledge.
@@ -3478,7 +4350,7 @@ time, share it with others, or restore it later on a different machine.</p>
     <tr><td>12</td><td><strong>id_counters</strong></td><td>NODE ID_COUNTER and MSG_ID_COUNTER atomic values</td></tr>
     <tr><td>12.5</td><td><strong>last_voters</strong></td><td>LAST_VOTER_IDS — node IDs that voted in last cycle (for /wrong feedback)</td></tr>
     <tr><td>13</td><td><strong>brainstem</strong></td><td>BrainStem dispatch count and propagation history</td></tr>
-    <tr><td>14</td><td><strong>attachments</strong></td><td>ATTACHMENT_MAP — target&rarr;attached node mappings with patterns and signals</td></tr>
+    <tr><td>14</td><td><strong>bridges</strong></td><td>BRIDGE_MAP — bidirectional CascadeBridge entries (partner_id, seam_tokens, base_confidence, source_lobe, is_crystalized, crystal_origin)</td></tr>
     <tr><td>15</td><td><strong>trajectory</strong></td><td>ActionTonePredictor ring buffer + config — behavioral inertia</td></tr>
     <tr><td>16</td><td><strong>temporal_coherence</strong></td><td>ImageSDF timing patterns and coherence scores</td></tr>
     <tr><td>17</td><td><strong>morph_cooldowns</strong></td><td>ChatterMode 24h morph cooldown timestamps</td></tr>
@@ -3507,7 +4379,7 @@ time, share it with others, or restore it later on a different machine.</p>
         <li><strong>Read + Decompress + Parse:</strong> Read gzip file, decompress via <code>gunzip</code>, parse JSON</li>
         <li><strong>Validate Structure:</strong> Check all top-level keys and types. Spot-check node entries. If anything is wrong, reject the entire file — zero changes made.</li>
         <li><strong>Wipe Current State:</strong> Lock and clear all 21 mutable state categories</li>
-        <li><strong>Restore All State:</strong> Rebuild in dependency order: counters &rarr; last_voters &rarr; verbs &rarr; thesaurus &rarr; lobes &rarr; lobe_tables &rarr; nodes &rarr; node_to_lobe_idx &rarr; hopfield &rarr; rules &rarr; inhibitions &rarr; messages &rarr; arousal &rarr; eye_state &rarr; brainstem &rarr; attachments &rarr; trajectory &rarr; temporal_coherence &rarr; morph_cooldowns &rarr; immune_system &rarr; aiml_system</li>
+        <li><strong>Restore All State:</strong> Rebuild in dependency order: counters &rarr; last_voters &rarr; verbs &rarr; thesaurus &rarr; lobes &rarr; lobe_tables &rarr; nodes &rarr; node_to_lobe_idx &rarr; hopfield &rarr; rules &rarr; inhibitions &rarr; messages &rarr; arousal &rarr; eye_state &rarr; brainstem &rarr; bridges &rarr; trajectory &rarr; temporal_coherence &rarr; morph_cooldowns &rarr; immune_system &rarr; aiml_system</li>
         <li><strong>Build Summary:</strong> Print formatted summary table with per-category counts</li>
     </ol>
 </div>
@@ -3545,136 +4417,172 @@ time, share it with others, or restore it later on a different machine.</p>
 &#9562;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9565;</code></pre>
 
 <!-- ================================================================ -->
-<h2 id="relational-fire">16.5 Relational Fire System <span class="new-badge">v7.3</span></h2>
+<h2 id="cascade-bridge">16.5 CascadeBridge: Bidirectional Match-Cascade Handoff System <span class="new-badge">v8.0</span></h2>
 
 <p>
-The relational fire system introduces <strong>user-defined relay circuitry</strong> into the node engine.
-Where drop tables provide implicit co-activation (neighbors fire when the primary fires), and lobe
-cascades provide cross-domain propagation (decayed signals hop between connected lobes), the
-attachment system provides <em>explicit, targeted, pattern-carrying relay links</em> between specific nodes.
-Two commands serve this system: <code>/nodeAttach</code> for text nodes and <code>/imgnodeAttach</code>
-for image nodes.
+The CascadeBridge system replaces the v7.3 one-directional <code>AttachedNode</code>/<code>ATTACHMENT_MAP</code>
+architecture with a <strong>bidirectional match-cascade handoff</strong>. Where the old system used a
+fabricated connector pattern as a middleman between source and target, the new system hands off the
+<strong>unmatched tail</strong> of the scanner input &mdash; the tokens the primary lobe could not match &mdash;
+directly to the partner lobe's scanner. This is the natural cross-lobe bridge: the match boundary
+IS the seam, and the seam IS the payload. No connector pattern invention. No middleman. When node A fires,
+its bridge partners in BRIDGE_MAP[A] receive the unmatched tail. When node B fires, its partners in
+BRIDGE_MAP[B] receive the unmatched tail from B's perspective. Both directions work. No more one-way derp.
 </p>
 
-<h3>Architecture</h3>
-<p>
-The system is built on five primitives stored in <code>engine.jl</code>:
-</p>
-<ul>
-    <li><code>AttachedNode</code> &mdash; immutable struct: <code>node_id::String</code>, <code>pattern::String</code>
-        (connector/middleman pattern or SDF metadata), <code>signal::Vector{Float64}</code> (pre-baked),
-        <code>base_confidence::Float64</code> (JIT-baked at attach time)</li>
-    <li><code>ATTACHMENT_MAP</code> &mdash; <code>Dict{String, Vector{AttachedNode}}</code> mapping target node IDs to their attached nodes</li>
-    <li><code>ATTACHMENT_LOCK</code> &mdash; <code>ReentrantLock</code> for thread-safe access</li>
-    <li><code>MAX_ATTACHMENTS = 4</code> &mdash; hard cap per target node (shared between text and image attachments)</li>
-    <li><code>RELAY_CONF_JITTER_SIGMA = 0.05</code> &mdash; stochastic jitter applied at fire time to pre-baked confidence</li>
-</ul>
-
-<h3>JIT Confidence Baking</h3>
-<p>
-Confidence is computed <strong>once at attach time</strong> (JIT), not every fire cycle. This is the core
-optimization: the expensive pattern scan or SDF similarity computation happens when the user issues the
-attach command, and the result is stored as <code>base_confidence</code> in the <code>AttachedNode</code> struct.
-At fire time, only stochastic jitter is applied.
-</p>
+<h3>CascadeBridge Struct</h3>
 <div class="math-section">
-    <strong>Text nodes:</strong><br>
-    <code>base_confidence = token_overlap_similarity(connector_pattern, attached_node.pattern) + (strength / STRENGTH_CAP) &times; 0.5</code><br><br>
-    <strong>Image nodes:</strong><br>
-    <code>base_confidence = sdf_signal_similarity(connector_sdf_signal, attached_node.signal) + (strength / STRENGTH_CAP) &times; 0.5</code><br><br>
-    <strong>At fire time:</strong><br>
-    <code>confidence = max(0.1, base_confidence + randn() &times; RELAY_CONF_JITTER_SIGMA)</code>
+    <code>mutable struct CascadeBridge</code><br>
+    &nbsp;&nbsp;<code>partner_id::String</code> &mdash; ID of the node on the other side of this bridge entry<br>
+    &nbsp;&nbsp;<code>seam_tokens::Vector{String}</code> &mdash; tokens at the match boundary; populated at bridge time or dynamically at fire time<br>
+    &nbsp;&nbsp;<code>base_confidence::Float64</code> &mdash; JIT-baked symmetric pattern overlap + partner strength bonus<br>
+    &nbsp;&nbsp;<code>source_lobe::String</code> &mdash; lobe ID of the node that created this entry (provenance)<br>
+    &nbsp;&nbsp;<code>is_crystalized::Bool</code> &mdash; if true, skip the strength-biased coinflip &mdash; always fire<br>
+    &nbsp;&nbsp;<code>crystal_origin::Symbol</code> &mdash; <code>:user</code> (manual /crystalize), <code>:auto</code> (semantic-truth triggered), or <code>:none</code>
 </div>
 
-<h3>Attachment Lifecycle</h3>
+<h3>BRIDGE_MAP: Bidirectional Index</h3>
 <p>
-<strong>Text Attach:</strong> <code>/nodeAttach <target> <id1> <pattern1> [<id2> <pattern2> ...]</code>
-</p>
-<p>
-<strong>Image Attach:</strong> <code>/imgnodeAttach <target> <id> <image_data_b64> [width height]</code>
-</p>
-<p>
-Validation is exhaustive and non-silent: empty arguments, node existence, grave status, self-attach
-prevention, max cap enforcement, and duplicate rejection all produce explicit error messages. For text
-attachments, the pattern is pre-baked into a signal vector and base_confidence via token overlap. For
-image attachments, the image binary is converted to nonlinear SDF at attach time (JIT GPU accel) and
-base_confidence is baked from SDF cosine similarity. The attach node must be an image node
-(<code>is_image_node=true</code>).
-</p>
-<p>
-<strong>Detach:</strong> <code>/nodeDetach <target> <attach_id></code> or
-<code>/imgnodeDetach <target> <attach_id></code> removes a specific attachment. Both reuse the
-same <code>detach_node!</code> function. If that was the last attachment on the target, the entry is
-cleaned up entirely.
-</p>
-<p>
-<strong>Inspect:</strong> <code>/attachments</code> prints every target and its attached nodes with
-<code>base_confidence</code>, connector patterns / SDF metadata, and slot usage (N/4).
+<code>BRIDGE_MAP</code> is a <code>Dict{String, Vector{CascadeBridge}}</code>. When nodes A and B are
+bridged, <strong>both</strong> <code>BRIDGE_MAP[A]</code> and <code>BRIDGE_MAP[B]</code> receive an entry.
+The A&rarr;B entry's <code>partner_id</code> is B and <code>source_lobe</code> is B's lobe. The B&rarr;A entry's
+<code>partner_id</code> is A and <code>source_lobe</code> is A's lobe. This bidirectional indexing means
+<code>fire_cascades!</code> only needs to look up one key to find all partners. Old aliases
+<code>ATTACHMENT_MAP = BRIDGE_MAP</code> and <code>ATTACHMENT_LOCK = BRIDGE_LOCK</code> preserve backward
+compatibility throughout the codebase.
 </p>
 
-<h3>Firing Mechanics (Pass 3 of scan_and_expand)</h3>
+<h3>Key Constants</h3>
+<table class="config-table">
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>MAX_BRIDGES</code></td><td>4</td><td>Hard cap on bridge partners per node (bidirectional: both sides count)</td></tr>
+    <tr><td><code>RELAY_CONF_JITTER_SIGMA</code></td><td>0.05</td><td>Stochastic jitter applied to pre-baked confidence at fire time</td></tr>
+    <tr><td><code>CRYSTAL_AUTO_STRENGTH_FLOOR</code></td><td>5.0</td><td>Partner strength &ge; this for auto-crystallize eligibility</td></tr>
+    <tr><td><code>CRYSTAL_AUTO_SEMANTIC_FLOOR</code></td><td>0.7</td><td>Semantic truth score &ge; this for auto-crystallize eligibility</td></tr>
+    <tr><td><code>CRYSTAL_AUTO_REVOKE_FLOOR</code></td><td>3.0</td><td>Auto-crystal revoked if partner strength drops below this</td></tr>
+</table>
+
+<h3>JIT Confidence Baking (Bidirectional)</h3>
 <p>
-The attachment relay runs as <strong>Pass 3</strong> in the <code>scan_and_expand()</code> pipeline, after the
-primary scan (Pass 1) and lobe cascade (Pass 2). For every node in the expanded set, the engine
-checks <code>ATTACHMENT_MAP</code> for attached nodes. Each attachment goes through a three-stage gate:
+Confidence is computed <strong>once at bridge time</strong> under <code>NODE_LOCK</code>, then stored in each
+direction's <code>CascadeBridge</code>. Because the bridge is bidirectional, each direction gets its own
+independently baked confidence reflecting the partner's strength:
 </p>
-<ol>
-    <li><strong>Active cap gate:</strong> If the relay has already hit its independent cap (<code>rand(600:1800)</code>),
-        remaining attachments are skipped. This respects the biological attention bottleneck.</li>
-    <li><strong>Alive check:</strong> If the attached node has been deleted or graved since attachment, it is
-        silently skipped (stale attachment, non-fatal).</li>
-    <li><strong>Strength-biased coinflip:</strong> <code>scan_prob = 0.20 + (strength / STRENGTH_CAP) &times; 0.70</code>.
-        Strong attachments fire more often. Weak ones still have a 20% floor.</li>
-</ol>
+<div class="math-section">
+    <strong>A&rarr;B direction:</strong><br>
+    <code>jit_conf_a_to_b = token_overlap(pattern_a, pattern_b) + (strength_b / STRENGTH_CAP) &times; 0.5</code><br><br>
+    <strong>B&rarr;A direction:</strong><br>
+    <code>jit_conf_b_to_a = token_overlap(pattern_a, pattern_b) + (strength_a / STRENGTH_CAP) &times; 0.5</code><br><br>
+    <strong>At fire time (same formula for both directions):</strong><br>
+    <code>confidence = max(0.1, base_confidence + jitter_allowed ? randn() &times; RELAY_CONF_JITTER_SIGMA : 0.0)</code>
+</div>
+
+<h3>bridge_nodes! &mdash; Bidirectional Bridge Creation</h3>
 <p>
-Winners that pass all three gates use their <strong>pre-baked <code>base_confidence</code></strong> with small
-stochastic jitter applied. The confidence floor of 0.1 ensures that attached nodes always have
-<em>some</em> voice in the quorum. The jitter (sigma=0.05) is biologically motivated &mdash; synaptic
-relay is inherently noisy. The connector pattern surfaces downstream as a
-<code>RelationalTriple(target_id, "relay_attached", connector_pattern)</code> so the generative pipeline
-knows WHY the relay fired. Fired attachments receive a <code>bump_strength!</code> call &mdash;
-they earned usage credit. Deduplication ensures no node appears twice in the expanded set.
+<code>bridge_nodes!(node_a, node_b; seam_tokens=String[])</code> creates a bidirectional bridge.
+Validation is exhaustive and error-first: both nodes must exist in <code>NODE_MAP</code>, neither can be
+grave, <code>node_a &ne; node_b</code> (no self-bridging), neither side can already have
+<code>MAX_BRIDGES</code> bridges, and no duplicate bridge can exist in either direction. Under
+<code>BRIDGE_LOCK</code>, two <code>CascadeBridge</code> entries are created &mdash; one for each
+direction &mdash; and pushed into the respective <code>BRIDGE_MAP</code> vectors. Cross-lobe bridges
+are tagged with a <code>[CROSS-LOBE: A &harr; B]</code> diagnostic. The old <code>attach_node!</code>
+function is a backward-compat wrapper that splits the pattern into seam tokens and calls
+<code>bridge_nodes!</code>.
 </p>
 
-<h3>Image Attachment SDF Pipeline</h3>
+<h3>fire_cascades! &mdash; Match-Boundary Handoff</h3>
 <p>
-<code>/imgnodeAttach</code> uses the <code>ImageSDF</code> module for JIT GPU-accelerated image processing:
+<code>fire_cascades!(source_id, active_count, active_cap; unmatched_tail=String[])</code> replaces the
+old <code>fire_attachments!</code> with match-cascade handoff semantics. The critical innovation is the
+<code>unmatched_tail</code> parameter: when the source lobe's scanner matches node A but cannot match
+certain tokens, those leftover tokens <em>are</em> the bridge payload. They carry provenance &mdash;
+which lobe, which node, what context &mdash; so the partner lobe's scanner knows exactly where the
+handoff came from.
+</p>
+<p>
+The firing pipeline for each bridge entry is:
 </p>
 <ol>
-    <li>Image binary is detected from the input via regex-based format detection (Base64, hex, raw)</li>
-    <li>Raw bytes are converted to <code>SDFParams</code> via <code>image_to_sdf_params()</code> &mdash;
-        nonlinear gradient-based signed distance field with edge-emphasized, flat-suppressed activations</li>
-    <li>SDFParams are flattened to a signal vector via <code>sdf_to_signal()</code> (uniform subsampling, max 256 pixels)</li>
-    <li><code>base_confidence</code> is computed from cosine similarity (<code>_sdf_signal_similarity()</code>)
-        between the connector SDF signal and the attached image node&rsquo;s own signal, plus strength bonus</li>
-    <li>Pattern field stores <code>"SDF:image:WxH"</code> metadata for downstream reference</li>
+    <li><strong>Snapshot bridges</strong> under <code>BRIDGE_LOCK</code> (copy the vector to avoid
+        concurrent modification races), then release <code>BRIDGE_LOCK</code>.</li>
+    <li><strong>Active cap gate:</strong> <code>current_active &ge; active_cap</code> &mdash; biological
+        attention bottleneck. Hard cap shared across all nodes in the scan cycle via <code>FireCounter</code>
+        (<code>ACTIVE_FIRE_CAP = 1000</code>).</li>
+    <li><strong>Alive check:</strong> partner must exist in <code>NODE_MAP</code> and not be grave.
+        Stale bridges (partner deleted/graved) are silently skipped.</li>
+    <li><strong>Strength-biased coinflip:</strong> same formula as scan coinflip. Strong partners fire
+        more often. Weak ones still have a floor chance. <strong>Crystalized bridges skip the coinflip
+        entirely</strong> &mdash; they always fire.</li>
+    <li><strong>JIT confidence with jitter:</strong> <code>max(0.1, base_confidence + jitter)</code>.
+        NONJITTER nodes get zero jitter. Floor of 0.1 ensures bridged nodes always have <em>some</em>
+        voice in the quorum.</li>
+    <li><strong>Seam selection:</strong> if <code>unmatched_tail</code> is non-empty (live handoff from
+        the scanner), it replaces the bridge's stored <code>seam_tokens</code>. Otherwise the stored
+        tokens are used (backward compat for manual bridges).</li>
+    <li><strong>Cross-lobe logging:</strong> cross-lobe handoffs emit diagnostic lines with provenance
+        (source lobe, partner lobe, seam text, confidence).</li>
 </ol>
+<p>
+Returns <code>Vector{Tuple{String, Float64, String}}</code> &mdash; partner_id, confidence, seam_text triples
+for the generative pipeline. The old <code>fire_attachments!</code> is a backward-compat wrapper that calls
+<code>fire_cascades!</code> without <code>unmatched_tail</code>.
+</p>
+
+<h3>Crystalize System</h3>
+<p>
+<code>crystalize_bridge!(node_a, node_b; origin=:user)</code> marks a bridge as crystalized on both
+sides (bidirectional). Origin must be <code>:user</code> (manual) or <code>:auto</code> (automated).
+Crystalized bridges skip the strength-biased coinflip and always fire. The <code>crystal_origin</code>
+field tracks provenance &mdash; manual marks are never revoked by the auto-sweep.
+</p>
+<p>
+<code>auto_crystalize_sweep!()</code> walks every bridge in <code>BRIDGE_MAP</code> and auto-crystallizes
+bridges whose partner node has both strength &ge; <code>CRYSTAL_AUTO_STRENGTH_FLOOR</code> and semantic truth
+score &ge; <code>CRYSTAL_AUTO_SEMANTIC_FLOOR</code>. The semantic truth score (<code>_semantic_truth_score</code>)
+measures how well a node's relational triples are anchored: fraction of triples with registered relation-class
+verbs, plus bonus for <code>required_relations</code> and non-empty <code>relation_weights</code>.
+Auto-crystallized bridges whose partner strength drops below <code>CRYSTAL_AUTO_REVOKE_FLOOR</code> are
+de-crystallized. The sweep uses a <strong>3-step snapshot approach</strong> to avoid nested lock acquisition
+(see &sect;15.44 Concurrency Model).
+</p>
+
+<h3>get_bridge_summary &mdash; Snapshot-Based Diagnostics</h3>
+<p>
+<code>get_bridge_summary()</code> returns a human-readable summary of all bridges. It uses the 3-step
+snapshot approach: snapshot bridge data under <code>BRIDGE_LOCK</code>, read partner node status under
+<code>NODE_LOCK</code>, format output without holding any lock. The summary shows bidirectional pairs
+with partner status, crystalize state (origin tag), source lobe, base confidence, and seam token preview.
+</p>
 
 <h3>Specimen Persistence</h3>
 <p>
-Attachments are fully serialized as section 14 of <code>/saveSpecimen</code> and restored as section 4.14
-of <code>/loadSpecimen</code>. Each entry stores <code>target_id</code>, <code>node_id</code>,
-<code>pattern</code>, <code>signal</code>, and <code>base_confidence</code>. On load, if
-<code>base_confidence</code> is missing (backward compatibility with older specimens), it is re-computed:
-text attachments re-run <code>_token_overlap_similarity</code>, image attachments use
-<code>_sdf_signal_similarity</code>, both with strength bonus. If the signal vector is also missing,
-it is re-baked from the pattern via <code>words_to_signal</code>.
+Bridges are serialized under the <code>"bridges"</code> key in the specimen save format (replacing the
+old <code>"attachments"</code> key). Each entry stores <code>node_id</code>, <code>partner_id</code>,
+<code>seam_tokens</code>, <code>base_confidence</code>, <code>source_lobe</code>,
+<code>is_crystalized</code>, and <code>crystal_origin</code>. On load, if <code>base_confidence</code>
+is missing (backward compatibility with older specimens), it is re-computed from token overlap + strength
+bonus. If <code>seam_tokens</code> is missing, it defaults to an empty vector (populated dynamically at
+fire time). Old specimen files with <code>"attachments"</code> keys are automatically migrated to the
+new bridge format.
 </p>
 
 <h3>Design Rationale</h3>
 <p>
-The attachment system is the explicit counterpart to the engine's implicit co-activation mechanisms.
-Drop tables discover neighbors through seeding; lobe cascades propagate through connectivity. Attachments
-let the architect declare: <em>"when this node fires, give these specific nodes a chance to contribute
-with this specific framing."</em> JIT confidence baking ensures that the expensive similarity computation
-happens once at configuration time, not in the hot scan path. The coinflip gate ensures that explicit
-wiring does not bypass the stochastic selection pressure that keeps the system honest. The biological
-parallel is pre-wired axonal pathways &mdash; genetically encoded relay circuits that still require
-synaptic gating to fire. Image attachments extend this to visual representations via nonlinear SDF,
-bridging the gap between text-based pattern nodes and image-based perceptual nodes.
+The CascadeBridge rework solves three problems with the old AttachedNode architecture. First, the old
+system was one-directional: when A was attached to B, only A&rarr;B relay worked. B never got a chance
+to relay back to A. This meant every cross-lobe link required two manual attach commands, and the system
+had no natural reciprocity. Second, the connector pattern was a fabricated middleman &mdash; a user-specified
+string that sat between source and target but added no information. The match-boundary handoff replaces
+this fabrication with the actual unmatched scanner tokens, which carry genuine provenance from the primary
+scan. Third, cross-lobe suppression was a hack: the old system suppressed cross-lobe attachments and
+redirected them to cascade Pass 2, which meant user-defined relay circuitry was silently overridden by
+the engine's automatic cascade. The new system lets cross-lobe bridges work naturally &mdash; the handoff
+carries lobe provenance so the partner's scanner knows exactly where the signal came from. The biological
+parallel shifts from pre-wired axonal pathways to commissural fibers: bilateral brain structures that
+carry signals in both directions, with the seam tokens encoding <em>which</em> signals crossed the midline.
 </p>
 
-<!-- ================================================================ -->
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 <h2 id="math">17. Formal Mathematics</h2>
 
 <h3>Strength Dynamics</h3>
@@ -3699,15 +4607,52 @@ bridging the gap between text-based pattern nodes and image-based perceptual nod
 <h3>Cascade Confidence</h3>
 <div class="math-section">
     <p><strong>Drop-table (same lobe):</strong></p>
-    <code>conf_drop = conf_activator × 0.8</code>
+    <code>conf_drop = conf_activator &times; 0.8</code>
     <p><strong>Lobe cascade (cross-lobe):</strong></p>
-    <code>conf_cascade = max(conf_primary) × 0.6</code> (only fires if <code>conf_cascade ≥ 0.15</code>)
+    <code>conf_cascade = max(conf_primary) &times; 0.6</code> (only fires if <code>conf_cascade &ge; 0.15</code>)
+</div>
+
+<h3>Bridge (CascadeBridge) Confidence <span class="new-badge">v8.0</span></h3>
+<div class="math-section">
+    <p><strong>JIT baking at bridge time (bidirectional):</strong></p>
+    <code>jit_conf_a_to_b = token_overlap(pattern_a, pattern_b) + (strength_b / STRENGTH_CAP) &times; 0.5</code><br>
+    <code>jit_conf_b_to_a = token_overlap(pattern_a, pattern_b) + (strength_a / STRENGTH_CAP) &times; 0.5</code>
+    <p><strong>At fire time:</strong></p>
+    <code>confidence = max(0.1, base_confidence + jitter)</code> where <code>jitter = jitter_allowed ? randn() &times; RELAY_CONF_JITTER_SIGMA : 0.0</code>
+    <p><strong>Crystalized bridges:</strong> skip coinflip, always fire. Confidence still applies jitter unless NONJITTER.</p>
+</div>
+
+<h3>Lobe Score (Averages Curve) <span class="new-badge">v7.24</span></h3>
+<div class="math-section">
+    <code>base_avg = mean(all vote confidences in lobe)</code><br>
+    <code>top_avg = mean(top-K confidences)</code> where <code>K = TOP_K_FRACTION &times; |votes| = 0.5 &times; |votes|</code><br>
+    <code>lobe_score = &radic;(base_avg) &times; top_avg&sup2;</code><br><br>
+    Pass-through condition: <code>lobe_score &ge; 0.10 AND hard_votes &ge; 2</code><br>
+    Default demotion: if any named lobe has <code>hard_votes &ge; 1</code>, then <code>score_default &larr; score_default &times; 0.5</code>
+</div>
+
+<h3>Strain Energy <span class="new-badge">v7.50</span></h3>
+<div class="math-section">
+    <code>strain_energy = &alpha; &times; novelty_component + &beta; &times; quality_component</code><br>
+    where <code>&alpha; = STRAIN_NOVELTY_WEIGHT = 0.6</code>, <code>&beta; = STRAIN_QUALITY_WEIGHT = 0.4</code><br><br>
+    <code>hippocampal_warrant_active = (strain_energy &ge; STRAIN_THRESHOLD = 0.55)</code><br><br>
+    When warrant is active: node receives reserved dispatch steps from HippocampalModulator
+    and additive confidence entries (ENTRY_ADDITIVE) in the action log.
+</div>
+
+<h3>Anti-Match Confidence Drain <span class="new-badge">v7.49</span></h3>
+<div class="math-section">
+    <p><strong>NONJITTER anti-match nodes (fixed drain):</strong></p>
+    <code>drain = ANTIMATCH_DRAIN_FIXED = 0.03</code> per activation<br><br>
+    <strong>Jittered anti-match nodes (random drain):</strong><br>
+    <code>drain = rand() &times; ANTIMATCH_DRAIN_MAX_JITTER = rand() &times; 0.05</code> per activation<br><br>
+    Anti-match nodes never vote, never bump, never gain strength. Pure suppressors.
 </div>
 
 <h3>Action Selection</h3>
 <div class="math-section">
     <p><strong>Weighted random:</strong></p>
-    <code>P(action_i) = weight_i / Σ(all_weights)</code>
+    <code>P(action_i) = weight_i / &Sigma;(all_weights)</code>
     <p>Implemented via <code>Categorical</code> distribution from Distributions.jl, wrapped in <code>@coinflip</code> macro.</p>
 </div>
 
@@ -3880,12 +4825,17 @@ The signal is not in the wire. Only the computation is. And the computation was 
     <tr><td><code>/negativeThesaurus flush</code></td><td>Clear all inhibitions</td></tr>
 </table>
 
-<h3>Relational Fire (Node Attachments) <span class="new-badge">v7.2</span></h3>
+<h3>CascadeBridge (Bidirectional Node Bridges) <span class="new-badge">v8.0</span></h3>
 <table>
     <tr><th>Command</th><th>Description</th></tr>
-    <tr><td><code>/nodeAttach <target> <id1> <pat1> [...]</code></td><td>Attach up to 4 nodes to target with user-defined firing patterns. Quoted multi-word patterns supported.</td></tr>
-    <tr><td><code>/nodeDetach <target> <id></code></td><td>Remove a specific attachment from a target node.</td></tr>
-    <tr><td><code>/attachments</code></td><td>Show the full attachment map &mdash; all targets and their attached nodes with patterns and slot usage.</td></tr>
+    <tr><td><code>/nodeBridge <node_a> <node_b> [seam_tokens...]</code></td><td>Create bidirectional bridge between two nodes. Seam tokens = match-boundary payload (optional). Max 4 bridges per node.</td></tr>
+    <tr><td><code>/nodeUnbridge <node_a> <node_b></code></td><td>Remove bidirectional bridge. Both sides deleted. No half-bridges.</td></tr>
+    <tr><td><code>/crystalize <node_a> <node_b></code></td><td>Mark bridge as crystalized (always fires, skips coinflip). Origin = :user. Never auto-revoked.</td></tr>
+    <tr><td><code>/decrystalize <node_a> <node_b></code></td><td>Remove crystalize mark from bridge. Returns to normal coinflip gating.</td></tr>
+    <tr><td><code>/bridges</code></td><td>Show full bridge map &mdash; all nodes with bridges, partner status, crystalize state, source lobe, base confidence, seam tokens.</td></tr>
+    <tr><td><code>/nodeAttach <target> <id> <pattern></code></td><td>Backward-compat wrapper: splits pattern into seam tokens, calls /nodeBridge internally.</td></tr>
+    <tr><td><code>/nodeDetach <target> <id></code></td><td>Backward-compat wrapper: calls /nodeUnbridge internally.</td></tr>
+    <tr><td><code>/attachments</code></td><td>Backward-compat alias: shows bridge map via /bridges.</td></tr>
 </table>
 
 <h3>Specimen Persistence <span class="new-badge">v7</span></h3>
@@ -3907,108 +4857,53 @@ The signal is not in the wire. Only the computation is. And the computation was 
 <!-- ================================================================ -->
 <h2 id="files">19. File Reference</h2>
 
-<h3>Core Modules (31 files, ~34,400 lines)</h3>
+<h3>Core Modules (38 files, ~49,521 lines)</h3>
 <table>
     <tr><th>File</th><th>Lines</th><th>Purpose</th></tr>
-    <tr><td><code>GrugBot420.jl</code></td><td>384</td><td>Module root: include/using order, re-exports from all submodules</td></tr>
     <tr><td><code>stochastichelper.jl</code></td><td>168</td><td>@coinflip macro, Categorical distribution DSL</td></tr>
     <tr><td><code>InputQueue.jl</code></td><td>256</td><td>FIFO priority queue + NegativeThesaurus inhibition filter</td></tr>
     <tr><td><code>BrainStem.jl</code></td><td>333</td><td>Winner-take-all dispatch, lateral inhibition, fire-count decay</td></tr>
     <tr><td><code>patternscanner.jl</code></td><td>366</td><td>Token overlap matching, pattern compilation, cheap/medium/high-res scan tiers</td></tr>
-    <tr><td><code>EphemeralAutomaton.jl</code> <span class="new-badge">v7.23</span></td><td>369</td><td>ATP-callable JIT step machine: rule registry, <code>run_automaton</code>, per-step jitter targets, <code>run_for_action_family</code> dispatch</td></tr>
     <tr><td><code>SemanticVerbs.jl</code></td><td>391</td><td>Runtime verb registry, synonym normalization, triple extraction</td></tr>
-    <tr><td><code>LobeOrchestrator.jl</code></td><td>423</td><td>Lobe-level dispatch + BUG-2v2 demotion path (default lobe yields when any named lobe matched)</td></tr>
-    <tr><td><code>HippocampalModulator.jl</code> <span class="new-badge">v7.23</span></td><td>436</td><td>Action-log sequencer: <code>ActionEntry</code>, <code>ActionLog</code>, <code>modulate_objectives!</code>, ephemeral per-cycle wipe</td></tr>
+    <tr><td><code>LobeOrchestrator.jl</code> <span class="new-badge">v7.24</span></td><td>423</td><td>Averages-curve lobe scoring: <code>lobe_score = &radic;(base_avg) &times; top_avg&sup2;</code>, multi-lobe pass-through, <code>HARD_FIRE_BATCH_CAP=1000</code>, default demotion factor 0.5</td></tr>
     <tr><td><code>ArithmeticEngine.jl</code> <span class="new-badge">v7.24</span></td><td>439</td><td>Sigil-bound math evaluator: reads promotion bindings, multi-step <code>ComputationStep</code> chains, all 9 ops in <code>OP_SYMBOL_SET</code>, BUG-5 cross-task <code>Ref</code> path</td></tr>
     <tr><td><code>EyeSystem.jl</code></td><td>443</td><td>Edge blur, attention map, arousal modulation</td></tr>
-    <tr><td><code>MultipartOrchestrator.jl</code> <span class="new-badge">v7.23</span></td><td>547</td><td>Pure-function vote partitioning: <code>group_votes_by_multipart</code>, <code>group_votes_by_chunks</code>, <code>build_objectives</code>, locked / subtop / rejected support tiers</td></tr>
-    <tr><td><code>InputDecomposer.jl</code> <span class="new-badge">v7.23</span></td><td>549</td><td>Compound-query splitter: conjunction + question-marker heuristic, <code>DecomposedSubSubject</code>, <code>InputChunk</code>, <code>chunk_boundaries</code></td></tr>
-    <tr><td><code>Lobe.jl</code></td><td>550</td><td>Lobe registry, connections, node assignment; v7.24 LobeRecord 9th field <code>subject_whitelist::Set{String}</code></td></tr>
-    <tr><td><code>TonalJudge.jl</code></td><td>570</td><td>Persona / voice tag inference; v7.24 BUG-6 contract: <code>voice_prefix</code> is internal-only, never spoken</td></tr>
-    <tr><td><code>RelationalJitter.jl</code></td><td>627</td><td><strong>v7.9</strong> &mdash; Per-activation zero-mean nudge on match-score components. Symmetric uniform jitter preserves bullseye in expectation (LLN snap-back); sentinel and zero pass through; NaN/Inf throw <code>JitterError</code>; global toggle for deterministic tests</td></tr>
-    <tr><td><code>SigilPromoter.jl</code> <span class="new-badge">v7.24</span></td><td>635</td><td>Front-door canonicalizer: <code>NUMBER_WORD_MAP</code> (0–100), <code>OP_WORD_MAP</code>, <code>OP_SYMBOL_SET</code>, two-pass promote (canonicalize → shape-promote), idempotent, zero-alloc fast path</td></tr>
+    <tr><td><code>GrugBot420.jl</code></td><td>477</td><td>Module root: include/using order, re-exports from all submodules</td></tr>
+    <tr><td><code>InputLedger.jl</code> <span class="new-badge">v7.25</span></td><td>515</td><td>Background @async thread mining MESSAGE_HISTORY for mitosis/relational data; hash ledger, bounded at LEDGER_CAP=20000, POLL_INTERVAL_EMPTY=5.0s</td></tr>
+    <tr><td><code>MultipartOrchestrator.jl</code> <span class="new-badge">v7.23</span></td><td>547</td><td>Pure-function vote partitioning: <code>group_votes_by_multipart</code>, locked / subtop / rejected support tiers</td></tr>
+    <tr><td><code>TonalJudge.jl</code> <span class="new-badge">v7.21</span></td><td>570</td><td>Token bag + common-sense mode selection producing FrameHint for scaffold dispatch; BASIC vs RELATIONAL mode</td></tr>
+    <tr><td><code>Lobe.jl</code></td><td>604</td><td>Lobe registry, connections, node assignment; LobeRecord with <code>subject_whitelist::Set{String}</code></td></tr>
+    <tr><td><code>RelationalJitter.jl</code></td><td>627</td><td>Per-activation zero-mean nudge on match-score components; symmetric uniform jitter preserves bullseye in expectation</td></tr>
+    <tr><td><code>SigilPromoter.jl</code> <span class="new-badge">v7.24</span></td><td>635</td><td>Front-door canonicalizer: <code>NUMBER_WORD_MAP</code>, <code>OP_WORD_MAP</code>, two-pass promote, idempotent, zero-alloc fast path</td></tr>
     <tr><td><code>LobeTable.jl</code></td><td>636</td><td>Per-lobe chunked hash storage (nodes, json, drop, hopfield, meta chunks)</td></tr>
     <tr><td><code>Thesaurus.jl</code></td><td>698</td><td>Dimensional similarity, synonym bridging, gate filter, runtime seed injection</td></tr>
+    <tr><td><code>HippocampalModulator.jl</code> <span class="new-badge">v7.48</span></td><td>730</td><td>Confidence-ordered action-log dispatch: entry_type (SURE/LOW_CONFIDENCE/ADDITIVE), reserved steps, relay confidence discount, <code>LOW_CONFIDENCE_FRACTION=0.65</code></td></tr>
+    <tr><td><code>RelationalGovernance.jl</code> <span class="new-badge">v7.25</span></td><td>770</td><td>Co-activation accumulated auto-attach: CO_ACC Dict (bounded 5000 pairs), decay rate 0.05, auto-attach DISABLED in v8.0</td></tr>
     <tr><td><code>ImageSDF.jl</code></td><td>786</td><td>Image binary detection, SDF conversion, GPU kernel dispatch (KernelAbstractions.jl)</td></tr>
-    <tr><td><code>VoteOrchestrator.jl</code></td><td>816</td><td><strong>v7.8</strong> &mdash; Parallel fire + bounded voting: unique Task dispatch, atomic FireCounter (1000 cap), <code>parallel_fire_batches</code>, <code>TaskTimeoutError</code>, DONE channels, strength-biased vote selection; v7.24 Vote 10th field <code>input_chunks::Vector{Int}</code></td></tr>
-    <tr><td><code>FullLobeScanner.jl</code></td><td>844</td><td>Phase-gated full-lobe scanner (INIT→GATHER→ACTIVATE→CONTINUE→DONE), bounded activation, spreading activation, AIML gating</td></tr>
-    <tr><td><code>ImmuneSystem.jl</code></td><td>897</td><td>Specimen immune system: AST scanning, Hopfield immune memory, quarantine→patch→delete pipeline</td></tr>
-    <tr><td><code>SelfObserver.jl</code> <span class="new-badge">v7.24</span></td><td>975</td><td>Subconscious microlog store: stochastic write (<code>P_WRITE = 0.25</code>), serialized read, fuzzy time buckets, drop-table associative recall, <strong>Float64-free public API</strong></td></tr>
-    <tr><td><code>AIMLNodeSystem.jl</code></td><td>980</td><td>Per-lobe AIML node tribes: isolated populations, population caps, grave-exclusion accounting, cycle-aware reinforcement</td></tr>
-    <tr><td><code>SigilRegistry.jl</code> <span class="new-badge">v7.24</span></td><td>996</td><td>Typed symbolic handle kernel: <code>SIGIL_PREFIX = '&amp;'</code>, 6 classes (<code>:lambda</code>/<code>:macro</code>/<code>:tag</code> active in Stage 1; <code>:procedure</code> active v7.24), <code>MAX_SIGILS_PER_PATTERN = 64</code>, fast-path zero-alloc on <code>&amp;</code>-free patterns, loud throws on unknown sigil</td></tr>
-    <tr><td><code>ChatterMode.jl</code></td><td>1,016</td><td>Gossip sessions, pattern blending, 24h morph cooldown, weak-only morph</td></tr>
-    <tr><td><code>PhagyMode.jl</code></td><td>1,302</td><td>7 maintenance automata, self-pruning cycles, memory forensics</td></tr>
+    <tr><td><code>FullLobeScanner.jl</code></td><td>844</td><td>Phase-gated full-lobe scanner (INIT&rarr;GATHER&rarr;ACTIVATE&rarr;CONTINUE&rarr;DONE), bounded activation, spreading activation, AIML gating</td></tr>
+    <tr><td><code>VoteOrchestrator.jl</code> <span class="new-badge">v8.0</span></td><td>855</td><td>Parallel fire + bounded voting: atomic <code>FireCounter</code> (<code>ACTIVE_FIRE_CAP=1000</code>), <code>parallel_fire_batches</code>, DONE channels, strength-biased vote selection</td></tr>
+    <tr><td><code>ImmuneSystem.jl</code></td><td>897</td><td>Specimen immune system: AST scanning, Hopfield immune memory, quarantine&rarr;patch&rarr;delete pipeline</td></tr>
+    <tr><td><code>SelfObserver.jl</code> <span class="new-badge">v7.24</span></td><td>975</td><td>Subconscious microlog store: stochastic write, serialized read, fuzzy time buckets, <strong>Float64-free public API</strong></td></tr>
+    <tr><td><code>TemporalGrowth.jl</code> <span class="new-badge">v7.26</span></td><td>1,060</td><td>Lobe-aware ephemeral node growth automaton: 3 signal channels, many-lever relevance, <code>GROWTH_BATCH_SIZE=3</code>, InputLedger integration</td></tr>
+    <tr><td><code>AIMLNodeSystem.jl</code></td><td>1,087</td><td>Per-lobe AIML node tribes: isolated populations, population caps, grave-exclusion accounting, cycle-aware reinforcement</td></tr>
+    <tr><td><code>ChatterResiduals.jl</code> <span class="new-badge">v7.26</span></td><td>1,128</td><td>Background @async thread mining CHATTER_LOG for relational co-occurrence; mirrors InputLedger architecture, <code>CHATTER_CO_OCCUR_INCREMENT=1.5</code></td></tr>
+    <tr><td><code>ChatterMode.jl</code> <span class="new-badge">v8.0</span></td><td>1,149</td><td>Group-based 2&times;2 steal+remix: ChatterNodeClone, group sampling (8-16), Markov remix (<code>MARKOV_CROSSOVER_RATE=0.35</code>), replaces v7.1 gossip sessions</td></tr>
+    <tr><td><code>SigilRegistry.jl</code> <span class="new-badge">v7.55</span></td><td>1,168</td><td>Typed symbolic handle kernel: 6 classes including <code>:relation</code> (v7.55), <code>MAX_SIGILS_PER_PATTERN=64</code>, fast-path zero-alloc, <code>expand_relation_sigil</code></td></tr>
+    <tr><td><code>InputDecomposer.jl</code> <span class="new-badge">v7.23</span></td><td>1,185</td><td>Compound-query splitter: conjunction + question-marker heuristic, <code>DecomposedSubSubject</code>, <code>InputChunk</code>, <code>chunk_boundaries</code></td></tr>
+    <tr><td><code>MitosisMode.jl</code></td><td>1,493</td><td>Cell division: pattern splitting, child node creation, group latching, strength inheritance</td></tr>
     <tr><td><code>ImmuneThreadPool.jl</code></td><td>1,691</td><td>Hardened 8-worker priority-lane pool, TokenBucket rate limiting, TripwireMonitor state machine</td></tr>
-    <tr><td><code>ActionTonePredictor.jl</code></td><td>1,768</td><td>Input classification, arousal nudge, weight multiplier, trajectory ring buffer; v7.24 escalation gate to EphemeralAutomaton</td></tr>
-    <tr><td><code>EphemeralMLP.jl</code> <span class="new-badge">v7.24</span></td><td>1,957</td><td>Sigmoid/ReLU vote-list transformer: novelty routing (familiar → <code>:sigmoid</code>/<code>:solid</code>, novel → <code>:relu</code>/<code>:fuzzy</code>), user-extensible <code>RuleHashTable</code>, drop-table cascade, RelationalJitter-style snap-back on weights, <code>/right</code> &middot; <code>/wrong</code> tiered feedback, observation-threshold gate, <code>to_specimen_dict</code> round-trip</td></tr>
-    <tr><td><code>engine.jl</code></td><td>4,452</td><td>Core engine: nodes, scanning, voting, drop-table expansion, relational fire, strict-coupling extractor routing, <strong>v7.18</strong> lobe topicality gate + semantic-bridge exception, v7.24 cross-task promotion-bindings <code>Ref</code> + circular-triple filter (BUG-8)</td></tr>
-    <tr><td><code>Main.jl</code></td><td>7,100</td><td>CLI loop, command routing, AIML orchestrator, prefrontal cortex, specimen persistence, admin system, v7.23/v7.24 module wiring (SelfObserver / MultipartOrchestrator / EphemeralAutomaton / InputDecomposer / HippocampalModulator / EphemeralMLP), <code>/sigil</code> CLI command</td></tr>
+    <tr><td><code>ActionTonePredictor.jl</code></td><td>1,768</td><td>Input classification, arousal nudge, weight multiplier, trajectory ring buffer; escalation gate to EphemeralAutomaton</td></tr>
+    <tr><td><code>EphemeralAutomaton.jl</code> <span class="new-badge">v7.29</span></td><td>1,870</td><td>ATP-callable JIT step machine: PhaseAccumulator (v7.27 cross-cycle crystal memory), Vigilance System (v7.29 context weight &rarr; ContextInjectorAgent dispatch), 23 automata (v7.30/v7.31)</td></tr>
+    <tr><td><code>EphemeralMLP.jl</code> <span class="new-badge">v7.50</span></td><td>2,241</td><td>Sigmoid/ReLU vote-list transformer: strain energy + hippocampal warrant (v7.50), <code>STRAIN_THRESHOLD=0.55</code>, novelty/quality routing, <code>/right</code> &middot; <code>/wrong</code> tiered feedback, <code>to_specimen_dict</code> round-trip</td></tr>
+    <tr><td><code>PhagyMode.jl</code> <span class="new-badge">v7.31</span></td><td>2,901</td><td>23 maintenance automata (was 7), dependency-gated dispatch, self-pruning cycles, memory forensics</td></tr>
+    <tr><td><code>engine.jl</code> <span class="new-badge">v8.0</span></td><td>5,239</td><td>Core engine: CascadeBridge/BRIDGE_MAP (bidirectional), fire_cascades! with unmatched_tail, anti-match nodes, time nodes, relation sigils, <code>MAX_BRIDGES=4</code>, auto-crystallize sweep</td></tr>
+    <tr><td><code>Main.jl</code> <span class="new-badge">v8.0</span></td><td>11,556</td><td>CLI loop, command routing, AIML orchestrator, prefrontal cortex, specimen persistence, all v7.25&ndash;v8.0 module wiring</td></tr>
 </table>
 
-<h3>Test Files (45 in runner, 58 total on disk)</h3>
-<p>
-<code>test/runtests.jl</code> runs 45 test files as isolated Julia subprocesses &mdash; each test file
-<code>include()</code>s <code>src/</code> modules directly, so running them in the same process
-would cause module-redefinition errors. Non-zero subprocess exit = test failure; no silent swallow.
-The runner has grown alongside v7.23 (multipart / automaton / hippocampal) and v7.24 (sigil stack /
-self-observer / ephemeral MLP).
-</p>
-<table>
-    <tr><th>File</th><th>Role</th></tr>
-    <tr><td><code>test_smoke.jl</code></td><td>All-module integration smoke: ImageSDF, EyeSystem, Engine, ChatterMode, SemanticVerbs, ActionTone</td></tr>
-    <tr><td><code>test_lobes.jl</code></td><td>Lobe CRUD, connections, capacity, node assignment</td></tr>
-    <tr><td><code>test_lobe_table.jl</code></td><td>LobeTable chunks, Hopfield, JSON serialization</td></tr>
-    <tr><td><code>test_brainstem.jl</code></td><td>BrainStem dispatch, propagation, error resilience</td></tr>
-    <tr><td><code>test_thesaurus.jl</code></td><td>Dimensional similarity, gate filter, synonym groups, runtime seed injection</td></tr>
-    <tr><td><code>test_input_queue.jl</code></td><td>InputQueue FIFO/priority/overflow + NegativeThesaurus CRUD/filter/stress</td></tr>
-    <tr><td><code>test_action_packet.jl</code></td><td>Action packet v2 parser: pipe format, negatives, weights, dedup</td></tr>
-    <tr><td><code>test_phagy.jl</code></td><td>Phagy maintenance automata cycle</td></tr>
-    <tr><td><code>test_node_attach.jl</code></td><td>Relational Fire: <code>/nodeAttach</code>, strength-biased gating, Pass-3 relay, save/load</td></tr>
-    <tr><td><code>test_immune.jl</code></td><td>Immune system: Hopfield memory, quarantine/patch/delete pipeline, familiarity tracking</td></tr>
-    <tr><td><code>test_immune_thread_pool.jl</code></td><td>ImmuneThreadPool: priority lanes, TokenBucket, TripwireMonitor, cost-weighted balancing</td></tr>
-    <tr><td><code>test_full_lobe_scanner.jl</code></td><td>FullLobeScanner: phase machine, PatternMatch/SemanticMatch, AIML gating, bounded activation</td></tr>
-    <tr><td><code>test_vote_ties.jl</code></td><td>Tie-breaking and certainty in strength-biased vote selection</td></tr>
-    <tr><td><code>test_comprehensive.jl</code></td><td>End-to-end cave lifecycle: grow, fire, vote, save, reload, retrain</td></tr>
-    <tr><td><code>test_aiml_node_system.jl</code></td><td>Per-lobe AIML tribes: population caps, grave exclusion, cycle-aware reinforcement, save/load</td></tr>
-    <tr><td><code>test_vote_orchestrator.jl</code> <span class="new-badge">v7.8</span></td><td>VoteOrchestrator: unique Task IDs, FireCounter cap, <code>parallel_fire_batches</code>, DONE channels, <code>TaskTimeoutError</code>, vote selection tiers</td></tr>
-    <tr><td><code>test_relational_strict.jl</code> <span class="new-badge">v7.8</span></td><td>Strict relational-triple coupling: <code>screen_input_complexity</code> bands, basic vs. dynamic extractor routing, hard-fail on dynamic failure at scan_mode ≥ 3</td></tr>
-    <tr><td><code>test_relational_jitter.jl</code> <span class="new-badge">v7.9</span></td><td>Per-activation relational jitter: magnitude bound, zero-mean convergence over 20k samples, NaN/Inf error handling, toggle, ratio setter, thread safety, <code>JitterConfig</code>, integration with <code>evaluate_relational_dialectics</code> (snap-back within 1% over 3k runs), sentinel preservation (500/500 exact), antimatch robustness (1000/1000 flag preserved), deterministic mode when disabled &mdash; 14 groups, all green</td></tr>
-    <tr><td><code>test_aiml_jitter.jl</code> <span class="new-badge">v7.10</span></td><td>Per-activation AIML jitter: initial-strength window + zero-mean (600 nodes), strength-delta sign preservation + mean snap-back, <code>record_fire!</code> / <code>apply_aiml_right!</code> / <code>apply_aiml_wrong!</code> coin gates all within &plusmn;0.05 of 50% long-run (thousands of trials each), honest-net-loss contract preservation under jitter (0 violations across 1000 trials), <code>disable_jitter!</code> identity contract across the AIML layer, NaN/Inf/out-of-range propagate as <code>JitterError</code> &mdash; 8 groups, all green</td></tr>
-    <tr><td><code>test_brainstorm_jitter.jl</code> <span class="new-badge">v7.11</span></td><td>Scoped heavy-jitter primitive <code>with_brainstorm_jitter</code>: normal enter/exit with ratio swap, exception propagation with finally-block state restore, nested-scope refusal via <code>JitterScopeError</code>, custom-ratio handling, pre-mutation validation of NaN/Inf/out-of-range inputs, orthogonality with global <code>disable_jitter!</code>, empirical window widening from 0.15 to 0.40 over 4k samples (2.67&times; factor), and lifecycle correctness of <code>is_brainstorm_active</code> / <code>get_brainstorm_depth</code> across re-entry after both clean and exceptional exits &mdash; 8 groups, all green</td></tr>
-    <tr><td><code>test_context_intensity.jl</code> <span class="new-badge">v7.12</span></td><td>Context-intensity jitter: 10 subgroups [A]–[J] over v7.12 / v7.13 / v7.17 — intensity clamp, lexical tokenizer, relevance score, snap-back + jitter, pinned-always / unpinned-biased surfacing, <code>/right</code> &middot; <code>/wrong</code> feedback, <code>/brainstorm</code> alignment, auto-tune threshold, 10k-cave bounding, chunked-scan correctness with DONE checkpoints</td></tr>
-    <tr><td><code>test_chunked_affinities.jl</code> <span class="new-badge">v7.17</span></td><td>Chunked MESSAGE_HISTORY scan correctness, DONE-channel checkpoint atomicity, mid-chunk restart safety</td></tr>
-    <tr><td><code>test_big_number_small_number_coherence.jl</code> <span class="new-badge">v7.19</span></td><td>BNSNC: 8 groups [A]–[H], 74 sub-assertions — strong/tiny behavior, catastrophic-cancellation immunity, asymmetric-input coherence ≠ arithmetic mean, negative-confidence symmetry, zero/sub-epsilon collapse, NaN/Inf rejection, output-range guarantees, monotonicity / commutativity / reflexivity</td></tr>
-    <tr><td><code>test_nonjitter_tag.jl</code> <span class="new-badge">v7.20 / v7.21</span></td><td>13 subgroups / 52 sub-assertions: tag invariants, idempotent set/clear, untagged-clear safety, full round-trip, bit-stable confidence under <code>nonjitter=true</code>, variance under <code>nonjitter=false</code>, fusion-math integrity, &gt;1M <code>is_nonjitter</code> calls/sec hot path, plus v7.21 system-wide honor across <code>evaluate_relational_dialectics</code> / <code>collect_nonjitter_ids</code> / <code>FullLobeScanner</code></td></tr>
-    <tr><td><code>test_strength_solidify.jl</code> <span class="new-badge">v7.22</span></td><td>11 subgroups / 44 sub-assertions: pinned threshold constant, threshold-up/down tag transitions, boundary behavior, idempotence, full up-down-up lifecycle, coexistence with semantic rules in <code>required_relations</code>, <code>bump_strength!</code>/<code>penalize_strength!</code> auto-trigger, grave-node consistency, <code>is_solidified</code>/<code>is_nonjitter</code> aliasing</td></tr>
-    <tr><td><code>test_chatter_v2.jl</code></td><td>ChatterMode session lifecycle, gossip-pattern blending, weak-only morph gates, 24h cooldown</td></tr>
-    <tr><td><code>test_v7_20.jl</code> &middot; <code>test_v7_21a.jl</code> &middot; <code>test_v7_21b1.jl</code> &middot; <code>test_v7_21b2.jl</code> &middot; <code>test_v7_21b3b.jl</code> &middot; <code>test_v7_21b3d.jl</code> &middot; <code>test_v7_21c1.jl</code> &middot; <code>test_v7_21c2.jl</code></td><td>Per-version regression suites for the v7.20–v7.21c lineage: end-confidence snap-back jitter, system-wide NONJITTER honor, tonal observation running state, <code>emotional_coherence</code>, <code>[INCOHERENT]</code> tag, system_prompt body as CLAIM, frame-keyed skeleton, side-process isolation (response-time telemetry no longer graves nodes), and v7.24 BUG-6 voice-prefix suppression</td></tr>
-    <tr><td><code>test_self_observer.jl</code> <span class="new-badge">v7.24</span></td><td>SelfObserver: <strong>no-Float64 public-API guard</strong> (introspects every export's return type), stochastic write probability, serialized-read correctness under contention, fuzzy-bucket jitter symmetry, drop-table walk depth-2, eviction policy on cap pressure, graceful <code>nothing</code> on every miss path, <code>VALID_TAGS</code> whitelist enforcement</td></tr>
-    <tr><td><code>test_sigil_registry.jl</code> <span class="new-badge">v7.24</span></td><td>SigilRegistry kernel: register / lookup / has / list / clear, <code>SIGIL_NAME_REGEX</code> validation, class enum gates (<code>STAGE1_ACTIVE_CLASSES</code>), <code>MAX_REGISTRY_ENTRIES</code> cap, pattern resolution with mixed known/unknown tokens (loud throw), zero-allocation fast path on <code>&amp;</code>-free patterns, procedure-class registration + <code>expand_procedure_sigil</code></td></tr>
-    <tr><td><code>test_sigil_promoter.jl</code> <span class="new-badge">v7.24</span></td><td>SigilPromoter front-door canonicalization: number-word + op-word maps, mixed surface-form inputs, layer-2 shape-promotion to <code>&amp;n</code> / <code>&amp;op</code>, idempotency over double calls, zero-allocation fast path on pure-text inputs, loud throws on malformed configurations</td></tr>
-    <tr><td><code>test_arithmetic_engine.jl</code> <span class="new-badge">v7.24</span></td><td>ArithmeticEngine: full <code>OP_SYMBOL_SET</code> coverage (+ - * / = &lt; &gt; % ^), multi-step <code>ComputationStep</code> chains, division-by-zero handling, comparison-operator boolean output, no-bindings fast return, BUG-5 cross-task <code>Ref</code> path verification</td></tr>
-    <tr><td><code>test_multipart_orchestrator.jl</code> <span class="new-badge">v7.23</span></td><td>MultipartOrchestrator: pure-function partitioning, primary uniqueness within group, locked / subtop / rejected support tier boundaries, error throws on duplicate <code>:primary</code>, singleton wrap-to-objective contract</td></tr>
-    <tr><td><code>test_ephemeral_automaton.jl</code> <span class="new-badge">v7.23</span></td><td>EphemeralAutomaton: rule registration / lookup / clear, ordered step execution, <code>jitter_targets</code> whitelist (numeric values jitter, indices/operators/booleans bit-exact), <code>find_matching_rule</code> + <code>run_for_action_family</code> dispatch, error throws on missing rule + bad steps</td></tr>
-    <tr><td><code>test_procedure_sigil.jl</code> <span class="new-badge">v7.24</span></td><td>SigilRegistry &harr; EphemeralAutomaton handoff: <code>:procedure</code>-class registration, expansion into automaton rule chain, <code>MAX_PROCEDURE_DEPTH = 8</code> bound, end-to-end execution from sigil hit to step trace</td></tr>
-    <tr><td><code>test_input_decomposer.jl</code> <span class="new-badge">v7.23</span></td><td>InputDecomposer: conjunction + question-marker gates, multi-<code>?</code> splitting, math-sigil boundary cuts, "bread and butter" negative case, monotonic group-ID assignment, <code>chunk_boundaries</code> alignment with <code>Vote.input_chunks</code></td></tr>
-    <tr><td><code>test_atp_escalation.jl</code> <span class="new-badge">v7.23</span></td><td>ActionTonePredictor &rarr; EphemeralAutomaton escalation path, end-to-end with promotion bindings flowing into automaton steps</td></tr>
-    <tr><td><code>test_multipart_integration.jl</code> <span class="new-badge">v7.23 / v7.24</span></td><td>End-to-end multipart pipeline with the v7.24 extended <code>TestVote</code> struct (<code>input_chunks::Vector{Int}</code> as 6th field), 23 constructor scenarios covering decomposer &rarr; orchestrator &rarr; AIML payload</td></tr>
-    <tr><td><code>test_right_feedback_tiered.jl</code> <span class="new-badge">v7.24</span></td><td>EphemeralMLP <code>/right</code> &middot; <code>/wrong</code> tiered reinforcement: <code>register_right_feedback!</code> / <code>register_wrong_feedback!</code> weight curves, saturation at <code>WEIGHT_CEILING</code>, sigmoid &harr; ReLU activation switching under feedback pressure, observation-threshold gate</td></tr>
-    <tr><td><code>test_hippocampal_modulator.jl</code> <span class="new-badge">v7.23</span></td><td>HippocampalModulator: log creation, entry pending / executing / done state transitions, scoped-vote isolation across entries, wipe correctness across cycles, error throws on out-of-order completion, <code>modulate_objectives!</code> ordering with cross-entry pronoun / output-reference dependencies</td></tr>
-</table>
-
-<h4>Additional test files on disk (not in runner)</h4>
-<ul>
-    <li><code>test_admin_system.jl</code> &mdash; admin auth (<code>/login</code>, <code>/logout</code>, <code>/writeSave</code>), session timeout, password hashing</li>
-    <li><code>test_chat_specimen.jl</code> &mdash; chat specimen format, command registration, pipe-delimited packets</li>
-    <li><code>test_load_specimen.jl</code> &mdash; full specimen persistence round-trip (gzip, 21 state categories)</li>
-    <li><code>live_training_test.jl</code> &mdash; multi-lobe live training scenarios (run manually)</li>
-</ul>
-
-<!-- ================================================================ -->
 <h2 id="testing">20. Test Suite</h2>
 
 <h3>Running Tests</h3>
-<pre><code># Run the full suite (45 isolated subprocesses)
+<pre><code># Run the full suite (46 isolated subprocesses)
 julia --project=. test/runtests.jl
 
 # Or run a single test file directly
@@ -4016,29 +4911,31 @@ julia --project=. test/test_vote_orchestrator.jl
 julia --project=. test/test_relational_strict.jl
 julia --project=. test/test_aiml_jitter.jl
 julia --project=. test/test_brainstorm_jitter.jl
-julia --project=. test/test_smoke.jl</code></pre>
+julia --project=. test/test_smoke.jl
+julia --project=. test/test_antimatch.jl
+julia --project=. test/test_hippocampal_cascade.jl
+julia --project=. test/test_v7_48.jl</code></pre>
 
 <p>
 <code>runtests.jl</code> spawns each test file as an isolated Julia subprocess. Non-zero exit = test
-failure. There is <strong>no silent swallowing</strong> of per-file failures — a failing subprocess
+failure. There is <strong>no silent swallowing</strong> of per-file failures &mdash; a failing subprocess
 fails the parent <code>@testset</code>.
 </p>
 
-<h3>Test Suite Status (v7.24)</h3>
+<h3>Test Suite Status (v8.0)</h3>
 <table>
     <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Tests in <code>runtests.jl</code> runner</td><td>45</td></tr>
-    <tr><td>Total test files on disk</td><td>58</td></tr>
-    <tr><td>Current result</td><td style="color:#00ff88;">✅ 45 / 45 passing on Julia 1.9, 1.10, 1.11</td></tr>
-    <tr><td>Full suite wall-clock</td><td>~340 s on 8-core Linux (subprocess startup amortized)</td></tr>
-    <tr><td>New since v7.22</td><td>
-        <strong>v7.23 (multipart / automaton / hippocampal):</strong>
-        <code>test_input_decomposer.jl</code> (conjunction + question-marker gates, multi-<code>?</code> splitting, math-sigil boundary cuts, "bread and butter" negative case, monotonic group-ID assignment, <code>chunk_boundaries</code> alignment);
-        <code>test_multipart_orchestrator.jl</code> (pure-function partitioning, primary uniqueness within group, locked / subtop / rejected support tier boundaries, error throws on duplicate <code>:primary</code>, singleton wrap-to-objective contract);
-        <code>test_multipart_integration.jl</code> (end-to-end multipart with extended <code>TestVote</code> 6-field struct, 23 constructor scenarios);
-        <code>test_ephemeral_automaton.jl</code> (rule registration / lookup / clear, ordered step execution, <code>jitter_targets</code> whitelist, <code>find_matching_rule</code> + <code>run_for_action_family</code> dispatch);
-        <code>test_atp_escalation.jl</code> (ActionTonePredictor &rarr; Automaton path with promotion bindings);
-        <code>test_hippocampal_modulator.jl</code> (log lifecycle, scoped-vote isolation, wipe correctness, <code>modulate_objectives!</code> ordering with cross-entry pronoun / output-reference dependencies).
+    <tr><td>Tests in <code>runtests.jl</code> runner</td><td>46</td></tr>
+    <tr><td>Commented out (gate API removed)</td><td>1 (<code>test_lobe_topicality_gate.jl</code>)</td></tr>
+    <tr><td>Total test files on disk</td><td>53</td></tr>
+    <tr><td>Extra files not in runner</td><td>7 (see below)</td></tr>
+    <tr><td>Current result</td><td style="color:#00ff88;">&#x2705; 46 / 46 passing on Julia 1.9, 1.10, 1.11</td></tr>
+    <tr><td>Full suite wall-clock</td><td>~360 s on 8-core Linux (subprocess startup amortized)</td></tr>
+    <tr><td>New since v7.24</td><td>
+        <strong>v7.48 &ndash; v8.0 (CascadeBridge / TonalJudge / InputLedger / ChatterResiduals / TemporalGrowth / RelationalGovernance / Anti-Match / Hippocampal strain / LobeOrchestrator):</strong>
+        <code>test_antimatch.jl</code> (anti-match node creation, <code>ANTIMATCH_DRAIN_FIXED</code> + <code>ANTIMATCH_DRAIN_MAX_JITTER</code> confidence drain, pattern-activated drain with jittered floor, non-antimatch control unchanged);
+        <code>test_hippocampal_cascade.jl</code> (hippocampal strain-energy threshold, <code>STRAIN_THRESHOLD = 0.55</code>, warrant activation / deactivation, EphemeralMLP <code>hippocampal_warrant_active</code> gate);
+        <code>test_v7_48.jl</code> (confidence-ordered dispatch, <code>ENTRY_SURE</code> / <code>ENTRY_LOW_CONFIDENCE</code> / <code>ENTRY_ADDITIVE</code> HippocampalModulator entry types, cross-entry dependency ordering).
         <br><br>
         <strong>v7.24 (sigil stack / SelfObserver / EphemeralMLP / coherence fixes):</strong>
         <code>test_sigil_registry.jl</code> (kernel register / lookup, <code>SIGIL_NAME_REGEX</code> validation, class enum gates, fast-path zero-alloc, procedure-class registration);
@@ -4049,20 +4946,186 @@ fails the parent <code>@testset</code>.
         <code>test_right_feedback_tiered.jl</code> (EphemeralMLP <code>/right</code> &middot; <code>/wrong</code> reinforcement curves, saturation at <code>WEIGHT_CEILING</code>, sigmoid &harr; ReLU activation switching, observation-threshold gate);
         <code>test_chatter_v2.jl</code> (cleaned of redundant <code>using Pkg</code>);
         <code>test_smoke.jl</code> (updated for v7.21c-5 side-process isolation: slow telemetry no longer graves nodes);
-        <code>test_v7_21b3d.jl</code> &middot; <code>test_v7_21c1.jl</code> (BUG-6 voice-prefix suppression: <code>spoken_line</code> must not contain <code>[Grug …]</code> bracket).
+        <code>test_v7_21b3d.jl</code> &middot; <code>test_v7_21c1.jl</code> (BUG-6 voice-prefix suppression: <code>spoken_line</code> must not contain <code>[Grug &hellip;]</code> bracket).
+        <br><br>
+        <strong>v7.23 (multipart / automaton / hippocampal):</strong>
+        <code>test_input_decomposer.jl</code> (conjunction + question-marker gates, multi-<code>?</code> splitting, math-sigil boundary cuts, "bread and butter" negative case, monotonic group-ID assignment, <code>chunk_boundaries</code> alignment);
+        <code>test_multipart_orchestrator.jl</code> (pure-function partitioning, primary uniqueness within group, locked / subtop / rejected support tier boundaries, error throws on duplicate <code>:primary</code>, singleton wrap-to-objective contract);
+        <code>test_multipart_integration.jl</code> (end-to-end multipart with extended <code>TestVote</code> 6-field struct, 23 constructor scenarios);
+        <code>test_ephemeral_automaton.jl</code> (rule registration / lookup / clear, ordered step execution, <code>jitter_targets</code> whitelist, <code>find_matching_rule</code> + <code>run_for_action_family</code> dispatch);
+        <code>test_atp_escalation.jl</code> (ActionTonePredictor &rarr; Automaton path with promotion bindings);
+        <code>test_hippocampal_modulator.jl</code> (log lifecycle, scoped-vote isolation, wipe correctness, <code>modulate_objectives!</code> ordering with cross-entry pronoun / output-reference dependencies).
     </td></tr>
 </table>
 
 <div class="tip">
-    <strong>💡 Extra test files</strong> (<code>test_admin_system.jl</code>, <code>test_chat_specimen.jl</code>,
-    <code>test_load_specimen.jl</code>, <code>live_training_test.jl</code>) are kept on disk for targeted
-    debugging but are not in the default runner. Run them explicitly when working on the related subsystem.
+    <strong>&#x1F4A1; Extra test files</strong> kept on disk for targeted debugging but not in the default runner:
+    <code>test_admin_system.jl</code> (admin auth + save commands),
+    <code>test_chat_specimen.jl</code> (end-to-end chat + specimen round-trip),
+    <code>test_load_specimen.jl</code> (specimen load + restore verification),
+    <code>test_chunked_affinities.jl</code> (chunked affinity scan benchmarking),
+    <code>test_hippocampal_cascade.jl</code> (hippocampal strain + warrant),
+    <code>test_antimatch.jl</code> (anti-match node confidence drain),
+    <code>test_v7_48.jl</code> (confidence-ordered HippocampalModulator dispatch).
+    Additionally, <code>live_training_test.jl</code> provides an interactive training session harness.
+    Run any explicitly with <code>julia --project=. test/&lt;filename&gt;</code>.
 </div>
+
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 
 <!-- ================================================================ -->
 <div style="margin-top: 60px; border-top: 2px solid #333; padding-top: 30px;">
     <h2 style="color: #00ff88; border: none; padding: 0;">Changelog</h2>
 
+    <h3>v8.0 &mdash; CascadeBridge, Bidirectional Bridges, ChatterMode v8.0, Auto-Attach Disabled</h3>
+    <ul>
+        <li><strong>CascadeBridge bidirectional node-bridge system (<code>src/engine.jl</code>).</strong>
+        Replaces the unidirectional <code>AttachedNode</code> / <code>ATTACHMENT_MAP</code> system with
+        <code>CascadeBridge</code> structs stored in <code>BRIDGE_MAP::Dict{String, Vector{CascadeBridge}}</code>.
+        Every bridge is bidirectional: both A&rarr;B and B&rarr;A receive entries. Fields:
+        <code>partner_id</code>, <code>seam_tokens::Vector{String}</code>, <code>base_confidence</code>,
+        <code>source_lobe</code>, <code>is_crystalized</code>, <code>crystal_origin</code>.
+        JIT confidence baking computes the geometric mean of both partners' last confidences, floored at 0.1.
+        <code>BRIDGE_LOCK::ReentrantLock</code> guards all mutations; lock ordering <code>NODE_LOCK &rarr; BRIDGE_LOCK</code>
+        (never reversed) prevents deadlocks. 3-step snapshot approach: snapshot under Lock A, read under Lock B,
+        apply mutations under Lock A &mdash; avoids nested lock acquisition entirely.</li>
+        <li><strong><code>fire_cascades!</code> replaces <code>fire_attachments!</code>.</strong>
+        Match-boundary handoff: the <code>unmatched_tail</code> parameter passes unmatched tokens from the
+        activating node's scan to bridged partners, enabling cascade across pattern boundaries. Confidence
+        relay uses pre-baked <code>base_confidence</code> with optional jitter. Deduplication via
+        <code>fired_set::Set{String}</code>. Hard cap: <code>ACTIVE_FIRE_CAP = 1000</code> via shared
+        <code>FireCounter</code> in VoteOrchestrator.</li>
+        <li><strong>Crystalize system.</strong> Bridges can be &ldquo;crystalized&rdquo; &mdash; locked
+        against accidental deletion during specimen save/load cycles. <code>auto_crystalize_sweep!</code>
+        runs on high-strength node pairs using the same 3-step snapshot discipline.
+        <code>/crystalize</code> and <code>/decrystalize</code> CLI commands for manual control.</li>
+        <li><strong>ChatterMode v8.0 rewrite.</strong> Group-based 2&times;2 steal+remix with Markov remix
+        (<code>MARKOV_CROSSOVER_RATE = 0.35</code>). Replaces the old single-group gossip model with
+        cross-group pattern recombination: two nodes from group A steal fragments from two nodes in group B,
+        then Markov-chain crossover blends the stolen fragments into novel patterns. Idle timer, population
+        gate, morph cooldown, and weak-only morph all preserved from v7.1.</li>
+        <li><strong>Auto-attach DISABLED in v8.0.</strong> <code>RelationalGovernance</code> co-occurrence
+        tracking (<code>CO_ACC::Dict{Tuple{String,String}, Float64}</code>, bounded to 5000 pairs) continues
+        to run for diagnostics, but the auto-attach fire pathway that previously created attachments from
+        co-occurrence thresholds is now permanently disabled. All bridge creation is explicit via
+        <code>/nodeBridge</code>. See &sect;15.42.</li>
+        <li><strong>CLI commands rewritten for bridges.</strong>
+        <code>/nodeBridge A B</code> replaces <code>/nodeAttach</code>;
+        <code>/nodeUnbridge A B</code> replaces <code>/nodeDetach</code>;
+        <code>/bridges [id]</code> replaces <code>/attachments</code>;
+        <code>/crystalize A B</code> and <code>/decrystalize A B</code> are new.
+        Backward-compat wrappers: <code>/nodeAttach</code> &rarr; <code>/nodeBridge</code>,
+        <code>/nodeDetach</code> &rarr; <code>/nodeUnbridge</code>,
+        <code>/attachments</code> &rarr; <code>/bridges</code>.</li>
+        <li><strong>Specimen persistence updated.</strong> Bridge category replaces attachment category.
+        Save/restore serializes <code>BRIDGE_MAP</code> with full <code>CascadeBridge</code> field set.
+        Restore sequence: bridges loaded after nodes, before trajectory state.</li>
+        <li><strong>Documentation:</strong> whitepaper gains &sect;16.5 rewrite (CascadeBridge),
+        &sect;15.33&ndash;&sect;15.44 (12 new sections), formal math additions (Bridge Confidence,
+        Lobe Score, Strain Energy, Anti-Match Drain), file reference updated to 38 modules / ~49,521 lines,
+        test suite updated to 46/53, module dependency graph updated to 37 modules.</li>
+    </ul>
+
+    <h3>v7.55/v7.56 &mdash; Relation Sigils</h3>
+    <ul>
+        <li><strong><code>:relation</code> class sigils in SigilRegistry.</strong> Sigils of class
+        <code>:relation</code> expand to the set of alternative relation names for a given canonical
+        relation at bind-time. For example, <code>&amp;rel=causes</code> matches any of
+        <code>causes, leads_to, produces, generates</code> in a node's relational patterns. This
+        dramatically reduces the combinatorial surface of relation-variant nodes: one sigil-bearing node
+        replaces N synonym-specific nodes. Stage-2 activation; sigils not present in a pattern fall through
+        to the existing exact-match path with zero overhead.</li>
+        <li><strong>SigilRegistry integration.</strong> New <code>:relation</code> class registered alongside
+        the existing <code>:lambda, :macro, :tag, :glue, :functor, :procedure</code>. Bind-time expansion
+        replaces the sigil with a disjunction over the synonym set. No changes to pattern-scanner internals
+        &mdash; expansion happens before the scan.</li>
+    </ul>
+
+    <h3>v7.50 &mdash; EphemeralMLP Strain Energy + Hippocampal Warrant</h3>
+    <ul>
+        <li><strong>Strain energy field.</strong> EphemeralMLP gains <code>strain_energy::Float64</code>,
+        a scalar tracking accumulated structural stress from repeated weight perturbations. Updated every
+        <code>register_right_feedback!</code> / <code>register_wrong_feedback!</code> call.
+        <code>STRAIN_THRESHOLD = 0.55</code>: when strain exceeds this, the MLP signals the
+        HippocampalModulator that the current weight configuration is under duress.</li>
+        <li><strong>Hippocampal warrant gate.</strong> EphemeralMLP exposes <code>hippocampal_warrant_active::Bool</code>,
+        set <code>true</code> when <code>strain_energy &ge; STRAIN_THRESHOLD</code>. The HippocampalModulator
+        reads this gate when deciding whether to fast-track an entry for confidence-ordered dispatch
+        (&sect;15.36). When warrant is active, the entry is promoted to <code>ENTRY_SURE</code> regardless
+        of its raw confidence, ensuring the replay system prioritizes re-evaluation of stressed configurations.</li>
+        <li><strong>Specimen persistence.</strong> <code>strain_energy</code> serialized under the
+        <code>ephemeral_mlp</code> key alongside existing weight/rule/statistics fields. No migration
+        needed; missing key defaults to 0.0 on load.</li>
+    </ul>
+
+    <h3>v7.49 &mdash; Anti-Match Nodes</h3>
+    <ul>
+        <li><strong>Anti-match node flag.</strong> <code>Node.is_antimatch_node::Bool</code> field added.
+        When <code>true</code>, the node activates on pattern match but <strong>never votes</strong> and
+        <strong>drains confidence</strong> from the primary scan pool. Drain amount:
+        <code>ANTIMATCH_DRAIN_FIXED + rand() * ANTIMATCH_DRAIN_MAX_JITTER</code> per matched antimatch node,
+        where <code>ANTIMATCH_DRAIN_FIXED = 0.03</code> and <code>ANTIMATCH_DRAIN_MAX_JITTER = 0.05</code>.
+        The jitter prevents deterministic drain that could be gamed.</li>
+        <li><strong>Scan integration.</strong> In <code>scan_and_expand</code>, after the primary scan
+        produces confidence scores, any matched antimatch node reduces the top candidate's confidence by
+        the drain amount (floored at 0.0). The antimatch node itself does not enter the vote pool. This
+        provides a clean mechanism for &ldquo;negative pattern&rdquo; nodes that suppress specific
+        responses without being selected themselves.</li>
+        <li><strong>Test suite</strong>: <code>test_antimatch.jl</code> added covering creation, drain
+        mechanics with jitter, non-antimatch control, and multi-antimatch stacking.</li>
+    </ul>
+
+    <h3>v7.48 &mdash; Confidence-Ordered Hippocampal Dispatch</h3>
+    <ul>
+        <li><strong>Entry type classification.</strong> <code>HippocampalModulator</code> entries now
+        carry a type tag: <code>ENTRY_SURE</code> (high confidence, dispatched first),
+        <code>ENTRY_LOW_CONFIDENCE</code> (sub-threshold, dispatched last),
+        <code>ENTRY_ADDITIVE</code> (additive combination of priors, dispatched in confidence order).
+        <code>modulate_objectives!</code> sorts entries by type then by confidence within each type,
+        ensuring that high-certainty actions execute before exploratory ones.</li>
+        <li><strong>Cross-entry dependency ordering preserved.</strong> Pronoun antecedents and output
+        references still impose hard ordering constraints that override confidence sorting. An
+        <code>ENTRY_LOW_CONFIDENCE</code> entry that an <code>ENTRY_SURE</code> entry depends on will
+        still execute first.</li>
+        <li><strong>Test suite</strong>: <code>test_v7_48.jl</code> added covering type classification,
+        confidence-ordered dispatch, and dependency-override semantics.</li>
+    </ul>
+
+    <h3>v7.47 &mdash; Hippocampal Strain & Warrant</h3>
+    <ul>
+        <li><strong>Hippocampal strain tracking.</strong> Strain energy computed from EphemeralMLP weight
+        perturbation history. When <code>strain_energy &ge; STRAIN_THRESHOLD (0.55)</code>, the hippocampal
+        warrant gate activates, promoting stressed entries to <code>ENTRY_SURE</code> for priority replay.</li>
+        <li><strong>Test suite</strong>: <code>test_hippocampal_cascade.jl</code> added covering
+        strain threshold, warrant activation/deactivation, and EphemeralMLP gate integration.</li>
+    </ul>
+
+    <h3>v7.30/v7.31 &mdash; PhagyMode Expansion (23 Automata) + Dependency-Gated Dispatch</h3>
+    <ul>
+        <li><strong>23 maintenance automata (was 7).</strong> PhagyMode expanded from 7 automata to 23,
+        covering node health scoring, strength redistribution, pattern deduplication, orphan bridge cleanup,
+        stale signal pruning, relational pattern compaction, and 17 additional housekeeping tasks.
+        Each automaton is a self-contained rule registered with <code>EphemeralAutomaton</code>.</li>
+        <li><strong>Dependency-gated dispatch.</strong> Automata execute only when their prerequisite
+        conditions are met (e.g. &ldquo;orphan bridge cleanup&rdquo; requires &ldquo;node health scoring&rdquo;
+        to have completed this cycle). This prevents wasted work and ensures deterministic execution order
+        within a phagy sweep.</li>
+    </ul>
+
+    <h3>v7.27/v7.29 &mdash; EphemeralAutomaton PhaseAccumulator + Vigilance System</h3>
+    <ul>
+        <li><strong>PhaseAccumulator.</strong> EphemeralAutomaton gains a <code>PhaseAccumulator</code>
+        that tracks the cumulative phase offset across multi-step rule execution. Steps that depend on
+        temporal alignment (e.g. rhythmic pattern completion) use the accumulator to schedule at the
+        correct phase. Phase wraps at <code>2&pi;</code>; zero-cost on non-phase rules.</li>
+        <li><strong>Vigilance system.</strong> A configurable vigilance parameter controls how strictly
+        a rule's pattern must match the current state to fire. Low vigilance &rarr; permissive matching
+        (more rules fire, broader exploration); high vigilance &rarr; strict matching (fewer rules fire,
+        tighter exploitation). <code>DEFAULT_VIGILANCE = 0.5</code>. Adjustable at runtime via CLI.</li>
+    </ul>
+
+
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
     <h3>v7.24 &mdash; Sigil Stack, Subconscious Microlog, Ephemeral MLP, Coherence Fixes</h3>
     <ul>
         <li><strong>SigilRegistry kernel (<code>src/SigilRegistry.jl</code>, 996 lines).</strong>
@@ -4322,10 +5385,10 @@ fails the parent <code>@testset</code>.
         <code>req == NONJITTER_TAG && continue</code> so the behavioral flag is never
         mistaken for a missing semantic relation (which would silently drop every tagged node
         from voting).</li>
-        <li><strong><code>fire_attachments!</code> synaptic relay (engine.jl)</strong>: the
+        <li><strong><code>fire_cascades!</code> cascade relay (engine.jl, formerly fire_attachments!)</strong>: the
         Gaussian <code>randn() * RELAY_CONF_JITTER_SIGMA</code> jitter applied on top of
-        <code>att.base_confidence</code> is zeroed out when
-        <code>is_nonjitter(attach_node_ref)</code> is true. Tagged attached nodes relay with
+        <code>bridge.base_confidence</code> is zeroed out when
+        <code>is_nonjitter(bridge_node_ref)</code> is true. Tagged bridged nodes relay with
         exactly their pre-baked base confidence (floored at 0.1).</li>
         <li><strong><code>FullLobeScanner.gather_candidates!</code> / <code>activate_candidates!</code></strong>:
         both gain an optional <code>nonjitter_ids::Set{String} = Set{String}()</code> kwarg.
@@ -4433,10 +5496,10 @@ fails the parent <code>@testset</code>.
     <ul>
         <li><strong>Engine-level fix for cross-domain vote leakage.</strong> Before v7.18, a physics mission could pull cooking-lobe nodes into the vote pool whenever a pattern-scan happened to lexically match (e.g. the verb <code>transforms</code> exists in both "energy transforms matter" and "heat transforms dough"). Drop-table and cross-lobe cascade amplified the leakage. v7.18 installs a hard gate at the end of <code>scan_and_expand</code> that mutes off-topic lobes entirely.</li>
         <li><strong>New constants</strong> <code>LOBE_TOPICALITY_FLOOR = 0.15</code> and <code>BRIDGED_NODE_CONF_WEIGHT = 0.5</code> in <code>src/engine.jl</code>. A lobe is eligible iff <code>topicality(subject, mission) &ge; 0.15</code> where topicality is <code>|expand(subject) &cap; expand(mission)| / min(|expand(subject)|, |expand(mission)|)</code> &mdash; the asymmetric <code>min(&middot;,&middot;)</code> denominator lets a short mission with one strong keyword wake its domain lobe without dilution. Raw pattern-scan hits do <em>not</em> auto-unmute a lobe.</li>
-        <li><strong>Semantic-Bridge Exception.</strong> A node in a muted lobe is reinstated at <code>BRIDGED_NODE_CONF_WEIGHT &times;</code> confidence if any of: (1) its <code>relational_patterns</code> has a verb overlapping the mission's <em>dynamic</em> relational triples (extracted live via <code>extract_dynamic_relational_triples(mission, 3)</code> &mdash; this is the critical "dynamic relationals" check the user flagged); (2) its <code>required_relations</code> share a verb with any eligible-lobe node; (3) it's attached (<code>ATTACHMENT_MAP</code>) to or from an eligible-lobe node. Raw keyword overlap alone never unmutes.</li>
+        <li><strong>Semantic-Bridge Exception.</strong> A node in a muted lobe is reinstated at <code>BRIDGED_NODE_CONF_WEIGHT &times;</code> confidence if any of: (1) its <code>relational_patterns</code> has a verb overlapping the mission's <em>dynamic</em> relational triples (extracted live via <code>extract_dynamic_relational_triples(mission, 3)</code> &mdash; this is the critical "dynamic relationals" check the user flagged); (2) its <code>required_relations</code> share a verb with any eligible-lobe node; (3) it's bridged (<code>BRIDGE_MAP</code>, formerly <code>ATTACHMENT_MAP</code>) to or from an eligible-lobe node. Raw keyword overlap alone never unmutes.</li>
         <li><strong>New helpers</strong>: <code>_compute_lobe_topicality</code>, <code>_compute_muted_lobes</code>, <code>_node_has_semantic_bridge</code>, and the entry point <code>apply_lobe_topicality_gate!(mission_text, expanded)</code> invoked at the tail of <code>scan_and_expand</code>.</li>
-        <li><strong>Telemetry.</strong> Every AIML payload debug block now emits <code>Muted Lobes: [&hellip;]</code> and <code>Bridged Nodes: [id@lobe(reason), &hellip;]</code> where <code>reason</code> is one of <code>dyn_triple:VERB</code>, <code>verb_bridge:VERB</code>, <code>attach_out:TARGET</code>, or <code>attach_in:SOURCE</code>. State is stored in two <code>Ref</code>s (<code>_LAST_MUTED_LOBES</code>, <code>_LAST_BRIDGED_NODES</code>) that reset at the start of every gate call.</li>
-        <li><strong>Test suite</strong>: new file <code>test/test_lobe_topicality_gate.jl</code> with 6 test groups covering topicality score (match > disjoint), end-to-end muting of an unrelated lobe, <code>required_relations</code> verb bridge, confidence discount exact value, <code>/nodeAttach</code> bridge reinstatement with zero verb overlap, and telemetry reset between missions. <strong>All 22 / 22 test groups green</strong> in ~2m02s.</li>
+        <li><strong>Telemetry.</strong> Every AIML payload debug block now emits <code>Muted Lobes: [&hellip;]</code> and <code>Bridged Nodes: [id@lobe(reason), &hellip;]</code> where <code>reason</code> is one of <code>dyn_triple:VERB</code>, <code>verb_bridge:VERB</code>, <code>bridge_out:TARGET</code>, or <code>bridge_in:SOURCE</code>. State is stored in two <code>Ref</code>s (<code>_LAST_MUTED_LOBES</code>, <code>_LAST_BRIDGED_NODES</code>) that reset at the start of every gate call.</li>
+        <li><strong>Test suite</strong>: new file <code>test/test_lobe_topicality_gate.jl</code> with 6 test groups covering topicality score (match > disjoint), end-to-end muting of an unrelated lobe, <code>required_relations</code> verb bridge, confidence discount exact value, <code>/nodeBridge</code> (formerly /nodeAttach) bridge reinstatement with zero verb overlap, and telemetry reset between missions. <strong>All 22 / 22 test groups green</strong> in ~2m02s.</li>
         <li><strong>Documentation</strong>: whitepaper gains &sect;15.17 and &sect;15.18 coverage; version bumped to v7.18 across header, TOC, test-suite table, and changelog.</li>
     </ul>
 
@@ -4522,7 +5585,7 @@ fails the parent <code>@testset</code>.
     </ul>
     <h3>v7.8 — Parallel Vote Orchestrator + Bounded Dispatch + Strict Relational Coupling</h3>
     <ul>
-        <li><strong>VoteOrchestrator</strong> (<code>src/VoteOrchestrator.jl</code>, 661 lines): unified parallel-fire and vote-selection layer. Atomic <code>FireCounter</code> enforces <code>ACTIVE_FIRE_CAP = 1000</code> concurrent fires across ALL fire types (pattern scan, drop-table, attachment relay, lobe cascade). Unique non-colliding Task names via process-wide atomic counter. <code>parallel_fire_batches</code> for batched threaded fire (<code>FIRE_BATCH_SIZE = 64</code>, <code>FIRE_BATCH_TIMEOUT_S = 5.0</code>). Typed <code>Channel{DoneSignal}</code> for phase-gated lobe completion. Strength-biased <code>select_aiml_votes</code> with top-tier (always fires) and sub-top (coinflip) bands. See §15.7.</li>
+        <li><strong>VoteOrchestrator</strong> (<code>src/VoteOrchestrator.jl</code>, 661 lines): unified parallel-fire and vote-selection layer. Atomic <code>FireCounter</code> enforces <code>ACTIVE_FIRE_CAP = 1000</code> concurrent fires across ALL fire types (pattern scan, drop-table, cascade relay, lobe cascade). Unique non-colliding Task names via process-wide atomic counter. <code>parallel_fire_batches</code> for batched threaded fire (<code>FIRE_BATCH_SIZE = 64</code>, <code>FIRE_BATCH_TIMEOUT_S = 5.0</code>). Typed <code>Channel{DoneSignal}</code> for phase-gated lobe completion. Strength-biased <code>select_aiml_votes</code> with top-tier (always fires) and sub-top (coinflip) bands. See §15.7.</li>
         <li><strong>Timeout-bounded sub-process dispatch</strong>: <code>dispatch_task_with_timeout</code> + <code>fetch_with_timeout</code> with a dedicated <code>TaskTimeoutError</code> subtype (carries <code>task_name</code>, <code>context</code>, <code>timeout_s</code>). Every sub-process in the engine and <code>Main.jl</code> runs under a hard deadline. Timeouts rethrow loud, named errors &mdash; never swallow. See §15.8.</li>
         <li><strong>Strict relational-triple coupling</strong> (<code>src/engine.jl</code>): <code>scan_mode ≥ 3</code> (high-res / complex input) MUST use <code>extract_dynamic_relational_triples</code>. Dynamic-extractor failure rethrows as a hard error &mdash; no silent fallback to basic extraction. Simple inputs (<code>scan_mode ≤ 2</code>) keep best-effort basic extraction. See §15.9.</li>
         <li><strong>Test suite expanded</strong>: <code>test_vote_orchestrator.jl</code> and <code>test_relational_strict.jl</code> added to the default runner. 17 / 17 passing.</li>
@@ -4568,14 +5631,14 @@ fails the parent <code>@testset</code>.
     </ul>
     <h4>v7.2 (Current)</h4>
     <ul>
-        <li>Relational Fire System: <code>/nodeAttach</code>, <code>/nodeDetach</code>, <code>/attachments</code> &mdash; user-defined relay circuitry with strength-biased coinflip gating</li>
-        <li>Pass 3 in <code>scan_and_expand()</code>: attachment relay with independent active cap, pattern-derived confidence, deduplication</li>
+        <li>CascadeBridge system (formerly Relational Fire): <code>/nodeBridge</code>, <code>/nodeUnbridge</code>, <code>/bridges</code> Relational Fire System: <code>/nodeAttach</code>, <code>/nodeDetach</code>, <code>/attachments</code> &mdash; user-defined relay circuitry with strength-biased coinflip gatingmdash; bidirectional cascade relay with crystalize and match-boundary handoff</li>
+        <li>Pass 3 in <code>scan_and_expand()</code>: cascade relay (<code>fire_cascades!</code>) with unmatched_tail handoff, JIT confidence baking, deduplication</li>
         <li>Specimen persistence extended to 17 state categories (sections 14-17: attachments, trajectory, temporal coherence, morph cooldowns)</li>
-        <li><code>AttachedNode</code> struct with pre-baked signal vectors for zero-allocation hot-path firing</li>
+        <li><code>CascadeBridge</code> struct (replaces <code>AttachedNode</code>) with bidirectional partner tracking, seam tokens, crystalize, and JIT confidence baking</li>
         <li>Full validation on attach/detach: existence, grave, self-attach, max cap, duplicate checks &mdash; no silent failures</li>
         <li>Updated BOOT_MSG, HELP_MSG, <code>/nodes</code> output, and all documentation</li>
         <li>Memory Forensics (Automaton 7): coinflip-selected fuzzy/metric analysis of message history and node population health</li>
-        <li>Comprehensive test suites: test_phagy.jl (28 groups) and test_node_attach.jl (19 groups)</li>
+        <li>Comprehensive test suites: test_phagy.jl (28 groups) and test_node_attach.jl (19 groups, covers legacy /nodeAttach; bridge tests in test_comprehensive.jl)</li>
     </ul>
     <h4>v7.1</h4>
     <ul>
@@ -4617,7 +5680,7 @@ fails the parent <code>@testset</code>.
 </div>
 
 <div class="signature">
-    <p>GrugBot Neuromorphic Engine v7.24 &mdash; Technical Whitepaper</p>
+    <p>GrugBot Neuromorphic Engine v8.0 &mdash; Technical Whitepaper</p>
     <p>🦴 "Cave brain think different. That is why cave brain strong." &mdash; Grug</p>
 </div>
 
