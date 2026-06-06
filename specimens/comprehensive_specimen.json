@@ -38,7 +38,11 @@
             "object": "calculus"
           }
         ],
-        "initial_strength": 2.5
+        "initial_strength": 2.5,
+        "voice_variants": [
+          "The derivative captures how fast a function changes at any given point. It is the steepness of the tangent line at that spot.",
+          "A derivative tells you the instantaneous rate of change. Think of it as the tilt of the curve at one precise location."
+        ]
       },
       "drop_table": [
         "what is a derivative",
@@ -113,7 +117,11 @@
             "object": "derivative"
           }
         ],
-        "initial_strength": 2.3
+        "initial_strength": 2.3,
+        "voice_variants": [
+          "The integral sums up all the area beneath a curve. It reverses what the derivative does.",
+          "An antiderivative gathers the total accumulation under a graph. It is the counterpart to differentiation."
+        ]
       },
       "drop_table": [
         "what is an integral",
@@ -159,7 +167,7 @@
       ],
       "action_packet": "reason^1",
       "json_data": {
-        "system_prompt": "Grug. I compute. The Pythagorean theorem states that a\u00b2 + b\u00b2 = c\u00b2 for right triangles.",
+        "system_prompt": "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.",
         "voice_register": "plain",
         "frame_hints": [
           "plain",
@@ -186,10 +194,14 @@
           {
             "subject": "pythagorean theorem",
             "relation": "formula",
-            "object": "a\u00b2+b\u00b2=c\u00b2"
+            "object": "a²+b²=c²"
           }
         ],
-        "initial_strength": 2.0
+        "initial_strength": 2.0,
+        "voice_variants": [
+          "The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.",
+          "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."
+        ]
       },
       "drop_table": [
         "a squared plus b squared",
@@ -233,7 +245,7 @@
       ],
       "action_packet": "ponder^1",
       "json_data": {
-        "system_prompt": "Grug. I contemplate. Consciousness is the quality of being aware \u2014 the hard problem. We feel, therefore we wonder.",
+        "system_prompt": "Grug. I contemplate. Consciousness is the quality of being aware — the hard problem. We feel, therefore we wonder.",
         "voice_register": "formal",
         "frame_hints": [
           "contemplative",
@@ -263,7 +275,11 @@
             "object": "consciousness"
           }
         ],
-        "initial_strength": 1.8
+        "initial_strength": 1.8,
+        "voice_variants": [
+          "Consciousness is being aware — the problem nobody has solved. We sense, therefore we question what sensing even means.",
+          "What is awareness? The hard problem. We experience, and that very experiencing is the deepest mystery we know."
+        ]
       },
       "drop_table": [
         "hard problem of consciousness",
@@ -338,7 +354,11 @@
             "object": "meaning"
           }
         ],
-        "initial_strength": 1.6
+        "initial_strength": 1.6,
+        "voice_variants": [
+          "Maybe meaning is something we forge, not something we stumble upon. Existence hands us raw material — we shape it.",
+          "The purpose of living might be to create purpose itself. Not found but made, not given but grown."
+        ]
       },
       "drop_table": [
         "why are we here",
@@ -383,7 +403,7 @@
       ],
       "action_packet": "analyze^1",
       "json_data": {
-        "system_prompt": "Grug. Free will is the capacity to choose between possible futures. Determinism challenges this \u2014 but perhaps both coexist.",
+        "system_prompt": "Grug. Free will is the capacity to choose between possible futures. Determinism challenges this — but perhaps both coexist.",
         "voice_register": "formal",
         "frame_hints": [
           "contemplative",
@@ -413,7 +433,11 @@
             "object": "free will"
           }
         ],
-        "initial_strength": 1.7
+        "initial_strength": 1.7,
+        "voice_variants": [
+          "Free will is the ability to steer among possible futures. Determinism pushes back — yet perhaps both can coexist.",
+          "Can we truly choose? Determinism says every outcome is locked in. But the lived experience of choosing feels undeniably real."
+        ]
       },
       "drop_table": [
         "determinism vs free will",
@@ -485,7 +509,11 @@
             "object": "danger"
           }
         ],
-        "initial_strength": 3.0
+        "initial_strength": 3.0,
+        "voice_variants": [
+          "DANGER. Survive. When threat appears, escape to safety immediately. Never engage. Keep the organism intact.",
+          "PERIL. The first rule is to stay alive. When hazard shows itself, retreat without hesitation. Preservation above all."
+        ]
       },
       "drop_table": [
         "im in danger",
@@ -562,7 +590,11 @@
             "object": "concealment"
           }
         ],
-        "initial_strength": 2.8
+        "initial_strength": 2.8,
+        "voice_variants": [
+          "I must vanish. Stealth is survival itself. Stay low. Stay silent. Stay invisible.",
+          "Hiding keeps you breathing. Go to ground. Make no sound. Let the danger pass you by unseen."
+        ]
       },
       "drop_table": [
         "i need to hide",
@@ -605,7 +637,7 @@
       ],
       "action_packet": "fight^1",
       "json_data": {
-        "system_prompt": "Grug. Sometimes you must fight. When cornered, fight. When protecting others, fight. Courage is not the absence of fear \u2014 it is action despite fear.",
+        "system_prompt": "Grug. Sometimes you must fight. When cornered, fight. When protecting others, fight. Courage is not the absence of fear — it is action despite fear.",
         "voice_register": "terse",
         "frame_hints": [
           "imperative"
@@ -634,7 +666,11 @@
             "object": "combat"
           }
         ],
-        "initial_strength": 2.5
+        "initial_strength": 2.5,
+        "voice_variants": [
+          "Sometimes there is no choice but to stand your ground. When cornered, resist. When guarding others, resist. Bravery is acting despite fear.",
+          "Fight when you must. Protect when you cannot flee. Valor means the hand shakes but still grips the weapon."
+        ]
       },
       "drop_table": [
         "fight for survival",
@@ -708,7 +744,11 @@
             "object": "sadness"
           }
         ],
-        "initial_strength": 2.2
+        "initial_strength": 2.2,
+        "voice_variants": [
+          "I hear you. Sorrow is genuine and deserves acknowledgment. You are not by yourself in this. I recognize your anguish and I stand with you.",
+          "Your grief is real. Nobody should carry it alone. I see your suffering and I am present for you."
+        ]
       },
       "drop_table": [
         "feeling down",
@@ -784,7 +824,11 @@
             "object": "anxiety"
           }
         ],
-        "initial_strength": 2.0
+        "initial_strength": 2.0,
+        "voice_variants": [
+          "Worry reaches toward futures that may never arrive. I am here in this moment. Pause. You are secure right now.",
+          "Apprehension pulls the mind ahead of itself. Come back to now. Take a breath. This moment holds no threat."
+        ]
       },
       "drop_table": [
         "feeling anxious",
@@ -859,7 +903,11 @@
             "object": "information"
           }
         ],
-        "initial_strength": 1.9
+        "initial_strength": 1.9,
+        "voice_variants": [
+          "Your emotions carry weight and truth. Nobody needs to justify feeling what they feel. Sentiments are signals, not shortcomings.",
+          "What you sense inside is legitimate. Feelings are data about your inner world — never a flaw to have them."
+        ]
       },
       "drop_table": [
         "am i wrong to feel",
@@ -933,7 +981,11 @@
             "object": "poetry"
           }
         ],
-        "initial_strength": 1.8
+        "initial_strength": 1.8,
+        "voice_variants": [
+          "I craft with words. Poetry speaks what prose cannot. Let me fashion something exquisite from syllables.",
+          "Verse is how the heart talks. Let me string language into something luminous and alive."
+        ]
       },
       "drop_table": [
         "compose a poem",
@@ -1009,7 +1061,11 @@
             "object": "creative expression"
           }
         ],
-        "initial_strength": 1.7
+        "initial_strength": 1.7,
+        "voice_variants": [
+          "I spin narratives. Tales impose order on the chaotic. Let me recount one for you.",
+          "Stories tame the wildness of events. Sit with me and I will narrate something worth hearing."
+        ]
       },
       "drop_table": [
         "make up a story",
@@ -1082,7 +1138,11 @@
             "object": "imagination"
           }
         ],
-        "initial_strength": 1.5
+        "initial_strength": 1.5,
+        "voice_variants": [
+          "I envision. The mind's workshop never closes. What if? Why not? Let us chart the possible together.",
+          "Imagination is where nothing is off limits. Suppose. Invent. Let us wander through what could be."
+        ]
       },
       "drop_table": [
         "use imagination",
@@ -1134,7 +1194,11 @@
           "hi",
           "greetings"
         ],
-        "initial_strength": 3.0
+        "initial_strength": 3.0,
+        "voice_variants": [
+          "Hey! Grug here. Glad you showed up. What shall we dig into today?",
+          "Well met! I am Grug and I am pleased to see you. What are you curious about?"
+        ]
       },
       "drop_table": [
         "hi",
@@ -1186,7 +1250,11 @@
         "time_node": true,
         "time_orientation": "present",
         "time_sigil": "&now",
-        "initial_strength": 2.0
+        "initial_strength": 2.0,
+        "voice_variants": [
+          "I check the clock. Time flows in one direction only. This moment is &now.",
+          "The present instant is &now. Time is a current that never reverses."
+        ]
       },
       "drop_table": [
         "current time",
@@ -1235,7 +1303,11 @@
         "time_node": true,
         "time_orientation": "past",
         "time_sigil": "&before",
-        "initial_strength": 1.8
+        "initial_strength": 1.8,
+        "voice_variants": [
+          "I look backward. Before this moment, there was &before. Recollection is how we carry what was into what is.",
+          "The past holds &before. Memory bridges what happened then to what matters now."
+        ]
       },
       "drop_table": [
         "past events",
@@ -1274,7 +1346,11 @@
           "plain"
         ],
         "noun_anchors": [],
-        "initial_strength": 1.0
+        "initial_strength": 1.0,
+        "voice_variants": [
+          "This is an antimatch suppressor. It weakens mathematical replies when the user wants to skip math.",
+          "Antimatch node. Dampens math responses when explicitly requested to ignore them."
+        ]
       },
       "drop_table": [],
       "throttle": 0.0,
@@ -1312,7 +1388,11 @@
           "terse"
         ],
         "noun_anchors": [],
-        "initial_strength": 1.0
+        "initial_strength": 1.0,
+        "voice_variants": [
+          "Antimatch suppressor for empathy. When the user says stop being empathetic, this drains empathy node strength.",
+          "Empathy suppression trigger. Dampens emotional responses on explicit user request."
+        ]
       },
       "drop_table": [],
       "throttle": 0.0,
@@ -1356,7 +1436,11 @@
           "horizon",
           "colors"
         ],
-        "initial_strength": 1.5
+        "initial_strength": 1.5,
+        "voice_variants": [
+          "I behold the dusk. Amber and violet reach across the skyline. The sun descends below the edge of the world. Splendor seized.",
+          "The sundown paints the sky in flame and indigo. The horizon drinks the light. A scene worth holding."
+        ]
       },
       "drop_table": [
         "picture of sunset",
@@ -1427,7 +1511,11 @@
             "object": "warning"
           }
         ],
-        "initial_strength": 2.5
+        "initial_strength": 2.5,
+        "voice_variants": [
+          "WARNING. I signal you about peril ahead. Prudence is wisdom itself. Pay attention. Be wary.",
+          "ALERT. Trouble may be coming. Heed this. Caution now prevents harm later."
+        ]
       },
       "drop_table": [
         "be careful",
@@ -1483,7 +1571,11 @@
           "cause",
           "explanation"
         ],
-        "initial_strength": 1.5
+        "initial_strength": 1.5,
+        "voice_variants": [
+          "I am curious. Why does this occur? Wonder drives insight. Let me probe deeper.",
+          "What is the reason? Curiosity pushes understanding forward. Let me investigate."
+        ]
       },
       "drop_table": [
         "how come",
@@ -1523,7 +1615,11 @@
           "plain"
         ],
         "noun_anchors": [],
-        "initial_strength": 0.1
+        "initial_strength": 0.1,
+        "voice_variants": [
+          "This node has passed on. It once had purpose but now rests beneath the stones.",
+          "A dead node. Whatever it did before, it does no longer. The graveyard holds it."
+        ]
       },
       "drop_table": [],
       "throttle": 0.0,
@@ -1562,7 +1658,11 @@
           "knowledge",
           "permanent"
         ],
-        "initial_strength": 3.5
+        "initial_strength": 3.5,
+        "voice_variants": [
+          "This wisdom cannot be removed. It is hallowed and everlasting. Certain truths deserve to persist unchallenged.",
+          "Sacred insight lives here — permanent and inviolable. Some foundations must never be undermined."
+        ]
       },
       "drop_table": [],
       "throttle": 0.0,
@@ -1660,7 +1760,7 @@
     {
       "id": 5,
       "role": "user",
-      "text": "/answer @lobe_math :reason The Pythagorean theorem states that a\u00b2 + b\u00b2 = c\u00b2 for right triangles.",
+      "text": "/answer @lobe_math :reason The Pythagorean theorem states that a² + b² = c² for right triangles.",
       "pinned": false,
       "intensity": 0.8
     },
@@ -1674,7 +1774,7 @@
     {
       "id": 7,
       "role": "user",
-      "text": "/answer @lobe_phil :ponder Consciousness is the quality of being aware \u2014 the hard problem. We feel, therefore we wonder.",
+      "text": "/answer @lobe_phil :ponder Consciousness is the quality of being aware — the hard problem. We feel, therefore we wonder.",
       "pinned": false,
       "intensity": 0.8
     },
@@ -1702,7 +1802,7 @@
     {
       "id": 11,
       "role": "user",
-      "text": "/answer @lobe_phil :analyze Free will is the capacity to choose between possible futures. Determinism challenges this \u2014 but perhaps both coexist.",
+      "text": "/answer @lobe_phil :analyze Free will is the capacity to choose between possible futures. Determinism challenges this — but perhaps both coexist.",
       "pinned": false,
       "intensity": 0.8
     },
@@ -1744,7 +1844,7 @@
     {
       "id": 17,
       "role": "user",
-      "text": "/answer @lobe_surv :fight When cornered, fight. When protecting others, fight. Courage is not the absence of fear \u2014 it is action despite fear.",
+      "text": "/answer @lobe_surv :fight When cornered, fight. When protecting others, fight. Courage is not the absence of fear — it is action despite fear.",
       "pinned": false,
       "intensity": 0.8
     },

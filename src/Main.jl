@@ -2070,8 +2070,8 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         # tokens stay original; ~1 in 4 picks a synonym. Env-overridable for
         # tests or operator tuning.
         swap_rate = try
-            r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.25"))
-            (r < 0.0 || r > 1.0) ? 0.25 : r
+            r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.35"))
+            (r < 0.0 || r > 1.0) ? 0.35 : r
         catch
             0.25
         end
@@ -2088,8 +2088,8 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # GRUG v7.36: _light_thesaurus_touch — gentle synonym variation for
     # authored prose (voice_body). Unlike _swap_words_in which swaps every
     # token at SWAP_RATE, this only considers words that have RICH synonym
-    # sets (3+ alternatives in SYNONYM_SEED_MAP) and swaps at a much lower
-    # rate (LIGHT_TOUCH_RATE, default 0.15). This preserves the author's
+    # sets (2+ alternatives in SYNONYM_SEED_MAP) and swaps at a
+    # rate (LIGHT_TOUCH_RATE, default 0.30). This preserves the author's
     # voice and sentence structure while preventing the exact same paragraph
     # from appearing every time the same node wins. "Broadband thin push"
     # might become "Wideband thin push" or "Broadband narrow push" — same
@@ -2097,11 +2097,15 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # -------------------------------------------------------------------
     function _light_thesaurus_touch(sentence::String, drop_table::Vector{String},
                                      required_relations::Vector{String})::String
+        # GRUG v7.38: bumped default from 0.15 to 0.30. Domain-specific
+        # words now have synonyms but the old 0.15 rate barely changed anything.
+        # 0.30 means ~1 in 3 eligible words gets swapped, producing visible
+        # but not chaotic variation.
         light_rate = try
-            r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.15"))
-            (r < 0.0 || r > 1.0) ? 0.15 : r
+            r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.30"))
+            (r < 0.0 || r > 1.0) ? 0.30 : r
         catch
-            0.15
+            0.30
         end
         tokens = split(String(sentence))
         out = String[]
@@ -2117,9 +2121,12 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             clean in required_relations && (push!(out, String(tok)); continue)
             InputQueue.is_inhibited(clean) && (push!(out, String(tok)); continue)
             clean in drop_table && (push!(out, String(tok)); continue)
-            # Only consider words with RICH synonym sets (3+ alternatives)
+            # GRUG v7.38: Lowered threshold from 3+ to 2+ alternatives.
+            # Domain-specific entries (math, survival, philosophy) often have
+            # exactly 2 high-quality synonyms. The old 3+ gate was preventing
+            # these from ever swapping, making output static.
             n_syns = haskey(Thesaurus.SYNONYM_SEED_MAP, clean) ? length(Thesaurus.SYNONYM_SEED_MAP[clean]) : 0
-            if n_syns < 3
+            if n_syns < 2
                 push!(out, String(tok))  # not enough alternatives — keep original
                 continue
             end
@@ -2671,7 +2678,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # variant is picked, it's already fresh. But we also apply a LIGHT
     # thesaurus touch to the chosen voice_body: only words with rich
     # synonym sets (3+ alternatives) are eligible for swap, at a very low
-    # rate (GRUG_LIGHT_TOUCH_RATE, default 0.15). This means "broadband"
+    # rate (GRUG_LIGHT_TOUCH_RATE, default 0.30). This means "broadband"
     # might become "wideband" but "the" stays "the". The author's sentence
     # structure, voice, and emphasis are preserved — only individual words
     # with good alternatives get subtle variation.

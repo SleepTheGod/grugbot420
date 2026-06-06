@@ -1,0 +1,469 @@
+WARNING: using MitosisMode.THES_LATCH_WEIGHT in module Main conflicts with an existing identifier.
+WARNING: using MitosisMode.LATCH_SCAN_CONFIDENCE_FLOOR in module Main conflicts with an existing identifier.
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=25, msg=5)
+  👁  Eye state restored
+  🔧 Verb registry restored (7 classes, 30 verbs, 7 synonyms)
+  🔤 Thesaurus restored (25 words)
+  🧠 Lobes restored (5)
+  📋 Lobe tables restored (2)
+  🌱 Nodes restored (25)
+  ⚡ Hopfield cache restored (2 entries)
+  ⚙️  Rules restored (6)
+  🚫 Inhibitions restored (3)
+  💬 Messages restored (28 total, 1 pinned)
+  👁  Arousal restored (level=0.35)
+  🧬 BrainStem state restored
+  🌉 Bridges restored (4)
+  🗣  Chatter groups restored (4)
+  ⏱  Chatter cooldowns restored (2)
+  🔮 Trajectory restored (2 entries)
+  🕐 Temporal coherence restored (2 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 2 ledger entries)
+  🤖 AIML system restored (6 nodes across 4 lobes)
+  ⚙️  Automaton rules restored (2)
+  ⚠️  Phase accumulator: EMPTY (no crystal data) — HARD WARN
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.85)
+  ⚠  EphemeralMLP restore FAILED — using fresh state. Error: EphemeralMLPError("from_specimen_dict! failed to parse weights: EphemeralMLPError(\"from_specimen_dict! weight entry is not a dict\", \"parse_weights\")", "from_specimen_dict!")
+  👁  MLP Observer Store: 38 entries, 12 distinct keys (store starts fresh; MLP gate counter restored)
+  🧠 MLP cached Phi restored (last_phi=0.72)
+  ⚠️  Decomposer config: FAILED to load (using built-in defaults)
+      Error: MethodError(String, (Pair{String, Any}("pattern", "^(\\w+)ing\$"),), 0x0000000000008df9)
+  👁  Vigilance config loaded (cap=5, enabled=true)
+  📊  Injector stats loaded
+  🎲  Relational jitter config loaded (ratio=0.1, coin=0.05, enabled=true)
+  🧠  BrainStem config: 4 drift(s) from code defaults (saved for future override)
+  ⚙️  Engine config: 6 drift(s) from code defaults (saved for future override)
+  🏛️  Lobe orchestrator knobs: 3 drift(s) from code defaults
+  🗳️  Vote orchestrator knobs: 2 drift(s) from code defaults
+  🧬  Mitosis config: 2 drift(s) from code defaults (strain warrant knobs changed)
+  🌱  Growth automaton config: loaded (baseline reference)
+  🦠  Phagy config: loaded (baseline reference)
+  💬  Chatter config: loaded (baseline reference)
+  🛡️  Immune config: loaded (baseline reference)
+  🔭  Scanner config: loaded (baseline reference)
+  🎯  ActionTone knobs: loaded (baseline reference)
+  🔗  Co-activation accumulator loaded (0 pairs)
+  📝  Input ledger loaded (0 consumed hashes)
+  🔮  Chatter residuals loaded (0 consumed hashes)
+  🪭  Fan-out config loaded (enabled=true, max=4, modes=8)
+  🧠  Hippocampal pending ask: empty (no pending question)
+  🔐  Admin session: not logged in (clean)
+  🎭  Lobe orchestrator last state loaded (winner=lobe_math, scores=5)
+  🔖  Chatter cursor loaded (pos=2)
+  📋  Answer mode config loaded (11 modes)
+  🦠  Phagy rules ref loaded (6 rules)
+  ⏳  Time orientation config loaded (global=present)
+  ⏳  Time node orientation index: 2/2 nodes verified
+===SPECIMEN_LOADED===
+===MISSION_START:what is a derivative===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_math: base=0.55 × top=0.55 = 0.2243 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.55 step=1 | ENTRY_PENDING
+[ENGINE] 🕐  Node node_math_001 big-O ledger cleared (24hr reset).
+[ENGINE] 🐢  Node node_math_001 slow telemetry only (avg: 11.25s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=1.0 | quality=0.518 | semantic=0.495 | relevance=0.523 | disambig=0.537 | strain=0.795 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Let me lay it out: The slope captures how fast a function changes at any given point. It is the steepness of the tangent line at that spot. Pinned note: what is a derivative
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is a derivative'
+Primary Action: reason  (conf=0.55, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_math_001
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: (calculus, includes, derivative)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | mathematical expression detected | emotional distress detected | philosophical question detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.56 eligible=5] (Recent): [assistant]: The derivative measures the rate of change. It is the slope of the tangent line. (intensity=0.57)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.55, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_math: base=0.55 × top=0.55 = 0.2243 [hard_votes=1]
+Time Orientation: none
+=========================================
+===MISSION_END:what is a derivative===
+===MISSION_START:define integral===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_math: base=0.519 × top=0.519 = 0.1941 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.519 step=1 | ENTRY_PENDING
+[ENGINE] 🕐  Node node_math_002 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.517 | semantic=0.494 | relevance=0.522 | disambig=0.535 | strain=0.795 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Zooming out: The integral sums up all the area beneath a curve. It reverses what the derivative does.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'define integral'
+Primary Action: reason  (conf=0.52, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_math_002
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: (calculus, includes, integral)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | danger keyword detected | philosophical question detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=8] (Recent): [user]: /answer @lobe_phil :ponder Perhaps meaning is what we create, not what we find. (intensity=0.39) | [assistant]: The derivative measures the rate of change. It is the slope of the tangent line. (intensity=0.38)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.52, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_math: base=0.519 × top=0.519 = 0.1941 [hard_votes=1]
+Time Orientation: none
+=========================================
+===MISSION_END:define integral===
+===MISSION_START:what is consciousness===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_phil: base=0.335 × top=0.335 = 0.0652 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.335 step=1 | ENTRY_PENDING
+[ENGINE] 🕐  Node node_phil_001 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.513 | semantic=0.5 | relevance=0.522 | disambig=0.536 | strain=0.795 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Stepping back: I contemplate. Consciousness is the quality of being aware — the hard problem. We emote, therefore we wonder. Here's the connection: philosophy explores consciousness. Pinned note: what is a derivative (from the lobe_phil cave)
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is consciousness'
+Primary Action: ponder  (conf=0.34, certainty=SURE)
+Sure Actions: [ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_phil_001
+Lobe Context: [lobe_phil (0/3 active)]
+User Triples: None
+Node Triples: (philosophy, explores, consciousness)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected | creative request detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [User]: define integral (intensity=0.84) | [User]: what is consciousness (intensity=1.3)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.34, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_phil: base=0.335 × top=0.335 = 0.0652 [hard_votes=0]
+Time Orientation: none
+=========================================
+===MISSION_END:what is consciousness===
+===MISSION_START:im in danger===
+--> Scanning specimens & looking for dialectical relations...
+[ENGINE] 🌉  Cross-lobe cascade: 'node_surv_001' (lobe_surv) → 'node_emp_001' (lobe_emp) | seam="hazard risk in im peril" | conf=0.1
+[ENGINE] ⚡  Cascade handoff: 'node_emp_001' fired via bridge from 'node_surv_001' (conf=0.1, seam="hazard risk in im peril")
+[ENGINE] 🌉  Cascade bridge pass added 1 node(s) to expanded set.
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_surv: base=0.519 × top=0.519 = 0.1944 [hard_votes=1]
+  · lobe_emp: base=0.1 × top=0.1 = 0.0032 [hard_votes=0]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.519 step=1 | ENTRY_PENDING
+[ENGINE] 🕐  Node node_surv_001 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.514 | semantic=0.495 | relevance=0.524 | disambig=0.529 | strain=0.795 | rules=0 | adj=OFF
+
+🤖 AIML Output Scaffold:
+Here's what to do — DANGER. I must survive. When danger appears, flee to safety. Do not engage. Preserve the organism. (from the lobe_surv cave)
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'im in danger'
+Primary Action: flee  (conf=0.52, certainty=SURE)
+Sure Actions: [flee]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_surv_001
+Lobe Context: [lobe_surv (0/4 active)]
+User Triples: None
+Node Triples: (survival, triggers, danger)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | mathematical expression detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: what is consciousness (intensity=0.76)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.52, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_surv: base=0.519 × top=0.519 = 0.1944 [hard_votes=1]
+  · lobe_emp: base=0.1 × top=0.1 = 0.0032 [hard_votes=0]
+Time Orientation: none
+=========================================
+===MISSION_END:im in danger===
+===MISSION_START:i feel sad===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_emp: base=0.296 × top=0.34 = 0.063 [hard_votes=0]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.34 step=1 | ENTRY_PENDING
+  [2] mp_1 | votes=1 (sure=0 unsure=1) conf=0.251 step=2 [ENTRY_ADDITIVE] | ENTRY_PENDING
+[ENGINE] 🕐  Node node_emp_001 big-O ledger cleared (24hr reset).
+[ENGINE] 🕐  Node node_emp_002 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.498 | semantic=0.503 | relevance=0.519 | disambig=0.522 | strain=0.798 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Sit with this:  Here's the connection: sympathy responds_to sadness. so Your grief is real. Nobody should carry it alone. I see your suffering and I am present for you.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'i feel sad'
+Primary Action: comfort  (conf=0.34, certainty=SURE)
+Sure Actions: [comfort]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_emp_001
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: (empathy, responds_to, sadness)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [User]: what is consciousness (intensity=0.51)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.34, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_emp: base=0.296 × top=0.34 = 0.063 [hard_votes=0]
+Time Orientation: none
+=========================================
+
+(Grug also think these infos maybe important)
+- A thought:  It connects like this: empathy responds_to anxiety. so Anxiety is the mind reaching for futures that may never come. I am here now. Breathe. You are safe in this moment.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'i feel sad'
+Primary Action: support  (conf=0.25, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [support]
+Constraints: [None]
+Winning Node: node_emp_002
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: (empathy, responds_to, anxiety)
+Anti-Match Detected: false
+Evaluated Rules (shaping): mathematical expression detected
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_emp_002 | action=support | conf=0.25 | relations=(empathy, responds_to, anxiety)
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [User]: what is consciousness (intensity=0.51) | [User]: i feel sad (intensity=1.36)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.25, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_emp: base=0.296 × top=0.34 = 0.063 [hard_votes=0]
+Time Orientation: none
+=========================================
+===MISSION_END:i feel sad===
+===MISSION_START:i feel anxious===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_emp: base=0.378 × top=0.447 = 0.1231 [hard_votes=0]
+--> 2 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.447 step=1 | ENTRY_PENDING
+  🧠 MLP: relu | novelty=1.0 | quality=0.495 | semantic=0.497 | relevance=0.512 | disambig=0.518 | strain=0.8 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Let me think with you. Worry reaches toward futures that may never arrive. I am here in this moment. Pause. You are secure right now. because  This ties together: empathy responds_to anxiety.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'i feel anxious'
+Primary Action: support  (conf=0.45, certainty=SURE)
+Sure Actions: [support]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_emp_002
+Lobe Context: [Error retrieving lobe information]
+User Triples: None
+Node Triples: (empathy, responds_to, anxiety)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.19 eligible=9] (Recent): [User]: i feel sad (intensity=1.11) | [User]: i feel anxious (intensity=1.35)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.45, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_emp: base=0.378 × top=0.447 = 0.1231 [hard_votes=0]
+Time Orientation: none
+=========================================
+===MISSION_END:i feel anxious===
+===MISSION_START:write a poem===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 lobe_crea: base=0.788 × top=0.788 = 0.5521 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.788 step=1 | ENTRY_PENDING
+[ENGINE] 🕐  Node node_crea_001 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.513 | semantic=0.489 | relevance=0.518 | disambig=0.522 | strain=0.797 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+I craft with words. Poetry speaks what prose cannot. Let me fashion something exquisite from syllables. The link is clear: creativity produces poetry. No delay. (from the lobe_crea cave)
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'write a poem'
+Primary Action: elaborate  (conf=0.79, certainty=SURE)
+Sure Actions: [elaborate]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_crea_001
+Lobe Context: [lobe_crea (0/3 active)]
+User Triples: None
+Node Triples: (creativity, produces, poetry)
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [User]: i feel sad (intensity=0.72) | [System]: Mission "i feel sad" → primary=comfort conf=0.34 node=node_emp_001 (intensity=0.47)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 lobe_crea: base=0.788 × top=0.788 = 0.5521 [hard_votes=1]
+Time Orientation: none
+=========================================
+===MISSION_END:write a poem===
+===MISSION_START:sacred knowledge===
+--> Scanning specimens & looking for dialectical relations...
+[ORCHESTRATOR] 🎯 Lobe Curve (√base × top² = score):
+  👑 -: base=0.786 × top=0.786 = 0.5471 [hard_votes=1]
+--> 1 valid votes passed gate... compiling JIT superposition...
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] chk_1 | votes=1 (sure=1 unsure=0) conf=0.786 step=1 | ENTRY_PENDING
+[ENGINE] 🕐  Node node_unlink_001 big-O ledger cleared (24hr reset).
+  🧠 MLP: relu | novelty=1.0 | quality=0.518 | semantic=0.489 | relevance=0.516 | disambig=0.532 | strain=0.796 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+: Sacred insight lives here — permanent and inviolable. Some foundations must never be undermined.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'sacred knowledge'
+Primary Action: explain  (conf=0.79, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_unlink_001
+Lobe Context: [Unassigned nodes - no lobe context]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): greeting pattern detected | danger keyword detected
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): [user]: what is a derivative
+Fresh Memory [threshold=0.38 eligible=6] (Recent): No recent sounds
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 -: base=0.786 × top=0.786 = 0.5471 [hard_votes=1]
+Time Orientation: none
+=========================================
+===MISSION_END:sacred knowledge===
+  Activating project at `/workspace/grugbot420`
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "noun_capture"), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:7969
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "time_present_expand"), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:7969
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "time_past_expand"), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:7969
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "time_future_expand"), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:7969
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "time_auto_expand"), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:7969
+┌ Warning: loadSpecimen: skipping bad contributor vote: MethodError(String, (0.0,), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:8068
+┌ Error: [MAIN] load_specimen: failed to restore EphemeralMLP state: EphemeralMLPError("from_specimen_dict! failed to parse weights: EphemeralMLPError(\"from_specimen_dict! weight entry is not a dict\", \"parse_weights\")", "from_specimen_dict!")
+└ @ Main /workspace/grugbot420/src/Main.jl:8122
+┌ Warning: [MAIN] load_specimen: failed to set decomposer config (using defaults): MethodError(String, (Pair{String, Any}("pattern", "^(\\w+)ing\$"),), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:8183
+┌ Warning: [MAIN] action_tone_knobs: low_signal_threshold drift (code=0.5, saved=0.2)
+└ @ Main /workspace/grugbot420/src/Main.jl:8403
+┌ Warning: [MAIN] action_tone_knobs: fallback_damp_threshold drift (code=0.4, saved=0.3)
+└ @ Main /workspace/grugbot420/src/Main.jl:8406
+┌ Warning: [MAIN] action_tone_knobs: curve_jitter_envelope drift (code=0.03, saved=0.05)
+└ @ Main /workspace/grugbot420/src/Main.jl:8409
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emp': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:800
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.93 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emp': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:800
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.93 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emp': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emp': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 9 (+6 synonyms)
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.746, tone_gini=0.194
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'node_emp_001': KeyError("drop")
+└ @ Main /workspace/grugbot420/src/engine.jl:3915
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'node_emp_002': KeyError("drop")
+└ @ Main /workspace/grugbot420/src/engine.jl:3915
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:800
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:800
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.668, tone_gini=0.193
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.673, tone_gini=0.189
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.99 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'node_emp_001': KeyError("drop")
+└ @ Main /workspace/grugbot420/src/engine.jl:3915
+┌ Warning: [Engine] collect_drop_table_neighbors: lobe table lookup failed for node 'node_emp_002': KeyError("drop")
+└ @ Main /workspace/grugbot420/src/engine.jl:3915
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:800
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [FRAME=imperative/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emp': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4767
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.707, tone_gini=0.193
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.712, tone_gini=0.186
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [MAIN] coherence features computation failed (non-fatal): MethodError(get, (Node("node_math_003", "pythagorean theorem", [0.142920191880352, 0.9847871888198931], "reason^1", Dict{String, Any}("voice_register" => "plain", "noun_anchors" => Any["pythagorean", "theorem", "triangle", "hypotenuse"], "aux_triples" => Any[Dict{String, Any}("relation" => "applies_to", "object" => "right triangles", "subject" => "pythagorean theorem"), Dict{String, Any}("relation" => "formula", "object" => "a²+b²=c²", "subject" => "pythagorean theorem")], "required_relations" => Any["geometry->includes->pythagorean theorem"], "relation_weights" => Dict{String, Any}("geometry->includes->pythagorean theorem" => 1.2), "initial_strength" => 2.0, "system_prompt" => "Grug. I compute. The Pythagorean theorem states that a² + b² = c² for right triangles.", "voice_variants" => Any["The Pythagorean theorem gives a squared plus b squared equals c squared for any right-angled triangle.", "In right triangles the relationship a² + b² = c² always holds. The longest side squared equals the sum of the other two sides squared."], "frame_hints" => Any["plain", "exploratory"]), ["a squared plus b squared", "right triangle formula"], 0.0, RelationalTriple[RelationalTriple("geometry", "includes", "pythagorean theorem")], String[], Dict("geometry->includes->pythagorean theorem" => 1.2), 2.0, false, false, ["node_math_001"], false, 4, false, "", [0.1], 1.7e9, 0xc641e38a5c367e5f, false, false, false, 0.0), :is_grave, false), 0x0000000000008df9)
+└ @ Main /workspace/grugbot420/src/Main.jl:5441

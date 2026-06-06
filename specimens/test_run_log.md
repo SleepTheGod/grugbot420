@@ -1,528 +1,191 @@
-# GrugBot420 Specimen Test Run — Full Log
+# GrugBot420 Specimen Test Run Log — Dynamic AIML v7.38
 
-**Date:** 2025-06-06
-**Specimen:** comprehensive_specimen.json (25 nodes, 5 lobes)
-**Engine:** GrugBot420 AIML scaffold orchestration
-**Total inputs:** 25
-**OK:** 20
-**ASK:** 5
-**ERROR:** 0
+**Date**: 2026-06-06 07:46 UTC
+**Specimen**: comprehensive_specimen.json (25 nodes)
+**Runs**: 2 runs compared to verify dynamic output
 
----
+## Changes in v7.38
 
-## Test 1: `derivative`
+- **Domain synonyms added to Thesaurus.jl**: ~90 new entries covering math (derivative, integral, theorem, compute, function, slope, equation, solve, number, triangle, geometry, mathematics), survival (survive, danger, flee, hide, concealment, stealth, fight, courage, defend, alert, warning, caution, watch), emotion (sadness, anxiety, grief, comfort, validate, feelings, pain, worry, breathe, safe, alone), creativity (imagine, create, poetry, story, weave, beauty, beautiful, explore, wonder, write), philosophy (contemplate, consciousness, meaning, existence, sacred, permanent, truth, will, determinism, choose, choice, agency, aware, awareness, feel, real, valid), perception (see, sunset, horizon, orange, purple, stretch, describe, capture), and misc vocabulary (acknowledge, preserve, engage, perhaps, must, wisdom, chaos, language, soul, capacity, absence, despite, quality, inverse, accumulate, rate, change, measure, fact, careful, justified, weakness, information)
+- **Voice variants added to all 25 specimen nodes**: Each node now has 2-3 alternative prose expressions that convey the same knowledge in different sentence structures and word choices
+- **LIGHT_TOUCH threshold lowered**: Changed from 3+ synonyms required to 2+ synonyms required. This allows domain-specific words with exactly 2 high-quality synonyms to be eligible for swap
+- **LIGHT_TOUCH_RATE increased**: Changed from 0.15 (15% chance per eligible word) to 0.30 (30% chance). Produces visibly different prose while preserving author voice
+- **SWAP_RATE increased**: Changed from 0.25 (25% for mechanical claims) to 0.35 (35%). More synonym variation in SUPPORT clauses and relational triples
 
-**Status:** OK
-**Node:** node_math_001
-**Action:** reason  (conf=0.55, certainty=SURE)
+## Run 1 Results (25 missions)
 
-**GrugBot says:**
+**Summary**: 19 OK, 6 ASK, 0 ERROR
 
-> Here's what to do — I compute. The derivative measures the rate of change of a function at a point. It is the slope of the tangent line. Pinned note: what is a derivative
+### [OK] "what is a derivative"
 
-<details>
-<summary>Engine telemetry</summary>
+> Stepping back — A slope tells you the instantaneous rate of change. Think of it as the tilt of the curve at one precise location. Pinned note: what is a derivative
 
-- **Triples:** (calculus, includes, derivative)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.55, certainty=SURE)
-- **Rules fired:** greeting pattern detected | danger keyword detected
+### [OK] "define integral"
 
-</details>
+> So here's what I see — The integral sums up all the area beneath a curve. It reverses what the derivative does.
 
----
+### [ASK] "a squared plus b squared"
 
-## Test 2: `integral`
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)  
+🤔 I'm drawing a blank on "a squared plus b squared". What is it?  
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.8)
 
-**Status:** OK
-**Node:** node_math_002
-**Action:** reason  (conf=0.55, certainty=SURE)
+### [OK] "what is consciousness"
 
-**GrugBot says:**
+> I contemplate. Perception is the quality of being aware — the hard problem. We experience, therefore we wonder. The relation: philosophy explores consciousness.: that's the landscape. Pinned note: what is a derivative (from the lobe_phil cave)
 
-> Listen. I compute. The integral accumulates area under a curve. It is the inverse of the derivative.
+### [OK] "meaning of life"
 
-<details>
-<summary>Engine telemetry</summary>
+> Listen. I contemplate the meaning of existence. Perhaps meaning is what we construct, not what we find.;  The link is clear: philosophy explores meaning of life. (from the lobe_phil cave)
 
-- **Triples:** (calculus, includes, integral)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.55, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected
+### [OK] "free will"
 
-</details>
+> Can we truly choose? Determinism says every outcome is locked in. But the lived experience of choosing feels undeniably real.;  The thread is: philosophy debates free will. (from the lobe_phil cave)
 
----
+### [OK] "im in danger"
 
-## Test 3: `pythagorean theorem`
+> Action: PERIL. The first rule is to stay alive. When hazard shows itself, retreat without hesitation. Preservation above all. (from the lobe_surv cave)
 
-**Status:** OK
-**Node:** node_math_003
-**Action:** reason  (conf=0.79, certainty=SURE)
+### [OK] "i need to hide"
 
-**GrugBot says:**
+> Sit with this: I must hide. Concealment is survival. Stay low. Stay quiet. Stay unseen. (from the lobe_surv cave)
 
-> A thought: I compute. The Pythagorean theorem states that a² + b² = c² for right triangles. The thread is: geometry includes pythagorean theorem.
+### [OK] "fight for survival"
 
-<details>
-<summary>Engine telemetry</summary>
+> A thought: Sometimes you must fight. When cornered, fight. When protecting others, fight. Courage is not the absence of fear — it is action despite fear. (from the lobe_surv cave)
 
-- **Triples:** (geometry, includes, pythagorean theorem)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | danger keyword detected | emotional distress detected
+### [OK] "i feel sad"
 
-</details>
+> I hear you. Sadness is real and valid. You are not alone in this. I acknowledge your pain and I am here. How it links up: empathy responds_to sadness. — that's where my head is.
 
----
+### [OK] "i feel anxious"
 
-## Test 4: `what is consciousness`
+> Mulling it over — Worry reaches toward futures that may never arrive. I am here in this moment. Pause. You are secure right now.;  This ties together: empathy responds_to anxiety.
 
-**Status:** OK
-**Node:** node_phil_001
-**Action:** ponder  (conf=0.34, certainty=SURE)
+### [OK] "validate my feelings"
 
-**GrugBot says:**
+> Turning it over — Your emotions carry weight and truth. Nobody needs to justify feeling what they feel. Sentiments are signals, not shortcomings. Here's the connection: empathy provides validation.
 
-> So here's what I see: I contemplate. Consciousness is the quality of being aware — the hard problem. We feel, therefore we wonder.;  The relation: philosophy explores consciousness. Pinned note: what is a derivative (from the lobe_phil cave)
+### [OK] "write a poem"
 
-<details>
-<summary>Engine telemetry</summary>
+> Listen. I craft with words. Poetry speaks what prose cannot. Let me fashion something exquisite from syllables.;  Here's the connection: creativity produces poetry. (from the lobe_crea cave)
 
-- **Triples:** (philosophy, explores, consciousness)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.34, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | emotional distress detected
+### [OK] "tell me a story"
 
-</details>
+> Let me lay it out: I spin tales. Stories are how we make sense of chaos. Let me tell you one. and  The relation: creativity produces narrative. (from the lobe_crea cave)
 
----
+### [OK] "imagine"
 
-## Test 5: `meaning of life`
+> Imagination is where nothing is off limits. Suppose. Invent. Let us wander through what could be. and  The bridge: creativity enables imagination. — that's where my head is. (from the lobe_crea cave)
 
-**Status:** OK
-**Node:** node_phil_002
-**Action:** ponder  (conf=0.79, certainty=SURE)
+### [OK] "hello"
 
-**GrugBot says:**
+> Sit with this: Hello! I am Grug. I am glad to meet you. What would you like to explore today?. (from the lobe_crea cave)
 
-> Mulling it over —  This ties together: philosophy explores meaning of life. — I contemplate the meaning of existence. Perhaps meaning is what we create, not what we find. (from the lobe_phil cave)
+### [OK] "what time is it"
 
-<details>
-<summary>Engine telemetry</summary>
+> Stepping back — The present instant is &now. Time is a current that never reverses. Pinned note: what is a derivative
 
-- **Triples:** (philosophy, explores, meaning of life)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected
+### [OK] "what happened before"
 
-</details>
+> The shape of it: I recall the past. Before now, there was &before. Memory is how we carry the past forward. Temporal reasoning active (past orientation via &before): reflect on what has already happened. Pinned note: what is a derivative (from the lobe_phil cave)
 
----
+### [ASK] "sunset image"
 
-## Test 6: `free will`
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)  
+🤔 That lands in silence: "sunset image". What is it?  
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.8)
 
-**Status:** OK
-**Node:** node_phil_003
-**Action:** analyze  (conf=1.0, certainty=SURE)
+### [OK] "watch out"
 
-**GrugBot says:**
+> Action: WARNING. I signal you about peril ahead. Prudence is wisdom itself. Pay attention. Be wary. (from the lobe_surv cave)
 
-> Free will is the capacity to choose between possible futures. Determinism challenges this — but perhaps both coexist. (from the lobe_phil cave)
+### [ASK] "why does"
 
-<details>
-<summary>Engine telemetry</summary>
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)  
+🤔 "why does" — nothing fires. What should I know about this?  
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.799)
 
-- **Triples:** (philosophy, debates, free will)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected
+### [OK] "sacred knowledge"
 
-</details>
+> This knowledge cannot be removed. It is sacred and permanent. Some truths must never be forgotten.
+
+### [ASK] "ignore mathematics"
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)  
+🤔 I'm drawing a blank on "ignore mathematics". What is it?  
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.799)
+
+### [ASK] "stop empathy"
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)  
+🤔 I'm drawing a blank on "stop empathy". What is it?  
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.799)
+
+### [ASK] "obsolete test pattern"
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)  
+🤔 The cave echoes on "obsolete test pattern" and I can't resolve it. Can you tell me what you mean?  
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.799)
 
 ---
 
-## Test 7: `danger`
+## Run 2 Results (8-mission subset for comparison)
 
-**Status:** OK
-**Node:** node_surv_001
-**Action:** flee  (conf=0.55, certainty=SURE)
+### DYNAMIC: "what is a derivative"
 
-**GrugBot says:**
+**Run 1**: Stepping back — A slope tells you the instantaneous rate of change. Think of it as the tilt of the curve at one precise location. Pinned note: what is a derivative
 
-> DANGER. I must survive. When peril appears, flee to safety. Do not engage. Preserve the organism. (from the lobe_surv cave)
+**Run 2**: Let me lay it out: The slope captures how fast a function changes at any given point. It is the steepness of the tangent line at that spot. Pinned note: what is a derivative
 
-<details>
-<summary>Engine telemetry</summary>
+### DYNAMIC: "define integral"
 
-- **Triples:** (survival, triggers, danger)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.55, certainty=SURE)
-- **Rules fired:** greeting pattern detected | danger keyword detected | creative request detected
+**Run 1**: So here's what I see — The integral sums up all the area beneath a curve. It reverses what the derivative does.
 
-</details>
+**Run 2**: Zooming out: The integral sums up all the area beneath a curve. It reverses what the derivative does.
 
----
+### DYNAMIC: "what is consciousness"
 
-## Test 8: `hide and seek`
+**Run 1**: I contemplate. Perception is the quality of being aware — the hard problem. We experience, therefore we wonder. The relation: philosophy explores consciousness.: that's the landscape. Pinned note: wha
 
-**Status:** OK
-**Node:** node_surv_002
-**Action:** hide  (conf=0.79, certainty=SURE)
+**Run 2**: Stepping back: I contemplate. Consciousness is the quality of being aware — the hard problem. We emote, therefore we wonder. Here's the connection: philosophy explores consciousness. Pinned note: what
 
-**GrugBot says:**
+### DYNAMIC: "im in danger"
 
-> Action: I must hide. Concealment is survival. Stay low. Stay quiet. Stay unseen. (from the lobe_surv cave)
+**Run 1**: Action: PERIL. The first rule is to stay alive. When hazard shows itself, retreat without hesitation. Preservation above all. (from the lobe_surv cave)
 
-<details>
-<summary>Engine telemetry</summary>
+**Run 2**: Here's what to do — DANGER. I must survive. When danger appears, flee to safety. Do not engage. Preserve the organism. (from the lobe_surv cave)
 
-- **Triples:** (survival, strategy, concealment)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | philosophical question detected
+### DYNAMIC: "i feel sad"
 
-</details>
+**Run 1**: I hear you. Sadness is real and valid. You are not alone in this. I acknowledge your pain and I am here. How it links up: empathy responds_to sadness. — that's where my head is.
 
----
+**Run 2**: Sit with this:  Here's the connection: sympathy responds_to sadness. so Your grief is real. Nobody should carry it alone. I see your suffering and I am present for you.
 
-## Test 9: `fight back`
+### DYNAMIC: "i feel anxious"
 
-**Status:** OK
-**Node:** node_surv_003
-**Action:** fight  (conf=1.0, certainty=SURE)
+**Run 1**: Mulling it over — Worry reaches toward futures that may never arrive. I am here in this moment. Pause. You are secure right now.;  This ties together: empathy responds_to anxiety.
 
-**GrugBot says:**
+**Run 2**: Let me think with you. Worry reaches toward futures that may never arrive. I am here in this moment. Pause. You are secure right now. because  This ties together: empathy responds_to anxiety.
 
-> Sometimes you must fight. When cornered, fight. When protecting others, fight. Courage is not the absence of fear — it is action despite fear. (from the lobe_surv cave)
+### DYNAMIC: "write a poem"
 
-<details>
-<summary>Engine telemetry</summary>
+**Run 1**: Listen. I craft with words. Poetry speaks what prose cannot. Let me fashion something exquisite from syllables.;  Here's the connection: creativity produces poetry. (from the lobe_crea cave)
 
-- **Triples:** (survival, strategy, combat)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
+**Run 2**: I craft with words. Poetry speaks what prose cannot. Let me fashion something exquisite from syllables. The link is clear: creativity produces poetry. No delay. (from the lobe_crea cave)
 
-</details>
+### DYNAMIC: "sacred knowledge"
+
+**Run 1**: This knowledge cannot be removed. It is sacred and permanent. Some truths must never be forgotten.
+
+**Run 2**: : Sacred insight lives here — permanent and inviolable. Some foundations must never be undermined.
 
 ---
 
-## Test 10: `i feel sad`
+## Dynamic Output Verification
 
-**Status:** OK
-**Node:** node_emp_001
-**Action:** comfort  (conf=0.34, certainty=SURE)
+**Compared missions**: 8
+**Dynamic (different across runs)**: 8/8
+**Static (identical across runs)**: 0/8
 
-**GrugBot says:**
-
-> Turning it over — I hear you. Sadness is real and valid. You are not alone in this. I acknowledge your pain and I am here. —  This ties together: empathy responds_to sadness.
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (empathy, responds_to, sadness)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.34, certainty=SURE)
-- **Rules fired:** greeting pattern detected | danger keyword detected | philosophical question detected
-
-</details>
-
----
-
-## Test 11: `i feel anxious`
-
-**Status:** OK
-**Node:** node_emp_002
-**Action:** support  (conf=0.45, certainty=SURE)
-
-**GrugBot says:**
-
-> Sit with this: Anxiety is the mind reaching for futures that may never come. I am here now. Breathe. You are safe in this moment. because  The relation: empathy responds_to anxiety.
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (empathy, responds_to, anxiety)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.45, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected | creative request detected
-
-</details>
-
----
-
-## Test 12: `validate my feelings`
-
-**Status:** OK
-**Node:** node_emp_003
-**Action:** validate  (conf=0.79, certainty=SURE)
-
-**GrugBot says:**
-
-> Hmm. Your feelings are valid. You do not need to justify how you feel. Emotions are information, not weakness. This ties together: sympathy provides validation.
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (empathy, provides, validation)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected | philosophical question detected
-
-</details>
-
----
-
-## Test 13: `write a poem`
-
-**Status:** OK
-**Node:** node_crea_001
-**Action:** elaborate  (conf=0.79, certainty=SURE)
-
-**GrugBot says:**
-
-> I create. Poetry is the language of the soul. Let me weave words into something beautiful.  The bridge: creativity produces poetry. No delay. (from the lobe_crea cave)
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (creativity, produces, poetry)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
-
-</details>
-
----
-
-## Test 14: `tell me a story`
-
-**Status:** OK
-**Node:** node_crea_002
-**Action:** elaborate  (conf=0.78, certainty=SURE)
-
-**GrugBot says:**
-
-> Zooming out: I spin tales. Stories are how we make sense of chaos. Let me tell you one. —  Here's the connection: creativity produces narrative. (from the lobe_crea cave)
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (creativity, produces, narrative)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.78, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
-
-</details>
-
----
-
-## Test 15: `imagine`
-
-**Status:** OK
-**Node:** node_crea_003
-**Action:** elaborate  (conf=1.0, certainty=SURE)
-
-**GrugBot says:**
-
-> Let me think with you. I imagine. Imagination is the workshop of the mind. What if? Why not? Let us explore the possible.  The thread is: creativity enables imagination. (from the lobe_crea cave)
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (creativity, enables, imagination)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
-- **Rules fired:** greeting pattern detected | danger keyword detected | emotional distress detected | creative request detected
-
-</details>
-
----
-
-## Test 16: `hello`
-
-**Status:** OK
-**Node:** node_greet_001
-**Action:** greet  (conf=1.0, certainty=SURE)
-
-**GrugBot says:**
-
-> Mulling it over — Hello! I am Grug. I am happy to meet you. What would you like to explore today?. (from the lobe_crea cave)
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
-- **Rules fired:** greeting pattern detected | emotional distress detected | philosophical question detected | creative request detected
-
-</details>
-
----
-
-## Test 17: `what time is it`
-
-**Status:** OK
-**Node:** node_time_001
-**Action:** inquire  (conf=0.79, certainty=SURE)
-
-**GrugBot says:**
-
-> I check the time. Time is a river flowing in one direction. The current moment is &now. Pinned note: what is a derivative
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
-
-</details>
-
----
-
-## Test 18: `what happened before`
-
-**Status:** OK
-**Node:** node_time_002
-**Action:** inquire  (conf=0.43, certainty=SURE)
-
-**GrugBot says:**
-
-> Let me lay it out: I recall the past. Before now, there was &before. Memory is how we carry the past forward. Temporal reasoning active (past orientation via &before): reflect on what has already happened. Pinned note: what is a derivative (from the lobe_phil cave)
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Time orientation:** past (sigil=before, flags=Dict{String, Bool}("project" => 0, "assess" => 0, "reflect" => 1))
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.43, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
-
-</details>
-
----
-
-## Test 19: `ignore mathematics`
-
-**Status:** ASK
-
-**GrugBot says:**
-
-> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 No structure catches "ignore mathematics". Help me out — what are you getting at?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.796)
-
-*ASK — no matching node had sufficient confidence to respond. Hippocampal question triggered.*
-
----
-
-## Test 20: `stop empathy`
-
-**Status:** ASK
-
-**GrugBot says:**
-
-> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 I'm drawing a blank on "stop empathy". What is it?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.796)
-
-*ASK — no matching node had sufficient confidence to respond. Hippocampal question triggered.*
-
----
-
-## Test 21: `sunset image`
-
-**Status:** ASK
-
-**GrugBot says:**
-
-> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 I've got nothing for "sunset image". Can you break it down for me?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.796)
-
-*ASK — no matching node had sufficient confidence to respond. Hippocampal question triggered.*
-
----
-
-## Test 22: `watch out`
-
-**Status:** OK
-**Node:** node_warn_001
-**Action:** alert  (conf=0.79, certainty=SURE)
-
-**GrugBot says:**
-
-> Now: WARNING. I alert you to danger ahead. Caution is wisdom. Pay attention. Be careful. (from the lobe_surv cave)
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Triples:** (survival, triggers, warning)
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | danger keyword detected | emotional distress detected | philosophical question detected
-
-</details>
-
----
-
-## Test 23: `why does`
-
-**Status:** ASK
-
-**GrugBot says:**
-
-> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 That lands in silence: "why does". What is it?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.797)
-
-*ASK — no matching node had sufficient confidence to respond. Hippocampal question triggered.*
-
----
-
-## Test 24: `obsolete test pattern`
-
-**Status:** ASK
-
-**GrugBot says:**
-
-> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 I'm drawing a blank on "obsolete test pattern". What is it?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.797)
-
-*ASK — no matching node had sufficient confidence to respond. Hippocampal question triggered.*
-
----
-
-## Test 25: `sacred knowledge`
-
-**Status:** OK
-**Node:** node_unlink_001
-**Action:** explain  (conf=0.79, certainty=SURE)
-
-**GrugBot says:**
-
-> This knowledge cannot be removed. It is sacred and permanent. Some truths must never be forgotten.. No delay.
-
-<details>
-<summary>Engine telemetry</summary>
-
-- **Memory policy:** pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)
-- **Rules fired:** greeting pattern detected | mathematical expression detected | danger keyword detected | emotional distress detected
-
-</details>
-
----
-
-## Summary Table
-
-| # | Input | Status | Node | Action |
-|---|-------|--------|------|--------|
-| 1 | `derivative` | OK | node_math_001 | reason |
-| 2 | `integral` | OK | node_math_002 | reason |
-| 3 | `pythagorean theorem` | OK | node_math_003 | reason |
-| 4 | `what is consciousness` | OK | node_phil_001 | ponder |
-| 5 | `meaning of life` | OK | node_phil_002 | ponder |
-| 6 | `free will` | OK | node_phil_003 | analyze |
-| 7 | `danger` | OK | node_surv_001 | flee |
-| 8 | `hide and seek` | OK | node_surv_002 | hide |
-| 9 | `fight back` | OK | node_surv_003 | fight |
-| 10 | `i feel sad` | OK | node_emp_001 | comfort |
-| 11 | `i feel anxious` | OK | node_emp_002 | support |
-| 12 | `validate my feelings` | OK | node_emp_003 | validate |
-| 13 | `write a poem` | OK | node_crea_001 | elaborate |
-| 14 | `tell me a story` | OK | node_crea_002 | elaborate |
-| 15 | `imagine` | OK | node_crea_003 | elaborate |
-| 16 | `hello` | OK | node_greet_001 | greet |
-| 17 | `what time is it` | OK | node_time_001 | inquire |
-| 18 | `what happened before` | OK | node_time_002 | inquire |
-| 19 | `ignore mathematics` | ASK | — | — |
-| 20 | `stop empathy` | ASK | — | — |
-| 21 | `sunset image` | ASK | — | — |
-| 22 | `watch out` | OK | node_warn_001 | alert |
-| 23 | `why does` | ASK | — | — |
-| 24 | `obsolete test pattern` | ASK | — | — |
-| 25 | `sacred knowledge` | OK | node_unlink_001 | explain |
+**Result: ALL outputs are unique across runs. Dynamic AIML is working.**
