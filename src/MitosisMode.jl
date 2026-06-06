@@ -75,6 +75,7 @@ export run_mitosis!, MitosisStats, get_mitosis_log, MitosisError, get_mitosis_st
 export MITOSIS_PROBABILITY, DATA_ENERGY_MSG_SCALE, DATA_ENERGY_INTENSITY_SCALE
 export MITOSIS_GROUP_STRENGTH_FLOOR, MITOSIS_NOVELTY_COVERAGE_FLOOR
 export STRAIN_WARRANT_WEIGHT, STRAIN_WARRANT_ACTIVE_THRESHOLD  # GRUG v7.50: hippocampal strain warrant
+export LATCH_SCAN_CONFIDENCE_FLOOR, THES_LATCH_WEIGHT, LATCH_CANDIDATE_TOP_N  # GRUG v9.2: relational+thesaurus latching
 
 # ==============================================================================
 # ERROR TYPE
@@ -167,6 +168,15 @@ const MITOSIS_STRENGTH_DEFAULT  = 1.0     # Same as baseline — don't inflate m
 # Weak groups don't earn new branches. Dead groups are dead for a reason.
 const MITOSIS_GROUP_STRENGTH_FLOOR = 0.5  # avg strength must be >= 0.5 (STRENGTH_FLOOR is 0.0, STRENGTH_CAP is 10.0)
 
+# GRUG (v9.2): Relational+thesaurus-guided latching — replaces Jaccard-only
+# find_group_latch_candidates with the pattern-bind pipeline (minus votes).
+# Three gates must ALL pass for a candidate: scan confidence, relational score,
+# and vote overlap. The hard strength floor is replaced with a strength-biased
+# coinflip (p_join = avg_strength / STRENGTH_CAP).
+const LATCH_SCAN_CONFIDENCE_FLOOR = 0.60  # GRUG: Min high_res_scan confidence for latch candidate
+const THES_LATCH_WEIGHT           = 0.30  # GRUG: Thesaurus proximity bonus weight in candidate score
+const LATCH_CANDIDATE_TOP_N       = 5     # GRUG: How many top candidates to consider for random pick
+
 # GRUG (v9.1): Novelty gate — how well-covered must the input be for us to
 # consider it STALE? If the pattern overlap between the input and existing
 # node patterns exceeds this threshold, the input is NOT novel → no mitosis.
@@ -254,6 +264,77 @@ end
 # ==============================================================================
 # HELPER: Extract tokens from a string (lowercase, stripped, no stopwords)
 # ==============================================================================
+
+# ==============================================================================
+# STRENGTH-BIASED JOIN COINFLIP (v9.2)
+# ==============================================================================
+# GRUG: Replaces hard MITOSIS_GROUP_STRENGTH_FLOOR threshold with a smooth
+# probability curve. A group with avg_strength 0.5 used to be rejected outright
+# (below 0.5 floor). Now it has a 5% chance of accepting a new member.
+# A group with avg_strength 5.0 has a 50% chance. A group with avg_strength
+# 9.0 has a 90% chance. Bio-coherent: weak groups RARELY get new blood,
+# but sometimes they do. Strong groups almost always do. No hard wall.
+#
+# The old hard floor is still exported for /grow backward compat, but the
+# autonomous growth path (MitosisMode, TemporalGrowth) uses this coinflip.
+
+function _strength_biased_join_coinflip(avg_strength::Float64;
+                                         strength_cap::Float64 = 10.0)::Bool
+    # GRUG: Linear bias. p in [0, 1]. clamp for safety.
+    p = clamp(avg_strength / strength_cap, 0.0, 1.0)
+    # GRUG: Edge case — zero-strength group should never accept (p=0).
+    # But a group with even 0.1 strength gets a 1% chance. Bio-coherent:
+    # a nearly-dead tissue rarely attracts cells, but it's not impossible.
+    p <= 0.0 && return false
+    return rand() < p
+end
+
+# ==============================================================================
+# HELPER: Extract action names from an action_packet string
+# ==============================================================================
+# GRUG: Same logic as engine.jl _action_names_from_packet but MitosisMode
+# is self-contained (no `using ..GrugBot420`). Duplicated here for autonomy.
+
+function _mitosis_action_names_from_packet(packet::String)::Set{String}
+    names = Set{String}()
+    for part in split(packet, '|')
+        p = strip(part)
+        isempty(p) && continue
+        # Strip inline negatives and weight: action_name[negs]^weight -> action_name
+        m = match(r"^(.+?)\[[^\]]*\]", p)
+        if !isnothing(m)
+            name = strip(m.captures[1])
+            !isempty(name) && push!(names, name)
+        else
+            # Strip weight suffix: action_name^weight -> action_name
+            m2 = match(r"^(.+?)\^", p)
+            if !isnothing(m2)
+                name = strip(m2.captures[1])
+                !isempty(name) && push!(names, name)
+            else
+                !isempty(p) && push!(names, p)
+            end
+        end
+    end
+    return names
+end
+
+# ==============================================================================
+# HELPER: Check if action family is AIML (always singleton)
+# ==============================================================================
+# GRUG: AIML nodes are executive/template nodes managed by AIMLNodeSystem.
+# They don't participate in group latching — they're always singletons.
+# Detected via action_family_name == "ACTION_AIML" or json_data["is_aiml"].
+# This is separate from is_antimatch_node (which is a Node struct field).
+# AIML growth is handled by stochastic_aiml_growth_fn, not group latching.
+
+function _is_singleton_action_family(action_family_name::String, json_data::Dict{String,Any})::Bool
+    # GRUG: AIML action family = always singleton
+    action_family_name == "ACTION_AIML" && return true
+    # GRUG: Explicit AIML flag in json_data
+    get(json_data, "is_aiml", false) === true && return true
+    return false
+end
 
 const STOPWORDS = Set([
     "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
@@ -1047,12 +1128,27 @@ function run_mitosis!(;
     prediction_fn = nothing,           # () -> Union{Nothing, PredictionResult}
     last_user_text_fn = nothing,       # () -> Union{Nothing, String}
     # GRUG (v9): Group-based latching — new nodes join groups, not individual nodes
+    # NOTE: group_latch_fn is kept for /grow backward compat but NOT used in
+    # the autonomous growth path anymore (v9.2 replaces it with the
+    # relational+thesaurus pipeline via the new kwargs below).
     group_latch_fn = nothing,          # (pattern; node_map, node_lock) -> Vector{GroupLatchCandidate}
     add_to_group_fn = nothing,         # (group, node_id) -> Bool
     link_to_group_member_fn = nothing, # (new_node, group) -> Union{String, Nothing}
     # GRUG v7.50: Hippocampal strain — endocrine bridge from EphemeralMLP
     strain_energy_fn::Union{Function, Nothing} = nothing,            # () -> Float64
     hippocampal_warrant_fn::Union{Function, Nothing} = nothing,     # () -> Bool
+    # GRUG (v9.2): Relational+thesaurus-guided latching pipeline — pattern-bind minus votes.
+    # These replace the old group_latch_fn call in the autonomous growth path.
+    # When all four are provided, the new pipeline is used; when absent,
+    # the old group_latch_fn path is preserved for backward compat.
+    scan_latch_candidates_fn = nothing,    # (pattern, action_packet; node_map, node_lock, lobe_id, thesaurus_fn) -> Vector{LatchCandidate}
+    register_group_fn = nothing,           # (node) -> NodeGroup — creates singleton group
+    group_avg_strength_fn = nothing,       # (group; node_map, node_lock) -> Float64
+    group_for_fn = nothing,                # (node_id) -> Union{NodeGroup, Nothing} — lookup group by member
+    sigil_promote_fn = nothing,            # (text) -> String — SigilPromoter canonicalization
+    extract_triples_fn = nothing,           # (text) -> Vector{RelationalTriple} — relational extraction
+    evaluate_dialectics_fn = nothing,       # (user_triples, node_triples, req_rels, rel_weights) -> (Float64, Bool)
+    words_to_signal_fn = nothing,           # (text) -> Vector{Float64} — float-hash signal for scanner
 )::MitosisStats
     t0 = time()
 
@@ -1351,35 +1447,212 @@ function run_mitosis!(;
             # end
         end
 
-        # ── GROUP-BASED LATCHING (v9.1 — ANALOG COHERENCE) ──────────────────
-        # GRUG: New mitosis node picks a group from the candidate list at
-        # RANDOM. No ranking, no "pick best", no coinflip-then-fallback.
-        # The candidate list IS the probability distribution — analog
-        # coherence encoded as digital selection. Groups with higher
-        # avg_strength naturally occupy more of the selection space by
-        # being more numerous or more varied. The floor filters who gets
-        # INTO the list; random pick from the filtered list is the decision.
-        # Events go where they are best used. The list pre-computes averages.
-        # Within the group, the node attaches to a member that passes BOTH:
-        #   1. Pattern similarity threshold (Jaccard token overlap > 0.15)
-        #   2. Vote (action_packet) similarity threshold (shared action names > 0.25)
-        # If no candidate passes the strength floor, or no member passes
-        # both thresholds, the node is planted but remains unattached
-        # (free agent until a future cycle organizes it via Phagy).
-        if group_latch_fn !== nothing && add_to_group_fn !== nothing
+        # ── GROUP-BASED LATCHING (v9.2 — RELATIONAL+THESAURUS COHERENCE) ────
+        # GRUG: New mitosis node finds a group using the relational+thesaurus
+        # pipeline (pattern-bind minus votes). Three gates must ALL pass:
+        #   1. scan_conf > LATCH_SCAN_CONFIDENCE_FLOOR  (float-hash pattern match)
+        #   2. rel_score >= 0                            (relational triple overlap, -9999.0 = hard reject)
+        #   3. vote_overlap > MITOSIS_VOTE_SIM_FLOOR     (action_packet name overlap)
+        # Hard strength floor is REPLACED by strength-biased coinflip:
+        #   p_join = avg_strength / STRENGTH_CAP
+        # AIML nodes and antimatch nodes are ALWAYS singletons — no latching.
+        # Match nodes and time nodes participate in the full pipeline.
+        # Singletons with <4 connected nodes get NOCHAT label (ChatterMode-ineligible).
+        # NO AUTO GROWTH — stochastic gate and AIML growth remain disabled.
+
+        # GRUG: First — node type branch. AIML and antimatch = always singleton.
+        _is_antimatch = false
+        _is_singleton_type = false
+        try
+            new_node_obj = lock(node_lock) do
+                get(node_map, new_id, nothing)
+            end
+            if new_node_obj !== nothing
+                _is_antimatch = new_node_obj.is_antimatch_node
+                _is_singleton_type = _is_singleton_action_family(action_family_name, json_data)
+            end
+        catch
+            # GRUG: Can't read node? Assume non-singleton, try latching.
+            # A read failure shouldn't prevent group assignment.
+        end
+
+        if _is_antimatch || _is_singleton_type
+            # ── ANTIMATCH/AIML: ALWAYS SINGLETON ──────────────────────────
+            # GRUG: Antimatch nodes drain confidence, they don't join groups.
+            # AIML nodes are executive templates managed by AIMLNodeSystem.
+            # Both go straight to singleton group. No chatter. No latching.
+            try
+                if register_group_fn !== nothing
+                    new_node_obj = lock(node_lock) do
+                        get(node_map, new_id, nothing)
+                    end
+                    if new_node_obj !== nothing
+                        grp = register_group_fn(new_node_obj)
+                        if grp !== nothing
+                            latched_group_id = grp.id
+                        end
+                    end
+                end
+            catch e
+                # GRUG: Singleton registration failure is not fatal — node still exists.
+                # It just won't have a group yet. Phagy may assign one later.
+                latched_group_id = ""
+            end
+
+        elseif scan_latch_candidates_fn !== nothing && add_to_group_fn !== nothing
+            # ── MATCH/TIME: RELATIONAL+THESAURUS PIPELINE (v9.2) ───────────
+            # GRUG: The new pipeline. Canonicalize pattern → extract relational
+            # triples → scan candidate nodes with high_res_scan → evaluate
+            # relational dialectics → thesaurus bonus → three-gate filter →
+            # rank by composite score → random from top-N → strength-biased
+            # coinflip → join or singleton+NOCHAT. NO VOTE ACTIVATION.
+            try
+                candidates = scan_latch_candidates_fn(
+                    pattern, action_packet;
+                    node_map=node_map,
+                    node_lock=node_lock,
+                    lobe_id=lobe_hint,
+                    thesaurus_fn=thesaurus_word_similarity,
+                    # GRUG: Pass the engine functions for the pipeline.
+                    # When these are nothing, the scan function falls back
+                    # to simpler checks (still better than Jaccard-only).
+                    sigil_promote_fn=sigil_promote_fn,
+                    extract_triples_fn=extract_triples_fn,
+                    evaluate_dialectics_fn=evaluate_dialectics_fn,
+                    words_to_signal_fn=words_to_signal_fn,
+                )
+
+                if !isempty(candidates)
+                    # GRUG: Pick from top-N candidates by score.
+                    # Random within top-N = analog coherence, not deterministic best.
+                    n_pick = min(LATCH_CANDIDATE_TOP_N, length(candidates))
+                    chosen = candidates[rand(1:n_pick)]
+                    target_group = chosen.group
+
+                    # GRUG: Strength-biased coinflip replaces hard floor.
+                    avg_str = if group_avg_strength_fn !== nothing
+                        group_avg_strength_fn(target_group; node_map=node_map, node_lock=node_lock)
+                    else
+                        # GRUG: Fallback — use pre-computed avg_strength from candidate.
+                        try
+                            chosen.avg_strength
+                        catch
+                            0.0
+                        end
+                    end
+
+                    if _strength_biased_join_coinflip(avg_str)
+                        # ── JOIN GROUP ──────────────────────────────────────
+                        joined = add_to_group_fn(target_group, new_id)
+                        if joined
+                            latched_group_id = target_group.id
+
+                            # GRUG: Link to a related member within the group.
+                            # Uses existing link_to_group_member which checks
+                            # pattern Jaccard + vote overlap thresholds.
+                            if link_to_group_member_fn !== nothing
+                                try
+                                    new_node_obj = lock(node_lock) do
+                                        get(node_map, new_id, nothing)
+                                    end
+                                    if new_node_obj !== nothing
+                                        linked_id = link_to_group_member_fn(new_node_obj, target_group)
+                                        if linked_id !== nothing
+                                            latched_to_id = linked_id
+                                        end
+                                    end
+                                catch e
+                                    # GRUG: Link failure is not fatal — node is in the group.
+                                    # Missing a neighbor link just means it's not directly
+                                    # connected to a member yet. Phagy can fix this later.
+                                end
+                            end
+                        end
+                    else
+                        # ── COINFLIP LOST: SINGLETON + NOCHAT ───────────────
+                        # GRUG: The group wasn't strong enough to earn this node.
+                        # Found a new singleton group instead. NOCHAT if <4 neighbors.
+                        try
+                            if register_group_fn !== nothing
+                                new_node_obj = lock(node_lock) do
+                                    get(node_map, new_id, nothing)
+                                end
+                                if new_node_obj !== nothing
+                                    grp = register_group_fn(new_node_obj)
+                                    if grp !== nothing
+                                        latched_group_id = grp.id
+                                        # GRUG: NOCHAT rule — singleton groups with <4 connected
+                                        # nodes are invisible to ChatterMode. Prevents whacky remixes
+                                        # from under-populated groups. Graduate out at 4+ nodes.
+                                        if length(new_node_obj.neighbor_ids) < 4
+                                            try
+                                                # GRUG: Tag the group's json_data if it has it,
+                                                # or use a dedicated NOCHAT set in engine.jl.
+                                                # For now: mark in the group's chatter_count = -1
+                                                # as a NOCHAT sentinel. ChatterMode checks this.
+                                                # TODO: proper NOCHAT field on NodeGroup (Phase 5).
+                                                grp.chatter_count = -1
+                                            catch
+                                                # GRUG: Can't mark NOCHAT? Not fatal. The group
+                                                # just might get chattered too early. Not ideal
+                                                # but not catastrophic.
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        catch e
+                            # GRUG: Singleton registration failure — node is free agent.
+                            latched_group_id = ""
+                        end
+                    end
+                else
+                    # ── NO CANDIDATES: SINGLETON + NOCHAT ────────────────────
+                    # GRUG: No group passed the three-gate filter. That's fine —
+                    # the node founds a new singleton group. If it grows later,
+                    # great. If not, Phagy may merge it.
+                    try
+                        if register_group_fn !== nothing
+                            new_node_obj = lock(node_lock) do
+                                get(node_map, new_id, nothing)
+                            end
+                            if new_node_obj !== nothing
+                                grp = register_group_fn(new_node_obj)
+                                if grp !== nothing
+                                    latched_group_id = grp.id
+                                    # GRUG: NOCHAT — same rule as coinflip-lost path.
+                                    if length(new_node_obj.neighbor_ids) < 4
+                                        try
+                                            grp.chatter_count = -1
+                                        catch; end
+                                    end
+                                end
+                            end
+                        end
+                    catch e
+                        latched_group_id = ""
+                    end
+                end
+            catch e
+                # GRUG: Pipeline failure is not fatal — node is still planted.
+                # Every step has its own try/catch; this catches unexpected
+                # errors in the pipeline dispatch itself.
+                latched_to_id = ""
+                latched_group_id = ""
+            end
+
+        elseif group_latch_fn !== nothing && add_to_group_fn !== nothing
+            # ── FALLBACK: OLD JACCARD-ONLY PATH (backward compat) ───────────
+            # GRUG: When scan_latch_candidates_fn is not provided (e.g. /grow
+            # command or old caller), use the original Jaccard-based group
+            # latching with the hard strength floor. No changes to this path.
             try
                 candidates = group_latch_fn(pattern; node_map=node_map, node_lock=node_lock)
 
                 if !isempty(candidates)
-                    # GRUG: Filter by group strength floor — only groups
-                    # with adequate avg_strength enter the selection pool.
                     eligible = filter(c -> c.avg_strength >= MITOSIS_GROUP_STRENGTH_FLOOR, candidates)
 
                     if !isempty(eligible)
-                        # GRUG: Pick one at random from the eligible list.
-                        # No ranking, no deterministic "best". The list IS
-                        # the distribution. Random selection = analog coherence
-                        # expressed as a digital event.
                         chosen = eligible[rand(1:length(eligible))]
                         target_group = chosen.group
 
@@ -1387,8 +1660,6 @@ function run_mitosis!(;
                         if joined
                             latched_group_id = target_group.id
 
-                            # GRUG: Find a member within the group that passes
-                            # pattern AND vote similarity thresholds. Link to it.
                             if link_to_group_member_fn !== nothing
                                 new_node_obj = lock(node_lock) do
                                     get(node_map, new_id, nothing)
@@ -1402,11 +1673,8 @@ function run_mitosis!(;
                             end
                         end
                     end
-                    # GRUG: else no eligible group passes strength floor —
-                    # node remains free agent
                 end
             catch e
-                # GRUG: Group latch failure is not fatal — node is still planted.
                 latched_to_id = ""
                 latched_group_id = ""
             end
@@ -1415,12 +1683,33 @@ function run_mitosis!(;
         # GRUG: Set cooldown AFTER successful growth
         _set_cooldown()
 
-        notes = if !isempty(latched_to_id)
-            "Mitosis: branched '$pattern' -> $new_id in $lobe_hint [$(action_family_name)], group->$latched_group_id, linked->$latched_to_id (warrant=$warrant from $source)"
-        elseif !isempty(latched_group_id)
-            "Mitosis: branched '$pattern' -> $new_id in $lobe_hint [$(action_family_name)], group->$latched_group_id, no link target (warrant=$warrant from $source)"
+        # GRUG (v9.2): Build notes with node type and NOCHAT info.
+        _type_tag = if _is_antimatch
+            "antimatch:singleton"
+        elseif _is_singleton_type
+            "aiml:singleton"
         else
-            "Mitosis: branched '$pattern' -> $new_id in $lobe_hint [$(action_family_name)], free agent (warrant=$warrant from $source)"
+            "match"
+        end
+        _nochatter_tag = ""
+        if !isempty(latched_group_id) && isempty(latched_to_id)
+            # GRUG: In a group but not linked — check NOCHAT sentinel
+            try
+                if group_for_fn !== nothing
+                    grp = group_for_fn(new_id)
+                    if grp !== nothing && grp.chatter_count == -1
+                        _nochatter_tag = " [NOCHAT]"
+                    end
+                end
+            catch; end
+        end
+
+        notes = if !isempty(latched_to_id)
+            "Mitosis: branched '$pattern' -> $new_id in $lobe_hint [$(action_family_name):$(_type_tag)], group->$latched_group_id, linked->$latched_to_id (warrant=$warrant from $source)"
+        elseif !isempty(latched_group_id)
+            "Mitosis: branched '$pattern' -> $new_id in $lobe_hint [$(action_family_name):$(_type_tag)], group->$latched_group_id$(_nochatter_tag), no link target (warrant=$warrant from $source)"
+        else
+            "Mitosis: branched '$pattern' -> $new_id in $lobe_hint [$(action_family_name):$(_type_tag)], free agent (warrant=$warrant from $source)"
         end
 
         stats = MitosisStats(source, new_id, pattern, lobe_hint, warrant,

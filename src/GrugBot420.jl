@@ -358,8 +358,9 @@ export run_mitosis!, MitosisStats, MitosisError, get_mitosis_log
 export get_mitosis_status_summary
 export MITOSIS_PROBABILITY, MIN_POPULATION_GATE, MAX_POPULATION_CAP
 export MITOSIS_COOLDOWN_CYCLES, MIN_WARRANT_THRESHOLD
-export GroupLatchCandidate, group_avg_strength, find_group_latch_candidates
+export GroupLatchCandidate, LatchCandidate, group_avg_strength, find_group_latch_candidates, _scan_latch_candidates
 export MITOSIS_PATTERN_SIM_FLOOR, MITOSIS_VOTE_SIM_FLOOR
+export LATCH_SCAN_CONFIDENCE_FLOOR, THES_LATCH_WEIGHT, LATCH_CANDIDATE_TOP_N
 
 # GRUG: RelationalGovernance exports — auto-attach from co-activation intensity.
 # Hebbian learning at the topology level: nodes that fire together wire together.

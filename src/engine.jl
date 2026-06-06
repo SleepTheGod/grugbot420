@@ -1851,6 +1851,12 @@ and how it acts (vote).
 const MITOSIS_PATTERN_SIM_FLOOR = 0.15   # GRUG: Min pattern Jaccard for group member link
 const MITOSIS_VOTE_SIM_FLOOR   = 0.25   # GRUG: Min vote overlap for group member link
 
+# GRUG (v9.2): Relational+thesaurus-guided latching — pattern-bind minus votes.
+# Used by _scan_latch_candidates() for the autonomous growth path.
+const LATCH_SCAN_CONFIDENCE_FLOOR = 0.60  # GRUG: Min high_res_scan confidence for latch candidate
+const THES_LATCH_WEIGHT           = 0.30  # GRUG: Thesaurus proximity bonus weight in candidate score
+const LATCH_CANDIDATE_TOP_N       = 5     # GRUG: How many top candidates to consider
+
 function _action_names_from_packet(packet::String)::Set{String}
     names = Set{String}()
     for part in split(packet, '|')
@@ -1934,6 +1940,331 @@ function link_to_group_member(new_node::Node, group::NodeGroup)::Union{String, N
     end
 
     return nothing
+end
+
+# ==============================================================================
+# RELATIONAL+THESAURUS-GUIDED LATCH SCAN (v9.2 — pattern-bind minus votes)
+# ==============================================================================
+# GRUG: This replaces find_group_latch_candidates() in the autonomous growth
+# path. Instead of Jaccard token overlap on group centroids, it uses the full
+# pattern-bind pipeline: SigilPromoter canonicalization → relational triple
+# extraction → high_res_scan confidence → evaluate_relational_dialectics →
+# thesaurus proximity bonus → action_packet vote overlap gate.
+#
+# Three gates must ALL pass for a candidate node:
+#   1. scan_conf > LATCH_SCAN_CONFIDENCE_FLOOR   (float-hash pattern match)
+#   2. rel_score >= 0                             (relational overlap, -9999.0 = hard reject)
+#   3. vote_overlap > MITOSIS_VOTE_SIM_FLOOR      (action_packet name overlap)
+#
+# Candidate score = scan_conf + rel_score + thes_bonus
+# NO VOTE ACTIVATION — candidates are never fired, never enter VoteOrchestrator.
+#
+# Only non-grave, non-UNLINKABLE, non-image, non-antimatch nodes in groups
+# qualify. Time nodes and match nodes participate. Batch size limited to 1000
+# (same as ACTIVE_FIRE_CAP) to keep scan bounded on large specimens.
+
+# GRUG: Latch candidate struct for the relational+thesaurus pipeline.
+# Carries more signal than the old GroupLatchCandidate (which only had
+# similarity_score + avg_strength). This one carries the composite score
+# and all three gate results for debug visibility.
+struct LatchCandidate
+    node_id::String                     # GRUG: The candidate node's ID
+    group::NodeGroup                    # GRUG: The group this node belongs to
+    scan_conf::Float64                  # GRUG: high_res_scan confidence (gate 1)
+    rel_score::Float64                  # GRUG: evaluate_relational_dialectics score (gate 2)
+    vote_overlap::Float64               # GRUG: action_packet name overlap (gate 3)
+    thes_bonus::Float64                 # GRUG: thesaurus proximity bonus
+    composite_score::Float64            # GRUG: scan_conf + rel_score + thes_bonus
+    avg_strength::Float64               # GRUG: pre-computed group avg strength
+end
+
+"""
+    _scan_latch_candidates(pattern, action_packet; kwargs...) -> Vector{LatchCandidate}
+
+GRUG: Find candidate nodes for group latching using the relational+thesaurus
+pipeline. This is the pattern-bind phase minus vote activation. Returns scored
+candidates sorted by composite_score (descending). Caller picks from top-N.
+
+When pipeline functions (sigil_promote_fn, extract_triples_fn, etc.) are not
+provided, falls back to simpler checks — still better than Jaccard-only.
+"""
+function _scan_latch_candidates(
+    pattern::String,
+    action_packet::String;
+    node_map,
+    node_lock,
+    lobe_id::String = "",
+    thesaurus_fn::Union{Function, Nothing} = nothing,
+    sigil_promote_fn::Union{Function, Nothing} = nothing,
+    extract_triples_fn::Union{Function, Nothing} = nothing,
+    evaluate_dialectics_fn::Union{Function, Nothing} = nothing,
+    words_to_signal_fn::Union{Function, Nothing} = nothing,
+    batch_size::Int = 1000,
+)::Vector{LatchCandidate}
+    candidates = LatchCandidate[]
+
+    # GRUG: Step 1 — Canonicalize the pattern via SigilPromoter if available.
+    # Thesaurus canonicalization rewrites surface variants ("two plus two" → "2 + 2")
+    # so a new node with pattern "calculate sum" can match "compute addition".
+    canonical_pattern = pattern
+    if sigil_promote_fn !== nothing
+        try
+            promoted = sigil_promote_fn(pattern)
+            # GRUG: promote_input returns (rewritten, bindings). We just need the text.
+            if isa(promoted, Tuple) && length(promoted) >= 1 && !isempty(promoted[1])
+                canonical_pattern = String(promoted[1])
+            elseif isa(promoted, AbstractString) && !isempty(promoted)
+                canonical_pattern = String(promoted)
+            end
+        catch
+            # GRUG: SigilPromoter failure = use raw pattern. Not fatal.
+        end
+    end
+
+    # GRUG: Step 2 — Extract relational triples from the canonical pattern.
+    # These (subject, relation, object) triples are compared against each
+    # candidate node's relational_patterns via evaluate_relational_dialectics.
+    new_triples = if extract_triples_fn !== nothing
+        try
+            extract_triples_fn(canonical_pattern)
+        catch
+            # GRUG: Triple extraction failure = empty triples. Pipeline continues
+            # without relational gating — relies on scan_conf + vote_overlap only.
+            []
+        end
+    else
+        []
+    end
+
+    # GRUG: Step 3 — Build the new node's float-hash signal for pattern scanning.
+    # high_res_scan needs a Vector{Float64} target signal.
+    new_signal = if words_to_signal_fn !== nothing
+        try
+            words_to_signal_fn(canonical_pattern)
+        catch
+            Float64[]
+        end
+    else
+        Float64[]
+    end
+
+    # GRUG: Extract action names from the new node's action_packet for vote overlap.
+    new_action_names = _action_names_from_packet(action_packet)
+
+    # GRUG: Step 4 — Scan candidate nodes. Batch-limited.
+    # Collect nodes that are: not grave, not UNLINKABLE, not image, not antimatch,
+    # in a group, and (optionally) in the same lobe or connected lobes.
+    # GRUG: Three-phase lock strategy to avoid deadlock AND avoid reading
+    # NODE_TO_GROUP under the wrong lock. NODE_TO_GROUP is written under
+    # GROUP_LOCK, so we must read it under GROUP_LOCK too.
+    #
+    # Phase 1 (node_lock): Collect candidate node IDs and hard-filter flags.
+    #   No NODE_TO_GROUP access here — just node_map reads.
+    # Phase 2 (GROUP_LOCK): Look up NODE_TO_GROUP + GROUP_MAP, filter to
+    #   groups with room. Returns (node_id, group) pairs.
+    # Phase 3 (node_lock): Fetch actual node objects for scoring.
+    _candidate_nids = lock(node_lock) do
+        nids = String[]
+        for node in values(node_map)
+            # GRUG: Hard filters — these never participate in latching
+            node.is_grave && continue
+            node.is_unlinkable && continue
+            node.is_image_node && continue
+            node.is_antimatch_node && continue
+            push!(nids, node.id)
+            length(nids) >= batch_size && break
+        end
+        return nids
+    end
+
+    # GRUG: Phase 2 — under GROUP_LOCK, look up group membership + room.
+    _eligible_pairs = lock(GROUP_LOCK) do
+        eligible = Tuple{String, NodeGroup}[]  # (node_id, group)
+        for nid in _candidate_nids
+            gid = get(NODE_TO_GROUP, nid, nothing)
+            isnothing(gid) && continue
+            grp = get(GROUP_MAP, gid, nothing)
+            isnothing(grp) && continue
+            if length(grp.members) >= grp.max_occupancy && !grp.has_grave_slot
+                continue
+            end
+            push!(eligible, (nid, grp))
+        end
+        return eligible
+    end
+
+    # GRUG: Phase 3 — back under node_lock, fetch the actual node objects.
+    candidate_nodes = lock(node_lock) do
+        result = Tuple{Any, Any}[]  # (node, group)
+        for (nid, grp) in _eligible_pairs
+            node = get(node_map, nid, nothing)
+            isnothing(node) && continue
+            push!(result, (node, grp))
+        end
+        return result
+    end
+
+    if isempty(candidate_nodes)
+        return candidates
+    end
+
+    # GRUG: Step 5 — Score each candidate through the three-gate pipeline.
+    for (node, grp) in candidate_nodes
+        try
+            # ── GATE 1: Pattern scan confidence ────────────────────────────
+            scan_conf = 0.0
+            if !isempty(new_signal) && words_to_signal_fn !== nothing
+                try
+                    node_signal = words_to_signal_fn(node.pattern)
+                    if !isempty(node_signal) && !isempty(new_signal)
+                        # GRUG: high_res_scan needs target >= pattern length.
+                        # The longer signal is the target; the shorter is the pattern.
+                        if length(node_signal) >= length(new_signal) && length(new_signal) >= 2
+                            try
+                                # GRUG: high_res_scan throws PatternNotFoundError when no match.
+                                # We catch that and treat it as scan_conf = 0 (below threshold).
+                                (_, conf) = PatternScanner.high_res_scan(
+                                    node_signal, new_signal;
+                                    tolerance=0.05, threshold=LATCH_SCAN_CONFIDENCE_FLOOR
+                                )
+                                scan_conf = conf
+                            catch
+                                # GRUG: PatternNotFoundError or other scan error = no match.
+                                # Fall back to token overlap as a cheaper check.
+                                scan_conf = _token_overlap_similarity(canonical_pattern, node.pattern)
+                            end
+                        elseif length(new_signal) >= length(node_signal) && length(node_signal) >= 2
+                            try
+                                # GRUG: Reversed — new node signal is longer, it's the target.
+                                (_, conf) = PatternScanner.high_res_scan(
+                                    new_signal, node_signal;
+                                    tolerance=0.05, threshold=LATCH_SCAN_CONFIDENCE_FLOOR
+                                )
+                                scan_conf = conf
+                            catch
+                                scan_conf = _token_overlap_similarity(canonical_pattern, node.pattern)
+                            end
+                        else
+                            # GRUG: Signal too short for high_res_scan. Use token overlap.
+                            scan_conf = _token_overlap_similarity(canonical_pattern, node.pattern)
+                        end
+                    else
+                        scan_conf = _token_overlap_similarity(canonical_pattern, node.pattern)
+                    end
+                catch
+                    # GRUG: Signal computation failed. Use token overlap fallback.
+                    scan_conf = _token_overlap_similarity(canonical_pattern, node.pattern)
+                end
+            else
+                # GRUG: No signal function available. Use token overlap.
+                scan_conf = _token_overlap_similarity(canonical_pattern, node.pattern)
+            end
+
+            # GRUG: Gate 1 check — scan confidence must exceed floor.
+            if scan_conf < LATCH_SCAN_CONFIDENCE_FLOOR
+                continue
+            end
+
+            # ── GATE 2: Relational dialectics ──────────────────────────────
+            rel_score = 0.0
+            if evaluate_dialectics_fn !== nothing && !isempty(new_triples)
+                try
+                    (score, is_anti) = evaluate_dialectics_fn(
+                        new_triples,
+                        node.relational_patterns,
+                        node.required_relations,
+                        node.relation_weights
+                    )
+                    # GRUG: -9999.0 sentinel = hard reject (missing required relation).
+                    # is_anti = true = antimatch detected (inverse subject/object).
+                    if score == -9999.0 || is_anti
+                        continue  # GRUG: Hard reject — skip this candidate entirely.
+                    end
+                    rel_score = score
+                catch
+                    # GRUG: Dialectics evaluation failed. Neutral score (0.0).
+                    # Pipeline continues with scan_conf + vote_overlap only.
+                    rel_score = 0.0
+                end
+            end
+
+            # GRUG: Gate 2 check — rel_score must be >= 0 (not hard-rejected).
+            # (Already handled by the continue above for -9999.0 and antimatch.)
+            if rel_score < 0.0
+                continue
+            end
+
+            # ── GATE 3: Vote (action_packet) overlap ───────────────────────
+            vote_overlap = 0.0
+            if !isempty(new_action_names)
+                member_actions = _action_names_from_packet(node.action_packet)
+                if !isempty(member_actions)
+                    shared = length(intersect(new_action_names, member_actions))
+                    total = length(union(new_action_names, member_actions))
+                    vote_overlap = total > 0 ? Float64(shared) / Float64(total) : 0.0
+                end
+            end
+
+            # GRUG: Gate 3 check — vote overlap must exceed floor.
+            if vote_overlap < MITOSIS_VOTE_SIM_FLOOR
+                continue
+            end
+
+            # ── THESAURUS PROXIMITY BONUS ──────────────────────────────────
+            # GRUG: Near-synonyms expand reach beyond exact token match.
+            # "calculate" is close to "compute" in thesaurus space.
+            thes_bonus = 0.0
+            if thesaurus_fn !== nothing
+                try
+                    pat_tokens = split(lowercase(strip(canonical_pattern)))
+                    node_tokens = split(lowercase(strip(node.pattern)))
+                    best_thes = 0.0
+                    for pt in pat_tokens
+                        for nt in node_tokens
+                            try
+                                sim = thesaurus_fn(String(pt), String(nt))
+                                if sim > best_thes
+                                    best_thes = sim
+                                end
+                            catch; end
+                            # GRUG: Early exit if we already have a strong match
+                            best_thes >= 0.8 && break
+                        end
+                        best_thes >= 0.8 && break
+                    end
+                    thes_bonus = best_thes * THES_LATCH_WEIGHT
+                catch
+                    # GRUG: Thesaurus failure = no bonus. Not fatal.
+                end
+            end
+
+            # ── COMPOSITE SCORE ─────────────────────────────────────────────
+            composite = scan_conf + rel_score + thes_bonus
+
+            # GRUG: Grave-slot boost — group with a vacancy gets a bonus
+            # because a new node fills a meaningful gap.
+            if grp.has_grave_slot
+                composite += 0.5
+            end
+
+            # GRUG: Pre-compute avg_strength for the caller's coinflip.
+            avg_str = group_avg_strength(grp; node_map=node_map, node_lock=node_lock)
+
+            push!(candidates, LatchCandidate(
+                node.id, grp, scan_conf, rel_score, vote_overlap,
+                thes_bonus, composite, avg_str
+            ))
+        catch
+            # GRUG: Per-candidate failure doesn't kill the whole scan.
+            # Skip this node and continue with the rest.
+            continue
+        end
+    end
+
+    # GRUG: Sort by composite score descending. Caller picks from top-N.
+    sort!(candidates, by = c -> -c.composite_score)
+
+    return candidates
 end
 
 """
