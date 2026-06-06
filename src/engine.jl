@@ -4707,7 +4707,7 @@ function scan_and_expand(input_text::String;
     expanded = copy(primary_results)
 
     user_triples = extract_relational_triples(input_text)
-    max_primary_conf = maximum(r[2] for r in primary_results)
+    max_primary_conf = isempty(primary_results) ? 0.0 : maximum(r[2] for r in primary_results)
 
     # ── PASS 1: Drop-table expansion (same lobe, 80% confidence discount) ──────
     for (id, conf, antimatch, u_trips, n_trips, ichunks) in primary_results
