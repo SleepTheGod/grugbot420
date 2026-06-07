@@ -1565,6 +1565,7 @@ const ATTACHMENT_LOCK = BRIDGE_LOCK
 #   See save_specimen / load_specimen in Main.jl.
 
 const GROUP_MAX_OCCUPANCY = 32  # GRUG: Max members per group. New nodes can't join full groups.
+const NOCHAT_GRADUATE_MIN_NEIGHBORS = 4  # GRUG v7.39: Min connected members for NOCHAT graduation. Groups with <4 connected members are invisible to ChatterMode to prevent whacky remixes on under-populated groups.
 
 mutable struct NodeGroup
     id::String                       # GRUG: Stable group id ("group_0", "group_1", ...)
@@ -1581,16 +1582,24 @@ mutable struct NodeGroup
     is_time_node_group::Bool         # GRUG v7.56a: True when seed node is a time node. Time nodes
                                      #       can ONLY pair into groups with other time nodes. Non-time
                                      #       nodes can only join non-time-node groups. Pure label gate.
+    is_chatter_eligible::Bool        # GRUG v7.39: False = NOCHAT — group is invisible to ChatterMode.
+                                     #       Singleton groups with <4 connected members start as NOCHAT
+                                     #       to prevent whacky remixes on under-populated groups.
+                                     #       Automatically graduates to true when group reaches 4+
+                                     #       connected members (checked in add_to_group!). Replaces
+                                     #       the old chatter_count=-1 sentinel hack which was fragile
+                                     #       and never enforced.
 end
 
 # GRUG: Backwards-friendly constructor. Most callers only know id+seed.
 # Calls the default inner constructor (9 positional fields) provided by Julia.
-NodeGroup(id::String, seed_node_id::String, centroid_pattern::String; is_time_node_group::Bool=false) =
-    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, GROUP_MAX_OCCUPANCY, is_time_node_group)
+NodeGroup(id::String, seed_node_id::String, centroid_pattern::String; is_time_node_group::Bool=false, is_chatter_eligible::Bool=true) =
+    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, GROUP_MAX_OCCUPANCY, is_time_node_group, is_chatter_eligible)
 
-# NOTE: No explicit 8-arg outer constructor needed — Julia's default inner
+# NOTE: No explicit 11-arg outer constructor needed — Julia's default inner
 # constructor already provides NodeGroup(id, members, centroid_pattern,
-# created_at, last_chatter_at, chatter_count, has_grave_slot, max_occupancy).
+# created_at, last_chatter_at, chatter_count, has_grave_slot, max_occupancy,
+# is_time_node_group, is_chatter_eligible).
 # Defining an outer constructor with the same signature as the inner one
 # replaces it and causes infinite recursion (StackOverflowError).
 
@@ -1660,6 +1669,8 @@ end
 GRUG: Append `node_id` to the group's member list. Returns true on success,
 false if already a member. Updates the NODE_TO_GROUP reverse index. Clears
 `has_grave_slot` if the join fills a graved slot (count back to known size).
+v7.39: Also graduates NOCHAT groups to chatter-eligible when enough connected
+members are present (NOCHAT_GRADUATE_MIN_NEIGHBORS = 4).
 """
 function add_to_group!(group::NodeGroup, node_id::String)::Bool
     if isempty(strip(node_id))
@@ -1691,6 +1702,24 @@ function add_to_group!(group::NodeGroup, node_id::String)::Bool
         NODE_TO_GROUP[node_id] = group.id
         # GRUG: Filling a graved slot clears the override.
         group.has_grave_slot = false
+
+        # GRUG v7.39: NOCHAT graduation. When a NOCHAT group (is_chatter_eligible=false)
+        # grows to have enough connected members, it automatically graduates to
+        # chatter-eligible. The threshold is NOCHAT_GRADUATE_MIN_NEIGHBORS (4).
+        # This replaces the old chatter_count=-1 sentinel which had no graduation path.
+        if !group.is_chatter_eligible
+            _connected = 0
+            for mid in group.members
+                mn = get(NODE_MAP, mid, nothing)
+                if mn !== nothing && !mn.is_grave && length(mn.neighbor_ids) > 0
+                    _connected += 1
+                end
+            end
+            if _connected >= NOCHAT_GRADUATE_MIN_NEIGHBORS
+                group.is_chatter_eligible = true
+            end
+        end
+
         return true
     end
 end

@@ -6125,6 +6125,7 @@ function save_specimen_to_file!(filepath::String)::String
                 "has_grave_slot"   => grp.has_grave_slot,
                 "max_occupancy"    => grp.max_occupancy,
                 "is_time_node_group" => grp.is_time_node_group,
+                "is_chatter_eligible" => grp.is_chatter_eligible,
             ))
         end
     end
@@ -7741,7 +7742,18 @@ function load_specimen_from_file!(filepath::String)::String
 
                     max_occ = Int(get(gentry, "max_occupancy", GROUP_MAX_OCCUPANCY))
                     is_tng = Bool(get(gentry, "is_time_node_group", false))
-                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, max_occ, is_tng)
+                    # GRUG v7.39: is_chatter_eligible — backward compat: old specimens lack this field.
+                    # Old specimens with chatter_count == -1 (the sentinel hack) get is_chatter_eligible=false.
+                    # Old specimens with chatter_count >= 0 get is_chatter_eligible=true (default eligible).
+                    # New specimens just read the field directly.
+                    is_chatter_eligible_raw = get(gentry, "is_chatter_eligible", nothing)
+                    if is_chatter_eligible_raw !== nothing
+                        is_chatter_eligible = Bool(is_chatter_eligible_raw)
+                    else
+                        # GRUG: Migration from old sentinel — chatter_count=-1 means NOCHAT
+                        is_chatter_eligible = (ccount >= 0)
+                    end
+                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, max_occ, is_tng, is_chatter_eligible)
                     GROUP_MAP[gid] = grp
                     for m in members
                         NODE_TO_GROUP[m] = gid

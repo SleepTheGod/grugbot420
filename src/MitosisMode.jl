@@ -1586,12 +1586,12 @@ function run_mitosis!(;
                                         # from under-populated groups. Graduate out at 4+ nodes.
                                         if length(new_node_obj.neighbor_ids) < 4
                                             try
-                                                # GRUG: Tag the group's json_data if it has it,
-                                                # or use a dedicated NOCHAT set in engine.jl.
-                                                # For now: mark in the group's chatter_count = -1
-                                                # as a NOCHAT sentinel. ChatterMode checks this.
-                                                # TODO: proper NOCHAT field on NodeGroup (Phase 5).
-                                                grp.chatter_count = -1
+                                                # GRUG v7.39: NOCHAT — mark group invisible to ChatterMode.
+                                                # Use is_chatter_eligible field on NodeGroup (added v7.39).
+                                                # For now: mark via is_chatter_eligible=false on NodeGroup.
+                                                # ChatterMode enforces: skips groups with is_chatter_eligible=false.
+                                                # Graduates to true automatically in add_to_group! when group reaches 4+ connected members.
+                                                grp.is_chatter_eligible = false
                                             catch
                                                 # GRUG: Can't mark NOCHAT? Not fatal. The group
                                                 # just might get chattered too early. Not ideal
@@ -1623,7 +1623,7 @@ function run_mitosis!(;
                                     # GRUG: NOCHAT — same rule as coinflip-lost path.
                                     if length(new_node_obj.neighbor_ids) < 4
                                         try
-                                            grp.chatter_count = -1
+                                            grp.is_chatter_eligible = false
                                         catch; end
                                     end
                                 end
@@ -1693,11 +1693,11 @@ function run_mitosis!(;
         end
         _nochatter_tag = ""
         if !isempty(latched_group_id) && isempty(latched_to_id)
-            # GRUG: In a group but not linked — check NOCHAT sentinel
+            # GRUG: In a group but not linked — check NOCHAT (is_chatter_eligible)
             try
                 if group_for_fn !== nothing
                     grp = group_for_fn(new_id)
-                    if grp !== nothing && grp.chatter_count == -1
+                    if grp !== nothing && hasproperty(grp, :is_chatter_eligible) && !grp.is_chatter_eligible
                         _nochatter_tag = " [NOCHAT]"
                     end
                 end

@@ -812,6 +812,13 @@ function start_chatter_session!(
             end
             isnothing(group) && continue
 
+            # GRUG v7.39: NOCHAT enforcement. Groups with is_chatter_eligible=false
+            # are invisible to ChatterMode. These are singleton/under-populated groups
+            # that haven't yet graduated. Skipping them prevents whacky remixes.
+            if hasproperty(group, :is_chatter_eligible) && !group.is_chatter_eligible
+                continue
+            end
+
             # GRUG: Categorize members into strong / weak / grave-tier
             strong_ids = String[]
             weak_ids = String[]
@@ -822,6 +829,7 @@ function start_chatter_session!(
                     node = node_map[mid]
                     node.is_grave && continue
                     node.is_image_node && continue
+                    node.is_antimatch_node && continue  # GRUG v7.39: antimatch nodes drain confidence, don't participate in steal+remix
 
                     # GRUG: Cooldown check — skip nodes still on cooldown
                     if cooldown_query(mid) > 0.0
