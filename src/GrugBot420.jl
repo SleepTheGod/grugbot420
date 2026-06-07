@@ -110,6 +110,15 @@ using .InputLedger
 include("ChatterResiduals.jl")
 using .ChatterResiduals
 
+# GRUG: AutoGrowth — live conversation evidence accumulation + lazy coinflip
+# growth. Every user message carries evidence of gaps. The system accumulates
+# lazily and grows when enough evidence piles up. All node types + sigils +
+# thesaurus + lobe whitelists. Must load AFTER MitosisMode/RelationalGovernance/
+# InputLedger/ChatterResiduals (same function-injection pattern) and BEFORE
+# ImmuneSystem (growth calls immune_gate_fn on every new node).
+include("AutoGrowth.jl")
+using .AutoGrowth
+
 # GRUG: Immune system — must be included before engine.jl so engine can use it.
 # Scans all growth/ledger inputs for funky patterns before they touch anything.
 include("ImmuneSystem.jl")

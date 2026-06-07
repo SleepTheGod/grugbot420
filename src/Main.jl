@@ -4166,6 +4166,7 @@ Nodes    : /nodes                              (show node map status)
 Status   : /status                             (show chatter + system status)
            /mitosisStatus                      (show mitosis growth status)
            /growthStatus                       (show growth automaton status)
+           /autoGrowStatus                     (show live conversation auto-learning status)
 Arousal  : /arousal <0.0-1.0>                 (set eye system arousal level)
 Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addRelationClass <name>            (create new verb class bucket)
@@ -4305,6 +4306,7 @@ const HELP_MSG = """
 ║  /mlpStatus                   Show MLP brain status            ║
 ║  /mitosisStatus               Show mitosis growth status       ║
 ║  /growthStatus                Show growth automaton status     ║
+║  /autoGrowStatus              Show auto-learning status        ║
 ║  /mlpRule add <pat> <t> <key> Add rule to MLP hash table      ║
 ║  /mlpRule drop <id>           Remove rule from MLP table       ║
 ║  /mlpRule list                Show all MLP rules               ║
@@ -5654,6 +5656,129 @@ function process_mission(mission_text::String)
     end
     println("\n🤖 AIML Output Scaffold:\n$output")
 
+    # ── AUTOGROWTH: LIVE CONVERSATION EVIDENCE ACCUMULATION ──────────────
+    # GRUG: Every user message carries evidence of gaps. Accumulate now.
+    # Then maybe grow ONE thing if evidence is strong enough. Lazy + conservative.
+    # Runs ONLY on text missions (not image). Image signals don't carry lexical gaps.
+    try
+        if !is_image
+            # GRUG: Snapshot current node patterns for coverage checks.
+            _ag_node_patterns = lock(NODE_LOCK) do
+                Set{String}(lowercase(strip(n.pattern)) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:"))
+            end
+            _ag_node_ids_patterns = lock(NODE_LOCK) do
+                [(n.id, n.pattern) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:")]
+            end
+            # GRUG: Snapshot lobe coverage for under-populated lobe detection.
+            _ag_lobe_snapshots = Tuple{String,String,Set{String}}[]
+            for (lid, lrec) in Lobe.LOBE_REGISTRY
+                _ag_node_ids_in_lobe = Set{String}()
+                for (nid, assigned_lid) in Lobe.NODE_TO_LOBE_IDX
+                    if assigned_lid == lid
+                        push!(_ag_node_ids_in_lobe, nid)
+                    end
+                end
+                push!(_ag_lobe_snapshots, (lid, lrec.subject, _ag_node_ids_in_lobe))
+            end
+            # GRUG: Snapshot attachments for gap detection.
+            _ag_attach_snapshots = Tuple{String,String,Bool}[]
+            lock(BRIDGE_LOCK) do
+                for (target_id, bridges) in BRIDGE_MAP
+                    for br in bridges
+                        push!(_ag_attach_snapshots, (target_id, br.connector, get(br.json_data, "crystalized", false)))
+                    end
+                end
+            end
+            # GRUG: Sigil table entries for gap detection.
+            _ag_sigil_entries = Dict{String,Any}()
+            for (sname, sentry) in _ENGINE_SIGIL_TABLE.entries
+                _ag_sigil_entries[sname] = Dict{String,Any}(
+                    "lexicon"   => sentry.lexicon,
+                    "expansion" => sentry.expansion,
+                    "class"     => string(sentry.class),
+                )
+            end
+            # GRUG: Strain energy from EphemeralMLP (hippocampal hurt).
+            _ag_strain = try EphemeralMLP.get_strain_energy() catch _ 0.0 end
+
+            # ── ACCUMULATE EVIDENCE ──
+            AutoGrowth.accumulate_evidence!(
+                user_text                 = mission_text,
+                intensity                 = 1.0,  # GRUG: Base intensity per message
+                node_patterns             = _ag_node_patterns,
+                node_ids_patterns         = _ag_node_ids_patterns,
+                thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+                thesaurus_word_similarity = Thesaurus.word_similarity,
+                lobe_snapshots            = _ag_lobe_snapshots,
+                attachment_snapshots      = _ag_attach_snapshots,
+                sigil_table_entries       = _ag_sigil_entries,
+                strain_energy             = _ag_strain,
+                hippocampal_warrant_active = false,
+            )
+
+            # ── MAYBE GROW FROM EVIDENCE ──
+            # GRUG: One growth per turn max. Coinflip-biased. Lazy conservative.
+            _ag_result = AutoGrowth.maybe_grow_from_evidence!(
+                node_map                   = NODE_MAP,
+                node_lock                  = NODE_LOCK,
+                create_node_fn             = create_node,
+                add_to_group_fn            = add_to_group!,
+                register_group_fn          = register_group!,
+                group_map                  = GROUP_MAP,
+                group_lock                 = GROUP_LOCK,
+                lobe_registry              = Lobe.LOBE_REGISTRY,
+                immune_gate_fn             = (pattern, data) -> begin
+                    json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                    immune_gate("/autogrowth", json_text; is_critical=false)
+                end,
+                thesaurus_gate_filter      = Thesaurus.synonym_lookup,
+                thesaurus_word_similarity  = Thesaurus.word_similarity,
+                add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
+                register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
+                    AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+                group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                    find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                link_to_group_member_fn    = link_to_group_member,
+                group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
+                    grp = get(GROUP_MAP, gid, nothing)
+                    grp === nothing && return 0.0
+                    isempty(grp.node_ids) && return 0.0
+                    total = 0.0
+                    count = 0
+                    for nid in grp.node_ids
+                        n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                        if n !== nothing && !n.is_grave
+                            total += n.strength
+                            count += 1
+                        end
+                    end
+                    count > 0 ? total / count : 0.0
+                end,
+                group_for_fn               = (nid) -> lock(GROUP_LOCK) do
+                    for (gid, grp) in GROUP_MAP
+                        if nid in grp.node_ids
+                            return gid
+                        end
+                    end
+                    nothing
+                end,
+                sigil_promote_fn           = (text) -> SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, text),
+                extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+                evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
+                scan_latch_candidates_fn   = (pattern; kwargs...) -> find_group_latch_candidates(pattern; kwargs...),
+            )
+
+            if _ag_result !== nothing && _ag_result.won_coinflip
+                println("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_p, digits=3)))")
+            end
+        end
+    catch e
+        @warn "[MAIN] AutoGrowth failed (non-fatal,不影响response): $e"
+    end
+
     # GRUG v7.14: Do NOT store the full scaffold verbatim in MESSAGE_HISTORY.
     # The scaffold embeds the entire Fresh Memory block, so storing it
     # causes each cycle's output to become next cycle's context and
@@ -6663,6 +6788,21 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize chatter residuals: $e"
     end
 
+    # ── 39b. AUTOGROWTH EVIDENCE + CO-OCCURRENCE ──────────────────────
+    # GRUG: Save the evidence accumulator + co-occurrence map so the
+    # auto-learning system picks up where it left off on reload. Without
+    # this, reload starts with zero evidence and all the slowly-accumulated
+    # gap observations are lost. Evidence of gaps IS the fuel for growth.
+    try
+        specimen["autogrowth_evidence"] = AutoGrowth.get_evidence_snapshot()
+        specimen["autogrowth_co_occur"] = AutoGrowth.get_co_occur_snapshot()
+        _ev_count = length(specimen["autogrowth_evidence"])
+        _co_count = length(specimen["autogrowth_co_occur"])
+        println("  🌱  AutoGrowth evidence saved (evidence=$_ev_count, co-occur=$_co_count)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize autogrowth evidence: $e"
+    end
+
     # ── 40. FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Fan-out creates shadow answer nodes. If we don't persist these
     # settings, a specimen reloaded with fan-out disabled loses all shadow
@@ -6884,6 +7024,9 @@ function save_specimen_to_file!(filepath::String)::String
     push!(lines, "  🗳  Contributor votes : $(length(vote_list))")
     push!(lines, "  🎭  Tonal knobs      : saved")
     push!(lines, "  👁   Arousal          : $(arousal_data["level"])")
+    _ag_ev = try length(get(specimen, "autogrowth_evidence", [])) catch _ 0 end
+    _ag_co = try length(get(specimen, "autogrowth_co_occur", [])) catch _ 0 end
+    push!(lines, "  🌱  AutoGrowth       : evidence=$(_ag_ev), co-occur=$(_ag_co)")
     push!(lines, "╚══════════════════════════════════════════════════════════════╝")
     return join(lines, "\n")
 end
@@ -6999,7 +7142,8 @@ function load_specimen_from_file!(filepath::String)::String
                         "fanout_config", "hippocampal_pending_ask", "admin_session",
                         "lobe_orch_last", "chatter_cursor", "answer_mode_config",
                         "phagy_rules_ref",
-                        "time_orientation_config"])
+                        "time_orientation_config",
+                        "autogrowth_evidence", "autogrowth_co_occur"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -8471,6 +8615,23 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  Chatter residuals: FAILED to load (starting fresh)")
     end
 
+    # GRUG: Restore AutoGrowth evidence accumulator + co-occurrence map.
+    # Old specimens that predate AutoGrowth won't have these keys —
+    # that's fine, evidence starts empty and accumulates naturally.
+    try
+        if haskey(specimen, "autogrowth_evidence")
+            AutoGrowth.load_evidence_snapshot!(specimen["autogrowth_evidence"])
+            println("  🌱  AutoGrowth evidence loaded ($(length(specimen["autogrowth_evidence"])) records)")
+        end
+        if haskey(specimen, "autogrowth_co_occur")
+            AutoGrowth.load_co_occur_snapshot!(specimen["autogrowth_co_occur"])
+            println("  🌱  AutoGrowth co-occurrence loaded ($(length(specimen["autogrowth_co_occur"])) pairs)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore autogrowth evidence: $e"
+        println("  ⚠️  AutoGrowth evidence: FAILED to load (starting fresh)")
+    end
+
 
     # ── 4.40 FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Restore fan-out settings. If missing (old specimen), defaults apply.
@@ -8963,6 +9124,75 @@ function maybe_run_idle()
     catch e
         println("[IDLE:GROWTH] !!! ERROR during growth automaton cycle: $e !!!")
     end
+
+    # ── AUTOGROWTH: IDLE-TIME EVIDENCE-BASED GROWTH SUPPLEMENT ──────────
+    # GRUG: TemporalGrowth runs on fresh MESSAGE_HISTORY data. But the
+    # evidence accumulator may have PENDING evidence from live conversation
+    # that hasn't reached the coinflip threshold yet. Here in idle time,
+    # we give it another chance to fire. Also discover thesaurus pairs
+    # from accumulated co-occurrence data.
+    try
+        _ag_idle_result = AutoGrowth.maybe_grow_from_evidence!(
+            node_map                   = NODE_MAP,
+            node_lock                  = NODE_LOCK,
+            create_node_fn             = create_node,
+            add_to_group_fn            = add_to_group!,
+            register_group_fn          = register_group!,
+            group_map                  = GROUP_MAP,
+            group_lock                 = GROUP_LOCK,
+            lobe_registry              = Lobe.LOBE_REGISTRY,
+            immune_gate_fn             = (pattern, data) -> begin
+                json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                immune_gate("/autogrowth_idle", json_text; is_critical=false)
+            end,
+            thesaurus_gate_filter      = Thesaurus.synonym_lookup,
+            thesaurus_word_similarity  = Thesaurus.word_similarity,
+            add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+            register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
+            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+            stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
+                AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+            group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+            link_to_group_member_fn    = link_to_group_member,
+            group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
+                grp = get(GROUP_MAP, gid, nothing)
+                grp === nothing && return 0.0
+                isempty(grp.node_ids) && return 0.0
+                total = 0.0; count = 0
+                for nid in grp.node_ids
+                    n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                    if n !== nothing && !n.is_grave; total += n.strength; count += 1 end
+                end
+                count > 0 ? total / count : 0.0
+            end,
+            group_for_fn               = (nid) -> lock(GROUP_LOCK) do
+                for (gid, grp) in GROUP_MAP
+                    if nid in grp.node_ids; return gid end
+                end
+                nothing
+            end,
+            sigil_promote_fn           = (text) -> SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, text),
+            extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+            evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+            words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
+            scan_latch_candidates_fn   = (pattern; kwargs...) -> find_group_latch_candidates(pattern; kwargs...),
+        )
+        if _ag_idle_result !== nothing && _ag_idle_result.won_coinflip
+            println("[IDLE:AUTOGROWTH] 🌱  Grew $(_ag_idle_result.growth_type) for '$(_ag_idle_result.pattern)' in $(_ag_idle_result.lobe_hint)")
+        end
+
+        # GRUG: Also try discovering thesaurus pairs from co-occurrence data.
+        _ag_pairs = AutoGrowth.discover_thesaurus_pairs!(
+            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+            thesaurus_word_similarity  = Thesaurus.word_similarity,
+        )
+        if !isempty(_ag_pairs)
+            println("[IDLE:AUTOGROWTH] 📖  Discovered thesaurus pairs: $(_ag_pairs)")
+        end
+    catch e
+        println("[IDLE:AUTOGROWTH] !!! ERROR during idle autogrowth: $e !!!")
+    end
     # ── CHATTER/PHAGY PATH — only for mature specimens (>= 1000 nodes) ────
     if alive_count < ChatterMode._effective_min_population()
         # GRUG: Population too small for chatter/phagy. But mitosis above may have fired.
@@ -9333,6 +9563,7 @@ function run_cli()
             m_mlpobserver = match(r"^/mlpObserver\s*$", line)
             m_mitosisstatus = match(r"^/mitosisStatus\s*$", line)
             m_growthstatus  = match(r"^/growthStatus\s*$", line)
+            m_autogrowstatus = match(r"^/autoGrowStatus\s*$", line)
             m_explicit    = match(r"^/explicit\s+([a-zA-Z0-9_]+)\s+\[(.+?)\]\s+(.+)", line)
             m_grow        = match(r"^/grow\s+(\S+)\s+(.+)"s,      line)
             m_rule        = match(r"^/addRule\s+(.+)"s,   line)
@@ -9892,6 +10123,11 @@ elseif !isnothing(m_right)
             elseif !isnothing(m_growthstatus)
                 # GRUG: /growthStatus — show growth automaton status and recent spawn events.
                 println(TemporalGrowth.get_growth_status_summary())
+
+            elseif !isnothing(m_autogrowstatus)
+                # GRUG: /autoGrowStatus — show live conversation auto-learning status.
+                # Evidence accumulator counts, recent growth log, co-occurrence map size.
+                println(AutoGrowth.get_autogrowth_status_summary())
 
             elseif !isnothing(m_explicit)
                 cmd, id, mission_text = m_explicit.captures
