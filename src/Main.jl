@@ -4167,6 +4167,7 @@ Status   : /status                             (show chatter + system status)
            /mitosisStatus                      (show mitosis growth status)
            /growthStatus                       (show growth automaton status)
            /autoGrowStatus                     (show live conversation auto-learning status)
+           /autoLinkStatus                     (show evidence-based bridge linking status)
 Arousal  : /arousal <0.0-1.0>                 (set eye system arousal level)
 Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addRelationClass <name>            (create new verb class bucket)
@@ -4307,6 +4308,7 @@ const HELP_MSG = """
 ║  /mitosisStatus               Show mitosis growth status       ║
 ║  /growthStatus                Show growth automaton status     ║
 ║  /autoGrowStatus              Show auto-learning status        ║
+║  /autoLinkStatus              Show bridge linking status       ║
 ║  /mlpRule add <pat> <t> <key> Add rule to MLP hash table      ║
 ║  /mlpRule drop <id>           Remove rule from MLP table       ║
 ║  /mlpRule list                Show all MLP rules               ║
@@ -5779,6 +5781,91 @@ function process_mission(mission_text::String)
         @warn "[MAIN] AutoGrowth failed (non-fatal,不影响response): $e"
     end
 
+
+    # ── AUTOLINKER: EVIDENCE-BASED CROSS-LOBE BRIDGE GROWTH ──────────────
+    # GRUG: AutoGrowth grows NEW nodes. AutoLinker bridges EXISTING nodes.
+    # Especially cross-lobe: nodes in different chambers that keep showing
+    # up together but can't reach each other without a bridge.
+    # Same lazy conservative coinflip. Same cancer prevention.
+    try
+        if !is_image
+            # GRUG: Snapshot bridge map for cap checks + neighbor evidence.
+            _al_bridge_snap = lock(BRIDGE_LOCK) do
+                snap = Dict{String, Vector{Tuple{String,String}}}()
+                for (nid, bridges) in BRIDGE_MAP
+                    snap[nid] = [(br.partner_id, join(br.seam_tokens, " ")) for br in bridges]
+                end
+                snap
+            end
+
+            # GRUG: Resolve lobe for each fired node (for cross-lobe detection).
+            _al_lobe_of = (nid) -> Lobe.find_lobe_for_node(nid)
+
+            # GRUG: Get co-occurrence map from AutoGrowth for word-level link evidence.
+            # Convert Vector{Dict} snapshot to Dict{Tuple{String,String}, Int} for AutoLinker.
+            _al_co_occur_raw = AutoGrowth.get_co_occur_snapshot()
+            _al_co_occur = Dict{Tuple{String,String}, Int}()
+            for entry in _al_co_occur_raw
+                a = get(entry, "a", ""); b = get(entry, "b", ""); c = get(entry, "count", 0)
+                if !isempty(a) && !isempty(b) && c > 0
+                    key = a < b ? (a, b) : (b, a)
+                    _al_co_occur[key] = c
+                end
+            end
+
+            # ── ACCUMULATE LINK EVIDENCE ──
+            AutoLinker.accumulate_link_evidence!(
+                co_fired_ids              = fired_ids,
+                input_touched_ids         = String[],  # GRUG: InputLedger handles this separately
+                node_ids_patterns         = _ag_node_ids_patterns,
+                bridge_map_snapshot       = _al_bridge_snap,
+                thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+                thesaurus_word_similarity = Thesaurus.word_similarity,
+                lobe_of_fn                = _al_lobe_of,
+                strain_nodes              = String[],  # GRUG: strain snapshots not available here
+                co_occur_map              = _al_co_occur,
+                co_activation_pairs       = Tuple{String,String,Float64}[],  # GRUG: no explicit pairs in active path
+            )
+
+            # ── MAYBE AUTO LINK ──
+            _al_result = AutoLinker.maybe_auto_link!(
+                node_map              = NODE_MAP,
+                node_lock             = NODE_LOCK,
+                bridge_fn             = (id_a, id_b; seam_tokens=String[]) ->
+                    bridge_nodes!(id_a, id_b; seam_tokens=seam_tokens),
+                bridge_map_ref        = BRIDGE_MAP,
+                bridge_lock_ref       = BRIDGE_LOCK,
+                lobe_of_fn            = _al_lobe_of,
+                immune_gate_fn        = (pattern, data) -> begin
+                    json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                    immune_gate("/autolinker", json_text; is_critical=false)
+                end,
+                is_already_bridged_fn = (id_a, id_b) -> begin
+                    key = id_a < id_b ? (id_a, id_b) : (id_b, id_a)
+                    bridges_a = lock(() -> get(BRIDGE_MAP, id_a, CascadeBridge[]), BRIDGE_LOCK)
+                    for br in bridges_a
+                        if br.partner_id == id_b
+                            return true
+                        end
+                    end
+                    return false
+                end,
+                node_alive_fn         = (nid) -> begin
+                    n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                    return !isnothing(n) && !n.is_grave
+                end,
+                thesaurus_gate_filter = Thesaurus.synonym_lookup,
+            )
+
+            if _al_result !== nothing && _al_result.won_coinflip
+                cross_tag = _al_result.is_cross_lobe ? "CROSS-LOBE" : "same-lobe"
+                println("[AUTOLINKER] 🔗  Bridged $(_al_result.node_a) ↔ $(_al_result.node_b) [$cross_tag] (intensity=$(round(_al_result.evidence_intensity, digits=2)), p=$(round(_al_result.coinflip_p, digits=3)), source=$(_al_result.source))")
+            end
+        end
+    catch e
+        @warn "[MAIN] AutoLinker failed (non-fatal): $e"
+    end
+
     # GRUG v7.14: Do NOT store the full scaffold verbatim in MESSAGE_HISTORY.
     # The scaffold embeds the entire Fresh Memory block, so storing it
     # causes each cycle's output to become next cycle's context and
@@ -6803,6 +6890,18 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize autogrowth evidence: $e"
     end
 
+    # ── 39c. AUTOLINKER LINK EVIDENCE ───────────────────────────────────
+    # GRUG: Save the link evidence accumulator so the auto-linker picks up
+    # where it left off on reload. Link evidence is expensive to accumulate
+    # (many co-firing observations) so we don't want to lose it.
+    try
+        specimen["autolink_evidence"] = AutoLinker.get_link_evidence_snapshot()
+        _al_count = length(specimen["autolink_evidence"])
+        println("  🔗  AutoLinker evidence saved (link_evidence=$_al_count)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize autolink evidence: $e"
+    end
+
     # ── 40. FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Fan-out creates shadow answer nodes. If we don't persist these
     # settings, a specimen reloaded with fan-out disabled loses all shadow
@@ -7027,6 +7126,8 @@ function save_specimen_to_file!(filepath::String)::String
     _ag_ev = try length(get(specimen, "autogrowth_evidence", [])) catch _ 0 end
     _ag_co = try length(get(specimen, "autogrowth_co_occur", [])) catch _ 0 end
     push!(lines, "  🌱  AutoGrowth       : evidence=$(_ag_ev), co-occur=$(_ag_co)")
+    _al_ev = try length(get(specimen, "autolink_evidence", [])) catch _ 0 end
+    push!(lines, "  🔗  AutoLinker       : link_evidence=$(_al_ev)")
     push!(lines, "╚══════════════════════════════════════════════════════════════╝")
     return join(lines, "\n")
 end
@@ -7143,7 +7244,8 @@ function load_specimen_from_file!(filepath::String)::String
                         "lobe_orch_last", "chatter_cursor", "answer_mode_config",
                         "phagy_rules_ref",
                         "time_orientation_config",
-                        "autogrowth_evidence", "autogrowth_co_occur"])
+                        "autogrowth_evidence", "autogrowth_co_occur",
+                        "autolink_evidence"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -8632,6 +8734,19 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  AutoGrowth evidence: FAILED to load (starting fresh)")
     end
 
+    # GRUG: Restore AutoLinker link evidence so the bridge builder picks up
+    # where it left off. Link evidence accumulates slowly from co-firing and
+    # co-occurrence — losing it means the auto-linker starts from zero.
+    try
+        if haskey(specimen, "autolink_evidence")
+            AutoLinker.load_link_evidence_snapshot!(specimen["autolink_evidence"])
+            println("  🔗  AutoLinker evidence loaded ($(length(specimen["autolink_evidence"])) records)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore autolink evidence: $e"
+        println("  ⚠️  AutoLinker evidence: FAILED to load (starting fresh)")
+    end
+
 
     # ── 4.40 FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Restore fan-out settings. If missing (old specimen), defaults apply.
@@ -9193,6 +9308,104 @@ function maybe_run_idle()
     catch e
         println("[IDLE:AUTOGROWTH] !!! ERROR during idle autogrowth: $e !!!")
     end
+
+    # ── AUTOLINKER: IDLE-TIME EVIDENCE-BASED BRIDGE GROWTH ──────────────
+    # GRUG: During idle time, give the link accumulator another chance to
+    # fire. Evidence that accumulated during active conversation may have
+    # reached the coinflip threshold by now. Cross-lobe bridges especially.
+    try
+        # GRUG: Snapshot bridge map for cap checks + neighbor evidence.
+        _al_idle_bridge_snap = lock(BRIDGE_LOCK) do
+            snap = Dict{String, Vector{Tuple{String,String}}}()
+            for (nid, bridges) in BRIDGE_MAP
+                snap[nid] = [(br.partner_id, join(br.seam_tokens, " ")) for br in bridges]
+            end
+            snap
+        end
+
+        # GRUG: Snapshot node patterns for synonym bridge evidence.
+        _al_idle_nid_pat = lock(NODE_LOCK) do
+            [(n.id, n.pattern) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node]
+        end
+
+        _al_idle_lobe_of = (nid) -> Lobe.find_lobe_for_node(nid)
+        _al_idle_co_occur_raw = AutoGrowth.get_co_occur_snapshot()
+        _al_idle_co_occur = Dict{Tuple{String,String}, Int}()
+        for entry in _al_idle_co_occur_raw
+            a = get(entry, "a", ""); b = get(entry, "b", ""); c = get(entry, "count", 0)
+            if !isempty(a) && !isempty(b) && c > 0
+                key = a < b ? (a, b) : (b, a)
+                _al_idle_co_occur[key] = c
+            end
+        end
+
+        # GRUG: Accumulate link evidence from idle-time data.
+        # Mine RelationalGovernance CO_ACC for high-intensity pairs. Unlike
+        # co_fired_ids (which generates ALL pairs from a set), we pass explicit
+        # (id_a, id_b, intensity) triples to avoid cross-pair contamination.
+        _al_idle_co_act_pairs = Tuple{String,String,Float64}[]
+        try
+            _al_idle_co_acc_data = RelationalGovernance.serialize_co_activation()
+            _al_idle_pairs_dict = get(_al_idle_co_acc_data, "co_activation_pairs", Dict{String,Any}())
+            for (pair_key_str, intensity) in _al_idle_pairs_dict
+                if Float64(intensity) >= 5.0  # GRUG: Only use strong co-activation pairs
+                    parts = split(String(pair_key_str), "|")
+                    if length(parts) == 2
+                        push!(_al_idle_co_act_pairs, (String(parts[1]), String(parts[2]), Float64(intensity)))
+                    end
+                end
+            end
+        catch; end
+
+        AutoLinker.accumulate_link_evidence!(
+            co_fired_ids              = String[],  # GRUG: No direct co-fire data in idle
+            input_touched_ids         = String[],
+            node_ids_patterns         = _al_idle_nid_pat,
+            bridge_map_snapshot       = _al_idle_bridge_snap,
+            thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+            thesaurus_word_similarity = Thesaurus.word_similarity,
+            lobe_of_fn                = _al_idle_lobe_of,
+            strain_nodes              = String[],
+            co_occur_map              = _al_idle_co_occur,
+            co_activation_pairs       = _al_idle_co_act_pairs,
+        )
+
+        _al_idle_result = AutoLinker.maybe_auto_link!(
+            node_map              = NODE_MAP,
+            node_lock             = NODE_LOCK,
+            bridge_fn             = (id_a, id_b; seam_tokens=String[]) ->
+                bridge_nodes!(id_a, id_b; seam_tokens=seam_tokens),
+            bridge_map_ref        = BRIDGE_MAP,
+            bridge_lock_ref       = BRIDGE_LOCK,
+            lobe_of_fn            = _al_idle_lobe_of,
+            immune_gate_fn        = (pattern, data) -> begin
+                json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                immune_gate("/autolinker_idle", json_text; is_critical=false)
+            end,
+            is_already_bridged_fn = (id_a, id_b) -> begin
+                bridges_a = lock(() -> get(BRIDGE_MAP, id_a, CascadeBridge[]), BRIDGE_LOCK)
+                for br in bridges_a
+                    if br.partner_id == id_b
+                        return true
+                    end
+                end
+                return false
+            end,
+            node_alive_fn         = (nid) -> begin
+                n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                return !isnothing(n) && !n.is_grave
+            end,
+            thesaurus_gate_filter = Thesaurus.synonym_lookup,
+        )
+
+        if _al_idle_result !== nothing && _al_idle_result.won_coinflip
+            cross_tag = _al_idle_result.is_cross_lobe ? "CROSS-LOBE" : "same-lobe"
+            println("[IDLE:AUTOLINKER] 🔗  Bridged $(_al_idle_result.node_a) ↔ $(_al_idle_result.node_b) [$cross_tag]")
+        end
+    catch e
+        println("[IDLE:AUTOLINKER] !!! ERROR during idle autolink: $e !!!")
+    end
+
     # ── CHATTER/PHAGY PATH — only for mature specimens (>= 1000 nodes) ────
     if alive_count < ChatterMode._effective_min_population()
         # GRUG: Population too small for chatter/phagy. But mitosis above may have fired.
@@ -9564,6 +9777,7 @@ function run_cli()
             m_mitosisstatus = match(r"^/mitosisStatus\s*$", line)
             m_growthstatus  = match(r"^/growthStatus\s*$", line)
             m_autogrowstatus = match(r"^/autoGrowStatus\s*$", line)
+            m_autolinkstatus = match(r"^/autoLinkStatus\s*$", line)
             m_explicit    = match(r"^/explicit\s+([a-zA-Z0-9_]+)\s+\[(.+?)\]\s+(.+)", line)
             m_grow        = match(r"^/grow\s+(\S+)\s+(.+)"s,      line)
             m_rule        = match(r"^/addRule\s+(.+)"s,   line)
@@ -10128,6 +10342,11 @@ elseif !isnothing(m_right)
                 # GRUG: /autoGrowStatus — show live conversation auto-learning status.
                 # Evidence accumulator counts, recent growth log, co-occurrence map size.
                 println(AutoGrowth.get_autogrowth_status_summary())
+
+            elseif !isnothing(m_autolinkstatus)
+                # GRUG: /autoLinkStatus — show evidence-based cross-lobe bridge status.
+                # Link evidence accumulator counts, top candidates, recent link history.
+                println(AutoLinker.get_autolink_status_summary())
 
             elseif !isnothing(m_explicit)
                 cmd, id, mission_text = m_explicit.captures

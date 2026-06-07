@@ -119,6 +119,14 @@ using .ChatterResiduals
 include("AutoGrowth.jl")
 using .AutoGrowth
 
+# GRUG: AutoLinker — evidence-based cross-lobe bridge growth. Watches for
+# pairs of existing nodes that SHOULD be bridged (co-firing, synonym, strain,
+# opposing-lobe, etc). Accumulates link evidence lazily and bridges when
+# enough evidence piles up. Cross-lobe priority (lower floor, higher bonus).
+# Must load AFTER AutoGrowth (uses co-occurrence map) and BEFORE ImmuneSystem.
+include("AutoLinker.jl")
+using .AutoLinker
+
 # GRUG: Immune system — must be included before engine.jl so engine can use it.
 # Scans all growth/ledger inputs for funky patterns before they touch anything.
 include("ImmuneSystem.jl")
