@@ -339,7 +339,7 @@ end
 # Pattern: table_match(lobe_id, CHUNK_JSON, "field_name", mode=:token) gets all nodes with field.
 # ============================================================================
 
-function json_to_table_chunk!(lobe_id::String, node_id::String, json_data::Dict)
+function json_to_table_chunk!(lobe_id::String, node_id::String, json_data)
     if isempty(strip(lobe_id))
         throw_table_error("lobe_id cannot be empty", "json_to_table_chunk!")
     end

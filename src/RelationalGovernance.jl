@@ -656,12 +656,12 @@ function serialize_co_activation()::Dict{String, Any}
 end
 
 """
-    deserialize_co_activation!(data::Dict{String, Any})
+    deserialize_co_activation!(data)
 
 GRUG: Restore the co-activation accumulator from specimen data.
 Merges with existing accumulator (doesn't clear it first).
 """
-function deserialize_co_activation!(data::Dict{String, Any})
+function deserialize_co_activation!(data)
     pairs_raw = get(data, "co_activation_pairs", Dict{String, Any}())
 
     lock(CO_ACC_LOCK) do

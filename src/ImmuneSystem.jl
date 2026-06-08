@@ -658,11 +658,11 @@ end
 
 GRUG: Restore immune state from /loadSpecimen data.
 """
-function deserialize_immune_state!(data::Dict)
+function deserialize_immune_state!(data)
     reset_immune_state!()
 
     # Restore Hopfield memory
-    if haskey(data, "hopfield") && isa(data["hopfield"], Dict)
+    if haskey(data, "hopfield") && isa(data["hopfield"], AbstractDict)
         lock(IMMUNE_HOPFIELD_LOCK) do
             for (sig_str, count) in data["hopfield"]
                 IMMUNE_HOPFIELD[parse(UInt64, sig_str)] = Int(count)

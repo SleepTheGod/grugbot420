@@ -1079,11 +1079,11 @@ function serialize_chatter_residuals()::Dict{String, Any}
 end
 
 """
-    deserialize_chatter_residuals!(data::Dict{String, Any})
+    deserialize_chatter_residuals!(data)
 
 GRUG: Restore the ledger from specimen data. Merges with existing ledger.
 """
-function deserialize_chatter_residuals!(data::Dict{String, Any})
+function deserialize_chatter_residuals!(data)
     hash_list = get(data, "ledger_hashes", [])
 
     lock(_RESIDUAL_LEDGER_LOCK) do

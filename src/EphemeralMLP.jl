@@ -2665,14 +2665,14 @@ function to_specimen_dict()::Dict{String, Any}
 end
 
 """
-    from_specimen_dict!(data::Dict{String, Any})
+    from_specimen_dict!(data)
 
 Restore the EphemeralMLP state from a specimen dict. This is a DESTRUCTIVE
 operation — current state is replaced. Validates all inputs before modifying
 any state. NO silent failures — if anything is wrong, this throws and NO
 CHANGES ARE MADE.
 """
-function from_specimen_dict!(data::Dict{String, Any})
+function from_specimen_dict!(data)
     if isempty(data)
         _err("from_specimen_dict! got empty dict", "from_specimen_dict!")
     end
@@ -2686,7 +2686,7 @@ function from_specimen_dict!(data::Dict{String, Any})
     function parse_weights(ws_list::AbstractVector)::Vector{MLPWeight}
         weights = MLPWeight[]
         for w_data in ws_list
-            if !isa(w_data, Dict)
+            if !isa(w_data, AbstractDict)
                 _err("from_specimen_dict! weight entry is not a dict", "parse_weights")
             end
             val = Float64(get(w_data, "value", 0.0))
@@ -2708,7 +2708,7 @@ function from_specimen_dict!(data::Dict{String, Any})
         if haskey(wd, "w_hidden_output") && isa(wd["w_hidden_output"], AbstractVector)
             new_weights.w_hidden_output = parse_weights(wd["w_hidden_output"])
         end
-        if haskey(wd, "b_output") && isa(wd["b_output"], Dict)
+        if haskey(wd, "b_output") && isa(wd["b_output"], AbstractDict)
             b_out = wd["b_output"]
             val = Float64(get(b_out, "value", 0.0))
             jitter = Bool(get(b_out, "jitter_eligible", false))
@@ -2801,7 +2801,7 @@ function from_specimen_dict!(data::Dict{String, Any})
     if haskey(data, "rules") && isa(data["rules"], AbstractVector)
         for r_data in data["rules"]
             try
-                if !isa(r_data, Dict)
+                if !isa(r_data, AbstractDict)
                     @warn "[EphemeralMLP] Skipping non-dict rule entry"
                     continue
                 end
@@ -2862,7 +2862,7 @@ function from_specimen_dict!(data::Dict{String, Any})
 
     # ── Parse novelty tracker ───────────────────────────────────────────
     new_novelty = NoveltyTracker()
-    if haskey(data, "novelty_tracker") && isa(data["novelty_tracker"], Dict)
+    if haskey(data, "novelty_tracker") && isa(data["novelty_tracker"], AbstractDict)
         nt = data["novelty_tracker"]
         if haskey(nt, "history") && isa(nt["history"], AbstractVector)
             new_novelty.history = Float64[clamp(Float64(v), NOVELTY_FLOOR, NOVELTY_CEILING)
@@ -2890,12 +2890,12 @@ function from_specimen_dict!(data::Dict{String, Any})
     # GRUG: Reload the brain's memory of which questions led to which answers.
     # If the key is missing (old specimen), start with a blank tracker.
     new_input_corr = InputCorrelationTracker()
-    if haskey(data, "input_correlations") && isa(data["input_correlations"], Dict)
+    if haskey(data, "input_correlations") && isa(data["input_correlations"], AbstractDict)
         ic = data["input_correlations"]
         if haskey(ic, "entries") && isa(ic["entries"], AbstractVector)
             for entry_data in ic["entries"]
                 try
-                    if !isa(entry_data, Dict)
+                    if !isa(entry_data, AbstractDict)
                         continue
                     end
                     ih = parse(UInt64, String(get(entry_data, "input_hash", "0")))
@@ -2915,7 +2915,7 @@ function from_specimen_dict!(data::Dict{String, Any})
         if haskey(ic, "input_quality_ema") && isa(ic["input_quality_ema"], AbstractVector)
             for ema_data in ic["input_quality_ema"]
                 try
-                    if !isa(ema_data, Dict)
+                    if !isa(ema_data, AbstractDict)
                         continue
                     end
                     h = parse(UInt64, String(get(ema_data, "hash", "0")))

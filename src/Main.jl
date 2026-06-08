@@ -159,6 +159,22 @@ if !isdefined(@__MODULE__, :TemporalGrowth)
     using .TemporalGrowth
 end
 
+# GRUG: AutoGrowth + AutoLinker — live-conversation auto-learning. When Main.jl
+# runs STANDALONE (julia src/Main.jl, the actual bot launch path), these are NOT
+# in scope unless we include+using them here. When loaded via GrugBot420.jl they
+# are already module-level; the isdefined guard prevents double-include. WITHOUT
+# this, every AutoGrowth/AutoLinker call in process_mission/idle/save silently
+# fails with UndefVarError (swallowed by try/catch) — i.e. auto-learning is DEAD.
+# AutoGrowth must load before AutoLinker (AutoLinker uses its co-occurrence map).
+if !isdefined(@__MODULE__, :AutoGrowth)
+    include("AutoGrowth.jl")
+    using .AutoGrowth
+end
+if !isdefined(@__MODULE__, :AutoLinker)
+    include("AutoLinker.jl")
+    using .AutoLinker
+end
+
 # GRUG: FullLobeScanner needed for scanner_config save/load (section 37/4.37).
 # When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
 if !isdefined(@__MODULE__, :FullLobeScanner)
@@ -646,11 +662,11 @@ function append_to_save_file(json_str::String, save_filepath::String)::String
         # GRUG: Merge/append the new data
         # If new_data is a dict, merge into existing
         # If new_data is a list, append to appropriate array
-        if isa(new_data, Dict)
+        if isa(new_data, AbstractDict)
             for (key, value) in new_data
                 if haskey(existing, key)
                     # GRUG: Key exists - merge or replace based on type
-                    if isa(existing[key], Dict) && isa(value, Dict)
+                    if isa(existing[key], AbstractDict) && isa(value, AbstractDict)
                         # GRUG: Both dicts - deep merge
                         for (k, v) in value
                             existing[key][k] = v
@@ -3484,7 +3500,7 @@ function _generate_fanout_patterns(content::AbstractString, mode::AbstractString
     # from the object side of the relation.
     # "fire | burns | wood" → also create pattern "wood"
     seeded = get(ans_data, "seeded_triple", nothing)
-    if !isnothing(seeded) && isa(seeded, Dict)
+    if !isnothing(seeded) && isa(seeded, AbstractDict)
         obj = lowercase(strip(get(seeded, "object", "")))
         rel_raw = get(seeded, "relation", "relates")
         # GRUG v7.55: For dynamic relationals, expand the sigil for question forms.
@@ -5281,6 +5297,10 @@ function process_mission(mission_text::String)
     # accumulator. When intensity crosses the threshold (lazy, conservative),
     # the system auto-attaches them. Hebbian learning at the topology level.
     # Only non-grave, non-image nodes count (same as chatter eligibility).
+    # GRUG FIX (v7.44): Pre-declare fired_ids so it survives the try block scope.
+    # Julia scopes variables first-assigned inside try/catch to that block,
+    # making them UndefVarError outside. Pre-declaration fixes this.
+    fired_ids = String[]
     try
         fired_ids = [v.node_id for v in contributing_votes
                      if begin
@@ -5662,6 +5682,11 @@ function process_mission(mission_text::String)
     # GRUG: Every user message carries evidence of gaps. Accumulate now.
     # Then maybe grow ONE thing if evidence is strong enough. Lazy + conservative.
     # Runs ONLY on text missions (not image). Image signals don't carry lexical gaps.
+    # GRUG FIX (v7.44): Pre-declare variables used by both AutoGrowth AND AutoLinker
+    # so they survive the try block scope. Julia scopes first-assigned-inside-try
+    # variables to that block, making them UndefVarError outside.
+    _ag_node_patterns = Set{String}()
+    _ag_node_ids_patterns = Tuple{String,String}[]
     try
         if !is_image
             # GRUG: Snapshot current node patterns for coverage checks.
@@ -5687,7 +5712,9 @@ function process_mission(mission_text::String)
             lock(BRIDGE_LOCK) do
                 for (target_id, bridges) in BRIDGE_MAP
                     for br in bridges
-                        push!(_ag_attach_snapshots, (target_id, br.connector, get(br.json_data, "crystalized", false)))
+                        # GRUG FIX (v7.44): CascadeBridge has seam_tokens (not connector)
+                        # and is_crystalized (not json_data["crystalized"]).
+                        push!(_ag_attach_snapshots, (target_id, join(br.seam_tokens, " "), br.is_crystalized))
                     end
                 end
             end
@@ -5774,7 +5801,7 @@ function process_mission(mission_text::String)
             )
 
             if _ag_result !== nothing && _ag_result.won_coinflip
-                println("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_p, digits=3)))")
+                println("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_prob, digits=3)))")
             end
         end
     catch e
@@ -7149,6 +7176,13 @@ Phase 5: Build summary scroll
 
 Returns a multi-line summary string of everything restored.
 """
+# GRUG FIX (v7.43): JSON.parse returns JSON.Object{String,Any}, NOT Dict{String,Any}.
+# JSON.Object IS a subtype of AbstractDict, so isa(x, AbstractDict) works for both.
+# All isa(x, Dict) checks in the specimen load path were silently failing for
+# JSON.Object values, causing guard clauses to skip their blocks.
+# Helper: accept both Dict and JSON.Object as "dictionary-like".
+_is_dict_like(x) = isa(x, AbstractDict)
+
 function load_specimen_from_file!(filepath::String)::String
     if strip(filepath) == ""
         error("!!! FATAL: /loadSpecimen got empty filepath! Grug needs a file to thaw! !!!")
@@ -7209,7 +7243,7 @@ function load_specimen_from_file!(filepath::String)::String
         error("!!! FATAL: /loadSpecimen JSON parse failed after decompression: $e !!!")
     end
 
-    if !isa(specimen, Dict)
+    if !_is_dict_like(specimen)
         error("!!! FATAL: /loadSpecimen expects a JSON object at top level, got $(typeof(specimen))! !!!")
     end
 
@@ -7244,6 +7278,7 @@ function load_specimen_from_file!(filepath::String)::String
                         "lobe_orch_last", "chatter_cursor", "answer_mode_config",
                         "phagy_rules_ref",
                         "time_orientation_config",
+                        "coherence_config",
                         "autogrowth_evidence", "autogrowth_co_occur",
                         "autolink_evidence"])
     for key in keys(specimen)
@@ -7271,7 +7306,7 @@ function load_specimen_from_file!(filepath::String)::String
              "fanout_config", "hippocampal_pending_ask", "admin_session",
              "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
              "coherence_config", "mlp_cached_phi"]
-        if haskey(specimen, k) && !isa(specimen[k], Dict)
+        if haskey(specimen, k) && !_is_dict_like(specimen[k])
             push!(validation_errors, "'$k' must be an object")
         end
     end
@@ -7280,7 +7315,7 @@ function load_specimen_from_file!(filepath::String)::String
     if haskey(specimen, "nodes") && isa(specimen["nodes"], AbstractVector)
         for (i, nd) in enumerate(specimen["nodes"])
             i > 5 && break
-            if !isa(nd, Dict)
+            if !_is_dict_like(nd)
                 push!(validation_errors, "nodes[$i]: not a JSON object")
             elseif !haskey(nd, "id") || !haskey(nd, "pattern") || !haskey(nd, "action_packet")
                 push!(validation_errors, "nodes[$i]: missing 'id', 'pattern', or 'action_packet'")
@@ -7483,7 +7518,7 @@ function load_specimen_from_file!(filepath::String)::String
 
     # ─── 4.1.6 EYE STATE ────────────────────────────────────────────────────────
     # GRUG: Restore eye tracking state for continuity.
-    if haskey(specimen, "eye_state") && isa(specimen["eye_state"], Dict)
+    if haskey(specimen, "eye_state") && _is_dict_like(specimen["eye_state"])
         es = specimen["eye_state"]
         lock(EyeSystem.EYE_STATE_LOCK) do
             if haskey(es, "attention_enabled")
@@ -7513,7 +7548,7 @@ function load_specimen_from_file!(filepath::String)::String
         vr = specimen["verb_registry"]
         lock(SemanticVerbs.VERB_REGISTRY_LOCK) do
             # Restore classes + verbs
-            if haskey(vr, "classes") && isa(vr["classes"], Dict)
+            if haskey(vr, "classes") && _is_dict_like(vr["classes"])
                 for (cls, verbs) in vr["classes"]
                     SemanticVerbs._VERB_REGISTRY[String(cls)] = Set{String}(String.(verbs))
                     n_verb_classes += 1
@@ -7521,7 +7556,7 @@ function load_specimen_from_file!(filepath::String)::String
                 end
             end
             # Restore synonyms
-            if haskey(vr, "synonyms") && isa(vr["synonyms"], Dict)
+            if haskey(vr, "synonyms") && _is_dict_like(vr["synonyms"])
                 for (alias, canon) in vr["synonyms"]
                     SemanticVerbs._SYNONYM_MAP[String(alias)] = String(canon)
                     n_verb_synonyms += 1
@@ -7538,7 +7573,7 @@ function load_specimen_from_file!(filepath::String)::String
 
     # ── 4.3 THESAURUS SEEDS ──────────────────────────────────────────────
     n_thesaurus = 0
-    if haskey(specimen, "thesaurus_seeds") && isa(specimen["thesaurus_seeds"], Dict)
+    if haskey(specimen, "thesaurus_seeds") && _is_dict_like(specimen["thesaurus_seeds"])
         lock(Thesaurus.SEED_MAP_LOCK) do
             for (word, syns) in specimen["thesaurus_seeds"]
                 Thesaurus.SYNONYM_SEED_MAP[String(word)] = Set{String}(String.(syns))
@@ -7586,16 +7621,16 @@ function load_specimen_from_file!(filepath::String)::String
                 try
                     lid = String(ltdata["lobe_id"])
                     chunks = Dict{String, LobeTable.LobeTableChunk}()
-                    if haskey(ltdata, "chunks") && isa(ltdata["chunks"], Dict)
+                    if haskey(ltdata, "chunks") && _is_dict_like(ltdata["chunks"])
                         for (cname, entries) in ltdata["chunks"]
                             chunk = LobeTable.LobeTableChunk(
                                 String(cname),
                                 Dict{String, Any}(),
                                 ReentrantLock()
                             )
-                            if isa(entries, Dict)
+                            if _is_dict_like(entries)
                                 for (k, v) in entries
-                                    if isa(v, Dict) && get(v, "_type", "") == "NodeRef"
+                                    if _is_dict_like(v) && get(v, "_type", "") == "NodeRef"
                                         chunk.store[String(k)] = LobeTable.NodeRef(
                                             String(v["node_id"]),
                                             String(v["lobe_id"]),
@@ -7715,7 +7750,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ── 4.7 NODE_TO_LOBE_IDX ─────────────────────────────────────────────
-    if haskey(specimen, "node_to_lobe_idx") && isa(specimen["node_to_lobe_idx"], Dict)
+    if haskey(specimen, "node_to_lobe_idx") && _is_dict_like(specimen["node_to_lobe_idx"])
         lock(Lobe.LOBE_LOCK) do
             for (nid, lid) in specimen["node_to_lobe_idx"]
                 Lobe.NODE_TO_LOBE_IDX[String(nid)] = String(lid)
@@ -7819,7 +7854,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ── 4.12 AROUSAL ──────────────────────────────────────────────────────
-    if haskey(specimen, "arousal") && isa(specimen["arousal"], Dict)
+    if haskey(specimen, "arousal") && _is_dict_like(specimen["arousal"])
         ar = specimen["arousal"]
         lock(EyeSystem.AROUSAL_LOCK) do
             EyeSystem.AROUSAL_STATE.level      = Float64(get(ar, "level", 0.3))
@@ -7831,7 +7866,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ── 4.13 BRAINSTEM ────────────────────────────────────────────────────
-    if haskey(specimen, "brainstem") && isa(specimen["brainstem"], Dict)
+    if haskey(specimen, "brainstem") && _is_dict_like(specimen["brainstem"])
         bs = specimen["brainstem"]
         lock(BrainStem.BRAINSTEM_LOCK) do
             BrainStem.BRAINSTEM_STATE.dispatch_count = Int(get(bs, "dispatch_count", 0))
@@ -8049,11 +8084,11 @@ function load_specimen_from_file!(filepath::String)::String
     # Academic: Backward-compatible — if key is missing (v2.0 specimen),
     # trajectory stays at defaults. No error, no silent corruption.
     n_trajectory = 0
-    if haskey(specimen, "trajectory") && isa(specimen["trajectory"], Dict)
+    if haskey(specimen, "trajectory") && _is_dict_like(specimen["trajectory"])
         traj = specimen["trajectory"]
         lock(ActionTonePredictor._trajectory_lock) do
             # Restore config if present
-            if haskey(traj, "config") && isa(traj["config"], Dict)
+            if haskey(traj, "config") && _is_dict_like(traj["config"])
                 tc = traj["config"]
                 try
                     ActionTonePredictor._trajectory_config[] = ActionTonePredictor.TrajectoryConfig(
@@ -8143,7 +8178,7 @@ function load_specimen_from_file!(filepath::String)::String
     # Academic: Backward-compatible — missing key means no active cooldowns,
     # which is correct for v2.0 specimens that never tracked this.
     n_cooldowns = 0
-    if haskey(specimen, "morph_cooldowns") && isa(specimen["morph_cooldowns"], Dict)
+    if haskey(specimen, "morph_cooldowns") && _is_dict_like(specimen["morph_cooldowns"])
         lock(ChatterMode.MORPH_COOLDOWN_LOCK) do
             for (node_id, ts) in specimen["morph_cooldowns"]
                 try
@@ -8166,7 +8201,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # —— 4.18 IMMUNE SYSTEM STATE ——————————————————————————————
-    if haskey(specimen, "immune_system") && isa(specimen["immune_system"], Dict)
+    if haskey(specimen, "immune_system") && _is_dict_like(specimen["immune_system"])
         ImmuneSystem.deserialize_immune_state!(specimen["immune_system"])
         n_immune_sigs = lock(ImmuneSystem.IMMUNE_HOPFIELD_LOCK) do
             length(ImmuneSystem.IMMUNE_HOPFIELD)
@@ -8182,7 +8217,7 @@ function load_specimen_from_file!(filepath::String)::String
     # ─── 4.19 AIML NODE SYSTEM STATE ─────────────────────────────────────────────────
     # GRUG: Restore AIML registry + population caps + cycle counter.
     # Academic: Without this, all AIML executive nodes are lost on reload.
-    if haskey(specimen, "aiml_system") && isa(specimen["aiml_system"], Dict)
+    if haskey(specimen, "aiml_system") && _is_dict_like(specimen["aiml_system"])
         AIMLNodeSystem.deserialize_aiml_state!(specimen["aiml_system"])
         n_aiml_lobes = length(AIMLNodeSystem.get_registered_lobes())
         registered_lobes = AIMLNodeSystem.get_registered_lobes()
@@ -8275,7 +8310,7 @@ function load_specimen_from_file!(filepath::String)::String
     # GRUG v7.27: Restore the phase accumulator (time crystal) from specimen.
     # The crystal holds ATP distribution snapshots. Without this restore,
     # the hippocampus starts with zero learned phase — every reload is amnesia.
-    if haskey(specimen, "phase_accumulator") && isa(specimen["phase_accumulator"], Dict)
+    if haskey(specimen, "phase_accumulator") && _is_dict_like(specimen["phase_accumulator"])
         try
             EphemeralAutomaton.phase_accumulator_from_dict!(specimen["phase_accumulator"])
             _pa_status = EphemeralAutomaton.phase_pull_status()
@@ -8339,7 +8374,7 @@ function load_specimen_from_file!(filepath::String)::String
     # consistency even if group member lists were somehow incomplete.
     # We only fill in entries that are missing (chatter_groups restore may
     # have already set some).
-    if haskey(specimen, "node_to_group_idx") && isa(specimen["node_to_group_idx"], Dict)
+    if haskey(specimen, "node_to_group_idx") && _is_dict_like(specimen["node_to_group_idx"])
         lock(GROUP_LOCK) do
             for (nid, gid) in specimen["node_to_group_idx"]
                 n = String(nid)
@@ -8353,7 +8388,7 @@ function load_specimen_from_file!(filepath::String)::String
     # ── 4.24 TONAL JUDGE TUNABLES ──────────────────────────────────────────
     # GRUG: Restore the TonalJudge runtime knobs if present. Backward-compat:
     # pre-v2.5 specimens lack this key — knobs stay at defaults.
-    if haskey(specimen, "tonal_judge_knobs") && isa(specimen["tonal_judge_knobs"], Dict)
+    if haskey(specimen, "tonal_judge_knobs") && _is_dict_like(specimen["tonal_judge_knobs"])
         tk = specimen["tonal_judge_knobs"]
         if haskey(tk, "frame_lift_multiplier")
             TonalJudge._FRAME_LIFT_MULTIPLIER[] = Float64(tk["frame_lift_multiplier"])
@@ -8369,7 +8404,7 @@ function load_specimen_from_file!(filepath::String)::String
     # The brain's learned weights, rules, and correlations survive across
     # save/load. If the key is missing (old specimen), MLP keeps its default
     # initial state — no error, just a fresh brain.
-    if haskey(specimen, "ephemeral_mlp") && isa(specimen["ephemeral_mlp"], Dict)
+    if haskey(specimen, "ephemeral_mlp") && _is_dict_like(specimen["ephemeral_mlp"])
         try
             EphemeralMLP.from_specimen_dict!(specimen["ephemeral_mlp"])
             mlp_status = EphemeralMLP.get_mlp_status()
@@ -8388,7 +8423,7 @@ function load_specimen_from_file!(filepath::String)::String
     # The actual observer store starts fresh (micrologs are ephemeral by design).
     # But the MLP's selfobserver_observations counter was restored from the
     # specimen, so the gate works correctly even though the store is empty.
-    if haskey(specimen, "mlp_observer_store") && isa(specimen["mlp_observer_store"], Dict)
+    if haskey(specimen, "mlp_observer_store") && _is_dict_like(specimen["mlp_observer_store"])
         obs_data = specimen["mlp_observer_store"]
         obs_entries = get(obs_data, "total_entries", 0)
         obs_keys = get(obs_data, "key_count", 0)
@@ -8400,7 +8435,7 @@ function load_specimen_from_file!(filepath::String)::String
     # (current - 0.0) instead of (current - last_known), producing a
     # bogus coherence "spike" on the first observation. Old specimens
     # without this key simply keep the default 0.0 — no harm done.
-    if haskey(specimen, "mlp_cached_phi") && isa(specimen["mlp_cached_phi"], Dict)
+    if haskey(specimen, "mlp_cached_phi") && _is_dict_like(specimen["mlp_cached_phi"])
         _saved_phi = Float64(get(specimen["mlp_cached_phi"], "last_phi", 0.0))
         _MLP_CACHED_PHI[:last_phi] = _saved_phi
         println("  🧠 MLP cached Phi restored (last_phi=$_saved_phi)")
@@ -8465,7 +8500,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "injector_stats")
             _istats = specimen["injector_stats"]
-            if isa(_istats, Dict)
+            if _is_dict_like(_istats)
                 lock(EphemeralAutomaton._INJECTOR_LOCK) do
                     for (k, v) in _istats
                         if haskey(EphemeralAutomaton._INJECTOR_STATS, k)
@@ -8486,7 +8521,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "relational_jitter_config")
             _rjcfg = specimen["relational_jitter_config"]
-            if isa(_rjcfg, Dict)
+            if _is_dict_like(_rjcfg)
                 if haskey(_rjcfg, "jitter_ratio")
                     RelationalJitter._JITTER_RATIO[] = Float64(_rjcfg["jitter_ratio"])
                 end
@@ -8754,7 +8789,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "fanout_config")
             _focfg = specimen["fanout_config"]
-            if isa(_focfg, Dict)
+            if _is_dict_like(_focfg)
                 if haskey(_focfg, "enabled")
                     _FANOUT_ENABLED[] = Bool(_focfg["enabled"])
                 end
@@ -8781,7 +8816,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "hippocampal_pending_ask")
             _hpa = specimen["hippocampal_pending_ask"]
-            if isa(_hpa, Dict) && haskey(_hpa, "pending_text")
+            if _is_dict_like(_hpa) && haskey(_hpa, "pending_text")
                 lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
                     _HIPPOCAMPAL_PENDING_ASK[] = String(_hpa["pending_text"])
                 end
@@ -8805,7 +8840,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "admin_session")
             _as = specimen["admin_session"]
-            if isa(_as, Dict) && get(_as, "is_logged_in", false)
+            if _is_dict_like(_as) && get(_as, "is_logged_in", false)
                 ADMIN_SESSION[] = AdminSession(false, 0.0, 0.0)
                 println("  🔐  Admin session: SAVED while logged in — session reset for safety (use /login)")
             else
@@ -8823,11 +8858,11 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "lobe_orch_last")
             _lol = specimen["lobe_orch_last"]
-            if isa(_lol, Dict)
+            if _is_dict_like(_lol)
                 if haskey(_lol, "scores") && isa(_lol["scores"], AbstractVector)
                     _restored_scores = Tuple{String, Float64, Float64, Float64, Int}[]
                     for s in _lol["scores"]
-                        if isa(s, Dict)
+                        if _is_dict_like(s)
                             push!(_restored_scores, (
                                 String(get(s, "lobe_id", "")),
                                 Float64(get(s, "base_avg", 0.0)),
@@ -8859,7 +8894,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "chatter_cursor")
             _cc = specimen["chatter_cursor"]
-            if isa(_cc, Dict) && haskey(_cc, "cursor")
+            if _is_dict_like(_cc) && haskey(_cc, "cursor")
                 ChatterMode.CHATTER_CURSOR[] = Int(_cc["cursor"])
                 println("  🔖  Chatter cursor loaded (pos=$(ChatterMode.CHATTER_CURSOR[]))")
             end
@@ -8875,25 +8910,25 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "answer_mode_config")
             _amc = specimen["answer_mode_config"]
-            if isa(_amc, Dict)
+            if _is_dict_like(_amc)
                 for (mode_name, mode_cfg) in _amc
                     if haskey(_ANSWER_MODE_CONFIG, mode_name)
                         # Merge: saved values override code defaults
                         _existing = _ANSWER_MODE_CONFIG[mode_name]
-                        if isa(mode_cfg, Dict) && isa(_existing, Dict)
+                        if _is_dict_like(mode_cfg) && _is_dict_like(_existing)
                             for (k, v) in mode_cfg
                                 _existing[k] = v
                             end
                         elseif isempty(_existing) && !isempty(mode_cfg)
                             # Code default is empty (handled specially), but saved
                             # had data — restore it
-                            if isa(mode_cfg, Dict)
+                            if _is_dict_like(mode_cfg)
                                 _ANSWER_MODE_CONFIG[mode_name] = Dict{String,Any}(mode_cfg)
                             end
                         end
                     else
                         # New mode that doesn't exist in code defaults — add it
-                        if isa(mode_cfg, Dict)
+                        if _is_dict_like(mode_cfg)
                             _ANSWER_MODE_CONFIG[mode_name] = Dict{String,Any}(mode_cfg)
                         end
                     end
@@ -8929,7 +8964,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "time_orientation_config")
             _toc = specimen["time_orientation_config"]
-            if isa(_toc, Dict)
+            if _is_dict_like(_toc)
                 # Restore global time orientation state
                 _g_orient = String(get(_toc, "global_orientation", "none"))
                 _g_meta = get(_toc, "global_meta", Dict{String,Any}())
@@ -8947,10 +8982,10 @@ function load_specimen_from_file!(filepath::String)::String
                 # the time_orientation and time_sigil fields should already be there.
                 # This is a verification pass + logging.
                 _tni = get(_toc, "time_node_index", Dict{String,Any}())
-                if isa(_tni, Dict) && !isempty(_tni)
+                if _is_dict_like(_tni) && !isempty(_tni)
                     _verified = 0
                     for (nid, info) in _tni
-                        if isa(info, Dict)
+                        if _is_dict_like(info)
                             _orient = get(info, "orientation", "")
                             _sigil  = get(info, "sigil", "")
                             # Verify the node exists and has the orientation
@@ -8982,7 +9017,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "coherence_config")
             _cc = specimen["coherence_config"]
-            if isa(_cc, Dict)
+            if _is_dict_like(_cc)
                 CoherenceField.coherence_config_from_dict!(_cc)
                 _w = get(_cc, "weight", 0.0)
                 println("  🔗  CoherenceField config loaded (weight=$_w)")
@@ -10406,7 +10441,42 @@ elseif !isnothing(m_right)
                         end
 
                         try
-                            new_ids = grow_nodes_from_packet(json_text; target_lobe=target_lobe)
+                            # GRUG FIX (v7.42): When the grow packet pattern is image binary,
+                            # we must tell grow_nodes_from_packet to flag it is_image_node=true,
+                            # otherwise the base64 string is stored as a plain TEXT pattern with a
+                            # 1-element signal (the SDF signal we just computed gets discarded).
+                            # We inject is_image_node into the packet JSON, then after creation we
+                            # overwrite the empty placeholder signal with the real SDF signal.
+                            _grow_json_text = json_text
+                            if is_img
+                                _gp = try JSON.parse(json_text) catch; nothing end
+                                if _gp !== nothing
+                                    if haskey(_gp, "nodes") && isa(_gp["nodes"], AbstractVector)
+                                        for _nd in _gp["nodes"]
+                                            _is_dict_like(_nd) && (_nd["is_image_node"] = true)
+                                        end
+                                    elseif haskey(_gp, "pattern")
+                                        _gp["is_image_node"] = true
+                                    end
+                                    _grow_json_text = JSON.json(_gp)
+                                end
+                            end
+
+                            new_ids = grow_nodes_from_packet(_grow_json_text; target_lobe=target_lobe)
+
+                            # GRUG FIX (v7.42): Apply the real SDF signal to freshly-created image
+                            # nodes (create_node leaves an empty placeholder for image nodes).
+                            if is_img && !isempty(img_sig)
+                                lock(NODE_LOCK) do
+                                    for nid in new_ids
+                                        n = get(NODE_MAP, nid, nothing)
+                                        if !isnothing(n) && n.is_image_node && isempty(n.signal)
+                                            append!(n.signal, img_sig)
+                                        end
+                                    end
+                                end
+                            end
+
                             success_msg = "🌱 Tribe expanded! Grug planted $(length(new_ids)) new nodes into lobe '$(isnothing(target_lobe) ? "-" : target_lobe)': [$(join(new_ids, ", "))]"
                             println(success_msg)
                             add_message_to_history!("System", success_msg, false)

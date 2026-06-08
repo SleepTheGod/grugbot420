@@ -165,7 +165,7 @@ function _activation(node; now::Float64=time())
     if last_fire === nothing
         # Try json_data path for fire time
         jd = get(node, :json_data, nothing)
-        if jd !== nothing && isa(jd, Dict)
+        if jd !== nothing && isa(jd, AbstractDict)
             lft = get(jd, "last_fire_time", nothing)
             if lft === nothing
                 return 0.0
@@ -320,7 +320,7 @@ function _secondary_delta(candidate_id::AbstractString,
                 partner_id = nothing
                 if isa(partner_entry, AbstractString)
                     partner_id = partner_entry
-                elseif isa(partner_entry, Dict)
+                elseif isa(partner_entry, AbstractDict)
                     partner_id = get(partner_entry, "target_id",
                               get(partner_entry, :target_id, nothing))
                 end
@@ -375,7 +375,7 @@ function _tertiary_delta(candidate_id::AbstractString,
                 partner_id = nothing
                 if isa(partner_entry, AbstractString)
                     partner_id = partner_entry
-                elseif isa(partner_entry, Dict)
+                elseif isa(partner_entry, AbstractDict)
                     partner_id = get(partner_entry, "target_id",
                               get(partner_entry, :target_id, nothing))
                 end
@@ -387,7 +387,7 @@ function _tertiary_delta(candidate_id::AbstractString,
                             sub_id = nothing
                             if isa(sub_entry, AbstractString)
                                 sub_id = sub_entry
-                            elseif isa(sub_entry, Dict)
+                            elseif isa(sub_entry, AbstractDict)
                                 sub_id = get(sub_entry, "target_id",
                                       get(sub_entry, :target_id, nothing))
                             end
@@ -646,7 +646,7 @@ end
 Restore CoherenceField config from a dictionary (specimen load).
 Only sets values that are present in the dict; defaults are preserved.
 """
-function coherence_config_from_dict!(d::Dict)
+function coherence_config_from_dict!(d)
     if haskey(d, "weight")
         set_coherence_config!(:weight, Float64(d["weight"]))
     end

@@ -919,11 +919,11 @@ end
 
 GRUG: Restore link evidence from specimen load.
 """
-function load_link_evidence_snapshot!(snap::Dict)
+function load_link_evidence_snapshot!(snap)
     lock(_LINK_EVIDENCE_LOCK) do
         empty!(_LINK_EVIDENCE)
         for (key, data) in snap
-            if isa(data, Dict)
+            if isa(data, AbstractDict)
                 rec = LinkEvidenceRecord(
                     get(data, "node_a", ""),
                     get(data, "node_b", "");

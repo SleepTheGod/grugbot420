@@ -948,7 +948,7 @@ function serialize_aiml_state()::Dict{String, Any}
 end
 
 """
-    deserialize_aiml_state!(data::Dict{String, Any})
+    deserialize_aiml_state!(data)
 
 GRUG: Restore AIML system state from specimen save file.
 Wipes existing state and replaces with loaded data.
@@ -959,7 +959,7 @@ Expects data with keys:
   - "population_caps": Dict mapping lobe_id -> cap
   - "cycle": Integer cycle counter
 """
-function deserialize_aiml_state!(data::Dict{String, Any})
+function deserialize_aiml_state!(data)
     # GRUG: Validate input structure
     if !haskey(data, "registry")
         error("!!! FATAL: deserialize_aiml_state! missing 'registry' key !!!")
@@ -978,7 +978,7 @@ function deserialize_aiml_state!(data::Dict{String, Any})
 
         # GRUG: Restore population caps first (needed for node validation)
         caps_data = data["population_caps"]
-        if !isa(caps_data, Dict)
+        if !isa(caps_data, AbstractDict)
             error("!!! FATAL: deserialize_aiml_state! population_caps is not a Dict !!!")
         end
         for (lobe_id, cap) in caps_data
@@ -990,7 +990,7 @@ function deserialize_aiml_state!(data::Dict{String, Any})
 
         # GRUG: Restore registry
         registry_data = data["registry"]
-        if !isa(registry_data, Dict)
+        if !isa(registry_data, AbstractDict)
             error("!!! FATAL: deserialize_aiml_state! registry is not a Dict !!!")
         end
         for (lobe_id, nodes_list) in registry_data
@@ -1003,7 +1003,7 @@ function deserialize_aiml_state!(data::Dict{String, Any})
             end
 
             for node_data in nodes_list
-                if !isa(node_data, Dict)
+                if !isa(node_data, AbstractDict)
                     @warn "[AIML] deserialize: node entry is not a Dict, skipping"
                     continue
                 end

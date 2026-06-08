@@ -385,7 +385,7 @@ function accumulate_evidence!(;
                 if haskey(sig_entry, :expansion) && !isnothing(sig_entry[:expansion]) && !isempty(sig_entry[:expansion])
                     has_expansion = true
                 end
-                if isa(sig_entry, Dict)
+                if isa(sig_entry, AbstractDict)
                     if haskey(sig_entry, "lexicon") && !isnothing(sig_entry["lexicon"]) && !isempty(sig_entry["lexicon"])
                         has_expansion = true
                     end

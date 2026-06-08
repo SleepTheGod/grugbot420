@@ -240,7 +240,7 @@ Build a DecomposerConfig from the specimen's decomposer_config and store it
 as the runtime config. Called by Main.jl after loading a specimen. Returns
 the new config for inspection/logging.
 """
-function set_config!(specimen_dict::Dict)::DecomposerConfig
+function set_config!(specimen_dict)::DecomposerConfig
     cfg = build_config(specimen_dict)
     _RUNTIME_CONFIG[] = cfg
     return cfg
@@ -280,7 +280,7 @@ conjunction? Put it in decomposer_config.split_conjunctions. You want
 "investigated", "investigating"? Put it in decomposer_config. No source
 code edit needed. The specimen is the brain, not the compiler.
 """
-function build_config(specimen_dict::Dict)::DecomposerConfig
+function build_config(specimen_dict)::DecomposerConfig
     dc = get(specimen_dict, "decomposer_config", nothing)
     if dc === nothing
         return DEFAULT_CONFIG
