@@ -5642,7 +5642,7 @@ function process_mission(mission_text::String)
                                         SelfObserver.observe!(
                                             _MLP_OBSERVER_STORE,
                                             "vig_feedback_$(next_runtime_id("vig"))",
-                                            :vigilance,
+                                            :meta,       # GRUG FIX: was :vigilance which is not in VALID_TAGS
                                             Dict{String, Any}(
                                                 "source_rule" => _vig_agent.rule_id,
                                                 "probe_key"   => get(_vig_f, "probe_key", ""),
@@ -12596,7 +12596,7 @@ elseif !isnothing(m_right)
                 SelfObserver.observe!(
                     _MLP_OBSERVER_STORE,
                     "error_$(round(Int, time() * 1000) % 1_000_000)",
-                    :error,
+                    :meta,         # GRUG FIX: was :error which is not in VALID_TAGS
                     Dict{String, Any}(
                         "exception"        => string(e),
                         "command"          => string(line),

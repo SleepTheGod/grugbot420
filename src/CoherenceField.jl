@@ -52,6 +52,31 @@ const COHERENCE_DECAY_MAX    = 0.1   # Max activation decay rate
 const COHERENCE_RECENCY_MIN  = 10.0  # Min recency window (seconds)
 const COHERENCE_RECENCY_MAX  = 3600.0 # Max recency window (1 hour)
 
+# ── Safe node field accessor ──────────────────────────────────────────────────
+# GRUG FIX: get(node, :is_grave, false) throws MethodError when node is a
+# Node struct (not a Dict).  This helper works with both Node structs and
+# Dicts by trying getproperty first, then falling back to get().
+function _node_get(node, sym::Symbol, default)
+    try
+        val = getproperty(node, sym)
+        return val
+    catch
+        # Not a struct field — try Dict-style get, then json_data, then default
+        if isa(node, AbstractDict)
+            return get(node, sym, default)
+        end
+        # Last resort: check json_data if it exists
+        try
+            jd = getproperty(node, :json_data)
+            if isa(jd, AbstractDict) && haskey(jd, String(sym))
+                return jd[String(sym)]
+            end
+        catch
+        end
+        return default
+    end
+end
+
 # ── Error type ───────────────────────────────────────────────────────────────
 struct CoherenceFieldError <: Exception
     msg::String
@@ -161,10 +186,10 @@ function _activation(node; now::Float64=time())
     if window <= 0.0
         return 0.0
     end
-    last_fire = get(node, :last_fire_time, nothing)
+    last_fire = _node_get(node, :last_fire_time, nothing)
     if last_fire === nothing
         # Try json_data path for fire time
-        jd = get(node, :json_data, nothing)
+        jd = _node_get(node, :json_data, nothing)
         if jd !== nothing && isa(jd, AbstractDict)
             lft = get(jd, "last_fire_time", nothing)
             if lft === nothing
@@ -208,15 +233,15 @@ function _node_coherence(node)
     best = 0.0
 
     # Source 1: scan_coherence (PatternScanner bidirectional)
-    sc = get(node, :scan_coherence, nothing)
+    sc = _node_get(node, :scan_coherence, nothing)
     if sc !== nothing && isa(sc, Number) && isfinite(Float64(sc))
         best = max(best, Float64(sc))
     end
 
     # Source 2: strength proxy
-    str = get(node, :strength, nothing)
+    str = _node_get(node, :strength, nothing)
     if str !== nothing && isa(str, Number) && Float64(str) > 0.0
-        cap = get(node, :strength_cap, nothing)
+        cap = _node_get(node, :strength_cap, nothing)
         if cap !== nothing && isa(cap, Number) && Float64(cap) > 0.0
             ratio = Float64(str) / Float64(cap)
             best = max(best, clamp(ratio, 0.0, 1.0))
@@ -224,7 +249,7 @@ function _node_coherence(node)
     end
 
     # Source 3: coherence_score (ImageSDF temporal coherence)
-    cs = get(node, :coherence_score, nothing)
+    cs = _node_get(node, :coherence_score, nothing)
     if cs !== nothing && isa(cs, Number) && isfinite(Float64(cs))
         best = max(best, clamp(Float64(cs), 0.0, 1.0))
     end
@@ -261,7 +286,7 @@ function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
     phi = 0.0
     for (nid, node) in nodes_dict
         # Skip grave nodes — they don't contribute to the field
-        is_grave = get(node, :is_grave, false)
+        is_grave = _node_get(node, :is_grave, false)
         if is_grave === true || is_grave == 1
             continue
         end
@@ -337,7 +362,7 @@ function _secondary_delta(candidate_id::AbstractString,
     end
 
     # Neighbors from node's neighbor_ids: 5% coupling
-    neighbor_ids = get(candidate, :neighbor_ids, nothing)
+    neighbor_ids = _node_get(candidate, :neighbor_ids, nothing)
     if neighbor_ids !== nothing && isa(neighbor_ids, AbstractVector)
         for neighbor_id in neighbor_ids
             nid_str = String(neighbor_id)
@@ -422,8 +447,8 @@ Only applies when candidate strength > 0.5 (relative to cap).
 The negative contribution is proportional to the strength excess.
 """
 function _inhibition_delta(candidate, nodes_dict)::Float64
-    str = get(candidate, :strength, 0.0)
-    cap = get(candidate, :strength_cap, 1.0)
+    str = _node_get(candidate, :strength, 0.0)
+    cap = _node_get(candidate, :strength_cap, 1.0)
     if !isa(str, Number) || !isa(cap, Number) || Float64(cap) <= 0.0
         return 0.0
     end
@@ -433,7 +458,7 @@ function _inhibition_delta(candidate, nodes_dict)::Float64
     end
 
     # Count weaker neighbors
-    neighbor_ids = get(candidate, :neighbor_ids, nothing)
+    neighbor_ids = _node_get(candidate, :neighbor_ids, nothing)
     if neighbor_ids === nothing || !isa(neighbor_ids, AbstractVector) || isempty(neighbor_ids)
         return 0.0
     end
@@ -443,8 +468,8 @@ function _inhibition_delta(candidate, nodes_dict)::Float64
         nstr = nothing
         neighbor = get(nodes_dict, String(nid), nothing)
         if neighbor !== nothing
-            ns = get(neighbor, :strength, 0.0)
-            nc = get(neighbor, :strength_cap, 1.0)
+            ns = _node_get(neighbor, :strength, 0.0)
+            nc = _node_get(neighbor, :strength_cap, 1.0)
             if isa(ns, Number) && isa(nc, Number) && Float64(nc) > 0.0
                 nrel = Float64(ns) / Float64(nc)
                 if nrel < rel_str
@@ -495,7 +520,7 @@ function compute_delta(candidate_id::AbstractString,
     end
 
     # Skip grave nodes — they can't contribute
-    is_grave = get(candidate, :is_grave, false)
+    is_grave = _node_get(candidate, :is_grave, false)
     if is_grave === true || is_grave == 1
         return 0.0
     end
@@ -556,7 +581,7 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
     contributions = Vector{Dict{String,Any}}()
 
     for (nid, node) in nodes_dict
-        is_grave = get(node, :is_grave, false)
+        is_grave = _node_get(node, :is_grave, false)
         if is_grave === true || is_grave == 1
             continue
         end

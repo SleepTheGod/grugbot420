@@ -1,0 +1,16 @@
+/loadSpecimen comprehensive_specimen_v742.json
+# ── Cross-lobe bridges (cascade fire between chambers) ──
+/nodeBridge physics node_136 node_37 energy numbers
+/nodeBridge music node_142 node_109 melody joy
+/nodeBridge vision node_145 node_108 color star
+/nodeBridge physics node_140 node_18 quantum fire
+# ── Crystalized (sticky) bridge ──
+/crystalize physics node_136 node_37
+# ── Image node attached via SDF (vision lobe) ──
+/imgnodeAttach vision node_146 imgnode_sunset data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAGklEQVR4nGP8z8DwH4qBGBkYGP4jMTAAAP8/AAX+An/H4uOkAAAAAElFTkSuQmCC 8 8
+# ── Inspect ──
+/bridges
+/lobes
+# ── Save final comprehensive specimen ──
+/saveSpecimen comprehensive_specimen_v742.json
+/status

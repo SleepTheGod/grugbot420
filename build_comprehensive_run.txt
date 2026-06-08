@@ -1,0 +1,135 @@
+# build_comprehensive.txt — Command script piped into run_cli() via stdin.
+# Loads the v81 base, enriches it with EVERY feature Grug supports, then saves.
+
+# ── Load the strong v81 base (133 nodes, 8 lobes, 10 AIML, 16 sigils, 526 thesaurus) ──
+/loadSpecimen comprehensive_specimen_v81.json
+
+# ════════════════════════════════════════════════════════════════════
+#  NEW LOBES FOR NEW SUBJECTS (multi-subject coverage)
+# ════════════════════════════════════════════════════════════════════
+/newLobe physics energy force motion gravity matter quantum relativity
+/newLobe music rhythm melody harmony song sound instrument tempo
+/newLobe vision sight color shape image light dark pattern visual
+/nameLobe physics PhysicsBrain
+/nameLobe music MusicBrain
+/nameLobe vision VisionBrain
+
+# Connect lobes bidirectionally (lobe topology)
+/connectLobes physics math
+/connectLobes music emotions
+/connectLobes vision science
+/connectLobes physics science
+
+# ════════════════════════════════════════════════════════════════════
+#  LANGUAGE FEATURES — verb classes, verbs, synonyms, relation macros
+# ════════════════════════════════════════════════════════════════════
+/addRelationClass spatial
+/addVerb above spatial
+/addVerb below spatial
+/addVerb beside spatial
+/addRelationClass comparative
+/addVerb exceeds comparative
+/addVerb resembles comparative
+/addVerb mirrors comparative
+/addVerb produce causal
+# /addSynonym <canonical-verb> <alias> — canonical must be a registered verb
+/addSynonym create craft
+/addSynonym cause trigger
+/addSynonym exceeds surpasses
+# /addSeedSynonym = thesaurus seed group (no verb requirement)
+/addSeedSynonym vibrate oscillate quiver tremble shake pulse
+/addSeedSynonym melody tune air strain song
+/addSeedSynonym gravity weight pull attraction force
+# /addRelRelation <name> <alt1 alt2 ...> — dynamic relation sigil macro
+/addRelRelation harmonizes resonates syncs aligns
+
+# ════════════════════════════════════════════════════════════════════
+#  NEGATIVE THESAURUS (INHIBITION FILTER) — drains confidence on noise
+# ════════════════════════════════════════════════════════════════════
+/negativeThesaurus add gibberish --reason noise token no semantic value
+/negativeThesaurus add asdf --reason keyboard mash
+/negativeThesaurus add blahblah --reason filler noise
+
+# ════════════════════════════════════════════════════════════════════
+#  SIGILS — input-rewrite rules. class in {lambda,macro,tag,relation}
+#  applies_at in {bind,match,vote_shape,tone,render,thesaurus,drop_table,inhibit,relation}
+# ════════════════════════════════════════════════════════════════════
+/sigil add tempo macro match lexicon=fast,slow,allegro,adagio promote=false
+/sigil add wavelength macro thesaurus lexicon=red,orange,yellow,green,blue promote=false
+
+# ════════════════════════════════════════════════════════════════════
+#  ANTIMATCH NODES — confidence-drain guards (suppress unwanted firing)
+# ════════════════════════════════════════════════════════════════════
+/addAntiMatch ignore physics please
+/addAntiMatch stop the music now
+/addAntiMatch do not calculate
+
+# ════════════════════════════════════════════════════════════════════
+#  GROW NODES (single-token, high-confidence) into the new lobes
+#  Physics lobe
+# ════════════════════════════════════════════════════════════════════
+/grow physics {"pattern":"energy","action_packet":"explain[be precise]^4 | reason^2 | define^1","data":{"voice_register":"explanatory","system_prompt":"Grug. I explain physics plainly.","answer_mode":"explain"}}
+/grow physics {"pattern":"force","action_packet":"explain[be precise]^4 | reason^2","data":{"voice_register":"explanatory","answer_mode":"explain"}}
+/grow physics {"pattern":"gravity","action_packet":"explain[be precise]^4 | reason^2","data":{"voice_register":"explanatory","answer_mode":"explain"}}
+/grow physics {"pattern":"momentum","action_packet":"reason[show work]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"reason"}}
+/grow physics {"pattern":"quantum","action_packet":"explain[be precise]^4 | ponder^2","data":{"voice_register":"explanatory","answer_mode":"explain"}}
+
+# Music lobe
+/grow music {"pattern":"rhythm","action_packet":"describe[be vivid]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain"}}
+/grow music {"pattern":"melody","action_packet":"describe[be vivid]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain"}}
+/grow music {"pattern":"harmony","action_packet":"describe[be vivid]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain"}}
+/grow music {"pattern":"tempo","action_packet":"describe^4 | reason^2","data":{"voice_register":"plain","answer_mode":"reason"}}
+
+# Vision lobe
+/grow vision {"pattern":"color","action_packet":"describe[be vivid]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain"}}
+/grow vision {"pattern":"shape","action_packet":"describe^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain"}}
+/grow vision {"pattern":"light","action_packet":"describe[be vivid]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain"}}
+
+# ════════════════════════════════════════════════════════════════════
+#  TIME NODES (:time mode auto-gates &temporal) + RELATE + PROC + MULTI + MATH
+# ════════════════════════════════════════════════════════════════════
+/answer @time :time dawn | dusk
+/answer @time :time spring | winter
+/answer @physics :relate cause | produce | effect
+/answer @physics :proc measure mass; apply force; compute acceleration; verify result
+/answer @music :multi rhythm keeps time | melody carries feeling
+/answer @math :math area of circle equals pi times radius squared
+
+# ════════════════════════════════════════════════════════════════════
+#  AIML NODES — dynamic template responders
+# ════════════════════════════════════════════════════════════════════
+/aimlAdd physics phys_aiml_1 Grug think about topic. Energy never destroyed, only changed.
+/aimlAdd music music_aiml_1 Grug feel music. Rhythm move body, melody move heart.
+
+# ── Inspect state before saving ──
+/lobes
+/listVerbs
+/negativeThesaurus list
+/aimlStatus
+
+# ════════════════════════════════════════════════════════════════════
+#  CROSS-LOBE BRIDGES (cascade fire between chambers) — connective tissue
+#  Node IDs are deterministic from the build order above:
+#    physics energy=node_136, physics quantum=node_140
+#    math "2 plus 2"=node_37, science "why does fire burn"=node_18
+#    music melody=node_142, emotions "joy warmth"=node_109
+#    vision color=node_145, science "fire star"=node_108
+# ════════════════════════════════════════════════════════════════════
+/nodeBridge physics node_136 node_37 energy numbers
+/nodeBridge music node_142 node_109 melody joy
+/nodeBridge vision node_145 node_108 color star
+/nodeBridge physics node_140 node_18 quantum fire
+
+# ── Crystalized (sticky) bridge — always fires when partner fires ──
+/crystalize physics node_136 node_37
+
+# ── Image node: grow it into vision lobe (pattern = image binary → auto SDF) ──
+# The /grow path auto-detects the base64 image and flags is_image_node=true.
+/grow vision {"pattern":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAGklEQVR4nGP8z8DwH4qBGBkYGP4jMTAAAP8/AAX+An/H4uOkAAAAAElFTkSuQmCC","action_packet":"describe[be vivid]^4 | explain^2","data":{"voice_register":"plain","answer_mode":"explain","label":"red square image"}}
+
+# ── Inspect bridges ──
+/bridges
+
+# ── Save the comprehensive specimen ──
+/saveSpecimen comprehensive_specimen_v742.json
+/status

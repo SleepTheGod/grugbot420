@@ -1607,6 +1607,17 @@ function mlp_forward(features::Vector{Float64}, weights::MLPWeights,
              "mlp_forward")
     end
 
+    # GRUG FIX: Defensive weight size check. If specimen had old dimensions,
+    # the weight arrays may be too small for current HIDDEN_DIM. Return neutral
+    # output instead of crashing with BoundsError.
+    if length(weights.b_hidden) < HIDDEN_DIM ||
+       length(weights.w_input_hidden) < VOTE_FEATURE_DIM * HIDDEN_DIM ||
+       length(weights.w_output_heads) < NUM_OUTPUT_HEADS ||
+       (length(weights.b_output_heads) < NUM_OUTPUT_HEADS)
+        @error "[EphemeralMLP] mlp_forward: weight array sizes don't match current architecture (HIDDEN_DIM=$HIDDEN_DIM, VOTE_FEATURE_DIM=$VOTE_FEATURE_DIM). Returning neutral output."
+        return fill(0.5, NUM_OUTPUT_HEADS)
+    end
+
     # ── Input → Hidden ──────────────────────────────────────────────────
     hidden = zeros(HIDDEN_DIM)
     for j in 1:HIDDEN_DIM
@@ -2699,14 +2710,39 @@ function from_specimen_dict!(data)
     wd = data["weights"]
     new_weights = MLPWeights()
     try
+        # GRUG FIX: Validate weight array sizes before replacing defaults.
+        # Old specimens may have weights sized for LEGACY_VOTE_FEATURE_DIM=12
+        # and old HIDDEN_DIM=16, but current code expects VOTE_FEATURE_DIM=24
+        # and HIDDEN_DIM=64. Loading undersized arrays causes BoundsError
+        # during mlp_forward. Only replace if sizes match.
+        _expected_ih = VOTE_FEATURE_DIM * HIDDEN_DIM
+        _expected_bh = HIDDEN_DIM
+        _expected_ho = HIDDEN_DIM
+        _expected_at = HIDDEN_DIM * ATTENTION_HEADS
+
         if haskey(wd, "w_input_hidden") && isa(wd["w_input_hidden"], AbstractVector)
-            new_weights.w_input_hidden = parse_weights(wd["w_input_hidden"])
+            parsed = parse_weights(wd["w_input_hidden"])
+            if length(parsed) == _expected_ih
+                new_weights.w_input_hidden = parsed
+            else
+                @warn "[EphemeralMLP] w_input_hidden size mismatch (got $(length(parsed)), expected $_expected_ih), using defaults"
+            end
         end
         if haskey(wd, "b_hidden") && isa(wd["b_hidden"], AbstractVector)
-            new_weights.b_hidden = parse_weights(wd["b_hidden"])
+            parsed = parse_weights(wd["b_hidden"])
+            if length(parsed) == _expected_bh
+                new_weights.b_hidden = parsed
+            else
+                @warn "[EphemeralMLP] b_hidden size mismatch (got $(length(parsed)), expected $_expected_bh), using defaults"
+            end
         end
         if haskey(wd, "w_hidden_output") && isa(wd["w_hidden_output"], AbstractVector)
-            new_weights.w_hidden_output = parse_weights(wd["w_hidden_output"])
+            parsed = parse_weights(wd["w_hidden_output"])
+            if length(parsed) == _expected_ho
+                new_weights.w_hidden_output = parsed
+            else
+                @warn "[EphemeralMLP] w_hidden_output size mismatch (got $(length(parsed)), expected $_expected_ho), using defaults"
+            end
         end
         if haskey(wd, "b_output") && isa(wd["b_output"], AbstractDict)
             b_out = wd["b_output"]
@@ -2715,7 +2751,12 @@ function from_specimen_dict!(data)
             new_weights.b_output = MLPWeight(clamp(val, WEIGHT_FLOOR, WEIGHT_CEILING); jitter_eligible = jitter)
         end
         if haskey(wd, "w_attention") && isa(wd["w_attention"], AbstractVector)
-            new_weights.w_attention = parse_weights(wd["w_attention"])
+            parsed = parse_weights(wd["w_attention"])
+            if length(parsed) == _expected_at
+                new_weights.w_attention = parsed
+            else
+                @warn "[EphemeralMLP] w_attention size mismatch (got $(length(parsed)), expected $_expected_at), using defaults"
+            end
         end
 
         # GRUG v9: Parse transformer block weights. Old specimens won't have
@@ -2737,60 +2778,110 @@ function from_specimen_dict!(data)
         end
 
         # ── v9: QK projections (per transformer block) ──
+        _expected_qk = 2 * HIDDEN_DIM * HIDDEN_DIM
         if haskey(wd, "w_qk") && isa(wd["w_qk"], AbstractVector)
             parsed_qk = parse_weight_blocks(wd["w_qk"])
-            if length(parsed_qk) == NUM_TRANSFORMER_BLOCKS
+            if length(parsed_qk) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_qk, parsed_qk)
                 new_weights.w_qk = parsed_qk
             else
-                @warn "[EphemeralMLP] w_qk block count mismatch (got $(length(parsed_qk)), expected $NUM_TRANSFORMER_BLOCKS), using defaults"
+                @warn "[EphemeralMLP] w_qk block count/size mismatch (got $(length(parsed_qk)) blocks, sizes=$(map(length, parsed_qk)), expected $NUM_TRANSFORMER_BLOCKS blocks of $_expected_qk), using defaults"
             end
         end
 
         # ── v9: Value projections (per transformer block) ──
+        _expected_v = HIDDEN_DIM * HIDDEN_DIM
         if haskey(wd, "w_v") && isa(wd["w_v"], AbstractVector)
             parsed_v = parse_weight_blocks(wd["w_v"])
-            if length(parsed_v) == NUM_TRANSFORMER_BLOCKS
+            if length(parsed_v) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_v, parsed_v)
                 new_weights.w_v = parsed_v
             else
-                @warn "[EphemeralMLP] w_v block count mismatch, using defaults"
+                @warn "[EphemeralMLP] w_v block count/size mismatch, using defaults"
             end
         end
 
         # ── v9: FFN expansion-contraction weights (per block) ──
+        _expected_ffn1 = HIDDEN_DIM * FFN_DIM
+        _expected_bffn1 = FFN_DIM
+        _expected_ffn2 = FFN_DIM * HIDDEN_DIM
+        _expected_bffn2 = HIDDEN_DIM
         if haskey(wd, "w_ffn1") && isa(wd["w_ffn1"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ffn1"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.w_ffn1 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_ffn1, parsed)
+                new_weights.w_ffn1 = parsed
+            else
+                @warn "[EphemeralMLP] w_ffn1 size mismatch, using defaults"
+            end
         end
         if haskey(wd, "b_ffn1") && isa(wd["b_ffn1"], AbstractVector)
             parsed = parse_weight_blocks(wd["b_ffn1"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.b_ffn1 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_bffn1, parsed)
+                new_weights.b_ffn1 = parsed
+            else
+                @warn "[EphemeralMLP] b_ffn1 size mismatch, using defaults"
+            end
         end
         if haskey(wd, "w_ffn2") && isa(wd["w_ffn2"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ffn2"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.w_ffn2 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_ffn2, parsed)
+                new_weights.w_ffn2 = parsed
+            else
+                @warn "[EphemeralMLP] w_ffn2 size mismatch, using defaults"
+            end
         end
         if haskey(wd, "b_ffn2") && isa(wd["b_ffn2"], AbstractVector)
             parsed = parse_weight_blocks(wd["b_ffn2"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.b_ffn2 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_bffn2, parsed)
+                new_weights.b_ffn2 = parsed
+            else
+                @warn "[EphemeralMLP] b_ffn2 size mismatch, using defaults"
+            end
         end
 
         # ── v9: Layer norm scale/bias (2 per block: pre-attention, pre-FFN) ──
+        _expected_ln = HIDDEN_DIM
         if haskey(wd, "w_ln_scale") && isa(wd["w_ln_scale"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ln_scale"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2; new_weights.w_ln_scale = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2 &&
+               all(b -> length(b) == _expected_ln, parsed)
+                new_weights.w_ln_scale = parsed
+            else
+                @warn "[EphemeralMLP] w_ln_scale size mismatch, using defaults"
+            end
         end
         if haskey(wd, "w_ln_bias") && isa(wd["w_ln_bias"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ln_bias"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2; new_weights.w_ln_bias = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2 &&
+               all(b -> length(b) == _expected_ln, parsed)
+                new_weights.w_ln_bias = parsed
+            else
+                @warn "[EphemeralMLP] w_ln_bias size mismatch, using defaults"
+            end
         end
 
         # ── v9: Multi-output heads ──
+        _expected_head = HIDDEN_DIM
         if haskey(wd, "w_output_heads") && isa(wd["w_output_heads"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_output_heads"])
-            if length(parsed) == NUM_OUTPUT_HEADS; new_weights.w_output_heads = parsed; end
+            if length(parsed) == NUM_OUTPUT_HEADS &&
+               all(b -> length(b) == _expected_head, parsed)
+                new_weights.w_output_heads = parsed
+            else
+                @warn "[EphemeralMLP] w_output_heads size mismatch, using defaults"
+            end
         end
         if haskey(wd, "b_output_heads") && isa(wd["b_output_heads"], AbstractVector)
-            new_weights.b_output_heads = parse_weights(wd["b_output_heads"])
+            parsed = parse_weights(wd["b_output_heads"])
+            if length(parsed) == NUM_OUTPUT_HEADS
+                new_weights.b_output_heads = parsed
+            else
+                @warn "[EphemeralMLP] b_output_heads size mismatch (got $(length(parsed)), expected $NUM_OUTPUT_HEADS), using defaults"
+            end
         end
     catch e
         _err("from_specimen_dict! failed to parse weights: $e", "from_specimen_dict!")
