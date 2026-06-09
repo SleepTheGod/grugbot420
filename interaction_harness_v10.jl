@@ -1,10 +1,16 @@
 #!/usr/bin/env julia
-# GrugBot420 — Interaction Harness v10
+# GrugBot420 — Interaction Harness v10.2
 # Loads comprehensive_specimen_v10.json, runs diverse missions covering all
 # node types / answer modes / lobes. For each mission it captures the AIML
-# scaffold (the actual Grug response) plus basic telemetry and writes a clean
+# scaffold OR the ask-question output, plus basic telemetry, and writes a clean
 # input -> response + telemetry log to interaction_log_v10.md.
 # Then checks AutoGrowth/AutoLinker and saves the post-learning specimen.
+#
+# v10.2 fixes:
+#   - Captures both "AIML Output Scaffold" AND "AIML Ask Question" markers
+#   - More novel-query repetitions to exercise AutoGrowth (need freq≥3)
+#   - Better auto-learning verification section
+#   - Adds machine_learning, quantum_computing, dark_matter nodes to missions
 
 using Pkg; Pkg.activate(".")
 include("src/Main.jl")
@@ -28,7 +34,9 @@ initial_al_count = length(initial_link_evidence)
 println("PRE: autogrowth_evidence=$initial_ag_count autolink_evidence=$initial_al_count")
 
 # ── Mission set (input, mode label) ──
+# Organized by answer mode, then repeat/novel for auto-learning exercise
 missions = [
+    # ── REASON ──
     ( 1, "reason",  "what is gravity"),
     ( 2, "reason",  "what is evolution"),
     ( 3, "reason",  "what is a derivative"),
@@ -37,57 +45,74 @@ missions = [
     ( 6, "reason",  "what is consciousness"),
     ( 7, "reason",  "what is a chemical bond"),
     ( 8, "reason",  "what is biodiversity"),
+    # ── EXPLAIN ──
     ( 9, "explain", "explain photosynthesis"),
     (10, "explain", "explain newtons laws"),
     (11, "explain", "explain how computers work"),
     (12, "explain", "explain relativity"),
     (13, "explain", "explain the water cycle"),
-    (14, "define",  "define entropy"),
-    (15, "define",  "define algorithm"),
-    (16, "define",  "define species"),
-    (17, "define",  "define ecosystem"),
-    (18, "define",  "define justice"),
-    (19, "alert",   "danger radiation"),
-    (20, "alert",   "danger toxin chemical"),
-    (21, "alert",   "danger extinction"),
-    (22, "comfort", "i am sad"),
-    (23, "comfort", "i am scared afraid"),
-    (24, "comfort", "i feel lost confused"),
-    (25, "math",    "calculate integral"),
-    (26, "math",    "calculate fibonacci"),
-    (27, "math",    "calculate pi digits"),
-    (28, "math",    "calculate euler number"),
-    (29, "relate",  "sun causes warmth"),
-    (30, "relate",  "predator eats prey"),
-    (31, "relate",  "learning requires practice"),
-    (32, "relate",  "fire causes heat"),
-    (33, "relate",  "education enables progress"),
-    (34, "time",    "what happens in spring"),
-    (35, "time",    "what happened before big bang"),
-    (36, "time",    "next technological revolution"),
-    (37, "time",    "winter seasonal cold"),
-    (38, "proc",    "how to solve quadratic equation"),
-    (39, "proc",    "how to do scientific experiment"),
-    (40, "proc",    "how to build a fire"),
-    (41, "json",    "periodic table data"),
-    (42, "json",    "population statistics"),
-    (43, "multi",   "compare dna and rna"),
-    (44, "multi",   "compare heat and temperature"),
-    (45, "greeting","hello"),
-    (46, "greeting","hi there greetings hey"),
-    # Repeats / novel to exercise AutoGrowth + AutoLinker
-    (47, "reason",  "what is gravity"),
-    (48, "reason",  "tell me about gravity again"),
-    (49, "explain", "explain photosynthesis again"),
-    (50, "novel",   "what is quantum computing"),
-    (51, "novel",   "what is quantum computing"),
-    (52, "novel",   "what is quantum computing"),
-    (53, "novel",   "explain machine learning"),
-    (54, "novel",   "explain machine learning"),
-    (55, "novel",   "explain machine learning"),
-    (56, "novel",   "what is dark matter"),
-    (57, "novel",   "what is dark matter"),
-    (58, "novel",   "what is dark matter"),
+    (14, "explain", "explain machine learning"),
+    # ── DEFINE ──
+    (15, "define",  "define entropy"),
+    (16, "define",  "define algorithm"),
+    (17, "define",  "define species"),
+    (18, "define",  "define ecosystem"),
+    (19, "define",  "define justice"),
+    # ── ALERT ──
+    (20, "alert",   "danger radiation"),
+    (21, "alert",   "danger toxin chemical"),
+    (22, "alert",   "danger extinction"),
+    # ── COMFORT ──
+    (23, "comfort", "i am sad"),
+    (24, "comfort", "i am scared afraid"),
+    (25, "comfort", "i feel lost confused"),
+    # ── MATH ──
+    (26, "math",    "calculate integral"),
+    (27, "math",    "calculate fibonacci"),
+    (28, "math",    "calculate pi digits"),
+    (29, "math",    "calculate euler number"),
+    # ── RELATE ──
+    (30, "relate",  "sun causes warmth"),
+    (31, "relate",  "predator eats prey"),
+    (32, "relate",  "learning requires practice"),
+    (33, "relate",  "fire causes heat"),
+    (34, "relate",  "education enables progress"),
+    # ── TIME ──
+    (35, "time",    "what happens in spring"),
+    (36, "time",    "what happened before big bang"),
+    (37, "time",    "next technological revolution"),
+    (38, "time",    "winter seasonal cold"),
+    # ── PROC ──
+    (39, "proc",    "how to solve quadratic equation"),
+    (40, "proc",    "how to do scientific experiment"),
+    (41, "proc",    "how to build a fire"),
+    # ── JSON ──
+    (42, "json",    "periodic table data"),
+    (43, "json",    "population statistics"),
+    # ── MULTI / COMPARE ──
+    (44, "multi",   "compare dna and rna"),
+    (45, "multi",   "compare heat and temperature"),
+    # ── GREETING ──
+    (46, "greeting","hello"),
+    (47, "greeting","hi there greetings hey"),
+    # ── REPEATS (exercise voice_variants + recency) ──
+    (48, "reason",  "what is gravity"),
+    (49, "reason",  "tell me about gravity again"),
+    (50, "explain", "explain photosynthesis again"),
+    # ── NEW COVERAGE NODES (ML, quantum, dark matter) ──
+    (51, "reason",  "what is quantum computing"),
+    (52, "reason",  "what is dark matter"),
+    # ── NOVEL QUERIES (exercise AutoGrowth — need 5+ reps to cross threshold) ──
+    (53, "novel",   "what is synthetic biology"),
+    (54, "novel",   "what is synthetic biology"),
+    (55, "novel",   "what is synthetic biology"),
+    (56, "novel",   "what is synthetic biology"),
+    (57, "novel",   "what is synthetic biology"),
+    (58, "novel",   "what is neuromorphic computing"),
+    (59, "novel",   "what is neuromorphic computing"),
+    (60, "novel",   "what is neuromorphic computing"),
+    (61, "novel",   "what is neuromorphic computing"),
+    (62, "novel",   "what is neuromorphic computing"),
 ]
 
 # ── Helper: capture stdout of a thunk, return (returnval, captured_string) ──
@@ -107,32 +132,50 @@ function capture_stdout(f::Function)
     return val, captured
 end
 
-# ── Helper: extract the AIML scaffold block from captured output ──
-# Returns (speech, telemetry) where speech is Grug's actual words and telemetry
-# is the debug block (winning node, confidence, etc.).
-function extract_scaffold(captured::String)
-    marker = "🤖 AIML Output Scaffold:"
-    idx = findfirst(marker, captured)
-    idx === nothing && return ("", "")
-    after = captured[(last(idx)+1):end]
-    # Scaffold runs until the next telemetry/log line marker.
-    stop_markers = ["\n🌱", "\n🔗", "\n  👁", "\n[MAIN]", "\n┌ ", "\n└ ", "\nMISSION", "\n═══"]
-    cut = length(after)
-    for sm in stop_markers
-        p = findfirst(sm, after)
-        if p !== nothing && first(p) - 1 < cut
-            cut = first(p) - 1
+# ── Helper: extract the AIML scaffold OR ask-question block from captured output ──
+# Returns (speech, telemetry, response_type) where response_type is "scaffold" or "ask"
+function extract_response(captured::String)
+    # Try AIML Output Scaffold first
+    marker_scaffold = "🤖 AIML Output Scaffold:"
+    idx = findfirst(marker_scaffold, captured)
+    if idx !== nothing
+        after = captured[(last(idx)+1):end]
+        stop_markers = ["\n🌱", "\n🔑", "\n  👁", "\n[MAIN]", "\n┌ ", "\n└ ", "\nMISSION", "\n═══"]
+        cut = length(after)
+        for sm in stop_markers
+            p = findfirst(sm, after)
+            if p !== nothing && first(p) - 1 < cut
+                cut = first(p) - 1
+            end
         end
+        block = strip(after[1:cut])
+        dbg = findfirst("--- DEBUG TELEMETRY", block)
+        if dbg === nothing
+            return (block, "", "scaffold")
+        end
+        speech = strip(block[1:(first(dbg)-1)])
+        telemetry = strip(block[first(dbg):end])
+        return (speech, telemetry, "scaffold")
     end
-    block = strip(after[1:cut])
-    # Split the speech from the embedded DEBUG TELEMETRY block.
-    dbg = findfirst("--- DEBUG TELEMETRY", block)
-    if dbg === nothing
-        return (block, "")
+
+    # Try AIML Ask Question
+    marker_ask = "🤖 AIML Ask Question:"
+    idx = findfirst(marker_ask, captured)
+    if idx !== nothing
+        after = captured[(last(idx)+1):end]
+        stop_markers = ["\n🌱", "\n🔑", "\n  👁", "\n[MAIN]", "\n┌ ", "\n└ ", "\nMISSION", "\n═══", "\n[AUTOGROWTH]", "\n[AUTOLINK]"]
+        cut = length(after)
+        for sm in stop_markers
+            p = findfirst(sm, after)
+            if p !== nothing && first(p) - 1 < cut
+                cut = first(p) - 1
+            end
+        end
+        block = strip(after[1:cut])
+        return (block, "", "ask")
     end
-    speech = strip(block[1:(first(dbg)-1)])
-    telemetry = strip(block[first(dbg):end])
-    return (speech, telemetry)
+
+    return ("", "", "none")
 end
 
 # ── Helper: pull a few simple telemetry signals from a telemetry block ──
@@ -158,19 +201,22 @@ for (i, mode, input_text) in missions
     resp = ""
     scaffold = ""
     tele = (winner="", conf="", mode="")
+    resp_type = "none"
     err = ""
     try
         _, cap = capture_stdout() do
             process_mission(input_text)
         end
-        speech, tele_block = extract_scaffold(cap)
+        speech, tele_block, rtype = extract_response(cap)
         tele = extract_telemetry(tele_block)
         resp = speech
+        resp_type = rtype
     catch e
         err = sprint(showerror, e)
     end
     push!(records, (i=i, mode=mode, input=input_text, response=resp,
-                    winner=tele.winner, conf=tele.conf, modeline=tele.mode, err=err))
+                    winner=tele.winner, conf=tele.conf, modeline=tele.mode,
+                    resp_type=resp_type, err=err))
 end
 
 # ── Post-interaction state ──
@@ -191,12 +237,15 @@ try; al_status = AutoLinker.get_autolink_status_summary(); catch e; al_status = 
 try; growth_log = AutoGrowth.get_growth_log(); catch; end
 try; link_log = AutoLinker.get_link_log(); catch; end
 
+nodes_grown = final_node_count - node_count
+bridges_added = final_bridge_count - bridge_count
+
 # ── Write the MD log ──
 open("interaction_log_v10.md", "w") do io
     println(io, "# GrugBot420 — Interaction Log v10")
     println(io)
     println(io, "Conversation with Grug using the comprehensive v10 specimen.")
-    println(io, "Each entry shows the user input, Grug's response (AIML scaffold), and basic telemetry.")
+    println(io, "Each entry shows the user input, Grug's response (AIML scaffold or ask-question), and basic telemetry.")
     println(io)
     println(io, "## Session Summary")
     println(io)
@@ -207,9 +256,17 @@ open("interaction_log_v10.md", "w") do io
     println(io, "| Bridges | $bridge_count | $final_bridge_count |")
     println(io, "| AutoGrowth evidence | $initial_ag_count | $final_ag_count |")
     println(io, "| AutoLinker evidence | $initial_al_count | $final_al_count |")
+    println(io, "| Nodes grown | | $nodes_grown |")
+    println(io, "| Bridges added | | $bridges_added |")
     println(io, "| Missions run | | $(length(records)) |")
     uniq = length(Set(r.response for r in records if !isempty(r.response)))
     println(io, "| Unique responses | | $uniq |")
+    scaffold_count = count(r -> r.resp_type == "scaffold", records)
+    ask_count = count(r -> r.resp_type == "ask", records)
+    none_count = count(r -> r.resp_type == "none", records)
+    println(io, "| Scaffold responses | | $scaffold_count |")
+    println(io, "| Ask-question responses | | $ask_count |")
+    println(io, "| No response captured | | $none_count |")
     println(io)
 
     println(io, "## Conversation")
@@ -224,6 +281,12 @@ open("interaction_log_v10.md", "w") do io
             println(io)
             println(io, "```")
             println(io, r.err)
+            println(io, "```")
+        elseif r.resp_type == "ask"
+            println(io, "**Grug** *(ask question — no matching node, Grug asks for clarification)*:")
+            println(io)
+            println(io, "```")
+            println(io, isempty(r.response) ? "(empty ask)" : r.response)
             println(io, "```")
         else
             println(io, "**Grug:**")
@@ -249,6 +312,99 @@ open("interaction_log_v10.md", "w") do io
         println(io)
     end
 
+    println(io, "## Routing Coherence Audit")
+    println(io)
+    println(io, "All known queries verified to route to correct topic nodes:")
+    println(io)
+
+    # Collect unique user→node mappings
+    routing_audit = Dict{String,String}()
+    for r in records
+        if !isempty(r.winner) && r.resp_type == "scaffold"
+            node_id = replace(r.winner, "Winning Node: " => "")
+            key = lowercase(strip(r.input))
+            if !haskey(routing_audit, key)
+                routing_audit[key] = node_id
+            end
+        end
+    end
+
+    # Expected mappings (canonical)
+    expected = Dict{String,String}(
+        "what is gravity" => "n101",
+        "what is evolution" => "n102",
+        "what is a derivative" => "n103",
+        "what is climate change" => "n104",
+        "what is the meaning of life" => "n138",
+        "what is consciousness" => "n139",
+        "what is a chemical bond" => "n140",
+        "what is biodiversity" => "n141",
+        "explain photosynthesis" => "n105",
+        "explain newtons laws" => "n106",
+        "explain how computers work" => "n107",
+        "explain relativity" => "n142",
+        "explain the water cycle" => "n143",
+        "explain machine learning" => "n???",
+        "define entropy" => "n108",
+        "define algorithm" => "n109",
+        "define species" => "n110",
+        "define ecosystem" => "n144",
+        "define justice" => "n145",
+        "danger radiation" => "n111",
+        "danger toxin chemical" => "n112",
+        "danger extinction" => "n151",
+        "i am sad" => "n113",
+        "i am scared afraid" => "n114",
+        "i feel lost confused" => "n146",
+        "calculate integral" => "n115",
+        "calculate fibonacci" => "n116",
+        "calculate pi digits" => "n117",
+        "calculate euler number" => "n147",
+        "sun causes warmth" => "n118",
+        "predator eats prey" => "n119",
+        "learning requires practice" => "n120",
+        "fire causes heat" => "n148",
+        "education enables progress" => "n149",
+        "what happens in spring" => "n121",
+        "what happened before big bang" => "n122",
+        "next technological revolution" => "n123",
+        "winter seasonal cold" => "n150",
+        "how to solve quadratic equation" => "n124",
+        "how to do scientific experiment" => "n125",
+        "how to build a fire" => "n152",
+        "periodic table data" => "n126",
+        "population statistics" => "n127",
+        "compare dna and rna" => "n128",
+        "compare heat and temperature" => "n129",
+        "hello" => "n136",
+        "hi there greetings hey" => "n137",
+        "tell me about gravity again" => "n101",
+        "explain photosynthesis again" => "n105",
+        "what is quantum computing" => "n???",
+        "what is dark matter" => "n???",
+    )
+
+    decoherence_count = 0
+    for (query, expected_node) in sort(collect(expected), by=x->x[1])
+        actual = get(routing_audit, query, "???")
+        if expected_node == "n???"
+            # Novel/coverage node — just report what it routed to
+            println(io, "- `$(query)` → $(actual) *(coverage node)*")
+        elseif actual == expected_node
+            println(io, "- `$(query)` → $(actual) ✅")
+        else
+            println(io, "- `$(query)` → $(actual) ❌ (expected $(expected_node))")
+            decoherence_count += 1
+        end
+    end
+    println(io)
+    if decoherence_count == 0
+        println(io, "**Result: ZERO DECOHERENCE** — all known queries route correctly! ✅")
+    else
+        println(io, "**Result: $(decoherence_count) DECOHERENT routing(s) detected** ❌")
+    end
+    println(io)
+
     println(io, "## Auto-Learning Verification")
     println(io)
     println(io, "### AutoGrowth Status")
@@ -258,15 +414,32 @@ open("interaction_log_v10.md", "w") do io
     println(io)
     println(io, "### AutoGrowth Evidence (final)")
     println(io, "```")
-    for rec in final_evidence
-        println(io, "  \"$(rec["pattern"])\" => score=$(rec["accumulated_intensity"]), freq=$(rec["frequency"])")
+    if isempty(final_evidence)
+        println(io, "  (no evidence accumulated)")
+    else
+        sorted_ev = sort(final_evidence, by=x -> x["accumulated_intensity"], rev=true)
+        for rec in sorted_ev[1:min(15, length(sorted_ev))]
+            pattern = get(rec, "pattern", "???")
+            intensity = get(rec, "accumulated_intensity", 0.0)
+            freq = get(rec, "frequency", 0)
+            gtype = get(rec, "growth_type", "???")
+            lobe = get(rec, "lobe_hint", "default")
+            above_floor = intensity >= 2.0 && freq >= 3
+            marker = above_floor ? " ⚡ ABOVE THRESHOLD" : ""
+            println(io, "  \"$pattern\" => score=$(round(intensity; digits=2)), freq=$freq, type=$gtype, lobe=$lobe$marker")
+        end
     end
     println(io, "```")
     println(io)
     println(io, "### AutoGrowth Log (nodes created): $(length(growth_log)) events")
     println(io, "```")
-    for entry in growth_log
-        println(io, "  $entry")
+    if isempty(growth_log)
+        println(io, "  (no nodes grown this session)")
+    else
+        for entry in growth_log
+            status = entry.won_coinflip ? (isempty(entry.new_id) ? "BLOCKED" : "GREW") : "SKIP"
+            println(io, "  [$status] '$(entry.pattern)' type=$(entry.growth_type) p=$(round(entry.coinflip_prob; digits=3)) → $(entry.new_id)")
+        end
     end
     println(io, "```")
     println(io)
@@ -277,10 +450,23 @@ open("interaction_log_v10.md", "w") do io
     println(io)
     println(io, "### AutoLinker Log (bridges created): $(length(link_log)) events")
     println(io, "```")
-    for entry in link_log
-        println(io, "  $entry")
+    if isempty(link_log)
+        println(io, "  (no bridges created this session)")
+    else
+        for entry in link_log
+            println(io, "  $entry")
+        end
     end
     println(io, "```")
+    println(io)
+    println(io, "### Summary")
+    println(io)
+    println(io, "- Pre nodes: $node_count → Post nodes: $final_node_count (grown: $nodes_grown)")
+    println(io, "- Pre bridges: $bridge_count → Post bridges: $final_bridge_count (added: $bridges_added)")
+    println(io, "- AutoGrowth evidence entries: $initial_ag_count → $final_ag_count")
+    println(io, "- AutoLinker evidence entries: $initial_al_count → $final_al_count")
+    above_threshold = count(r -> r["accumulated_intensity"] >= 2.0 && r["frequency"] >= 3, final_evidence)
+    println(io, "- Evidence above growth threshold (intensity≥2.0, freq≥3): $above_threshold")
 end
 
 println(stderr, "Wrote interaction_log_v10.md")

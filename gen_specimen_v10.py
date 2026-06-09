@@ -180,7 +180,7 @@ n19 = add(make_node(next_node_id(), "predator eats prey", "reason^1",
         json_data={"answer_mode": "relate"}, voice_key="predator_prey",
         relational_patterns=[make_triple("predator", "eats", "prey"),
                              make_triple("predator", "hunts", "prey")],
-        required_relations=["eats"], relation_weights={"eats": 1.0, "hunts": 0.7},
+        required_relations=[], relation_weights={"eats": 1.0, "hunts": 0.7},
         strength=7.5), "lobe_ecology")
 n20 = add(make_node(next_node_id(), "learning requires practice", "reason^1",
         json_data={"answer_mode": "relate"}, voice_key="learning_practice",
@@ -314,6 +314,18 @@ n52 = add(make_node(next_node_id(), "how to build a fire", "reason^1",
                              "feed flame gradually with kindling"]},
         voice_key="build_fire", strength=7.5), "lobe_general")
 
+
+# ── 17. NOVEL-QUERY COVERAGE nodes (ML, quantum, dark matter) ──
+n53 = add(make_node(next_node_id(), "explain machine learning", "explain^1",
+        json_data={"mode": "explain"},
+        voice_key="machine_learning", strength=6.5), "lobe_tech")
+n54 = add(make_node(next_node_id(), "what is quantum computing", "reason^1",
+        json_data={"mode": "reason"},
+        voice_key="quantum_computing", strength=6.0), "lobe_tech")
+n55 = add(make_node(next_node_id(), "what is dark matter", "reason^1",
+        json_data={"mode": "reason"},
+        voice_key="dark_matter", strength=6.0), "lobe_physics")
+
 # ════════════════════════════════════════════════════════════════════
 # NEIGHBOR LINKING
 # ════════════════════════════════════════════════════════════════════
@@ -359,6 +371,10 @@ n23["neighbor_ids"] = [n9["id"], n7["id"]]
 n4["neighbor_ids"] = [n43["id"], n50["id"]]
 n43["neighbor_ids"] = [n4["id"], n50["id"]]
 n50["neighbor_ids"] = [n4["id"], n43["id"]]
+n53["neighbor_ids"] = [n7["id"], n54["id"], n9["id"]]
+n54["neighbor_ids"] = [n53["id"], n55["id"], n7["id"]]
+n55["neighbor_ids"] = [n1["id"], n54["id"], n42["id"]]
+
 
 # ════════════════════════════════════════════════════════════════════
 # BUILD SPECIMEN
@@ -471,6 +487,15 @@ bridges = [
     {"node_a": n9["id"], "node_b": n16["id"], "seam_tokens": ["computation", "sequence", "number"],
      "base_confidence_ab": 0.55, "base_confidence_ba": 0.5, "source_lobe": "lobe_tech",
      "is_crystalized": False, "crystal_origin": "none"},
+    {"node_a": n53["id"], "node_b": n7["id"], "seam_tokens": ["algorithm", "data", "computation"],
+     "base_confidence_ab": 0.6, "base_confidence_ba": 0.55, "source_lobe": "lobe_tech",
+     "is_crystalized": False, "crystal_origin": "none"},
+    {"node_a": n54["id"], "node_b": n55["id"], "seam_tokens": ["quantum", "physics", "cosmos"],
+     "base_confidence_ab": 0.65, "base_confidence_ba": 0.6, "source_lobe": "lobe_physics",
+     "is_crystalized": False, "crystal_origin": "none"},
+    {"node_a": n55["id"], "node_b": n1["id"], "seam_tokens": ["gravity", "mass", "universe"],
+     "base_confidence_ab": 0.55, "base_confidence_ba": 0.5, "source_lobe": "lobe_physics",
+     "is_crystalized": False, "crystal_origin": "none"},
 ]
 specimen["bridges"] = bridges
 
@@ -509,7 +534,10 @@ chatter_groups = [
      "chatter_count": 0, "has_grave_slot": False, "max_occupancy": 32, "is_time_node_group": False, "is_chatter_eligible": True},
     {"id": "grp_time", "members": [n21["id"], n50["id"], n22["id"], n23["id"]],
      "centroid_pattern": "time temporal seasonal", "created_at": 1700000108.0, "last_chatter_at": 0.0,
-     "chatter_count": 0, "has_grave_slot": False, "max_occupancy": 32, "is_time_node_group": True, "is_chatter_eligible": True},
+     "chatter_count": 0, "has_grave_slot": False, "max_occupancy": 32, "is_time_node_group": True, "is_chatter_eligible": True},    {"id": "grp_tech", "members": [n7["id"], n53["id"], n54["id"], n55["id"]],
+     "centroid_pattern": "computer technology quantum data", "created_at": 1700000110.0, "last_chatter_at": 0.0,
+     "chatter_count": 0, "has_grave_slot": False, "max_occupancy": 32, "is_time_node_group": False, "is_chatter_eligible": True},
+
 ]
 specimen["chatter_groups"] = chatter_groups
 specimen["chatter_cooldowns"] = []

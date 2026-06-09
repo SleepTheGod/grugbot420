@@ -7696,13 +7696,15 @@ function load_specimen_from_file!(filepath::String)::String
                     node = Node(
                         String(nd["id"]),
                         String(nd["pattern"]),
-                        # GRUG: If signal is missing or empty, regenerate from pattern.
-                        # This handles specimens where signal was stripped after
-                        # pattern changes (BUG-004 fix). words_to_signal is in scope
-                        # from engine.jl include.
-                        let sig = Float64.(get(nd, "signal", Float64[]))
-                            isempty(sig) ? words_to_signal(String(nd["pattern"])) : sig
-                        end,
+                        # GRUG: ALWAYS recompute signal from pattern on load.
+                        # Old specimens stored random 8-element signals that don't
+                        # match the pattern token count, causing BUG-004 mismatches
+                        # (signal length ≠ pattern token count → forced cheap scan
+                        # + penalty → node loses votes it should win). The hash-based
+                        # signal is deterministic from the pattern text, so recomputing
+                        # is both safe and correct. words_to_signal is in scope from
+                        # engine.jl include.
+                        words_to_signal(String(nd["pattern"])),
                         String(nd["action_packet"]),
                         Dict{String, Any}(string(k) => v for (k,v) in get(nd, "json_data", Dict())),
                         String.(get(nd, "drop_table", String[])),

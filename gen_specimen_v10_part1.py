@@ -359,6 +359,28 @@ NODE_VOICES = {
         ["hi", "greetings", "hey", "acknowledge", "listen", "wave"],
         "friendly", ["warm", "plain"]
     ),
+    # ── NOVEL / GROWTH-READY nodes ──
+    "machine_learning": (
+        "Grug. Machine learning question. Machine learning is when computer learns from examples instead of rules. Feed it data and it finds patterns. More data means better patterns.",
+        ["Computer gets smarter by practicing. Show it many examples and it figures out the rule on its own. Like how Grug learned which berries are good by trying many.",
+         "Learning machine studies examples and guesses the pattern. No one tells it the rule. It discovers the rule from data. More examples make sharper guesses."],
+        ["machine", "learning", "data", "pattern", "algorithm", "model", "training"],
+        "explanatory", ["exploratory", "plain"]
+    ),
+    "quantum_computing": (
+        "Grug. Quantum computing question. Quantum computer uses tiny particles that can be in two states at once. Regular computer thinks one thing at a time. Quantum thinks many at once.",
+        ["Strange computer uses quantum bits that are both zero and one until you look. Like a coin spinning in air. This lets it try many answers simultaneously.",
+         "Normal switch is on or off. Quantum switch is both until checked. Many quantum switches together try all paths at once. Hard to build but powerful if Grug can tame it."],
+        ["quantum", "computing", "qubit", "superposition", "entanglement", "particle"],
+        "explanatory", ["exploratory", "plain"]
+    ),
+    "dark_matter": (
+        "Grug. Dark matter question. Dark matter is stuff Grug cannot see but knows is there because it pulls on things. Galaxy spins too fast without extra invisible mass holding it together.",
+        ["Something invisible fills the sky. Grug sees its gravity bending light and pulling stars but cannot see the thing itself. Dark matter is the ghost that holds galaxies together.",
+         "The universe has hidden weight. Stars orbit faster than visible stuff allows. Something unseen provides the extra pull. Grug calls it dark matter because it hides from all eyes."],
+        ["dark", "matter", "invisible", "gravity", "galaxy", "mass", "universe"],
+        "plain", ["plain", "exploratory"]
+    ),
 }
 
 # ── Build make_node that uses voice data ──

@@ -1,379 +1,679 @@
-# GrugBot420 Interaction Log
+# GrugBot420 — Interaction Log
 
-## Session Overview
-
-- **Specimen**: comprehensive_specimen_v742.json
-- **Total Missions**: 30
-- **Nodes at Start**: 175
-- **Lobes**: 11 (default, survival, emotions, philosophy, science, time, math, music, vision, physics, language)
-- **AutoGrowth Events**: 2 nodes grown
-- **AutoLinker Events**: 3 bridges auto-linked
-
-## Mission Interactions
-
-### Mission #1
-
-**User Input**: "hello grug how are you today"
-
-**Grug Response**: primary=`welcome` | confidence=0.17 | node=node_0
-
-**Interpretation**: Grug greeted the user with a welcome message
+**Date:** 2026-06-09 04:55:27
+**Specimen:** comprehensive_specimen_v10.json (55 nodes)
+**Engine fixes applied:**
+- FORWARD_PASSTHROUGH_THRESHOLD=0.7 (bidirectional short-circuit)
+- Signal recomputation on load (words_to_signal always)
+- n119 required_relations=[] (removed deadlock)
 
 ---
 
-### Mission #2
+## Turn 1
 
-**User Input**: "tell me about emotions and feelings"
+**User:** hello
 
-**Grug Response**: primary=`reason` | confidence=1.34 | node=node_171
+### Scan Telemetry
 
-**Interpretation**: Grug reasoned about the topic using relational cascade
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n136 | 0.9981 | 0 | lobe_general |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #3
+> Turning it over — Greeting. Grug happy to see you. Welcome to Grugs cave. Grug is here to talk and think and help.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'hello'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n136
+Lobe Context: [lobe_general (7/7 active (not dangerous safe | hello | how to build a fire))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Dee...(truncated)
 
-**User Input**: "what is the meaning of life and consciousness"
-
-**Grug Response**: primary=`reason` | confidence=0.33 | node=node_17
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #4
-
-**User Input**: "explain the concept of gravity and physics"
-
-**Grug Response**: primary=`explain` | confidence=0.46 | node=node_138
-
-**Interpretation**: Grug explained the concept using the explain node type
-
----
-
-### Mission #5
-
-**User Input**: "calculate 42 plus 17 for me please"
-
-**Grug Response**: primary=`reason` | confidence=0.30 | node=node_127
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
+**Winner:** `n136` (conf=0.9981)
 
 ---
 
-### Mission #6
+## Turn 2
 
-**User Input**: "why do we feel sad sometimes"
+**User:** what is gravity
 
-**Grug Response**: primary=`comfort` | confidence=0.43 | node=node_33
+### Scan Telemetry
 
-**Interpretation**: Grug provided comfort using the comfort node type
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n101 | 0.9972 | 0 | lobe_physics |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #7
+> Let me lay it out: Attraction is invisible rope between things. More mass means stronger pull. Grug feel it every time Grug drops rock.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is gravity'
+Primary Action: reason  (conf=0.35, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n101
+Lobe Context: [lobe_physics (10/10 active (sun causes warmth | what happened before big bang | fire causes heat))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:...(truncated)
 
-**User Input**: "describe the process of photosynthesis"
-
-**Grug Response**: primary=`reason` | confidence=1.30 | node=node_172
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #8
-
-**User Input**: "what is love and why does it matter"
-
-**Grug Response**: primary=`reason` | confidence=0.39 | node=node_49
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #9
-
-**User Input**: "how do birds navigate during migration"
-
-**Grug Response**: No structured response captured (input may have triggered antimatch/silence)
+**Winner:** `n101` (conf=0.9972)
 
 ---
 
-### Mission #10
+## Turn 3
 
-**User Input**: "define the word epistemology"
+**User:** explain photosynthesis
 
-**Grug Response**: primary=`define` | confidence=0.34 | node=node_25
+### Scan Telemetry
 
-**Interpretation**: Grug defined the term using the define node type
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n105 | 0.9987 | 0 | lobe_biology |
+| 2 | n143 | 0.4114 | 0 | lobe_climate |
+| 3 | n142 | 0.3333 | 0 | lobe_physics |
+| 4 | n107 | 0.1875 | 0 | lobe_tech |
+| 5 | n106 | 0.1875 | 0 | lobe_physics |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #11
+> So here's what I see — Green things do magic with sunlight. They take water and carbon from air and weave them into food using light energy. This is how plants eat.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain photosynthesis'
+Primary Action: explain  (conf=0.55, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n105
+Lobe Context: [lobe_biology (4/4 active (what is evolution | explain photosynthesis | compare dna and rna))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pi...(truncated)
 
-**User Input**: "alert there is a predator nearby"
-
-**Grug Response**: primary=`reason` | confidence=0.14 | node=node_89
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #12
-
-**User Input**: "comfort me I am feeling lonely"
-
-**Grug Response**: primary=`reason` | confidence=0.34 | node=node_168
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #13
-
-**User Input**: "reason about why the sky is blue"
-
-**Grug Response**: primary=`reason` | confidence=2.55 | node=node_5
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
+**Winner:** `n105` (conf=0.9987)
 
 ---
 
-### Mission #14
+## Turn 4
 
-**User Input**: "explain quantum mechanics simply"
+**User:** i am sad
 
-**Grug Response**: primary=`ponder` | confidence=0.55 | node=node_140
+### Scan Telemetry
 
-**Interpretation**: Grug pondered deeply using the ponder node type
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n113 | 0.9993 | 0 | lobe_emotion |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #15
+> Sadness acknowledged. It is okay to feel sadness. Grug understands. Hard times come but they also go. You are not alone in this. No delay.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'i am sad'
+Primary Action: comfort  (conf=1.0, certainty=SURE)
+Sure Actions: [comfort]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n113
+Lobe Context: [lobe_emotion (3/3 active (i am sad | i am scared afraid | i feel lost confused))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about math, compute precisely | when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): N...(truncated)
 
-**User Input**: "what happens before and after an earthquake"
-
-**Grug Response**: No structured response captured (input may have triggered antimatch/silence)
-
----
-
-### Mission #16
-
-**User Input**: "I need help with survival skills"
-
-**Grug Response**: primary=`reason` | confidence=0.45 | node=node_85
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #17
-
-**User Input**: "tell me about friendship and trust"
-
-**Grug Response**: primary=`reason` | confidence=1.38 | node=node_171
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
+**Winner:** `n113` (conf=0.9993)
 
 ---
 
-### Mission #18
+## Turn 5
 
-**User Input**: "why does music make us feel emotions"
+**User:** danger radiation
 
-**Grug Response**: primary=`comfort` | confidence=0.30 | node=node_33
+### Scan Telemetry
 
-**Interpretation**: Grug provided comfort using the comfort node type
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n111 | 0.9999 | 0 | lobe_physics |
+| 2 | n112 | 0.4125 | 0 | lobe_chemistry |
+| 3 | n151 | 0.3333 | 0 | lobe_ecology |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #19
+> Now: Danger. Radiation burns cells silently. Use protection. Keep distance. Limit time near source. Grug take this very seriously.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'danger radiation'
+Primary Action: alert  (conf=1.0, certainty=SURE)
+Sure Actions: [alert]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n111
+Lobe Context: [lobe_physics (10/10 active (sun causes warmth | what happened before big bang | fire causes heat))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep M...(truncated)
 
-**User Input**: "describe how volcanoes erupt"
-
-**Grug Response**: primary=`reason` | confidence=1.30 | node=node_172
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #20
-
-**User Input**: "what is the difference between knowledge and belief"
-
-**Grug Response**: No structured response captured (input may have triggered antimatch/silence)
-
----
-
-### Mission #21
-
-**User Input**: "how does memory work in the brain"
-
-**Grug Response**: primary=`explain` | confidence=0.49 | node=node_21
-
-**Interpretation**: Grug explained the concept using the explain node type
+**Winner:** `n111` (conf=0.9999)
 
 ---
 
-### Mission #22
+## Turn 6
 
-**User Input**: "tell me about the ocean tides"
+**User:** predator eats prey
 
-**Grug Response**: primary=`reason` | confidence=1.48 | node=node_171
+### Scan Telemetry
 
-**Interpretation**: Grug reasoned about the topic using relational cascade
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n119 | 1.0 | 0 | lobe_ecology |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #23
+> A thought: Hunter and hunted are bound together. Too many predators starve themselves. Too many prey overgraze and starve differently. Each controls the other. The loop maintains balance.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'predator eats prey'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n119
+Lobe Context: [lobe_ecology (5/5 active (predator eats prey | define ecosystem | danger extinction))]
+User Triples: None
+Node Triples: (predator, eats, prey), (predator, hunts, prey)
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user expresses fear, respond with comfort | when user mentions...(truncated)
 
-**User Input**: "what are the laws of thermodynamics"
-
-**Grug Response**: No structured response captured (input may have triggered antimatch/silence)
-
----
-
-### Mission #24
-
-**User Input**: "why should we care about philosophy"
-
-**Grug Response**: primary=`reason` | confidence=0.17 | node=node_171
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #25
-
-**User Input**: "how do computers process information"
-
-**Grug Response**: No structured response captured (input may have triggered antimatch/silence)
+**Winner:** `n119` (conf=1.0)
 
 ---
 
-### Mission #26
+## Turn 7
 
-**User Input**: "grug what time is it now"
+**User:** define entropy
 
-**Grug Response**: primary=`reason` | confidence=0.35 | node=node_167
+### Scan Telemetry
 
-**Interpretation**: Grug reasoned about the topic using relational cascade
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n108 | 1.0 | 0 | lobe_physics |
+| 2 | n110 | 0.5998 | 0 | lobe_biology |
+| 3 | n109 | 0.5988 | 0 | lobe_tech |
+| 4 | n145 | 0.3333 | 0 | lobe_philosophy |
+| 5 | n144 | 0.3333 | 0 | lobe_ecology |
 
----
+### Grug Response (AIML Output Scaffold)
 
-### Mission #27
+> Entropy definition. Entropy measures how spread out and mixed up things are. Things naturally go from ordered to messy. Mess increases over time unless energy is added.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'define entropy'
+Primary Action: define  (conf=0.64, certainty=SURE)
+Sure Actions: [define]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n108
+Lobe Context: [lobe_physics (10/10 active (sun causes warmth | what happened before big bang | fire causes heat))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort | when user mentions dang...(truncated)
 
-**User Input**: "I feel happy when the sun shines"
-
-**Grug Response**: primary=`reason` | confidence=0.36 | node=node_9
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
-
----
-
-### Mission #28
-
-**User Input**: "what is math and why is it important"
-
-**Grug Response**: No structured response captured (input may have triggered antimatch/silence)
-
----
-
-### Mission #29
-
-**User Input**: "explain the nature of reality and existence"
-
-**Grug Response**: primary=`reason` | confidence=0.28 | node=node_89
-
-**Interpretation**: Grug reasoned about the topic using relational cascade
+**Winner:** `n108` (conf=1.0)
 
 ---
 
-### Mission #30
+## Turn 8
 
-**User Input**: "tell me about weather patterns and storms"
+**User:** calculate integral
 
-**Grug Response**: primary=`reason` | confidence=1.45 | node=node_171
+### Scan Telemetry
 
-**Interpretation**: Grug reasoned about the topic using relational cascade
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n115 | 0.9995 | 0 | lobe_math |
+| 2 | n116 | 0.3333 | 0 | lobe_math |
+| 3 | n117 | 0.1875 | 0 | lobe_math |
+| 4 | n147 | 0.1875 | 0 | lobe_math |
+
+### Grug Response (AIML Output Scaffold)
+
+> Here's what to do — Integral computation. Integral adds up infinitely many tiny pieces to find total area or accumulation. It is the reverse of derivative. Area under curve is integral.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'calculate integral'
+Primary Action: reason  (conf=0.48, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n115
+Lobe Context: [lobe_math (8/8 active (how to solve quadratic equatio | what is a derivative | circle_sdf))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort
+Arithmeti...(truncated)
+
+**Winner:** `n115` (conf=0.9995)
 
 ---
 
-## Auto-Learning Telemetry
+## Turn 9
 
-### AutoGrowth
+**User:** what is evolution
 
-AutoGrowth is the evidence-based lazy node creation system. It accumulates evidence of knowledge gaps (uncovered tokens, thesaurus gaps, under-populated lobes, missing sigil expansions, strain). When evidence exceeds the floor + frequency thresholds, a biased coinflip decides whether to grow.
+### Scan Telemetry
 
-- **Evidence Floor**: 2.0
-- **Frequency Floor**: 3
-- **Evidence Scale**: 8.0
-- **Coinflip Cap**: 25%
-- **Pending Evidence**: 38 entries
-- **Co-occurrence Pairs**: 80
-- **Growth Log**: 16 events, 1 node successfully grown
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n102 | 0.9983 | 0 | lobe_biology |
 
-#### Nodes Grown
+### Grug Response (AIML Output Scaffold)
 
-- **`energy numbers`** in lobe `MathLobe` (intensity=4.0, p=0.25)
-- **`sigil:n`** in lobe `default` (intensity=4.2, p=0.25)
+> Stepping back — Creatures adapt slowly across generations. What works stays, what fails fades. Grug see it in how wolves get thicker fur in cold.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is evolution'
+Primary Action: reason  (conf=0.55, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n102
+Lobe Context: [lobe_biology (4/4 active (what is evolution | explain photosynthesis | compare dna and rna))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about math, compute precisely | when user expresses fear, respond with comfort
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fres...(truncated)
 
-#### Top Pending Candidates
+**Winner:** `n102` (conf=0.9983)
 
-| Token | Type | Intensity | Frequency | Lobe | Source |
-|-------|------|-----------|-----------|------|--------|
-| sigil:n | sigil | 6.0 | 20 | default | sigil_gap |
-| emotions | match | 2.0 | 2 | default | silence_map |
-| ocean | match | 1.0 | 1 | default | silence_map |
-| there | match | 1.0 | 1 | default | silence_map |
-| volcanoes | match | 1.0 | 1 | default | silence_map |
+---
 
-### AutoLinker
+## Turn 10
 
-AutoLinker is the evidence-based cross-lobe bridge linking system. Cross-lobe pairs get a 1.5x bonus, making them the most valuable connections to form.
+**User:** what is biodiversity
 
-- **Evidence Floor (cross-lobe)**: 3.0
-- **Same-Lobe Floor**: 5.0
-- **Frequency Floor**: 4
-- **Coinflip Cap**: 20%
-- **Cross-Lobe Bonus**: 1.5x
-- **Total Evidence Records**: 37
-- **Cross-Lobe Pairs**: 9
-- **Above Floor**: 5 (eligible for coinflip)
-- **Auto-Linked Bridges**: 3
+### Scan Telemetry
 
-#### Bridges Auto-Linked
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n141 | 0.9996 | 0 | lobe_ecology |
 
-- **node_156 ↔ node_169** [CROSS-LOBE] (intensity=8.0, p=0.2, source=opposing_lobe_co_act)
-- **node_152 ↔ node_169** [CROSS-LOBE] (intensity=8.0, p=0.2, source=opposing_lobe_co_act)
-- **node_151 ↔ node_169** [CROSS-LOBE] (intensity=12.0, p=0.2, source=opposing_lobe_co_act)
+### Grug Response (AIML Output Scaffold)
 
-#### Top Bridge Candidates (Still Pending)
+> Zooming out: Biodiversity question. Many different living things sharing a home is biodiversity. More diversity means healthier forest. Each creature has role.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is biodiversity'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n141
+Lobe Context: [lobe_ecology (5/5 active (predator eats prey | define ecosystem | danger extinction))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about math, compute precisely | when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML ...(truncated)
 
-| Pair | Type | Intensity | Frequency |
-|------|------|-----------|-----------|
-| node_156 ↔ node_171 | XLOBE | 16.0 | 8 |
-| node_157 ↔ node_172 | XLOBE | 8.0 | 4 |
-| node_157 ↔ node_169 | XLOBE | 8.0 | 4 |
-| node_152 ↔ node_172 | XLOBE | 8.0 | 4 |
-| node_151 ↔ node_156 | SAME | 6.5 | 8 |
+**Winner:** `n141` (conf=0.9996)
 
-## Non-Fatal Errors Observed
+---
 
-These errors occurred during the session but did not prevent mission processing or auto-learning:
+## Turn 11
 
-1. **EphemeralMLP BoundsError**: `transform_vote_list` fails with index 17 on 16-weight MLP. Size mismatch between the vote list and the MLP weight array. Non-fatal -- the MLP gate counter is incremented but the transform is skipped.
+**User:** explain relativity
 
-2. **Coherence MethodError**: `get(node, :is_grave, false)` throws MethodError on proc-type nodes. The coherence field computation tries to access a field that does not exist on all node types. Non-fatal -- coherence features are computed with a try/catch and the error is logged but does not block the mission pipeline.
+### Scan Telemetry
 
-3. **Journal observe tag error**: SelfObserverArgumentError -- the self-observation journal receives a tag value instead of a valid category. Non-fatal -- journal entries are best-effort.
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n142 | 0.9995 | 0 | lobe_physics |
+| 2 | n107 | 0.4125 | 0 | lobe_tech |
+| 3 | n105 | 0.3333 | 0 | lobe_biology |
+| 4 | n153 | 0.1875 | 0 | lobe_tech |
+| 5 | n143 | 0.1875 | 0 | lobe_climate |
 
-## Post-Learning Specimen
+### Grug Response (AIML Output Scaffold)
 
-After the interaction session, the specimen was saved with all accumulated auto-learning evidence:
+> The shape of it: Relativity question. Relativity says speed of light is same for everyone. Time slows down when you go fast. Space and time are connected like fabric.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain relativity'
+Primary Action: explain  (conf=1.0, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n142
+Lobe Context: [lobe_physics (10/10 active (sun causes warmth | what happened before big bang | fire causes heat))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0...(truncated)
 
-- **File**: comprehensive_specimen_v742_postlearn.json (7.8MB)
-- **AutoGrowth Evidence**: 38 records, 80 co-occurrence pairs
-- **AutoLinker Evidence**: 37 records
-- **Nodes**: 175+ (original + auto-grown)
-- **Bridges**: Original 4 + 3 auto-linked
+**Winner:** `n142` (conf=0.9995)
+
+---
+
+## Turn 12
+
+**User:** define ecosystem
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n144 | 0.9981 | 0 | lobe_ecology |
+| 2 | n109 | 0.5985 | 0 | lobe_tech |
+| 3 | n145 | 0.3333 | 0 | lobe_philosophy |
+| 4 | n108 | 0.3333 | 0 | lobe_physics |
+| 5 | n110 | 0.3333 | 0 | lobe_biology |
+
+### Grug Response (AIML Output Scaffold)
+
+> Here is the picture: The whole web of life plus the land it lives on is an environment. Energy flows through it. Materials cycle within it. Everything connects to everything.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'define ecosystem'
+Primary Action: define  (conf=0.64, certainty=SURE)
+Sure Actions: [define]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n144
+Lobe Context: [lobe_ecology (5/5 active (predator eats prey | define ecosystem | danger extinction))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user mentions danger, alert with caution
+Arithmetic: no math bindings th...(truncated)
+
+**Winner:** `n144` (conf=0.9981)
+
+---
+
+## Turn 13
+
+**User:** what is quantum computing
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n154 | 1.0 | 0 | lobe_tech |
+
+### Grug Response (AIML Output Scaffold)
+
+> So here's what I see — Strange computer uses quantum bits that are both zero and one until you look. Like a coin spinning in air. This lets it try many answers simultaneously.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is quantum computing'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n154
+Lobe Context: [lobe_tech (6/6 active (explain how computers work | define algorithm | next technological revolution))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+A...(truncated)
+
+**Winner:** `n154` (conf=1.0)
+
+---
+
+## Turn 14
+
+**User:** explain machine learning
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n153 | 1.0 | 0 | lobe_tech |
+| 2 | n143 | 0.2605 | 0 | lobe_climate |
+| 3 | n105 | 0.25 | 0 | lobe_biology |
+| 4 | n142 | 0.25 | 0 | lobe_physics |
+| 5 | n106 | 0.2 | 0 | lobe_physics |
+
+### Grug Response (AIML Output Scaffold)
+
+> Machine learning question. Machine learning is when computer learns from examples instead of rules. Feed it data and it finds patterns. More data means better patterns., and — that's the landscape.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain machine learning'
+Primary Action: explain  (conf=1.0, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n153
+Lobe Context: [lobe_tech (6/6 active (explain how computers work | define algorithm | next technological revolution))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math bindings ...(truncated)
+
+**Winner:** `n153` (conf=1.0)
+
+---
+
+## Turn 15
+
+**User:** what is the meaning of life
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n138 | 0.9982 | 0 | lobe_philosophy |
+
+### Grug Response (AIML Output Scaffold)
+
+> Let me lay it out: Life meaning question. Life meaning is deep question. Grug think meaning is what you make of it. Purpose comes from doing and caring.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is the meaning of life'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n138
+Lobe Context: [lobe_philosophy (5/5 active (learning requires practice | what is consciousness | define justice))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned):...(truncated)
+
+**Winner:** `n138` (conf=0.9982)
+
+---
+
+## Turn 16
+
+**User:** what is consciousness
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n139 | 1.0 | 0 | lobe_philosophy |
+
+### Grug Response (AIML Output Scaffold)
+
+> Here is the picture: What is it like to be something? That feeling of being is consciousness. Hard to explain but Grug knows it when Grug has it.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is consciousness'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n139
+Lobe Context: [lobe_philosophy (5/5 active (learning requires practice | what is consciousness | define justice))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned ...(truncated)
+
+**Winner:** `n139` (conf=1.0)
+
+---
+
+## Turn 17
+
+**User:** danger extinction
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n151 | 0.9994 | 0 | lobe_ecology |
+| 2 | n111 | 0.3333 | 0 | lobe_physics |
+| 3 | n112 | 0.1875 | 0 | lobe_chemistry |
+
+### Grug Response (AIML Output Scaffold)
+
+> Extinction warning. Species dying out forever is extinction. Lost species never return. Biome weakens with each loss. Protect endangered kinds now.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'danger extinction'
+Primary Action: alert  (conf=1.0, certainty=SURE)
+Sure Actions: [alert]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n151
+Lobe Context: [lobe_ecology (5/5 active (predator eats prey | define ecosystem | danger extinction))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user mentions danger, alert with caution
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+De...(truncated)
+
+**Winner:** `n151` (conf=0.9994)
+
+---
+
+## Turn 18
+
+**User:** explain the water cycle
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n143 | 0.9985 | 0 | lobe_climate |
+| 2 | n105 | 0.5489 | 0 | lobe_biology |
+| 3 | n106 | 0.3475 | 0 | lobe_physics |
+| 4 | n153 | 0.3461 | 0 | lobe_tech |
+| 5 | n142 | 0.25 | 0 | lobe_physics |
+
+### Grug Response (AIML Output Scaffold)
+
+> Stepping back — The sky river flows constantly. Heat lifts water up. Cold brings it down. Gravity pulls it across land. Ocean catches it and cycle restarts.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'explain the water cycle'
+Primary Action: explain  (conf=1.0, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n143
+Lobe Context: [lobe_climate (3/3 active (what is climate change | winter seasonal cold | explain the water cycle))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about math, compute precisely | when user expresses fear, respond with comfort | when user mentions danger, alert with caution
+Arithmetic: no math binding...(truncated)
+
+**Winner:** `n143` (conf=0.9985)
+
+---
+
+## Turn 19
+
+**User:** what is dark matter
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n155 | 0.9963 | 0 | lobe_physics |
+
+### Grug Response (AIML Output Scaffold)
+
+> Zooming out: Dark matter question. Dark matter is stuff Grug cannot see but knows is there because it pulls on things. Galaxy spins too fast without extra invisible mass holding it together.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is dark matter'
+Primary Action: reason  (conf=1.0, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n155
+Lobe Context: [lobe_physics (10/10 active (sun causes warmth | what happened before big bang | fire causes heat))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort...(truncated)
+
+**Winner:** `n155` (conf=0.9963)
+
+---
+
+## Turn 20
+
+**User:** what is climate change
+
+### Scan Telemetry
+
+| Rank | Node ID | Confidence | Rel. Triples | Lobe |
+|------|---------|------------|--------------|------|
+| 1 | n104 | 1.0 | 0 | lobe_climate |
+
+### Grug Response (AIML Output Scaffold)
+
+> Let me lay it out: The long weather is shifting. More heat trapped by gases Grug people put in sky. Seasons change pattern. Old ways no longer work.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is climate change'
+Primary Action: reason  (conf=0.64, certainty=SURE)
+Sure Actions: [reason]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: n104
+Lobe Context: [lobe_climate (3/3 active (what is climate change | winter seasonal cold | explain the water cycle))]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): when user asks about force, explain newtons laws | when user asks about math, compute precisely | when user expresses fear, respond with comfort | when user mentions danger, alert w...(truncated)
+
+**Winner:** `n104` (conf=1.0)
+
+---

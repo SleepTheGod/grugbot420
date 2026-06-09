@@ -3884,14 +3884,29 @@ function _bidirectional_cheap_scan(
         ))
     end
 
-    # GRUG v7.19: Fuse forward and reverse confidences via big-number/small-number
-    # coherence instead of plain averaging. This rewards agreement on strong signal,
-    # suppresses agreement on noise, and is immune to catastrophic cancellation
-    # between close floats. See PatternScanner.big_number_small_number_coherence
-    # for the full formula. If only one direction hit, miss_contribution stands in
-    # for the missing side so a partial reversal gets a moderate score instead of
-    # a spike (pure average) or a zero (hard drop).
-    smoothed_conf = big_number_small_number_coherence(forward_conf, reverse_conf)
+    # GRUG v7.25: FORWARD-DOMINANT SHORT-CIRCUIT.
+    # When the forward scan finds a high-confidence match and the reverse scan
+    # misses, the node clearly matches in its natural word order. Penalizing a
+    # perfect forward hit because the reversed signal doesn't also match is wrong
+    # — the reverse scan exists to catch word-order inversions ("dog bites man"
+    # ↔ "man bites dog"), not to gate forward matches. When forward is confident
+    # enough, use it directly; the reverse-miss means the word order is correct
+    # (not inverted), which is evidence FOR the match, not against it.
+    FORWARD_PASSTHROUGH_THRESHOLD = 0.7
+    if forward_ok && !reverse_ok && forward_conf >= FORWARD_PASSTHROUGH_THRESHOLD
+        smoothed_conf = forward_conf
+    elseif reverse_ok && !forward_ok && reverse_conf >= FORWARD_PASSTHROUGH_THRESHOLD
+        smoothed_conf = reverse_conf
+    else
+        # GRUG v7.19: Fuse forward and reverse confidences via big-number/small-number
+        # coherence instead of plain averaging. This rewards agreement on strong signal,
+        # suppresses agreement on noise, and is immune to catastrophic cancellation
+        # between close floats. See PatternScanner.big_number_small_number_coherence
+        # for the full formula. If only one direction hit, miss_contribution stands in
+        # for the missing side so a partial reversal gets a moderate score instead of
+        # a spike (pure average) or a zero (hard drop).
+        smoothed_conf = big_number_small_number_coherence(forward_conf, reverse_conf)
+    end
 
     # GRUG v7.20: END-CONFIDENCE SNAP-BACK JITTER.
     # The per-window slight_jitter inside cheap_scan fuzzes each window's score
