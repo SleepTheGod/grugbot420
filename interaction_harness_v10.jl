@@ -1,0 +1,292 @@
+#!/usr/bin/env julia
+# GrugBot420 — Interaction Harness v10
+# Loads comprehensive_specimen_v10.json, runs diverse missions covering all
+# node types / answer modes / lobes. For each mission it captures the AIML
+# scaffold (the actual Grug response) plus basic telemetry and writes a clean
+# input -> response + telemetry log to interaction_log_v10.md.
+# Then checks AutoGrowth/AutoLinker and saves the post-learning specimen.
+
+using Pkg; Pkg.activate(".")
+include("src/Main.jl")
+println("=== ENGINE LOADED ===")
+
+# ── Load the comprehensive specimen ──
+println("\n>>> LOADING COMPREHENSIVE SPECIMEN v10 <<<")
+load_specimen_from_file!("comprehensive_specimen_v10.json")
+
+# ── Pre-interaction state snapshot ──
+node_count   = lock(() -> length(NODE_MAP), NODE_LOCK)
+lobe_count   = length(Lobe.LOBE_REGISTRY)
+bridge_count = lock(() -> length(BRIDGE_MAP), BRIDGE_LOCK)
+sigil_count  = length(_ENGINE_SIGIL_TABLE.entries)
+println("PRE: nodes=$node_count lobes=$lobe_count bridges=$bridge_count sigils=$sigil_count")
+
+initial_evidence = AutoGrowth.get_evidence_snapshot()
+initial_ag_count = length(initial_evidence)
+initial_link_evidence = AutoLinker.get_link_evidence_snapshot()
+initial_al_count = length(initial_link_evidence)
+println("PRE: autogrowth_evidence=$initial_ag_count autolink_evidence=$initial_al_count")
+
+# ── Mission set (input, mode label) ──
+missions = [
+    ( 1, "reason",  "what is gravity"),
+    ( 2, "reason",  "what is evolution"),
+    ( 3, "reason",  "what is a derivative"),
+    ( 4, "reason",  "what is climate change"),
+    ( 5, "reason",  "what is the meaning of life"),
+    ( 6, "reason",  "what is consciousness"),
+    ( 7, "reason",  "what is a chemical bond"),
+    ( 8, "reason",  "what is biodiversity"),
+    ( 9, "explain", "explain photosynthesis"),
+    (10, "explain", "explain newtons laws"),
+    (11, "explain", "explain how computers work"),
+    (12, "explain", "explain relativity"),
+    (13, "explain", "explain the water cycle"),
+    (14, "define",  "define entropy"),
+    (15, "define",  "define algorithm"),
+    (16, "define",  "define species"),
+    (17, "define",  "define ecosystem"),
+    (18, "define",  "define justice"),
+    (19, "alert",   "danger radiation"),
+    (20, "alert",   "danger toxin chemical"),
+    (21, "alert",   "danger extinction"),
+    (22, "comfort", "i am sad"),
+    (23, "comfort", "i am scared afraid"),
+    (24, "comfort", "i feel lost confused"),
+    (25, "math",    "calculate integral"),
+    (26, "math",    "calculate fibonacci"),
+    (27, "math",    "calculate pi digits"),
+    (28, "math",    "calculate euler number"),
+    (29, "relate",  "sun causes warmth"),
+    (30, "relate",  "predator eats prey"),
+    (31, "relate",  "learning requires practice"),
+    (32, "relate",  "fire causes heat"),
+    (33, "relate",  "education enables progress"),
+    (34, "time",    "what happens in spring"),
+    (35, "time",    "what happened before big bang"),
+    (36, "time",    "next technological revolution"),
+    (37, "time",    "winter seasonal cold"),
+    (38, "proc",    "how to solve quadratic equation"),
+    (39, "proc",    "how to do scientific experiment"),
+    (40, "proc",    "how to build a fire"),
+    (41, "json",    "periodic table data"),
+    (42, "json",    "population statistics"),
+    (43, "multi",   "compare dna and rna"),
+    (44, "multi",   "compare heat and temperature"),
+    (45, "greeting","hello"),
+    (46, "greeting","hi there greetings hey"),
+    # Repeats / novel to exercise AutoGrowth + AutoLinker
+    (47, "reason",  "what is gravity"),
+    (48, "reason",  "tell me about gravity again"),
+    (49, "explain", "explain photosynthesis again"),
+    (50, "novel",   "what is quantum computing"),
+    (51, "novel",   "what is quantum computing"),
+    (52, "novel",   "what is quantum computing"),
+    (53, "novel",   "explain machine learning"),
+    (54, "novel",   "explain machine learning"),
+    (55, "novel",   "explain machine learning"),
+    (56, "novel",   "what is dark matter"),
+    (57, "novel",   "what is dark matter"),
+    (58, "novel",   "what is dark matter"),
+]
+
+# ── Helper: capture stdout of a thunk, return (returnval, captured_string) ──
+function capture_stdout(f::Function)
+    orig = stdout
+    rd, wr = redirect_stdout()
+    local val
+    local captured = ""
+    try
+        val = f()
+    finally
+        redirect_stdout(orig)
+        close(wr)
+        captured = read(rd, String)
+        close(rd)
+    end
+    return val, captured
+end
+
+# ── Helper: extract the AIML scaffold block from captured output ──
+# Returns (speech, telemetry) where speech is Grug's actual words and telemetry
+# is the debug block (winning node, confidence, etc.).
+function extract_scaffold(captured::String)
+    marker = "🤖 AIML Output Scaffold:"
+    idx = findfirst(marker, captured)
+    idx === nothing && return ("", "")
+    after = captured[(last(idx)+1):end]
+    # Scaffold runs until the next telemetry/log line marker.
+    stop_markers = ["\n🌱", "\n🔗", "\n  👁", "\n[MAIN]", "\n┌ ", "\n└ ", "\nMISSION", "\n═══"]
+    cut = length(after)
+    for sm in stop_markers
+        p = findfirst(sm, after)
+        if p !== nothing && first(p) - 1 < cut
+            cut = first(p) - 1
+        end
+    end
+    block = strip(after[1:cut])
+    # Split the speech from the embedded DEBUG TELEMETRY block.
+    dbg = findfirst("--- DEBUG TELEMETRY", block)
+    if dbg === nothing
+        return (block, "")
+    end
+    speech = strip(block[1:(first(dbg)-1)])
+    telemetry = strip(block[first(dbg):end])
+    return (speech, telemetry)
+end
+
+# ── Helper: pull a few simple telemetry signals from a telemetry block ──
+function extract_telemetry(tele_block::AbstractString)
+    winner = ""; conf = ""; tmode = ""
+    for line in split(tele_block, '\n')
+        l = strip(line)
+        if startswith(l, "Winning Node:") && isempty(winner)
+            winner = l
+        elseif startswith(l, "Primary Action:") && isempty(conf)
+            conf = l
+        elseif startswith(l, "Time Orientation:") && isempty(tmode)
+            tmode = l
+        end
+    end
+    return (winner=winner, conf=conf, mode=tmode)
+end
+
+# ── Run missions, collecting records ──
+records = Vector{NamedTuple}()
+for (i, mode, input_text) in missions
+    println(stderr, "Running mission #$i [$mode]: $input_text")
+    resp = ""
+    scaffold = ""
+    tele = (winner="", conf="", mode="")
+    err = ""
+    try
+        _, cap = capture_stdout() do
+            process_mission(input_text)
+        end
+        speech, tele_block = extract_scaffold(cap)
+        tele = extract_telemetry(tele_block)
+        resp = speech
+    catch e
+        err = sprint(showerror, e)
+    end
+    push!(records, (i=i, mode=mode, input=input_text, response=resp,
+                    winner=tele.winner, conf=tele.conf, modeline=tele.mode, err=err))
+end
+
+# ── Post-interaction state ──
+final_node_count   = lock(() -> length(NODE_MAP), NODE_LOCK)
+final_lobe_count   = length(Lobe.LOBE_REGISTRY)
+final_bridge_count = lock(() -> length(BRIDGE_MAP), BRIDGE_LOCK)
+final_evidence = AutoGrowth.get_evidence_snapshot()
+final_ag_count = length(final_evidence)
+final_link_evidence = AutoLinker.get_link_evidence_snapshot()
+final_al_count = length(final_link_evidence)
+
+ag_status = ""
+al_status = ""
+growth_log = []
+link_log = []
+try; ag_status = AutoGrowth.get_autogrowth_status_summary(); catch e; ag_status = "err: $e"; end
+try; al_status = AutoLinker.get_autolink_status_summary(); catch e; al_status = "err: $e"; end
+try; growth_log = AutoGrowth.get_growth_log(); catch; end
+try; link_log = AutoLinker.get_link_log(); catch; end
+
+# ── Write the MD log ──
+open("interaction_log_v10.md", "w") do io
+    println(io, "# GrugBot420 — Interaction Log v10")
+    println(io)
+    println(io, "Conversation with Grug using the comprehensive v10 specimen.")
+    println(io, "Each entry shows the user input, Grug's response (AIML scaffold), and basic telemetry.")
+    println(io)
+    println(io, "## Session Summary")
+    println(io)
+    println(io, "| Metric | Pre | Post |")
+    println(io, "|---|---|---|")
+    println(io, "| Nodes | $node_count | $final_node_count |")
+    println(io, "| Lobes | $lobe_count | $final_lobe_count |")
+    println(io, "| Bridges | $bridge_count | $final_bridge_count |")
+    println(io, "| AutoGrowth evidence | $initial_ag_count | $final_ag_count |")
+    println(io, "| AutoLinker evidence | $initial_al_count | $final_al_count |")
+    println(io, "| Missions run | | $(length(records)) |")
+    uniq = length(Set(r.response for r in records if !isempty(r.response)))
+    println(io, "| Unique responses | | $uniq |")
+    println(io)
+
+    println(io, "## Conversation")
+    println(io)
+    for r in records
+        println(io, "### Mission #$(r.i) — [$(r.mode)]")
+        println(io)
+        println(io, "**User:** $(r.input)")
+        println(io)
+        if !isempty(r.err)
+            println(io, "**Grug (ERROR):**")
+            println(io)
+            println(io, "```")
+            println(io, r.err)
+            println(io, "```")
+        else
+            println(io, "**Grug:**")
+            println(io)
+            println(io, "```")
+            println(io, isempty(r.response) ? "(no scaffold captured)" : r.response)
+            println(io, "```")
+        end
+        println(io)
+        # Basic telemetry
+        tele_bits = String[]
+        !isempty(r.winner)   && push!(tele_bits, r.winner)
+        !isempty(r.conf)     && push!(tele_bits, r.conf)
+        !isempty(r.modeline) && push!(tele_bits, r.modeline)
+        if !isempty(tele_bits)
+            println(io, "_Telemetry:_")
+            for b in tele_bits
+                println(io, "- $b")
+            end
+            println(io)
+        end
+        println(io, "---")
+        println(io)
+    end
+
+    println(io, "## Auto-Learning Verification")
+    println(io)
+    println(io, "### AutoGrowth Status")
+    println(io, "```")
+    println(io, ag_status)
+    println(io, "```")
+    println(io)
+    println(io, "### AutoGrowth Evidence (final)")
+    println(io, "```")
+    for rec in final_evidence
+        println(io, "  \"$(rec["pattern"])\" => score=$(rec["accumulated_intensity"]), freq=$(rec["frequency"])")
+    end
+    println(io, "```")
+    println(io)
+    println(io, "### AutoGrowth Log (nodes created): $(length(growth_log)) events")
+    println(io, "```")
+    for entry in growth_log
+        println(io, "  $entry")
+    end
+    println(io, "```")
+    println(io)
+    println(io, "### AutoLinker Status")
+    println(io, "```")
+    println(io, al_status)
+    println(io, "```")
+    println(io)
+    println(io, "### AutoLinker Log (bridges created): $(length(link_log)) events")
+    println(io, "```")
+    for entry in link_log
+        println(io, "  $entry")
+    end
+    println(io, "```")
+end
+
+println(stderr, "Wrote interaction_log_v10.md")
+
+# ── Save post-learning specimen ──
+save_specimen_to_file!("comprehensive_specimen_v10_postlearn.json")
+println(stderr, "Saved comprehensive_specimen_v10_postlearn.json")
+println(stderr, "POST: nodes=$final_node_count bridges=$final_bridge_count ag=$final_ag_count al=$final_al_count")
+println(stderr, "=== INTERACTION SESSION COMPLETE ===")
