@@ -1518,7 +1518,8 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
             # (attachment relay). Primary-match nodes never carry this relation.
             # If detected, the VoteCandidate gets is_relay=true so
             # composite_vote_score applies RELAY_CONFIDENCE_DISCOUNT.
-            is_relay = any(t -> getfield(t, :relation) == "relay_attached", v.node_triples)
+            is_relay = any(t -> getfield(t, :relation) == "relay_attached" ||
+                                getfield(t, :relation) == "cascade_bridge", v.node_triples)
 
             push!(vote_candidates, VoteOrchestrator.VoteCandidate(
                 v.node_id, v.confidence, node.strength;

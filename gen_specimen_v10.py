@@ -394,11 +394,18 @@ specimen["node_to_lobe_idx"] = node_to_lobe_idx
 
 lobe_tables = []
 for lobe in lobes:
-    chunks = {"json": {}, "drop": {}, "hopfield": {},
+    # v10-coherence-fix: NodeRefs MUST live in the "nodes" chunk (CHUNK_NODES
+    # in LobeTable.jl) — that is the chunk get_active_node_ids() reads. The
+    # earlier version wrote them under "json", so get_active_node_ids raised
+    # KeyError("nodes") and the cross-lobe cascade (PASS 2) silently produced
+    # no candidates from named lobes, which after AutoGrowth let orphan learned
+    # nodes win. Also include ALL node IDs (was capped at [:3]) so every node in
+    # the lobe is discoverable by the cascade.
+    chunks = {"nodes": {}, "json": {}, "drop": {}, "hopfield": {},
               "meta": {"lobe_created": lobe["created_at"], "lobe_subject": lobe["subject"]}}
-    for nid in lobe["node_ids"][:3]:
-        chunks["json"][nid] = {"_type": "NodeRef", "node_id": nid, "lobe_id": lobe["id"],
-                               "is_active": True, "inserted_at": time_mod.time()}
+    for nid in lobe["node_ids"]:
+        chunks["nodes"][nid] = {"_type": "NodeRef", "node_id": nid, "lobe_id": lobe["id"],
+                                "is_active": True, "inserted_at": time_mod.time()}
     lobe_tables.append({"lobe_id": lobe["id"], "chunks": chunks, "created_at": lobe["created_at"]})
 specimen["lobe_tables"] = lobe_tables
 

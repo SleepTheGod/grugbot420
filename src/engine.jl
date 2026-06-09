@@ -2343,6 +2343,15 @@ const MAX_ATTACHMENTS = MAX_BRIDGES
 # Magnitude is small (sigma=0.05) so it nudges but never dominates.
 const RELAY_CONF_JITTER_SIGMA = 0.05
 
+# v10-coherence-fix: CASCADE-RELAY CONFIDENCE DISCOUNT.
+# Applied to bridge-handoff (cascade) node confidence at injection time, BEFORE
+# score_lobes runs. Bridges are context co-activations, not direct answers — a
+# bridged partner must never out-rank the genuine primary content match. At 0.35
+# a bridge node carrying base_confidence 0.4 enters the pool at ~0.14, well below
+# any real primary content match (which scores 0.6+ on exact-pattern overlap),
+# so it can co-activate for generative context without stealing the winner crown.
+const CASCADE_RELAY_CONF_DISCOUNT = 0.35
+
 
 # SMELL-004: Pattern-scan acceptance thresholds. These were inline magic
 # numbers at the cheap/medium/high scan dispatch site. Promoted to named
@@ -4905,7 +4914,20 @@ function scan_and_expand(input_text::String;
                 #   subject=source_id, relation="cascade_bridge", object=seam_text
                 relay_triple = RelationalTriple(id, "cascade_bridge", seam_text)
                 relay_triples = vcat(fired_node.relational_patterns, [relay_triple])
-                push!(relay_additions, (fired_id, fired_conf, false, user_triples, relay_triples, Int[]))
+                # v10-coherence-fix: CASCADE-RELAY CONFIDENCE DISCOUNT AT INJECTION.
+                # Bridge handoffs are CONTEXT co-activations, not direct answers.
+                # The bridge's pre-baked base_confidence (~0.4-0.5) was high enough
+                # that, combined with the lobe-curve's winner bonus, a bridged
+                # partner in a different lobe could out-rank the genuine primary
+                # content match (e.g. gravity→derivative bridge made n103 beat the
+                # real n101 gravity node). Discounting the relay confidence HERE —
+                # before score_lobes runs — keeps bridges alive for generative
+                # context while ensuring they can't steal the lobe winner crown
+                # or the primary vote from a real content match. Downstream
+                # composite_vote_score still applies its own RELAY discount via
+                # the relay_attached detection; this is the earlier, structural cut.
+                discounted_conf = fired_conf * CASCADE_RELAY_CONF_DISCOUNT
+                push!(relay_additions, (fired_id, discounted_conf, false, user_triples, relay_triples, Int[]))
                 push!(already_included, fired_id)
             end
         end

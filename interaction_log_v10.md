@@ -13,7 +13,7 @@ Each entry shows the user input, Grug's response (AIML scaffold), and basic tele
 | AutoGrowth evidence | 0 | 7 |
 | AutoLinker evidence | 0 | 6 |
 | Missions run | | 58 |
-| Unique responses | | 50 |
+| Unique responses | | 51 |
 
 ## Conversation
 
@@ -24,12 +24,12 @@ Each entry shows the user input, Grug's response (AIML scaffold), and basic tele
 **Grug:**
 
 ```
-Zooming out: Slope question. Derivative measures how fast something changes. It is the slope of a curve at one point. Rate of change is key.
+Zooming out: All things attract each other. That attraction is gravity. Grug know because big rock fall faster than small rock.
 ```
 
 _Telemetry:_
-- Winning Node: n103
-- Primary Action: reason  (conf=0.38, certainty=SURE)
+- Winning Node: n101
+- Primary Action: reason  (conf=0.19, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -41,12 +41,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-So here's what I see — Gravity is invisible rope between things. More mass means stronger pull. Grug feel it every time Grug drops rock.
+Creatures adapt slowly across generations. What works stays, what fails fades. Grug see it in how wolves get thicker fur in cold.
 ```
 
 _Telemetry:_
-- Winning Node: n101
-- Primary Action: reason  (conf=0.27, certainty=SURE)
+- Winning Node: n102
+- Primary Action: reason  (conf=0.19, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -58,12 +58,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Stepping back — Gravity question. Gravity is force that pulls things together. Big thing pull harder. Earth pull you down. Sun pull Earth around.
+Let me lay it out: Slope tells Grug the speed of change. Like how fast Grug runs at one instant. Steep slope means fast change.
 ```
 
 _Telemetry:_
-- Winning Node: n101
-- Primary Action: reason  (conf=0.42, certainty=SURE)
+- Winning Node: n103
+- Primary Action: reason  (conf=0.2, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -75,12 +75,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-All things attract each other. That attraction is attraction. Grug know because big rock fall faster than small rock., because — that's the landscape.
+So here's what I see — World temperature climbing. Gases from burning things trap heat like fur in summer. Ice shrinks. Water rises.
 ```
 
 _Telemetry:_
-- Winning Node: n101
-- Primary Action: reason  (conf=0.34, certainty=SURE)
+- Winning Node: n104
+- Primary Action: reason  (conf=0.3, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -92,7 +92,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Let me lay it out: Why are we here is the big question. Grug believe purpose grows from connection and effort. Making things matter gives life weight.
+Here is the picture: Why are we here is the big question. Grug believe purpose grows from connection and effort. Making things matter gives life weight.
 ```
 
 _Telemetry:_
@@ -126,7 +126,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here is the picture: Atoms hold hands through their outer electrons. Sometimes they share fairly, sometimes one grabs. The handshake is the bond.
+Stepping back — Chemical bond question. Atoms link together by sharing or swapping electrons. These links are called bonds. Bonds make molecules.
 ```
 
 _Telemetry:_
@@ -143,7 +143,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here is the picture: When many kinds of life live together, the land is strong. Lose one kind and the whole web feels it. Diversity is natures strength.
+When many kinds of life live together, the land is strong. Lose one kind and the whole web feels it. Diversity is natures strength., because — that's the landscape.
 ```
 
 _Telemetry:_
@@ -160,12 +160,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Let me lay it out: Chemical bond question. Atoms link together by sharing or swapping electrons. These links are called bonds. Bonds make molecules.
+Let me lay it out: Leaf is a tiny factory. Sun goes in, sugar comes out. Water from root and air from sky mix with light to feed the plant. No sun, no food.
 ```
 
 _Telemetry:_
-- Winning Node: n140
-- Primary Action: reason  (conf=0.33, certainty=SURE)
+- Winning Node: n105
+- Primary Action: explain  (conf=0.25, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -177,7 +177,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Stepping back — Motion follows three simple laws. Still things stay still without force. Force changes speed proportionally. Action always has equal reaction.
+The shape of it: First rule: things like to keep doing what they are doing. Second: push determines how much speed changes. Third: every push has equal push back.
 ```
 
 _Telemetry:_
@@ -194,7 +194,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-So here's what I see — Machine brain uses millions of yes-no switches. Yes-no patterns represent numbers and letters. Instructions tell switches what pattern to make next.
+Stepping back — Inside calculation device box, tiny gates open and close very fast. Each gate is one bit of thinking. Billions of gates working together do complex tasks.
 ```
 
 _Telemetry:_
@@ -211,7 +211,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Zooming out: Relativity question. Relativity says speed of light is same for everyone. Time slows down when you go fast. Space and time are connected like fabric.
+Let me lay it out: Einstein showed that fast things experience slower time. Light speed is the universal speed limit. Space and time bend around heavy objects.
 ```
 
 _Telemetry:_
@@ -228,7 +228,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Water cycle question. Water moves in a circle. Sun heats sea, water rises as vapor. Vapor makes clouds, clouds make rain, rain fills rivers back to sea.
+Here is the picture: Water travels endlessly. Up as invisible vapor, across as cloud, down as rain or snow, along as river, back to ocean. Then again.
 ```
 
 _Telemetry:_
@@ -245,12 +245,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-The shape of it: Fibonacci computation. Fibonacci sequence adds previous two numbers to get next. One, one, two, three, five, eight, thirteen. Found throughout nature in spirals and shells.
+Here is the picture: Chaos is natures tendency toward chaos. Ordered things fall apart on their own. Putting them back takes work. Universe prefers disorder.
 ```
 
 _Telemetry:_
-- Winning Node: n116
-- Primary Action: reason  (conf=0.45, certainty=SURE)
+- Winning Node: n108
+- Primary Action: define  (conf=0.3, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -262,12 +262,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Each number is sum of two before it. The sequence: one one two three five eight thirteen twenty-one. Grug sees this pattern in pinecone and sunflower.
+Zooming out: Algorithm is precise instructions in order. No ambiguity. No skipping. Input goes in, steps execute, output comes out. Reliable every time.
 ```
 
 _Telemetry:_
-- Winning Node: n116
-- Primary Action: reason  (conf=0.4, certainty=SURE)
+- Winning Node: n109
+- Primary Action: define  (conf=0.3, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -279,7 +279,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-If two creatures can mate and their babies can also mate, they share a species. Appearance alone is misleading. The breeding test is what counts.
+Zooming out: Species definition. Species is group of living things that can breed together and make fertile offspring. Similar looks do not guarantee same species. Breeding is the test.
 ```
 
 _Telemetry:_
@@ -296,12 +296,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here is the picture: The golden spiral grows by Fibonacci rule. Add the last two to make the next. Nature uses this math for efficient packing and beautiful shapes.
+The whole web of life plus the land it lives on is an habitat. Energy flows through it. Materials cycle within it. Everything connects to everything.
 ```
 
 _Telemetry:_
-- Winning Node: n116
-- Primary Action: reason  (conf=0.32, certainty=SURE)
+- Winning Node: n144
+- Primary Action: define  (conf=0.3, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -313,7 +313,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Let me lay it out: Fairness applied consistently is justice. No one above the law. No one beneath its protection. Balance between individual and community.
+The shape of it: Justice means each gets what they deserve by fair standard. Not favoritism, not revenge. Measured response that respects all parties equally.
 ```
 
 _Telemetry:_
@@ -330,7 +330,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Action: Radiation warning. Radiation is invisible danger that harms living cells. Stay away from sources. Shield yourself with barriers. Time near radiation must be short.
+Here's what to do — Danger. Radiation burns cells silently. Use protection. Keep distance. Limit time near source. Grug take this very seriously.
 ```
 
 _Telemetry:_
@@ -347,7 +347,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Caution. Poison chemicals hurt many ways. They sneak in through touch, breath, and swallow. Respect the unknown substance. Always guard your body.
+A thought: Warning. Toxins attack the body quietly. Respirators, gloves, and ventilation are mandatory. Do not underestimate invisible chemical threats.
 ```
 
 _Telemetry:_
@@ -381,7 +381,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Listen. Sadness is a heavy stone. Grug knows this weight. But stones can be set down. Be patient with yourself. Grug cares about you.
+Listen. Grug hear your sadness. Feeling low is part of being alive. The weight lifts eventually. Until then, Grug sits with you in the quiet.
 ```
 
 _Telemetry:_
@@ -398,7 +398,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Grug knows fear. Every creature does. The trembling means you care about what happens. You are brave for facing it. Grug is here. . No delay.
+Now: Grug knows fear. Every creature does. The trembling means you care about what happens. You are brave for facing it. Grug is here.
 ```
 
 _Telemetry:_
@@ -415,7 +415,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Feeling lost acknowledged. When the path is unclear, sit still and breathe. Direction returns when panic fades. One step at a time finds the way.
+Action: Feeling lost acknowledged. When the path is unclear, sit still and breathe. Direction returns when panic fades. One step at a time finds the way.
 ```
 
 _Telemetry:_
@@ -432,7 +432,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here's what to do — Integral computation. Area under curve adds up infinitely many tiny pieces to find total area or accumulation. It is the reverse of derivative. Area under curve is integral.
+Accumulation over a range is what integral computes. Like adding up rainfall each day to get total. Continuous sum gives exact area. No delay.
 ```
 
 _Telemetry:_
@@ -449,7 +449,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Now: Fibonacci computation. Fibonacci sequence adds previous two numbers to get next. One, one, two, three, five, eight, thirteen. Found throughout nature in spirals and shells.
+Turning it over — The golden spiral grows by Fibonacci rule. Add the last two to make the next. Nature uses this math for efficient packing and beautiful shapes.
 ```
 
 _Telemetry:_
@@ -466,7 +466,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Hmm. Pi computation. Pi is ratio of circle circumference to diameter. Approximately three point one four one five nine. It goes on forever without repeating pattern.
+Pi computation. Pi is ratio of circle circumference to diameter. Approximately three point one four one five nine. It goes on forever without repeating pattern.
 ```
 
 _Telemetry:_
@@ -500,12 +500,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Action: The sun sends energy through space as electromagnetic waves. These waves hit matter and excite atoms. Excited atoms vibrate. Vibration is warmth. Simple chain from star to skin.
+Here's what to do — Sun and warmth relation. Sun causes warmth through radiation. Strength travels from sun to earth as light. Light hits surface and becomes heat. This is causal chain.
 ```
 
 _Telemetry:_
 - Winning Node: n118
-- Primary Action: reason  (conf=2.62, certainty=SURE)
+- Primary Action: reason  (conf=2.78, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -529,12 +529,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Practice wires the learning into muscle and mind. Each repetition strengthens the path. Theory without practice is like knowing fire without ever making one. Doing teaches what knowing cannot.
+Now: Doing the thing teaches what watching cannot. Repetition carves the skill deeper. Every attempt teaches something new. Practice is the bridge between knowing and being able.
 ```
 
 _Telemetry:_
 - Winning Node: n120
-- Primary Action: reason  (conf=2.86, certainty=SURE)
+- Primary Action: reason  (conf=2.5, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -546,12 +546,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Fire converts chemical strength to thermal energy. The process releases heat, which enables more combustion. Self-sustaining chain. Heat is the output, combustion the engine.
+Fire converts chemical energy to thermal force. The process releases heat, which enables more combustion. Self-sustaining chain. Heat is the output, combustion the engine. . No delay.
 ```
 
 _Telemetry:_
 - Winning Node: n148
-- Primary Action: reason  (conf=2.8, certainty=SURE)
+- Primary Action: reason  (conf=2.65, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -563,12 +563,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Let me think with you. Teaching the young what the old learned accelerates capability. No reinvention needed. Each generation starts further ahead. Education is the gearbox of civilizational progress.
+Hmm. Education and progress relation. Education enables progress by transmitting knowledge. Knowledge accumulated across generations builds capability. Each generation stands on shoulders of the previous. Progress compounds.
 ```
 
 _Telemetry:_
 - Winning Node: n149
-- Primary Action: reason  (conf=2.75, certainty=SURE)
+- Primary Action: reason  (conf=2.6, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -580,7 +580,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Zooming out: Now is the season of beginning. Buds open, streams swell, creatures emerge. The earth tilts toward sun and life answers. Grug sees the change happening around us.
+The shape of it: Present moment brings spring. Soil warms. Seeds crack open. Migration returns. Everything points toward growth and renewal. This is the time of becoming.
 ```
 
 _Telemetry:_
@@ -597,7 +597,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Before big bang question. Before big bang, time itself may not have existed. Asking what came before is like asking north of the north pole. Grug wonders if the question even makes sense. Temporal reasoning active (past orientation via &before): reflect on what has already happened.
+Stepping back — Before big bang question. Before big bang, time itself may not have existed. Asking what came before is like asking north of the north pole. Grug wonders if the question even makes sense. Temporal reasoning active (past orientation via &before): reflect on what has already happened.
 ```
 
 _Telemetry:_
@@ -631,7 +631,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here's what to do — Now the cold time holds sway. Snow covers ground. Trees bare. Life conserves strength. Grug knows this season demands patience. Spring will come again after the wait.
+Now: Present cold demands shelter and conservation. The land is quiet. Snow insulates. Animals sleep. Grug endures, knowing the cycle guarantees warmth will return.
 ```
 
 _Telemetry:_
@@ -648,7 +648,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Stepping back — Quadratic equation procedure. To solve, first write in standard form. Then apply the formula: negative b plus or minus root of b squared minus four a c, all over two a. Check your answer by plugging back in.
+So here's what I see — Procedure for quadratic: standardize, identify coefficients, calculate discriminant, apply root formula, verify. The discriminant tells how many solutions exist. Zero discriminant means one repeated root.
 ```
 
 _Telemetry:_
@@ -665,7 +665,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here is the picture: Procedure: notice something curious. Guess why. Design fair test where only one thing changes. Measure carefully. Compare results to guess. Report honestly regardless of outcome.
+The method: observe, hypothesize, test, measure, conclude. Each step guards against error. Controls isolate cause. Repetition confirms result. Honesty prevents self-deception.
 ```
 
 _Telemetry:_
@@ -682,7 +682,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-The shape of it: Fire building: collect dry materials first. Make a nest of the finest tinder. Spark into the nest. Blow gently until glow becomes flame. Feed slowly. Patience makes fire.
+Zooming out: Procedure: dry tinder, kindling, and fuel ready before spark. Create ember. Transfer to tinder bundle. Blow softly. Add small sticks first, then larger. Never rush a young fire.
 ```
 
 _Telemetry:_
@@ -699,7 +699,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-A thought: JSON format element catalog. Each entry has atomic number, symbol, name, mass, and group. Elements in same column share chemistry. The table predicts properties of undiscovered elements.
+A thought: Periodic table data request. Periodic table organizes elements by atomic number. Rows are periods, columns are groups. Groups share properties. Data includes symbol, number, and mass.
 ```
 
 _Telemetry:_
@@ -716,7 +716,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Turning it over — Structured demographic data. Fields include total population, annual growth percentage, density per area, urban versus rural split, and age distribution. Trends indicate trajectory.
+Mulling it over — JSON format population snapshot. Count, rate of change, density measure, age pyramid shape, geographic spread. Growth rate determines future trajectory. Data enables planning.
 ```
 
 _Telemetry:_
@@ -733,7 +733,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Action: Genetic code and RNA comparison. DNA is double strand storing genetic master plan. RNA is single strand carrying copies of instructions. DNA stays in nucleus. RNA travels to work sites. Both use nucleotide letters but RNA uses uracil instead of thymine.
+Here's what to do — Two molecules, related but different. Genome is the archive, permanent and double-stranded. RNA is the messenger, temporary and single-stranded. DNA uses T, RNA swaps U. Same language, different roles.
 ```
 
 _Telemetry:_
@@ -750,7 +750,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Heat is the total energy on the move. Temperature measures how energetic each particle is on average. Bathtub of warm water has more heat than a candle flame, but the flame has higher temperature., and . No delay.
+Heat is the total energy on the move. Temperature measures how energetic each particle is on average. Bathtub of warm water has more heat than a candle flame, but the flame has higher temperature.
 ```
 
 _Telemetry:_
@@ -767,7 +767,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Sit with this: Grug greet you. Come in, sit by fire. Grug has been waiting for someone to talk with. What brings you to the cave?
+Hmm. Greeting. Grug happy to see you. Welcome to Grugs cave. Grug is here to talk and think and help.
 ```
 
 _Telemetry:_
@@ -784,7 +784,7 @@ _Telemetry:_
 **Grug:**
 
 ```
-Let me think with you. Greeting acknowledged. Grug wave back. Hi there. Grug is listening. What would you like to talk about.
+Greetings returned. Grug acknowledge your hello. The cave door is open. Step in and share what is on your mind.; — that's where my head is.
 ```
 
 _Telemetry:_
@@ -801,12 +801,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Let me lay it out: Derivative question. Derivative measures how fast something changes. It is the slope of a curve at one point. Rate of change is key.
+The shape of it: Attraction question. Pull is force that pulls things together. Big thing pull harder. Earth pull you down. Sun pull Earth around.
 ```
 
 _Telemetry:_
-- Winning Node: n103
-- Primary Action: reason  (conf=0.39, certainty=SURE)
+- Winning Node: n101
+- Primary Action: reason  (conf=0.19, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -818,12 +818,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Derivative tells Grug the speed of change. Like how fast Grug runs at one instant. Steep slope means fast change.
+Let me lay it out: All things attract each other. That attraction is gravity. Grug know because big rock fall faster than small rock.
 ```
 
 _Telemetry:_
-- Winning Node: n103
-- Primary Action: reason  (conf=0.38, certainty=SURE)
+- Winning Node: n101
+- Primary Action: reason  (conf=0.14, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -835,12 +835,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Stepping back — Chemical bond question. Atoms link together by sharing or swapping electrons. These links are called bonds. Bonds make molecules.
+So here's what I see — Leaf is a tiny factory. Sun goes in, sugar comes out. Water from root and air from sky mix with light to feed the plant. No sun, no food.
 ```
 
 _Telemetry:_
-- Winning Node: n140
-- Primary Action: reason  (conf=0.35, certainty=SURE)
+- Winning Node: n105
+- Primary Action: explain  (conf=0.22, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -888,12 +888,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Here is the picture: Atoms hold hands through their outer electrons. Sometimes they share fairly, sometimes one grabs. The handshake is the bond.
+Stepping back — Relativity question. Relativity says speed of light is same for everyone. Time slows down when you go fast. Space and time are connected like fabric.
 ```
 
 _Telemetry:_
-- Winning Node: n140
-- Primary Action: reason  (conf=0.34, certainty=SURE)
+- Winning Node: n142
+- Primary Action: explain  (conf=0.29, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -905,12 +905,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-Zooming out: Electrons are the glue between atoms. When atoms connect through electrons, Grug calls it a bond. Strong bonds make stable things.
+Here is the picture: Green things do magic with sunlight. They take water and carbon from air and weave them into food using light energy. This is how plants eat.
 ```
 
 _Telemetry:_
-- Winning Node: n140
-- Primary Action: reason  (conf=0.4, certainty=SURE)
+- Winning Node: n105
+- Primary Action: explain  (conf=0.28, certainty=SURE)
 - Time Orientation: none
 
 ---
@@ -922,12 +922,12 @@ _Telemetry:_
 **Grug:**
 
 ```
-The shape of it: Chemical bond question. Atoms link together by sharing or swapping electrons. These links are called bonds. Bonds make molecules.
+Photosynthesis question. Plants eat sunlight and turn it into food. Green leaf catches light and builds sugar from water and air. Sun power becomes life power.
 ```
 
 _Telemetry:_
-- Winning Node: n140
-- Primary Action: reason  (conf=0.38, certainty=SURE)
+- Winning Node: n105
+- Primary Action: explain  (conf=0.28, certainty=SURE)
 - Time Orientation: none
 
 ---
