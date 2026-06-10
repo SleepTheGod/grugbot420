@@ -83,6 +83,7 @@ function make_test_node(id::String, strength::Float64 = 5.0)
         Dict{String,Float64}(),       # relation_weights
         strength,                     # strength
         false,                        # is_image_node
+        false,                        # is_antimatch_node
         String[],                     # neighbor_ids
         false,                        # is_unlinkable
         12,                           # max_neighbors

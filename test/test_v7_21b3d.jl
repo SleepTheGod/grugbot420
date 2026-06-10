@@ -54,6 +54,7 @@ function make_test_node!(node_id::String, pattern::String, system_prompt::String
         Dict{String,Float64}(),         # relation_weights
         5.0,                            # strength
         false,                          # is_image_node
+        false,                          # is_antimatch_node
         String[],                       # neighbor_ids
         false,                          # is_unlinkable
         12,                             # max_neighbors

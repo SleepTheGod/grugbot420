@@ -1,5 +1,7 @@
 module LobeOrchestrator
 
+using Base.Threads: ReentrantLock
+
 # ==============================================================================
 # LobeOrchestrator — averages-curve lobe selection (replaces hard mute gate)
 # ==============================================================================
@@ -104,6 +106,7 @@ struct LobeFireOrder
 end
 
 # --- Telemetry refs ----------------------------------------------------------
+const _TELEMETRY_LOCK = ReentrantLock()
 const LAST_LOBE_SCORES = Ref{Vector{Tuple{String, Float64, Float64, Float64, Int}}}(
     Tuple{String, Float64, Float64, Float64, Int}[]
 )
@@ -117,9 +120,38 @@ GRUG: Clear all telemetry refs. Called at the top of score_lobes so repeated
 calls don't accumulate.
 """
 function reset_telemetry!()
-    LAST_LOBE_SCORES[] = Tuple{String, Float64, Float64, Float64, Int}[]
-    LAST_WINNER[]      = ""
-    LAST_PASSTHROUGH[] = String[]
+    lock(_TELEMETRY_LOCK) do
+        LAST_LOBE_SCORES[] = Tuple{String, Float64, Float64, Float64, Int}[]
+        LAST_WINNER[]      = ""
+        LAST_PASSTHROUGH[] = String[]
+    end
+    return nothing
+end
+
+"""
+    get_last_state() -> (scores, winner, passthrough)
+
+Thread-safe snapshot of all three telemetry refs under a single lock.
+Returns (copy(LAST_LOBE_SCORES[]), LAST_WINNER[], copy(LAST_PASSTHROUGH[])).
+"""
+function get_last_state()
+    lock(_TELEMETRY_LOCK) do
+        (copy(LAST_LOBE_SCORES[]), LAST_WINNER[], copy(LAST_PASSTHROUGH[]))
+    end
+end
+
+"""
+    set_last_state!(scores, winner, passthrough)
+
+Thread-safe write of all three telemetry refs under a single lock.
+Used by specimen restore to replay saved lobe orchestrator state.
+"""
+function set_last_state!(scores, winner, passthrough)
+    lock(_TELEMETRY_LOCK) do
+        LAST_LOBE_SCORES[] = scores
+        LAST_WINNER[]      = winner
+        LAST_PASSTHROUGH[] = passthrough
+    end
     return nothing
 end
 
@@ -255,7 +287,9 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
         # winning. If two lobes pass the threshold, they fire async (highest
         # first), and cross-talk is hard-capped to 1k active at a time.
         push!(scored, (lobe_id, base_avg, top_avg, score, hard_count, lobe_entries))
-        push!(LAST_LOBE_SCORES[], (lobe_id, base_avg, top_avg, score, hard_count))
+        lock(_TELEMETRY_LOCK) do
+            push!(LAST_LOBE_SCORES[], (lobe_id, base_avg, top_avg, score, hard_count))
+        end
     end
 
     # v7.24-coherence-fix BUG #2: `default` lobe demotion.
@@ -297,11 +331,13 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
                         scored[k] = (lid, ba, ta, new_score, hc, le)
                         # Update telemetry too so the scaffold prints the
                         # demoted score, not the raw one.
-                        for ti in eachindex(LAST_LOBE_SCORES[])
-                            if LAST_LOBE_SCORES[][ti][1] == demote_lid
-                                (tlid, tba, tta, _, thc) = LAST_LOBE_SCORES[][ti]
-                                LAST_LOBE_SCORES[][ti] = (tlid, tba, tta, new_score, thc)
-                                break
+                        lock(_TELEMETRY_LOCK) do
+                            for ti in eachindex(LAST_LOBE_SCORES[])
+                                if LAST_LOBE_SCORES[][ti][1] == demote_lid
+                                    (tlid, tba, tta, _, thc) = LAST_LOBE_SCORES[][ti]
+                                    LAST_LOBE_SCORES[][ti] = (tlid, tba, tta, new_score, thc)
+                                    break
+                                end
                             end
                         end
                         break
@@ -431,8 +467,10 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
 
     # Update top-level telemetry
     if !isempty(out)
-        LAST_WINNER[] = out[1].lobe_id
-        LAST_PASSTHROUGH[] = [o.lobe_id for o in out if o.is_passthrough]
+        lock(_TELEMETRY_LOCK) do
+            LAST_WINNER[] = out[1].lobe_id
+            LAST_PASSTHROUGH[] = [o.lobe_id for o in out if o.is_passthrough]
+        end
     end
 
     return out
@@ -484,16 +522,19 @@ scaffold debug block. Replaces the old "Muted Lobes:" / "Bridged Nodes:"
 lines.
 """
 function last_summary()::String
-    if isempty(LAST_LOBE_SCORES[])
+    scores, winner, passthrough = lock(_TELEMETRY_LOCK) do
+        (copy(LAST_LOBE_SCORES[]), LAST_WINNER[], copy(LAST_PASSTHROUGH[]))
+    end
+    if isempty(scores)
         return "Lobe Curve: (no lobes scored)"
     end
     lines = String["Lobe Curve (√base × top² = score):"]
     # Sort scores desc for the readout
-    sorted = sort(LAST_LOBE_SCORES[]; by = x -> -x[4])
+    sorted = sort(scores; by = x -> -x[4])
     for (lobe_id, base_avg, top_avg, score, hard_count) in sorted
-        marker = if lobe_id == LAST_WINNER[]
+        marker = if lobe_id == winner
             "👑"
-        elseif lobe_id in LAST_PASSTHROUGH[]
+        elseif lobe_id in passthrough
             "↗"
         else
             "·"
@@ -509,7 +550,7 @@ end
 # --- Exports -----------------------------------------------------------------
 export LobeFireOrder
 export score_lobes, flatten_in_fire_order, compute_fire_batches
-export reset_telemetry!, last_summary
+export reset_telemetry!, last_summary, get_last_state, set_last_state!
 export LAST_LOBE_SCORES, LAST_WINNER, LAST_PASSTHROUGH
 export HARD_FIRE_BATCH_CAP, MIN_PASS_THROUGH_SCORE,
        MIN_WINNING_VOTES_PER_LOBE, TOP_K_FRACTION,

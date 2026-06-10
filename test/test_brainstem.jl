@@ -39,7 +39,8 @@ function _make_fresh_registry(lobe_ids::Vector{String})
             lid, "subject_$lid",
             Set{String}(), Set{String}(),
             1000, 0, 0, time(),
-            Set{String}()   # subject_whitelist — v7.24: 9th field
+            Set{String}(),   # subject_whitelist — v7.24: 9th field
+            lid              # name — v10: human-readable name
         )
     end
     return reg, lk

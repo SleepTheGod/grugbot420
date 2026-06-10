@@ -38,11 +38,12 @@
 module CoherenceField
 
 using JSON
+using Base.Threads: ReentrantLock
 
 # ── Exports ──────────────────────────────────────────────────────────────────
 export compute_field, compute_delta, coherence_field_status
 export CoherenceFieldConfig, COHERENCE_FIELD_CONFIG
-export set_coherence_config!, reset_coherence_config!
+export set_coherence_config!, reset_coherence_config!, coherence_config_snapshot
 export CoherenceFieldError
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ const COHERENCE_FIELD_CONFIG = CoherenceFieldConfig(
     0.0,    # cache_timestamp: never computed
     2.0,    # cache_ttl: 2 seconds
 )
+const _CONFIG_LOCK = ReentrantLock()
 
 # ── Config mutation ──────────────────────────────────────────────────────────
 
@@ -113,41 +115,43 @@ Set a single configuration parameter. Throws CoherenceFieldError on invalid valu
 Valid fields: :weight, :depth, :decay, :recency_window, :cache_ttl
 """
 function set_coherence_config!(field::Symbol, value)
-    if field === :weight
-        if value < 0.0 || value > COHERENCE_WEIGHT_MAX
-            throw(CoherenceFieldError(
-                "weight must be in [0.0, $(COHERENCE_WEIGHT_MAX)], got $value"))
+    lock(_CONFIG_LOCK) do
+        if field === :weight
+            if value < 0.0 || value > COHERENCE_WEIGHT_MAX
+                throw(CoherenceFieldError(
+                    "weight must be in [0.0, $(COHERENCE_WEIGHT_MAX)], got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.weight = Float64(value)
+        elseif field === :depth
+            iv = Int(value)
+            if iv < 1 || iv > COHERENCE_DEPTH_MAX
+                throw(CoherenceFieldError(
+                    "depth must be in [1, $(COHERENCE_DEPTH_MAX)], got $iv"))
+            end
+            COHERENCE_FIELD_CONFIG.depth = iv
+        elseif field === :decay
+            if value < 0.0 || value > COHERENCE_DECAY_MAX
+                throw(CoherenceFieldError(
+                    "decay must be in [0.0, $(COHERENCE_DECAY_MAX)], got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.decay = Float64(value)
+        elseif field === :recency_window
+            if value < COHERENCE_RECENCY_MIN || value > COHERENCE_RECENCY_MAX
+                throw(CoherenceFieldError(
+                    "recency_window must be in [$(COHERENCE_RECENCY_MIN), $(COHERENCE_RECENCY_MAX)], got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.recency_window = Float64(value)
+        elseif field === :cache_ttl
+            if value < 0.0
+                throw(CoherenceFieldError("cache_ttl must be >= 0.0, got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.cache_ttl = Float64(value)
+        else
+            throw(CoherenceFieldError("unknown config field: $field"))
         end
-        COHERENCE_FIELD_CONFIG.weight = Float64(value)
-    elseif field === :depth
-        iv = Int(value)
-        if iv < 1 || iv > COHERENCE_DEPTH_MAX
-            throw(CoherenceFieldError(
-                "depth must be in [1, $(COHERENCE_DEPTH_MAX)], got $iv"))
-        end
-        COHERENCE_FIELD_CONFIG.depth = iv
-    elseif field === :decay
-        if value < 0.0 || value > COHERENCE_DECAY_MAX
-            throw(CoherenceFieldError(
-                "decay must be in [0.0, $(COHERENCE_DECAY_MAX)], got $value"))
-        end
-        COHERENCE_FIELD_CONFIG.decay = Float64(value)
-    elseif field === :recency_window
-        if value < COHERENCE_RECENCY_MIN || value > COHERENCE_RECENCY_MAX
-            throw(CoherenceFieldError(
-                "recency_window must be in [$(COHERENCE_RECENCY_MIN), $(COHERENCE_RECENCY_MAX)], got $value"))
-        end
-        COHERENCE_FIELD_CONFIG.recency_window = Float64(value)
-    elseif field === :cache_ttl
-        if value < 0.0
-            throw(CoherenceFieldError("cache_ttl must be >= 0.0, got $value"))
-        end
-        COHERENCE_FIELD_CONFIG.cache_ttl = Float64(value)
-    else
-        throw(CoherenceFieldError("unknown config field: $field"))
+        # Invalidate cache on any config change
+        COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
     end
-    # Invalidate cache on any config change
-    COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
     return nothing
 end
 
@@ -157,14 +161,37 @@ end
 Reset all configuration to defaults. Weight goes back to 0.0 (off).
 """
 function reset_coherence_config!()
-    COHERENCE_FIELD_CONFIG.weight          = 0.0
-    COHERENCE_FIELD_CONFIG.depth           = 2
-    COHERENCE_FIELD_CONFIG.decay           = 0.01
-    COHERENCE_FIELD_CONFIG.recency_window  = 300.0
-    COHERENCE_FIELD_CONFIG.cache_ttl       = 2.0
-    COHERENCE_FIELD_CONFIG.cached_phi      = 0.0
-    COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
+    lock(_CONFIG_LOCK) do
+        COHERENCE_FIELD_CONFIG.weight          = 0.0
+        COHERENCE_FIELD_CONFIG.depth           = 2
+        COHERENCE_FIELD_CONFIG.decay           = 0.01
+        COHERENCE_FIELD_CONFIG.recency_window  = 300.0
+        COHERENCE_FIELD_CONFIG.cache_ttl       = 2.0
+        COHERENCE_FIELD_CONFIG.cached_phi      = 0.0
+        COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
+    end
     return nothing
+end
+
+"""
+    coherence_config_snapshot() -> CoherenceFieldConfig
+
+Thread-safe snapshot of COHERENCE_FIELD_CONFIG under _CONFIG_LOCK.
+Returns a deep copy so callers can read fields without holding the lock.
+"""
+function coherence_config_snapshot()
+    lock(_CONFIG_LOCK) do
+        # Build a new struct from the current field values
+        CoherenceFieldConfig(
+            COHERENCE_FIELD_CONFIG.weight,
+            COHERENCE_FIELD_CONFIG.depth,
+            COHERENCE_FIELD_CONFIG.decay,
+            COHERENCE_FIELD_CONFIG.recency_window,
+            COHERENCE_FIELD_CONFIG.cache_ttl,
+            COHERENCE_FIELD_CONFIG.cached_phi,
+            COHERENCE_FIELD_CONFIG.cache_timestamp
+        )
+    end
 end
 
 # ── Internal: Activation function ────────────────────────────────────────────
@@ -182,7 +209,7 @@ Formula: a(t) = e^(-3 × (now - last_fire) / recency_window)
   - Beyond window: ≈ 0 (contribution negligible)
 """
 function _activation(node; now::Float64=time())
-    window = COHERENCE_FIELD_CONFIG.recency_window
+    window = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.recency_window end
     if window <= 0.0
         return 0.0
     end
@@ -276,11 +303,20 @@ Returns 0.0 on empty input. Never throws.
 function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
                        force::Bool=false)
     now = time()
-    cfg = COHERENCE_FIELD_CONFIG
+
+    # Snapshot config under lock for the duration of this computation
+    weight = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.weight end
+    decay  = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.decay end
 
     # Cache check
-    if !force && cfg.cache_timestamp > 0.0 && (now - cfg.cache_timestamp) < cfg.cache_ttl
-        return cfg.cached_phi
+    if !force
+        cache_hit = lock(_CONFIG_LOCK) do
+            cfg = COHERENCE_FIELD_CONFIG
+            cfg.cache_timestamp > 0.0 && (now - cfg.cache_timestamp) < cfg.cache_ttl && cfg.cached_phi
+        end
+        if cache_hit !== false
+            return Float64(cache_hit)
+        end
     end
 
     phi = 0.0
@@ -295,8 +331,8 @@ function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
         activation = _activation(node; now=now)
 
         # Apply decay: reduce activation for very old nodes further
-        if cfg.decay > 0.0 && activation > 0.0
-            activation *= exp(-cfg.decay * (1.0 - activation))
+        if decay > 0.0 && activation > 0.0
+            activation *= exp(-decay * (1.0 - activation))
         end
 
         contribution = coherence * activation
@@ -308,8 +344,10 @@ function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
     end
 
     # Update cache
-    cfg.cached_phi = phi
-    cfg.cache_timestamp = now
+    lock(_CONFIG_LOCK) do
+        COHERENCE_FIELD_CONFIG.cached_phi = phi
+        COHERENCE_FIELD_CONFIG.cache_timestamp = now
+    end
 
     return phi
 end
@@ -536,12 +574,13 @@ function compute_delta(candidate_id::AbstractString,
     delta = activated_contribution - current_contribution
 
     # Secondary: depth-2 walk (bridge partners + neighbors)
-    if COHERENCE_FIELD_CONFIG.depth >= 2
+    depth = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.depth end
+    if depth >= 2
         delta += _secondary_delta(candidate_id, nodes_dict, bridge_map)
     end
 
     # Tertiary: depth-3 walk (only if depth >= 3)
-    if COHERENCE_FIELD_CONFIG.depth >= 3
+    if depth >= 3
         delta += _tertiary_delta(candidate_id, nodes_dict, bridge_map)
     end
 
@@ -589,8 +628,9 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
         coherence = _node_coherence(node)
         activation = _activation(node; now=now)
 
-        if COHERENCE_FIELD_CONFIG.decay > 0.0 && activation > 0.0
-            activation *= exp(-COHERENCE_FIELD_CONFIG.decay * (1.0 - activation))
+        decay = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.decay end
+        if decay > 0.0 && activation > 0.0
+            activation *= exp(-decay * (1.0 - activation))
         end
 
         if activation > 0.01
@@ -618,7 +658,13 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
     sort!(bot_candidates; by=c -> c["contribution"])
     bot5 = length(bot_candidates) >= 5 ? bot_candidates[1:5] : bot_candidates
 
-    cfg = COHERENCE_FIELD_CONFIG
+    cfg_snap = lock(_CONFIG_LOCK) do
+        (weight=COHERENCE_FIELD_CONFIG.weight,
+         depth=COHERENCE_FIELD_CONFIG.depth,
+         decay=COHERENCE_FIELD_CONFIG.decay,
+         recency_window=COHERENCE_FIELD_CONFIG.recency_window,
+         cache_ttl=COHERENCE_FIELD_CONFIG.cache_ttl)
+    end
 
     return Dict{String,Any}(
         "phi"              => phi,
@@ -628,11 +674,11 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
         "top_contributors" => top5,
         "bottom_contributors" => bot5,
         "config" => Dict{String,Any}(
-            "weight"          => cfg.weight,
-            "depth"           => cfg.depth,
-            "decay"           => cfg.decay,
-            "recency_window"  => cfg.recency_window,
-            "cache_ttl"       => cfg.cache_ttl,
+            "weight"          => cfg_snap.weight,
+            "depth"           => cfg_snap.depth,
+            "decay"           => cfg_snap.decay,
+            "recency_window"  => cfg_snap.recency_window,
+            "cache_ttl"       => cfg_snap.cache_ttl,
         ),
     )
 end
@@ -646,7 +692,7 @@ Serialize the current CoherenceField config to a dictionary suitable for
 specimen save. Only serializes non-default values to keep specimens clean.
 """
 function coherence_config_to_dict()
-    cfg = COHERENCE_FIELD_CONFIG
+    cfg = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG end
     d = Dict{String,Any}()
     # Always save weight (most important lever)
     d["weight"] = cfg.weight

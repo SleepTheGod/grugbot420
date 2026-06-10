@@ -705,9 +705,11 @@ function accumulate_evidence!(;
     # ── DECAY — expire stale evidence ──────────────────────────────────
     # GRUG: Decay evidence periodically, not every call (too expensive).
     # Every EVIDENCE_DECAY_INTERVAL seconds, halve all accumulated intensities.
-    if t_now - _LAST_DECAY[] > EVIDENCE_DECAY_INTERVAL
-        _decay_evidence!(t_now)
-        _LAST_DECAY[] = t_now
+    lock(_EVIDENCE_LOCK) do
+        if t_now - _LAST_DECAY[] > EVIDENCE_DECAY_INTERVAL
+            _decay_evidence!(t_now)
+            _LAST_DECAY[] = t_now
+        end
     end
 
     # ── CAP — evict oldest entries if over cap ─────────────────────────
@@ -1757,7 +1759,9 @@ function reset_evidence!()
     lock(_GROWTH_LOG_LOCK) do
         empty!(_GROWTH_LOG)
     end
-    _LAST_DECAY[] = time()
+    lock(_EVIDENCE_LOCK) do
+        _LAST_DECAY[] = time()
+    end
     return nothing
 end
 

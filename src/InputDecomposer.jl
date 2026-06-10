@@ -59,6 +59,8 @@
 
 module InputDecomposer
 
+using Base.Threads: ReentrantLock
+
 export DecomposedSubSubject, decompose_input, is_compound
 export InputChunk, chunk_boundaries
 export DecomposerConfig, build_config, DEFAULT_CONFIG
@@ -267,6 +269,7 @@ end
 # If no specimen has been loaded, it falls back to DEFAULT_CONFIG.
 
 const _RUNTIME_CONFIG = Ref{DecomposerConfig}(DEFAULT_CONFIG)
+const _CONFIG_LOCK = ReentrantLock()
 
 """
     set_config!(specimen_dict) -> DecomposerConfig
@@ -277,7 +280,7 @@ the new config for inspection/logging.
 """
 function set_config!(specimen_dict)::DecomposerConfig
     cfg = build_config(specimen_dict)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return cfg
 end
 
@@ -287,7 +290,7 @@ end
 Get the current runtime decomposer config. Useful for diagnostics.
 """
 function get_config()::DecomposerConfig
-    return _RUNTIME_CONFIG[]
+    return lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
 end
 
 # ==============================================================================
@@ -408,7 +411,8 @@ const punctuation_chars = [',', '.', ';', ':', '!', '?', '-', '—']
     use chunk_boundaries(input_text, config).
 =#
 function chunk_boundaries(input_text::String)::Vector{InputChunk}
-    return chunk_boundaries(input_text, _RUNTIME_CONFIG[])
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
+    return chunk_boundaries(input_text, cfg)
 end
 
 function chunk_boundaries(input_text::String, config::DecomposerConfig)::Vector{InputChunk}
@@ -496,7 +500,8 @@ Analyze the input for compound structure using the runtime config
 uses DEFAULT_CONFIG. For explicit config, use decompose_input(input_text, config).
 """
 function decompose_input(input_text::String)::Vector{DecomposedSubSubject}
-    return decompose_input(input_text, _RUNTIME_CONFIG[])
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
+    return decompose_input(input_text, cfg)
 end
 
 """
@@ -1072,7 +1077,7 @@ returns the standard singleton result.
 function decompose_input_mlp(input_text::String;
                              mlp_directive_quality::Float64 = 1.0,
                              mlp_novelty::Float64 = 0.0,
-                             config::DecomposerConfig = _RUNTIME_CONFIG[])::Vector{DecomposedSubSubject}
+                             config::DecomposerConfig = get_config())::Vector{DecomposedSubSubject}
     # GRUG: First check — do MLP signals even suggest compound?
     if mlp_directive_quality >= MLP_COMPOUND_THRESHOLD
         # MLP is confident about the directive. Not compound. Trust it.
@@ -1248,13 +1253,15 @@ Returns a status message. Throws ArgumentError on empty input.
 function add_split_conjunction!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot add empty string as split conjunction"))
-    cfg = _RUNTIME_CONFIG[]
-    if word in cfg.split_conjunctions
-        return "⚠  '$word' already in split_conjunctions (no change)"
+    lock(_CONFIG_LOCK) do
+        cfg = _RUNTIME_CONFIG[]
+        if word in cfg.split_conjunctions
+            return "⚠  '$word' already in split_conjunctions (no change)"
+        end
+        push!(cfg.split_conjunctions, word)
+        _RUNTIME_CONFIG[] = cfg  # re-store (Set mutation may not trigger Ref update)
+        return "✅ Added '$word' to split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
     end
-    push!(cfg.split_conjunctions, word)
-    _RUNTIME_CONFIG[] = cfg  # re-store (Set mutation may not trigger Ref update)
-    return "✅ Added '$word' to split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
 end
 
 """
@@ -1266,13 +1273,15 @@ Returns a status message. Throws ArgumentError if word not present.
 function remove_split_conjunction!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot remove empty string from split conjunctions"))
-    cfg = _RUNTIME_CONFIG[]
-    if !(word in cfg.split_conjunctions)
-        throw(ArgumentError("'$word' not in split_conjunctions — cannot remove what isn't there"))
+    lock(_CONFIG_LOCK) do
+        cfg = _RUNTIME_CONFIG[]
+        if !(word in cfg.split_conjunctions)
+            throw(ArgumentError("'$word' not in split_conjunctions — cannot remove what isn't there"))
+        end
+        delete!(cfg.split_conjunctions, word)
+        _RUNTIME_CONFIG[] = cfg
+        return "✅ Removed '$word' from split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
     end
-    delete!(cfg.split_conjunctions, word)
-    _RUNTIME_CONFIG[] = cfg
-    return "✅ Removed '$word' from split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
 end
 
 """
@@ -1288,17 +1297,17 @@ function add_compound_pair!(leader::String, follower::String)::String
     follower = strip(lowercase(follower))
     isempty(leader) && throw(ArgumentError("Compound pair leader cannot be empty"))
     isempty(follower) && throw(ArgumentError("Compound pair follower cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !haskey(cfg.compound_pairs, leader)
         cfg.compound_pairs[leader] = Set{String}([follower])
-        _RUNTIME_CONFIG[] = cfg
+        lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
         return "✅ Created compound pair '$leader' → {'$follower'} (new leader)"
     end
     if follower in cfg.compound_pairs[leader]
         return "⚠  '$leader' → '$follower' already in compound_pairs (no change)"
     end
     push!(cfg.compound_pairs[leader], follower)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Added '$follower' to compound pair '$leader' (now $(length(cfg.compound_pairs[leader])) followers)"
 end
 
@@ -1314,7 +1323,7 @@ function remove_compound_pair!(leader::String, follower::String)::String
     follower = strip(lowercase(follower))
     isempty(leader) && throw(ArgumentError("Compound pair leader cannot be empty"))
     isempty(follower) && throw(ArgumentError("Compound pair follower cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !haskey(cfg.compound_pairs, leader)
         throw(ArgumentError("'$leader' not in compound_pairs — no such leader"))
     end
@@ -1324,10 +1333,10 @@ function remove_compound_pair!(leader::String, follower::String)::String
     delete!(cfg.compound_pairs[leader], follower)
     if isempty(cfg.compound_pairs[leader])
         delete!(cfg.compound_pairs, leader)
-        _RUNTIME_CONFIG[] = cfg
+        lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
         return "✅ Removed '$follower' from '$leader'; leader had no followers left, removed '$leader' entry entirely"
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed '$follower' from compound pair '$leader' (now $(length(cfg.compound_pairs[leader])) followers)"
 end
 
@@ -1340,12 +1349,12 @@ Returns a status message. Throws ArgumentError on empty input.
 function add_question_marker!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot add empty string as question marker"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if word in cfg.question_markers
         return "⚠  '$word' already in question_markers (no change)"
     end
     push!(cfg.question_markers, word)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Added '$word' to question_markers (now $(length(cfg.question_markers)) total)"
 end
 
@@ -1358,12 +1367,12 @@ Throws ArgumentError if word not present.
 function remove_question_marker!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot remove empty string from question markers"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !(word in cfg.question_markers)
         throw(ArgumentError("'$word' not in question_markers — cannot remove what isn't there"))
     end
     delete!(cfg.question_markers, word)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed '$word' from question_markers (now $(length(cfg.question_markers)) total)"
 end
 
@@ -1378,7 +1387,7 @@ Returns a status message. Throws ArgumentError on empty stem.
 function add_command_marker!(stem::String, conjugated_forms::Vector{String}=String[])::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Cannot add empty string as command marker"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     was_new = !(stem in cfg.command_markers)
     push!(cfg.command_markers, stem)
     push!(cfg.expanded_command_markers, stem)  # stem itself is always in expanded
@@ -1390,7 +1399,7 @@ function add_command_marker!(stem::String, conjugated_forms::Vector{String}=Stri
             push!(cfg.expanded_command_markers, f)
         end
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     n_expanded = length(cfg.expanded_command_markers)
     if was_new
         if isempty(conjugated_forms)
@@ -1418,7 +1427,7 @@ Throws ArgumentError if stem not present.
 function remove_command_marker!(stem::String)::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Cannot remove empty string from command markers"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !(stem in cfg.command_markers)
         throw(ArgumentError("'$stem' not in command_markers — cannot remove what isn't there"))
     end
@@ -1431,7 +1440,7 @@ function remove_command_marker!(stem::String)::String
         end
         delete!(cfg.conjugation_rules, stem)
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed command marker '$stem' and its conjugated forms (now $(length(cfg.expanded_command_markers)) expanded markers)"
 end
 
@@ -1447,7 +1456,7 @@ function add_conjugation_rule!(stem::String, forms::Vector{String})::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Conjugation rule stem cannot be empty"))
     isempty(forms) && throw(ArgumentError("Conjugation rule must have at least one form"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !(stem in cfg.command_markers)
         throw(ArgumentError("'$stem' not in command_markers — add it with /decomposer addCommand first"))
     end
@@ -1464,7 +1473,7 @@ function add_conjugation_rule!(stem::String, forms::Vector{String})::String
     for f in clean_forms
         push!(cfg.expanded_command_markers, f)
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Set conjugation rule '$stem' → $clean_forms (now $(length(cfg.expanded_command_markers)) expanded markers)"
 end
 
@@ -1479,7 +1488,7 @@ Throws ArgumentError if no rule exists for this stem.
 function remove_conjugation_rule!(stem::String)::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Conjugation rule stem cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !haskey(cfg.conjugation_rules, stem)
         throw(ArgumentError("No conjugation rule for '$stem' — cannot remove what isn't there"))
     end
@@ -1487,7 +1496,7 @@ function remove_conjugation_rule!(stem::String)::String
         delete!(cfg.expanded_command_markers, f)
     end
     delete!(cfg.conjugation_rules, stem)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed conjugation rule for '$stem' (stem still in command_markers; now $(length(cfg.expanded_command_markers)) expanded markers)"
 end
 
@@ -1501,7 +1510,7 @@ Throws ArgumentError on empty input.
 function set_context_conjunction!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Context conjunction cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     old = cfg.context_conjunction
     cfg = DecomposerConfig(  # Reconstruct — context_conjunction is immutable in struct
         cfg.split_conjunctions,
@@ -1512,7 +1521,7 @@ function set_context_conjunction!(word::String)::String
         cfg.expanded_command_markers,
         cfg.conjugation_rules
     )
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Context conjunction changed: '$old' → '$word'"
 end
 
@@ -1523,8 +1532,8 @@ Reset the runtime config to built-in defaults. NO SILENT SURPRISE:
 this is a hard reset, and the operator is told exactly what they lost.
 """
 function reset_config!()::String
-    old_n = length(_RUNTIME_CONFIG[].split_conjunctions)
-    _RUNTIME_CONFIG[] = DEFAULT_CONFIG
+    old_n = lock(_CONFIG_LOCK) do; length(_RUNTIME_CONFIG[].split_conjunctions) end
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = DEFAULT_CONFIG end
     new_n = length(DEFAULT_CONFIG.split_conjunctions)
     return "✅ Decomposer config reset to built-in defaults (was $old_n split_conjunctions, now $new_n)"
 end
@@ -1554,7 +1563,7 @@ Used by /decomposer status command. NO SILENT ANYTHING — every field
 is shown, even if empty.
 """
 function config_status_string()::String
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     lines = String[]
 
     push!(lines, "╔══════════════════════════════════════════════════════════╗")

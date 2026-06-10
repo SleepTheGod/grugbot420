@@ -1389,11 +1389,12 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
     #                     winner is more trustworthy than one tied with
     #                     weak siblings)
     # All optional — NaN means "skip this knob for this candidate".
-    winner_lobe = LobeOrchestrator.LAST_WINNER[]
-    passthrough_lobes = Set(LobeOrchestrator.LAST_PASSTHROUGH[])
+    _lobe_scores, _lobe_winner, _lobe_passthrough = LobeOrchestrator.get_last_state()
+    winner_lobe = _lobe_winner
+    passthrough_lobes = Set(_lobe_passthrough)
     # Build a lobe_id -> base_avg map so we can compute peak_dominance.
     lobe_base_map = Dict{String, Float64}()
-    for (lid, base_avg, _, _, _) in LobeOrchestrator.LAST_LOBE_SCORES[]
+    for (lid, base_avg, _, _, _) in _lobe_scores
         lobe_base_map[lid] = base_avg
     end
     # v7.24-restore: bring the ATP and TonalJudge channels back into vote
@@ -1404,7 +1405,7 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
     # Action-tone prediction (last computed by scan_specimens). Snapshot once
     # and reuse for every candidate so we don't keep re-resolving the Ref.
     last_pred = try
-        ActionTonePredictor.LAST_PREDICTION[]
+        ActionTonePredictor.get_last_prediction()
     catch
         nothing
     end
@@ -1909,7 +1910,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     evaluated_rules = String[]
     try
-        for rule in AIML_DROP_TABLE
+        for rule in lock(engine._DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end
             # Parse a leading [action_name "..."] tag, if present.
             # Pattern: optional whitespace, '[', action_name (word chars +
             # hyphen/underscore), at least one space, then a quote. This is
@@ -3093,8 +3094,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # winner and ↗ marking pass-through runners-up. See LobeOrchestrator.jl.
     try
         println(payload_io, LobeOrchestrator.last_summary())
-        if !isempty(LobeOrchestrator.LAST_PASSTHROUGH[])
-            println(payload_io, "Passthrough Lobes: [$(join(LobeOrchestrator.LAST_PASSTHROUGH[], ", "))]")
+        _, _, _lobe_passthrough = LobeOrchestrator.get_last_state()
+        if !isempty(_lobe_passthrough)
+            println(payload_io, "Passthrough Lobes: [$(_lobe_passthrough)]")
         end
     catch e
         println(payload_io, "Lobe Curve: <telemetry error: $e>")
@@ -4953,7 +4955,8 @@ function process_mission(mission_text::String)
             end
  
             # GRUG: Only record when escalation actually fired. No escalation = no phase entry.
-            if ActionTonePredictor.LAST_ESCALATION_TRACE[] !== nothing
+            _esc_trace = ActionTonePredictor.get_last_escalation_trace()
+            if _esc_trace !== nothing
                 # GRUG v7.27: Record ATP phase snapshot into the time crystal.
                 # The automaton is the hippocampus. Each escalation grows the crystal
                 # by one phase point. Rain check = ATP min_confidence (already cleared
@@ -4975,7 +4978,7 @@ function process_mission(mission_text::String)
                         get(prediction.tone_distribution,   ActionTonePredictor.TONE_NEUTRAL,    0.0),
                         get(prediction.tone_distribution,   ActionTonePredictor.TONE_REFLECTIVE, 0.0)
                     ]
-                    _trace = ActionTonePredictor.LAST_ESCALATION_TRACE[]
+                    _trace = _esc_trace
                     EphemeralAutomaton.record_phase!(
                         _phase_vec,
                         Symbol(prediction.action_family),
@@ -5185,7 +5188,7 @@ function process_mission(mission_text::String)
         # Main when dev-included directly). Either way, the Ref is a sibling
         # binding — reference it bare, never via `Main.` which only resolves
         # in the dev-include case and breaks the packaged path.
-        scan_fc = _LAST_FIRE_COUNTER[]
+        scan_fc = get_fire_counter()
         fires_total = isnothing(scan_fc) ? 0 : VoteOrchestrator.current_fire_count(scan_fc)
         VoteOrchestrator.send_done!(done_channel, VoteOrchestrator.DoneSignal(
             "scan_pass",
@@ -6340,7 +6343,7 @@ function save_specimen_to_file!(filepath::String)::String
     # GRUG: r.text and r.fire_probability are the actual struct field names.
     # Academic: Previously used r.rule_text / r.fire_prob which would cause a
     # Julia field access error at runtime. Fixed in v2.1.
-    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in AIML_DROP_TABLE]
+    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(engine._DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end]
     specimen["rules"] = rule_list
 
     # ── 4. MESSAGE HISTORY ────────────────────────────────────────────────
@@ -6781,9 +6784,10 @@ function save_specimen_to_file!(filepath::String)::String
     # GRUG: Save the TonalJudge runtime-adjustable knobs. These are Refs that
     # can be tuned at runtime; losing them on reload means the specimen
     # forgets its emotional calibration.
+    _tj_lift, _tj_inhibit = TonalJudge.get_frame_match_weights()
     specimen["tonal_judge_knobs"] = Dict{String, Any}(
-        "frame_lift_multiplier"   => TonalJudge._FRAME_LIFT_MULTIPLIER[],
-        "frame_inhibit_multiplier" => TonalJudge._FRAME_INHIBIT_MULTIPLIER[]
+        "frame_lift_multiplier"   => _tj_lift,
+        "frame_inhibit_multiplier" => _tj_inhibit
     )
 
     # ── 25. EPHEMERAL MLP STATE ────────────────────────────────────────────
@@ -7240,13 +7244,13 @@ function save_specimen_to_file!(filepath::String)::String
     # bias. Without these, reload loses the momentum of which lobe was winning
     # and the first post-reload cycle scores naively.
     try
-        _lls = LobeOrchestrator.LAST_LOBE_SCORES[]
+        _lls, _lls_winner, _lls_passthrough = LobeOrchestrator.get_last_state()
         specimen["lobe_orch_last"] = Dict{String,Any}(
             "scores"      => [_lls_item_to_dict(t) for t in _lls],
-            "winner"      => LobeOrchestrator.LAST_WINNER[],
-            "passthrough" => LobeOrchestrator.LAST_PASSTHROUGH[]
+            "winner"      => _lls_winner,
+            "passthrough" => _lls_passthrough
         )
-        println("  🎭  Lobe orchestrator last state saved (winner=$(LobeOrchestrator.LAST_WINNER[]))")
+        println("  🎭  Lobe orchestrator last state saved (winner=$(_lls_winner))")
     catch e
         @warn "[MAIN] save_specimen: FAILED to serialize lobe orchestrator last state: $e"
     end
@@ -7622,7 +7626,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # Wipe AIML rules
-    empty!(AIML_DROP_TABLE)
+    lock(engine._DROP_TABLE_LOCK) do; empty!(AIML_DROP_TABLE) end
 
     # GRUG: Wipe AIML node tribes. All lobe registrations, populations, cycle state.
     # A brain transplant must clear executive memory too, not just cave nodes.
@@ -7732,8 +7736,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # Wipe TonalJudge knobs back to defaults
-    TonalJudge._FRAME_LIFT_MULTIPLIER[] = 1.20
-    TonalJudge._FRAME_INHIBIT_MULTIPLIER[] = 0.85
+    TonalJudge.set_frame_match_weights!(lift=1.20, inhibit=0.85)
 
     # Wipe vigilance config back to defaults (v7.29)
     EphemeralAutomaton._VIGILANCE_CONFIG[] = EphemeralAutomaton.VigilanceConfig()
@@ -8062,7 +8065,7 @@ function load_specimen_from_file!(filepath::String)::String
             try
                 rtext = String(rentry["text"])
                 rprob = Float64(get(rentry, "prob", 1.0))
-                push!(AIML_DROP_TABLE, StochasticRule(rtext, rprob))
+                push!(lock(engine._DROP_TABLE_LOCK) do; AIML_DROP_TABLE end, StochasticRule(rtext, rprob))
                 n_rules += 1
             catch e
                 error("!!! FATAL: /loadSpecimen failed to restore rule: $e !!!")
@@ -8666,13 +8669,14 @@ function load_specimen_from_file!(filepath::String)::String
     # pre-v2.5 specimens lack this key — knobs stay at defaults.
     if haskey(specimen, "tonal_judge_knobs") && _is_dict_like(specimen["tonal_judge_knobs"])
         tk = specimen["tonal_judge_knobs"]
-        if haskey(tk, "frame_lift_multiplier")
-            TonalJudge._FRAME_LIFT_MULTIPLIER[] = Float64(tk["frame_lift_multiplier"])
-        end
-        if haskey(tk, "frame_inhibit_multiplier")
-            TonalJudge._FRAME_INHIBIT_MULTIPLIER[] = Float64(tk["frame_inhibit_multiplier"])
-        end
-        println("  🎭 TonalJudge knobs restored (lift=$(TonalJudge._FRAME_LIFT_MULTIPLIER[]), inhibit=$(TonalJudge._FRAME_INHIBIT_MULTIPLIER[]))")
+        _tj_lift_val = get(tk, "frame_lift_multiplier", nothing)
+        _tj_inhibit_val = get(tk, "frame_inhibit_multiplier", nothing)
+        TonalJudge.set_frame_match_weights!(;
+            lift     = _tj_lift_val !== nothing ? Float64(_tj_lift_val) : nothing,
+            inhibit  = _tj_inhibit_val !== nothing ? Float64(_tj_inhibit_val) : nothing
+        )
+        _tj_l, _tj_i = TonalJudge.get_frame_match_weights()
+        println("  🎭 TonalJudge knobs restored (lift=$(_tj_l), inhibit=$(_tj_i))")
     end
 
 
@@ -9180,15 +9184,12 @@ function load_specimen_from_file!(filepath::String)::String
                             ))
                         end
                     end
-                    LobeOrchestrator.LAST_LOBE_SCORES[] = _restored_scores
+                    LobeOrchestrator.set_last_state!(_restored_scores,
+                        haskey(_lol, "winner") ? String(_lol["winner"]) : "",
+                        (haskey(_lol, "passthrough") && isa(_lol["passthrough"], AbstractVector)) ? [String(p) for p in _lol["passthrough"]] : String[])
                 end
-                if haskey(_lol, "winner")
-                    LobeOrchestrator.LAST_WINNER[] = String(_lol["winner"])
-                end
-                if haskey(_lol, "passthrough") && isa(_lol["passthrough"], AbstractVector)
-                    LobeOrchestrator.LAST_PASSTHROUGH[] = [String(p) for p in _lol["passthrough"]]
-                end
-                println("  🎭  Lobe orchestrator last state loaded (winner=$(LobeOrchestrator.LAST_WINNER[]), scores=$(length(LobeOrchestrator.LAST_LOBE_SCORES[])))")
+                _r_scores2, _r_winner2, _ = LobeOrchestrator.get_last_state()
+                println("  \U0001f3ad  Lobe orchestrator last state loaded (winner=$(_r_winner2), scores=$(length(_r_scores2)))")
             end
         end
     catch e
@@ -12814,7 +12815,7 @@ elseif !isnothing(m_right)
                 # /coherence — show current field value Φ + summary
                 lock(NODE_LOCK) do
                     phi = CoherenceField.compute_field(NODE_MAP; force=true)
-                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    cfg = CoherenceField.coherence_config_snapshot()
                     if cfg.weight ≈ 0.0
                         println("Φ = $(round(phi; digits=4))  [routing OFF — weight=0.0]")
                         println("  Use /coherenceConfig weight 0.05 to enable gradient routing")
@@ -12833,7 +12834,7 @@ elseif !isnothing(m_right)
                     else
                         delta = CoherenceField.compute_delta(target_id, NODE_MAP, BRIDGE_MAP; force=true)
                         direction = delta > 0 ? "↑ COHERENT (positive contribution)" : delta < 0 ? "↓ DECOHERENT (negative contribution)" : "— NEUTRAL"
-                        cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                        cfg = CoherenceField.coherence_config_snapshot()
                         println("ΔΦ($target_id) = $(round(delta; digits=6))  $direction")
                         if cfg.weight ≈ 0.0
                             println("  [routing OFF — this gradient has NO effect on voting]")
@@ -12854,7 +12855,7 @@ elseif !isnothing(m_right)
                     n_coherent = status["n_coherent"]
                     top5 = status["top_contributors"]
                     bot5 = status["bottom_contributors"]
-                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    cfg = CoherenceField.coherence_config_snapshot()
 
                     println("╔══════════════════════════════════════╗")
                     println("║     COHERENCE FIELD STATUS (v9)      ║")
@@ -12889,7 +12890,7 @@ elseif !isnothing(m_right)
                 #   reset            — reset all to defaults
                 config_arg = m_coherence_config.captures[1]
                 if isnothing(config_arg) || isempty(strip(String(config_arg)))
-                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    cfg = CoherenceField.coherence_config_snapshot()
                     println("CoherenceField config:")
                     println("  weight    = $(cfg.weight)  (0.0=off, max=$(CoherenceField.COHERENCE_WEIGHT_MAX))")
                     println("  depth     = $(cfg.depth)  (1-3, max=$(CoherenceField.COHERENCE_DEPTH_MAX))")
@@ -12899,7 +12900,7 @@ elseif !isnothing(m_right)
                 else
                     parts = split(strip(String(config_arg)))
                     if isempty(parts)
-                        cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                        cfg = CoherenceField.coherence_config_snapshot()
                         println("CoherenceField config: weight=$(cfg.weight), depth=$(cfg.depth), decay=$(cfg.decay), recency=$(cfg.recency_window)s")
                     elseif String(parts[1]) == "weight"
                         if length(parts) < 2

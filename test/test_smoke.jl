@@ -250,25 +250,50 @@ println("  ✓ apply_wrong_feedback!: strength $(before_str) -> $(wrong_node.str
 # ==============================================================================
 println("\n[11] CHATTER MODE")
 
-chatter_snapshot = [
+# GRUG: start_chatter_session! now requires (node_map, node_lock, group_map, group_lock)
+# Build minimal node_map and group_map from snapshot data
+_chatter_node_ids = String[]
+for (nid, pat, pkt, str) in [
     ("node_chatter_1", "hello greeting warm", "greet^2", 3.0),
     ("node_chatter_2", "think reason analyze", "reason^3", 7.0),
     ("node_chatter_3", "cold logic process",   "analyze^2", 5.0),
     ("node_chatter_4", "danger flee escape",   "flee^1",   1.0),
     ("node_chatter_5", "welcome friend hello", "greet^2",  4.0),
 ]
-
+    local ctx = Dict{String,Any}("system_prompt" => "chatter node")
+    cid = create_node(pat, pkt, ctx, String[]; initial_strength=str)
+    push!(_chatter_node_ids, cid)
+end
 # Pad to at least 1000 for valid session (ChatterMode v7.1 requires MIN_POPULATION_FOR_CHATTER = 1000)
-full_snapshot = vcat(chatter_snapshot, [("node_pad_$i", "pad pattern $i", "reason^1", rand()*5) for i in 1:1000])
+for i in 1:1000
+    local ctx = Dict{String,Any}("system_prompt" => "pad node")
+    create_node("pad pattern $i", "reason^1", ctx, String[]; initial_strength=rand()*5)
+end
+_chatter_node_map = NODE_MAP
+# GRUG: group_map must hold NodeGroup structs (not plain vectors)
+# Build a NodeGroup with all chatter nodes as members
+_ng_id = "chatter_group"
+_all_chatter_ids = collect(keys(_chatter_node_map))
+_chatter_group_map = Dict{String, NodeGroup}(
+    _ng_id => NodeGroup(_ng_id, _all_chatter_ids[1], "hello greeting warm";
+                         is_chatter_eligible=true)
+)
+# Add remaining members
+for _mid in _all_chatter_ids[2:end]
+    push!(_chatter_group_map[_ng_id].members, _mid)
+end
+_chatter_node_lock = ReentrantLock()
+_chatter_group_lock = ReentrantLock()
 
-session = ChatterMode.start_chatter_session!(full_snapshot)
-# GRUG v7.19: New vote-swap chatter schema (window_size + swaps_*)
-@assert session.window_size >= ChatterMode.CHATTER_WINDOW_MIN "FAIL: window_size below CHATTER_WINDOW_MIN!"
-@assert session.window_size <= ChatterMode.CHATTER_WINDOW_MAX "FAIL: window_size above CHATTER_WINDOW_MAX!"
+session = ChatterMode.start_chatter_session!(
+    _chatter_node_map, _chatter_node_lock,
+    _chatter_group_map, _chatter_group_lock
+)
+# GRUG v8.0: ChatterSession no longer has window_size. Verify core fields.
 @assert session.end_time > session.start_time "FAIL: Session end time should be after start!"
 @assert !session.is_running "FAIL: Session should not be running after completion!"
 @assert session.swaps_accepted <= session.swaps_attempted "FAIL: accepted cannot exceed attempted!"
-println("  ✓ Chatter v7.19 session complete: window=$(session.window_size), attempted=$(session.swaps_attempted), accepted=$(session.swaps_accepted)")
+println("  ✓ Chatter v8.0 session complete: groups=$(session.groups_sampled), attempted=$(session.swaps_attempted), accepted=$(session.swaps_accepted)")
 
 # Test input queue
 ChatterMode.enqueue_input!("queued test input")

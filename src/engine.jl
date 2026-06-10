@@ -1,5 +1,5 @@
 # Engine.jl
-using Base.Threads: Atomic, atomic_add!
+using Base.Threads: Atomic, atomic_add!, ReentrantLock
 using JSON
 using Random # GRUG: Need random to roll active node limits and scan modes!
 
@@ -2329,6 +2329,14 @@ end
 # count toward the same limit. Protected by NODE_LOCK implicitly (only written
 # by scan_specimens under its own flow).
 const _LAST_FIRE_COUNTER = Ref{Union{Nothing, VoteOrchestrator.FireCounter}}(nothing)
+const _FIRE_COUNTER_LOCK = ReentrantLock()
+
+"""
+    get_fire_counter() -> Union{Nothing, VoteOrchestrator.FireCounter}
+
+Thread-safe read of _LAST_FIRE_COUNTER. Used by Main.jl scan telemetry.
+"""
+get_fire_counter() = lock(_FIRE_COUNTER_LOCK) do; _LAST_FIRE_COUNTER[] end
 
 # GRUG: Hard cap on how many bridges a node can have. User said 4.
 # Each bridge is bidirectional, so MAX_BRIDGES=4 means 4 partners per node.
@@ -2443,6 +2451,11 @@ Validation (error-first, NO silent failures):
 
 Returns confirmation string on success.
 """
+
+# GRUG: Safe Lobe access — Lobe module may not be loaded when engine runs standalone
+_safe_find_lobe(node_id::String) = isdefined(@__MODULE__, :Lobe) ? something(Lobe.find_lobe_for_node(node_id), "") : ""
+_safe_lobe_registry_has(lobe_id::String) = isdefined(@__MODULE__, :Lobe) && haskey(Lobe.LOBE_REGISTRY, lobe_id)
+
 function bridge_nodes!(node_a::String, node_b::String;
                        seam_tokens::Vector{String}=String[])::String
     if strip(node_a) == ""
@@ -2476,8 +2489,8 @@ function bridge_nodes!(node_a::String, node_b::String;
     end
 
     # GRUG: Resolve lobe provenance for both sides of the bridge
-    lobe_a = something(Lobe.find_lobe_for_node(node_a), "")
-    lobe_b = something(Lobe.find_lobe_for_node(node_b), "")
+    lobe_a = _safe_find_lobe(node_a)
+    lobe_b = _safe_find_lobe(node_b)
 
     # GRUG: JIT CONFIDENCE BAKING — symmetric overlap, asymmetric strength bonus.
     # Each side's base_confidence includes the PARTNER's strength so a strong
@@ -2544,7 +2557,10 @@ end
 # Converts the old (target_id, attach_id, pattern) signature into the new
 # bidirectional bridge. The pattern becomes seam_tokens (split on whitespace).
 function attach_node!(target_id::String, attach_id::String, pattern::String)::String
-    seam = isempty(strip(pattern)) ? String[] : split(strip(pattern))
+    if isempty(strip(pattern))
+        error("!!! FATAL: attach_node! got empty pattern! Grug needs a real relay pattern! !!!")
+    end
+    seam = String.(split(strip(pattern)))
     return bridge_nodes!(target_id, attach_id; seam_tokens=seam)
 end
 
@@ -2662,7 +2678,7 @@ function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
             return
         end
 
-        source_lobe = something(Lobe.find_lobe_for_node(source_id), "")
+        source_lobe = _safe_find_lobe(source_id)
         current_active = active_count
 
         for br in bridges
@@ -2690,7 +2706,7 @@ function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
             # unmatched tail carries provenance (which lobe, which node, seam tokens)
             # so lobe B's scanner knows exactly where the handoff came from.
             # This is the whole point of the rework — cross-lobe works NATURALLY.
-            partner_lobe = something(Lobe.find_lobe_for_node(br.partner_id), "")
+            partner_lobe = _safe_find_lobe(br.partner_id)
             is_cross_lobe = source_lobe != "" && partner_lobe != "" && source_lobe != partner_lobe
 
             # GRUG v8.0: CONFIDENCE-BIASED BRIDGE COINFLIP! Not the same as scan
@@ -3288,8 +3304,8 @@ function attach_image_node!(target_id::String, attach_id::String, image_data::Ve
     sdf_seam = ["SDF:image:$(width)x$(height)"]
 
     # GRUG: Resolve lobe provenance
-    lobe_target = something(Lobe.find_lobe_for_node(target_id), "")
-    lobe_attach = something(Lobe.find_lobe_for_node(attach_id), "")
+    lobe_target = _safe_find_lobe(target_id)
+    lobe_attach = _safe_find_lobe(attach_id)
 
     lock(BRIDGE_LOCK) do
         # GRUG: Check bridge caps on BOTH sides (bidirectional!)
@@ -4566,7 +4582,9 @@ function scan_specimens(input_text::String)::Vector{Tuple{String, Float64, Bool,
     # GRUG: Attach FireCounter to a task-local so scan_and_expand relay pass
     # can count attachment fires toward the same 1000 cap. We pass it via a
     # thread-local-ish handoff: store last cycle's counter in a const Ref.
-    _LAST_FIRE_COUNTER[] = fire_counter
+    lock(_FIRE_COUNTER_LOCK) do
+        _LAST_FIRE_COUNTER[] = fire_counter
+    end
 
     if isempty(all_valid_specimens)
         # GRUG QoL FIX: If no valid rocks found, this is not a logic failure!
@@ -4873,7 +4891,7 @@ function scan_and_expand(input_text::String;
     # If scan already consumed all 1000 slots, bridges simply won't fire.
     # If scan_specimens was never called (edge case, e.g. empty NODE_MAP branch),
     # fall back to a fresh FireCounter so relay still respects the cap.
-    shared_fc = _LAST_FIRE_COUNTER[]
+    shared_fc = lock(_FIRE_COUNTER_LOCK) do; _LAST_FIRE_COUNTER[] end
     if isnothing(shared_fc)
         shared_fc = VoteOrchestrator.FireCounter("relay_fallback#$(hash(input_text))", VoteOrchestrator.ACTIVE_FIRE_CAP)
     end
@@ -5649,6 +5667,7 @@ struct StochasticRule
 end
 
 const AIML_DROP_TABLE = StochasticRule[]
+const _DROP_TABLE_LOCK = ReentrantLock()
 
 # GRUG: Allowed magic word tags. Fake tags are rejected loudly!
 const ALLOWED_RULE_TAGS = Set([
@@ -5704,7 +5723,9 @@ function add_orchestration_rule!(rule_input::String)::String
         end
     end
 
-    push!(AIML_DROP_TABLE, StochasticRule(rule_text, fire_prob))
+    lock(_DROP_TABLE_LOCK) do
+        push!(AIML_DROP_TABLE, StochasticRule(rule_text, fire_prob))
+    end
     return "Rule tied to tree: [$rule_text] (fire_prob=$(round(fire_prob, digits=2)))"
 end
 

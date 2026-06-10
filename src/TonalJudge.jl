@@ -44,6 +44,8 @@
 
 module TonalJudge
 
+using Base.Threads: ReentrantLock
+
 using ..ActionTonePredictor: ActionFamily, ToneFamily,
     ACTION_QUERY, ACTION_COMMAND, ACTION_NEGATE, ACTION_ASSERT,
     ACTION_SPECULATE, ACTION_ESCALATE,
@@ -423,6 +425,7 @@ end
 # Read by diagnostics, the [FRAME=...] tag, and (in b-3) the scaffold layer.
 
 const LAST_JUDGEMENT = Ref{Union{Nothing, TonalJudgement}}(nothing)
+const _JUDGEMENT_LOCK = ReentrantLock()
 
 """
     judge_from_prediction(pred::PredictionResult) -> TonalJudgement
@@ -434,14 +437,18 @@ function judge_from_prediction(pred::PredictionResult)::TonalJudgement
     reading = build_reading_from_prediction(pred)
     obs = get_tonal_observation()
     j = judge(reading, obs)
-    LAST_JUDGEMENT[] = j
+    lock(_JUDGEMENT_LOCK) do
+        LAST_JUDGEMENT[] = j
+    end
     return j
 end
 
-get_last_judgement() = LAST_JUDGEMENT[]
+get_last_judgement() = lock(_JUDGEMENT_LOCK) do; LAST_JUDGEMENT[] end
 
 function reset_last_judgement!()
-    LAST_JUDGEMENT[] = nothing
+    lock(_JUDGEMENT_LOCK) do
+        LAST_JUDGEMENT[] = nothing
+    end
     return nothing
 end
 
@@ -498,16 +505,18 @@ Returns the new (lift, inhibit) tuple.
 """
 function set_frame_match_weights!(; lift::Union{Nothing,Float64}=nothing,
                                     inhibit::Union{Nothing,Float64}=nothing)
-    if lift !== nothing
-        lift < 1.0 && error("set_frame_match_weights!: lift must be >= 1.0, got $lift")
-        _FRAME_LIFT_MULTIPLIER[] = lift
+    lock(_JUDGEMENT_LOCK) do
+        if lift !== nothing
+            lift < 1.0 && error("set_frame_match_weights!: lift must be >= 1.0, got $lift")
+            _FRAME_LIFT_MULTIPLIER[] = lift
+        end
+        if inhibit !== nothing
+            (inhibit <= 0.0 || inhibit > 1.0) &&
+                error("set_frame_match_weights!: inhibit must be in (0, 1], got $inhibit")
+            _FRAME_INHIBIT_MULTIPLIER[] = inhibit
+        end
+        return (_FRAME_LIFT_MULTIPLIER[], _FRAME_INHIBIT_MULTIPLIER[])
     end
-    if inhibit !== nothing
-        (inhibit <= 0.0 || inhibit > 1.0) &&
-            error("set_frame_match_weights!: inhibit must be in (0, 1], got $inhibit")
-        _FRAME_INHIBIT_MULTIPLIER[] = inhibit
-    end
-    return (_FRAME_LIFT_MULTIPLIER[], _FRAME_INHIBIT_MULTIPLIER[])
 end
 
 """
@@ -515,7 +524,7 @@ end
 
 Read the current multipliers. Mostly for diagnostics and tests.
 """
-get_frame_match_weights() = (_FRAME_LIFT_MULTIPLIER[], _FRAME_INHIBIT_MULTIPLIER[])
+get_frame_match_weights() = lock(_JUDGEMENT_LOCK) do; (_FRAME_LIFT_MULTIPLIER[], _FRAME_INHIBIT_MULTIPLIER[]) end
 
 """
     compute_frame_match_multiplier(node_frame_hints, judgement) -> Float64
@@ -554,14 +563,14 @@ function compute_frame_match_multiplier(node_frame_hints, judgement)::Float64
     matched = any(_canon(h) == judged_label for h in node_frame_hints)
 
     if matched
-        return _FRAME_LIFT_MULTIPLIER[]
+        return lock(_JUDGEMENT_LOCK) do; _FRAME_LIFT_MULTIPLIER[] end
     end
 
     # Mismatch path: inhibit fires ONLY under relational mode.  Under basic
     # mode we leave it at neutral so the cheap autopilot path doesn't silently
     # suppress mis-plugged nodes.
     if judgement.mode === RELATIONAL
-        return _FRAME_INHIBIT_MULTIPLIER[]
+        return lock(_JUDGEMENT_LOCK) do; _FRAME_INHIBIT_MULTIPLIER[] end
     end
 
     return 1.0

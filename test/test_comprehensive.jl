@@ -460,18 +460,18 @@ target_id  = attach_ids[1]
 attached_id = attach_ids[2]
 
 result = attach_node!(target_id, attached_id, "heavy falling object")
-@assert contains(result, "Attached") "FAIL: attach_node! should return confirmation string!"
+@assert contains(result, "Bridged") "FAIL: attach_node! should return confirmation string!"
 @assert haskey(ATTACHMENT_MAP, target_id) "FAIL: ATTACHMENT_MAP should have target node!"
 @assert length(ATTACHMENT_MAP[target_id]) == 1 "FAIL: Should have 1 attachment!"
 
 att = ATTACHMENT_MAP[target_id][1]
-@assert att.node_id == attached_id "FAIL: Attached node ID mismatch!"
+@assert att.partner_id == attached_id "FAIL: Attached node ID mismatch!"
 @assert att.base_confidence > 0.0 "FAIL: JIT base_confidence should be > 0!"
 println("  ✓ attach_node!: $(attached_id) attached to $(target_id) with base_conf=$(round(att.base_confidence, digits=3))")
 
 # Test detach
 detach_result = detach_node!(target_id, attached_id)
-@assert contains(detach_result, "Detached") || contains(detach_result, "etach") "FAIL: detach_node! should return confirmation!"
+@assert contains(detach_result, "Unbridged") || contains(detach_result, "bridg") "FAIL: detach_node! should return confirmation!"
 println("  ✓ detach_node!: attachment removed")
 
 # ==============================================================================

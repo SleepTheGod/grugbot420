@@ -638,9 +638,11 @@ function accumulate_link_evidence!(;
 
 
     # ── DECAY ───────────────────────────────────────────────────────
-    if t_now - _LAST_LINK_DECAY[] > LINK_DECAY_INTERVAL
-        _decay_link_evidence!(t_now)
-        _LAST_LINK_DECAY[] = t_now
+    lock(_LINK_EVIDENCE_LOCK) do
+        if t_now - _LAST_LINK_DECAY[] > LINK_DECAY_INTERVAL
+            _decay_link_evidence!(t_now)
+            _LAST_LINK_DECAY[] = t_now
+        end
     end
 
     # ── CAP ──────────────────────────────────────────────────────────
@@ -926,7 +928,9 @@ function maybe_auto_link!(;
             delete!(_LINK_EVIDENCE, best_key)
         end
 
-        _TOTAL_AUTO_LINKS[] += 1
+        lock(_LINK_EVIDENCE_LOCK) do
+            _TOTAL_AUTO_LINKS[] += 1
+        end
 
         stats = AutoLinkStats(true, id_a, id_b, best_is_cross,
                               best_intensity, p_link, best_source,
@@ -996,7 +1000,7 @@ function get_autolink_status_summary()::String
     push!(lines, "║  evidence_records=$total_evidence")
     push!(lines, "║  cross_lobe_pairs=$cross_lobe_count")
     push!(lines, "║  above_floor=$above_floor (eligible for coinflip)")
-    push!(lines, "║  total_auto_links=$(_TOTAL_AUTO_LINKS[])")
+    push!(lines, "║  total_auto_links=$(lock(_LINK_EVIDENCE_LOCK) do; _TOTAL_AUTO_LINKS[] end)")
     push!(lines, "║")
     push!(lines, "║  CONSTANTS:")
     push!(lines, "║    evidence_floor=$LINK_EVIDENCE_FLOOR (cross-lobe)")
@@ -1050,8 +1054,10 @@ function reset_link_evidence!()
     lock(_LINK_LOG_LOCK) do
         empty!(_LINK_LOG)
     end
-    _TOTAL_AUTO_LINKS[] = 0
-    _LAST_LINK_DECAY[] = time()
+    lock(_LINK_EVIDENCE_LOCK) do
+        _TOTAL_AUTO_LINKS[] = 0
+        _LAST_LINK_DECAY[] = time()
+    end
 end
 
 """
