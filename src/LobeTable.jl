@@ -854,7 +854,11 @@ function deserialize_flashcards!(data::Any)
             if isempty(expr) || isempty(result)
                 continue
             end
-            result_num = Float64(get(card, "result_num", NaN))
+            result_num = let rn = get(card, "result_num", NaN)
+                # GRUG: serialized result_num may be JSON null (nothing) for
+                # non-arithmetic cards. Float64(nothing) throws — coerce to NaN.
+                (rn === nothing || rn === missing) ? NaN : Float64(rn)
+            end
             card_type_str = string(get(card, "type", "arithmetic"))
             card_type = Symbol(card_type_str)
             ttl = Float64(get(card, "ttl", 0.0))

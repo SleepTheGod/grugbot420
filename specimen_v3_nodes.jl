@@ -31,7 +31,8 @@ grow_lobe("lobe_math", [
     ("how do i solve an equation", "reason^5 | calculate^4 | explain^3",
      "Grug. Equation question. Equation say two sides are equal. Grug do same thing to both sides until unknown rock stands alone. Then Grug know its value.",
      ["equation","solve","equal","unknown","balance"], 7.0, Dict{String,Any}(
-        "relational_patterns" => ["unknown equals value","both sides balance"],
+        "relational_patterns" => [("unknown","equals","value"),("side","&similarity","side")],
+        "relation_weights" => Dict("equals"=>1.4,"balances"=>1.2,"mirrors"=>1.1,"resembles"=>1.0),
         "voice_register" => "explanatory", "frame_hints" => ["warm","exploratory"])),
     ("what is geometry", "explain^5 | describe^4",
      "Grug. Geometry question. Geometry is shape of things. Circle round. Triangle three corners. Square four equal sides. Grug measure angles and lines.",
@@ -74,6 +75,17 @@ grow_lobe("lobe_science", [
     ("what are the planets", "describe^5 | explain^4",
      "Grug. Planet question. Planets are big round rocks going around sun. Earth is Grug home. Mars is red. Jupiter is biggest. They circle sun in big paths.",
      ["planet","sun","earth","mars","space"], 6.5, E()),
+    ("how does fire make heat", "explain^5 | reason^4",
+     "Grug. Fire heat question. Fire eat wood, and from eating it make heat. Fire produce warm, fire create light. Where fire burn, heat come. This Grug know well, Grug make fire every cold night.",
+     ["fire","heat","burn","warm","energy"], 6.8, Dict{String,Any}(
+        "relational_patterns" => [("fire","&causal","heat"),("fire","&causal","light")],
+        "relation_weights" => Dict("produces"=>1.6,"creates"=>1.5,"causes"=>1.4,"generates"=>1.4,"makes"=>1.3,"leads_to"=>1.1))),
+    ("does one thing cause another", "reason^5 | explain^4",
+     "Grug. Cause-and-effect question. When one thing make another thing happen, Grug call that cause. Push rock, rock roll. Strike flint, spark jump. Grug watch close to learn what cause what.",
+     ["cause","effect","because","reason","result"], 6.0, Dict{String,Any}(
+        "relational_patterns" => [("cause","&causal","effect")],
+        "relation_weights" => Dict("causes"=>1.6,"produces"=>1.5,"creates"=>1.4,"triggers"=>1.4,"leads_to"=>1.3,"results_in"=>1.3),
+        "required_relations" => ["&causal"])),  # GATED: only fires when a causal triple is supplied
 ])
 
 # ---------------------------------------------------------------------------
@@ -101,6 +113,15 @@ grow_lobe("lobe_biology", [
     ("what is a species", "define^5 | explain^3",
      "Grug. Species question. Species is kind of living thing. Same species can make young together. Wolf is one species. Bear another. Grug human species.",
      ["species","kind","animal","group","young"], 5.5, E()),
+    ("what is a cat", "define^5 | describe^4",
+     "Grug. Cat question. Cat is small soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when happy, hiss when mad. Grug like cat, cat keep cave free of pest.",
+     ["cat","animal","hunter","claw","purr"], 6.0, E()),
+    ("what is a dog", "define^5 | describe^4",
+     "Grug. Dog question. Dog is loyal pack friend. Dog help Grug hunt, warn of danger, keep Grug warm at night. Dog love Grug true. Best four-leg friend a Grug can have.",
+     ["dog","animal","loyal","pack","hunt"], 6.0, E()),
+    ("what is a bird", "define^5 | describe^4",
+     "Grug. Bird question. Bird is feather beast that fly in sky. Bird sing in morning. Bird build nest, lay egg. Grug watch bird to know weather and find water. Bird free in air.",
+     ["bird","animal","feather","fly","sky"], 5.8, E()),
 ])
 
 # ---------------------------------------------------------------------------
@@ -117,8 +138,8 @@ grow_lobe("lobe_phil", [
     ("do we have free will", "ponder^5 | reason^4",
      "Grug. Free will question. Grug feel Grug choose. Grug pick to throw rock or not. But maybe brain decide first. Hard question. Grug think Grug free enough.",
      ["free","will","choice","decide","choose"], 6.5, Dict{String,Any}(
-        "relational_patterns" => ["choice causes action","will drives decision"],
-        "required_relations" => ["choose"])),
+        "relational_patterns" => [("choice","&causal","action"),("will","&causal","decision")],
+        "relation_weights" => Dict("causes"=>1.5,"produces"=>1.3,"creates"=>1.2,"triggers"=>1.2,"leads_to"=>1.1))),
     ("what is the meaning of life", "ponder^5 | comfort^3",
      "Grug. Meaning question. Grug think meaning is what Grug make. Help tribe. Make fire. Love family. Watch stars. Life mean what Grug fill it with.",
      ["meaning","life","purpose","tribe","love"], 7.0, E()),
@@ -251,19 +272,30 @@ grow_lobe("lobe_social", [
 grow_lobe("lobe_temporal", [
     ("tell me about the past", "describe^5 | explain^4",
      "Grug. Past question. Past is where Grug came from. Old hunts, old fires, ancestors. Grug remember to learn. The past teach Grug what work and what fail.",
-     ["past","memory","history","ancestor","before"], 6.0, E()),
+     ["past","memory","history","ancestor","before"], 6.0, Dict{String,Any}(
+        "time_node" => true, "time_orientation" => "past")),
     ("what does the future hold", "ponder^5 | reason^4",
      "Grug. Future question. Future not here yet. Grug plant seed today for fruit tomorrow. Grug cannot see future, but Grug shape it by what Grug do now.",
-     ["future","tomorrow","plan","ahead","after"], 6.0, E()),
+     ["future","tomorrow","plan","ahead","after"], 6.0, Dict{String,Any}(
+        "time_node" => true, "time_orientation" => "future")),
     ("what is happening right now", "describe^5 | acknowledge^3",
      "Grug. Now question. Now is the only real moment. Fire crackle. Wind blow. Grug breathe. Grug here with you. Now is where life truly happen.",
-     ["now","present","moment","here","real"], 6.0, E()),
+     ["now","present","moment","here","real"], 6.0, Dict{String,Any}(
+        "time_node" => true, "time_orientation" => "present", "wants_context" => true)),
+    ("what did we just talk about", "describe^5 | acknowledge^4",
+     "Grug. Recent talk question. Grug think back to the words just spoke. Grug pull fresh memory close so Grug answer true to what we just share, not random old thing.",
+     ["recent","just","memory","talk","now"], 6.0, Dict{String,Any}(
+        "time_node" => true, "time_orientation" => "present", "wants_context" => true)),
     ("how do things change over time", "explain^5 | reason^4",
      "Grug. Change question. All things change. River carve stone slow. Cub grow to bear. Season turn. Nothing stay same forever. Change is the one constant.",
-     ["change","time","season","grow","flow"], 6.0, E()),
+     ["change","time","season","grow","flow"], 6.0, Dict{String,Any}(
+        "time_node" => true, "time_orientation" => "present",
+        "relational_patterns" => [("then","&temporal","now"),("past","&temporal","future")],
+        "relation_weights" => Dict("before"=>1.4,"after"=>1.4,"precedes"=>1.3,"follows"=>1.3,"then"=>1.2,"now"=>1.2,"during"=>1.1))),
     ("what happened to extinct animals", "describe^4 | ponder^3",
      "Grug. Lost beast question. Great beasts walked here long ago. Now gone forever. Cold come, food go, they fade. Grug honor their bones. Nothing lasts.",
      ["extinct","gone","lost","beast","ancient"], 0.0, Dict{String,Any}(
+        "time_node" => true, "time_orientation" => "past",
         "is_grave" => true, "grave_reason" => "extinct subject, preserved as memorial")),  # grave node
 ])
 
@@ -291,6 +323,11 @@ grow_lobe("lobe_nature", [
      "Grug. Sunset question. Sun sink slow behind hills. Sky turn orange, then red, then purple. Light dance on water. Grug stop and watch. Beauty before the dark.",
      ["sunset","sun","sky","orange","beauty"], 6.0, Dict{String,Any}(
         "is_image_node" => true, "voice_register" => "warm")),  # image node
+    ("what does heavy rain cause", "explain^5 | caution^4",
+     "Grug. Rain flood question. Too much rain make river swell. Rain cause flood, water rise fast, water carry away cave and food. Big rain produce big danger. Grug move to high ground when sky pour long.",
+     ["rain","flood","water","river","danger"], 6.5, Dict{String,Any}(
+        "relational_patterns" => [("rain","&causal","flood"),("flood","&causal","danger")],
+        "relation_weights" => Dict("causes"=>1.6,"produces"=>1.4,"creates"=>1.3,"triggers"=>1.4,"leads_to"=>1.3,"results_in"=>1.2))),
 ])
 
 # ---------------------------------------------------------------------------
@@ -309,7 +346,8 @@ grow_lobe("lobe_tech", [
     ("how do i write code", "explain^5 | reason^4",
      "Grug. Code question. Code is list of clear steps for thinking rock. First this, then that, if so do this else do that. Machine follow exactly. Grug must be precise.",
      ["code","steps","program","logic","precise"], 6.0, Dict{String,Any}(
-        "relational_patterns" => ["step leads to step","rule controls machine"])),
+        "relational_patterns" => [("step","&causal","step"),("rule","&possessive","machine")],
+        "relation_weights" => Dict("leads_to"=>1.4,"causes"=>1.3,"produces"=>1.2,"controls"=>1.2,"has"=>1.1,"owns"=>1.0))),
     ("what is a tool", "define^5 | explain^3",
      "Grug. Tool question. Tool make Grug stronger. Rock break nut. Stick reach high fruit. Spear hunt far. Tool is Grug hand made better. Grug love good tool.",
      ["tool","help","make","hand","use"], 5.5, E()),

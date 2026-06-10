@@ -2,8 +2,17 @@
 # GrugBot420 — v3 Specimen Interaction Harness
 # Loads the comprehensive v3 specimen, runs missions across ALL
 # 12 subject lobes, captures input -> response + telemetry, and
-# writes a Markdown interaction log. Verifies NO decoherence by
-# checking that responses are varied and confidences are healthy.
+# writes a Markdown interaction log. Verifies NO decoherence.
+#
+# v3.1 ADVANCED CAPABILITIES:
+#   1. MULTIPART — compound questions ("what is addition and what is a cat")
+#      exercise the InputDecomposer; we verify both parts are reflected.
+#   2. TIME COHERENCE — warm up the conversation, then ask "what now" /
+#      "what did we just talk about". Those time nodes carry wants_context=true
+#      so the engine pulls Fresh Memory (recent context) into the answer.
+#   3. DYNAMIC RELATIONAL TRIPLES — nodes whose relational_patterns use sigil
+#      relations (&causal/&temporal/...) so they match ANY verb in the sigil's
+#      expansion ("fire produces heat", "fire creates heat", "rain causes flood").
 # ============================================================
 ENV["GRUG_NO_AUTOLOAD"] = "1"
 include("src/Main.jl")
@@ -16,14 +25,12 @@ load_specimen_from_file!(SPEC)
 # output stays clean. We capture the REAL speech from _LAST_AIML_OUTPUT.
 function run_mission(text::String)
     resp = ""; node = ""; action = ""; conf = 0.0
-    # Reset capture refs
     lock(_LAST_AIML_OUTPUT_LOCK) do
         _LAST_AIML_OUTPUT[] = ""
         _LAST_FIRED_NODE[] = ""
         _LAST_PRIMARY_ACTION[] = ""
         _LAST_CONFIDENCE[] = 0.0
     end
-    # Dispatch (silence stdout)
     orig = stdout
     (rd, wr) = redirect_stdout()
     try
@@ -55,12 +62,12 @@ missions = [
     ("SCIENCE", [
         "what is gravity", "what is energy", "what is an atom", "what is heat",
         "why does the sky look blue", "how does sound travel",
-        "what is electricity", "what are the planets",
+        "what is electricity", "what are the planets", "how does fire make heat",
     ]),
     ("BIOLOGY", [
         "what is a cell", "what is dna", "how do plants make food",
         "what is the brain", "why do we need blood", "what is evolution",
-        "what is a species",
+        "what is a species", "what is a cat", "what is a dog", "what is a bird",
     ]),
     ("PHILOSOPHY", [
         "do we have free will", "what is consciousness", "what is truth",
@@ -91,7 +98,7 @@ missions = [
     ]),
     ("NATURE", [
         "describe the ocean", "tell me about the forest",
-        "what makes the weather", "why do rivers flow",
+        "what makes the weather", "why do rivers flow", "what does heavy rain cause",
     ]),
     ("TECHNOLOGY", [
         "what is a tool", "how do computers work", "what is a robot",
@@ -107,19 +114,7 @@ missions = [
     ]),
 ]
 
-# Image-type nodes live on the engine's IMAGE scan path (they respond to image
-# binary input, not text), so they are intentionally NOT queried as text here.
-# They are persisted in the specimen as a node-type feature (is_image_node=true):
-#   - lobe_nature: "what is a mountain", "what is a sunset" (SDF image nodes)
-#   - lobe_nature: "show me a picture of a sunset over water" (SDF params node)
-const IMAGE_NODE_PATTERNS = [
-    "what is a mountain", "what is a sunset", "show me a picture of a sunset over water",
-]
-# Grave (memorial) node: persisted with is_grave=true so it never fires — it is a
-# dead/preserved node demonstrating the grave node-type feature.
-const GRAVE_NODE_PATTERNS = ["what happened to extinct animals"]
-
-# ---- Run all missions ----
+# ---- Run all base missions ----
 results = []  # (subject, input, resp, node, action, conf)
 for (subject, ms) in missions
     for m in ms
@@ -129,26 +124,159 @@ for (subject, ms) in missions
     end
 end
 
-# ---- Decoherence analysis ----
-responses = [r[3] for r in results]
-unique_resp = unique(responses)
-n_total = length(results)
-n_unique = length(unique_resp)
-confs = [r[6] for r in results]
-n_healthy = count(c -> c >= 0.30, confs)
-n_fired = count(r -> !isempty(r[4]), results)  # node fired (not empty-cave)
-avg_conf = isempty(confs) ? 0.0 : sum(confs)/length(confs)
+# ============================================================
+# ADVANCED TEST 1: MULTIPART / INTERMEDIATE QUESTIONS
+# Compound questions joined by "and". The engine's InputDecomposer
+# splits them; we record the merged response and check both subjects
+# are reflected so we can confirm both parts were handled.
+# ============================================================
+println("\n" * "="^60)
+println("ADVANCED TEST 1: MULTIPART QUESTIONS")
+println("="^60)
+multipart_specs = [
+    ("what is addition and what is a cat",            ["add", "cat"]),
+    ("what is a cat and what is a dog",               ["cat", "dog"]),
+    ("what is gravity and how do plants make food",   ["gravity", "plant"]),
+    ("what is fire and what is heat and what is a cat",["fire", "heat", "cat"]),
+]
+multipart_results = []  # (input, resp, node, action, conf, expected, hits, decomp)
+for (inp, expected) in multipart_specs
+    # Capture FULL stdout so we can show the decomposer split + merged answer.
+    lock(_LAST_AIML_OUTPUT_LOCK) do
+        _LAST_AIML_OUTPUT[] = ""; _LAST_FIRED_NODE[] = ""
+        _LAST_PRIMARY_ACTION[] = ""; _LAST_CONFIDENCE[] = 0.0
+    end
+    orig = stdout
+    (rd, wr) = redirect_stdout()
+    reader = @async read(rd, String)
+    try
+        process_mission(inp)
+    catch e
+    end
+    redirect_stdout(orig); close(wr)
+    full = fetch(reader); close(rd)
+    resp = ""; node = ""; action = ""; conf = 0.0
+    lock(_LAST_AIML_OUTPUT_LOCK) do
+        resp = _LAST_AIML_OUTPUT[]; node = _LAST_FIRED_NODE[]
+        action = _LAST_PRIMARY_ACTION[]; conf = _LAST_CONFIDENCE[]
+    end
+    # Pull the decomposer's compound-detection line from the full transcript.
+    decomp = ""
+    for ln in split(full, "\n")
+        if occursin("Compound input detected", ln)
+            decomp = strip(replace(ln, r"^\s*\[?MULTIPART\]?\s*" => ""))
+            break
+        end
+    end
+    lr = lowercase(resp)
+    hits = [e for e in expected if occursin(e, lr)]
+    push!(multipart_results, (inp, resp, node, action, conf, expected, hits, decomp))
+    println("[MULTIPART] $inp  ->  parts hit: $(length(hits))/$(length(expected))  node=$node")
+    isempty(decomp) || println("           split: $decomp")
+end
 
-# detect generic fallback repetition
+# ============================================================
+# ADVANCED TEST 2: TIME COHERENCE (wants_context)
+# We seed a short conversation, then ask present-tense time questions
+# ("what is happening right now" / "what did we just talk about").
+# Those nodes carry wants_context=true, so the engine pulls Fresh
+# Memory of recent turns into the response (requesting_nodes gate).
+# ============================================================
+println("\n" * "="^60)
+println("ADVANCED TEST 2: TIME COHERENCE")
+println("="^60)
+# Warm-up turns build recent conversational context.
+warmup = [
+    "what is fire", "how do i make fire", "what is a cat", "tell me about the forest",
+]
+time_warmup_results = []
+for w in warmup
+    (_, resp, node, action, conf) = run_mission(w)
+    push!(time_warmup_results, (w, resp, node, action, conf))
+    println("[TIME WARMUP] $w  ->  node=$node")
+end
+# Now the present-tense probes.
+time_probe_specs = [
+    "what is happening right now",
+    "what did we just talk about",
+]
+time_probe_results = []
+for p in time_probe_specs
+    (_, resp, node, action, conf) = run_mission(p)
+    # Was wants_context honored? Inspect the node's json_data.
+    wants_ctx = lock(NODE_LOCK) do
+        nd = get(NODE_MAP, node, nothing)
+        nd === nothing ? false : (get(nd.json_data, "wants_context", false) === true)
+    end
+    orient = lock(NODE_LOCK) do
+        nd = get(NODE_MAP, node, nothing)
+        nd === nothing ? "?" : string(get(nd.json_data, "time_orientation", "?"))
+    end
+    push!(time_probe_results, (p, resp, node, action, conf, wants_ctx, orient))
+    println("[TIME PROBE] $p  ->  node=$node orient=$orient wants_context=$wants_ctx")
+end
+
+# ============================================================
+# ADVANCED TEST 3: DYNAMIC RELATIONAL TRIPLES (sigil relations)
+# The nodes carry relational_patterns like (fire, &causal, heat).
+# &causal expands to causes/produces/creates/generates/... so the
+# SAME node matches the user no matter which causal verb they use.
+# We hit each node with several different verbs to prove the sigil
+# expansion is doing the dynamic matching.
+# ============================================================
+println("\n" * "="^60)
+println("ADVANCED TEST 3: DYNAMIC RELATIONAL TRIPLES")
+println("="^60)
+dynamic_specs = [
+    ("fire produces heat",      "how does fire make heat",  "&causal"),
+    ("fire creates heat",       "how does fire make heat",  "&causal"),
+    ("fire generates heat",     "how does fire make heat",  "&causal"),
+    ("rain causes flood",       "what does heavy rain cause","&causal"),
+    ("rain triggers flood",     "what does heavy rain cause","&causal"),
+    ("rain results_in flood",   "what does heavy rain cause","&causal"),
+    ("will produces decision",  "do we have free will",     "&causal"),
+    ("cause produces effect",   "does one thing cause another", "&causal (gated)"),
+    ("does one thing cause another", "does one thing cause another", "&causal (gate blocks: no triple)"),
+]
+dynamic_results = []  # (input, resp, node, action, conf, target_pattern, sigil)
+for (inp, target, sigil) in dynamic_specs
+    (_, resp, node, action, conf) = run_mission(inp)
+    # Resolve the fired node's pattern for comparison with the expected target.
+    fired_pat = lock(NODE_LOCK) do
+        nd = get(NODE_MAP, node, nothing)
+        nd === nothing ? "" : nd.pattern
+    end
+    push!(dynamic_results, (inp, resp, node, action, conf, target, fired_pat, sigil))
+    matched = fired_pat == target ? "✓" : "≈"
+    println("[DYNAMIC] $inp  ->  fired '$fired_pat' [$matched target '$target'] conf=$(round(conf,digits=3))")
+end
+
+# ---- Decoherence analysis (over base + advanced response sets) ----
+all_resp_results = vcat(
+    [(r[2], r[3], r[6]) for r in results],                              # (input, resp, conf) base
+    [(m[1], m[2], m[5]) for m in multipart_results],
+    [(t[1], t[2], t[5]) for t in time_warmup_results],
+    [(t[1], t[2], t[5]) for t in time_probe_results],
+    [(d[1], d[2], d[5]) for d in dynamic_results],
+)
+responses = [r[2] for r in all_resp_results]
+unique_resp = unique(responses)
+n_total = length(all_resp_results)
+n_unique = length(unique_resp)
+confs = [r[3] for r in all_resp_results]
+n_healthy = count(c -> c >= 0.30, confs)
+avg_conf = isempty(confs) ? 0.0 : sum(confs)/length(confs)
 fallback_markers = ["think about math, philosophy, nature"]
-n_fallback = count(r -> any(occursin(fm, lowercase(r[3])) for fm in fallback_markers), results)
+n_fallback = count(r -> any(occursin(fm, lowercase(r[2])) for fm in fallback_markers), all_resp_results)
+
+# Base-mission fire count (for the headline metric)
+base_fired = count(r -> !isempty(r[4]), results)
 
 println("\n" * "="^60)
-println("DECOHERENCE ANALYSIS")
+println("DECOHERENCE ANALYSIS (all turns incl. advanced)")
 println("="^60)
-println("Total missions      : $n_total")
+println("Total turns         : $n_total")
 println("Unique responses    : $n_unique  ($(round(100*n_unique/n_total,digits=1))%)")
-println("Nodes fired         : $n_fired")
 println("Healthy conf (>=0.3): $n_healthy")
 println("Avg confidence      : $(round(avg_conf,digits=3))")
 println("Generic fallbacks   : $n_fallback")
@@ -165,10 +293,30 @@ jitter_r  = try; RelationalJitter.get_jitter_ratio(); catch; -1.0; end
 cf_snap   = try; CoherenceField.coherence_config_snapshot(); catch; nothing; end
 cf_weight = cf_snap === nothing ? -1.0 : cf_snap.weight
 
+# Count time + dynamic nodes in the live graph
+n_time_nodes = lock(NODE_LOCK) do
+    count(nd -> get(nd.json_data, "time_node", false) === true, values(NODE_MAP))
+end
+n_wantsctx = lock(NODE_LOCK) do
+    count(nd -> get(nd.json_data, "wants_context", false) === true, values(NODE_MAP))
+end
+n_dynamic = lock(NODE_LOCK) do
+    count(nd -> any(t -> startswith(t.relation, "&"), nd.relational_patterns), values(NODE_MAP))
+end
+
+# Helper: strip the engine's verbose DEBUG TELEMETRY block from the speech.
+function clean_speech(s::String)
+    idx = findfirst("--- DEBUG TELEMETRY", s)
+    body = idx === nothing ? s : s[1:first(idx)-1]
+    return strip(replace(body, r"\n+" => " "))
+end
+
 # ---- Write Markdown log ----
 io = open(joinpath(@__DIR__, "interaction_results_v3.md"), "w")
 println(io, "# GrugBot420 — Comprehensive v3 Specimen Interaction Log\n")
-println(io, "Generated by `interact_v3.jl` against `comprehensive_v3_specimen.json`.\n")
+println(io, "Generated by `interact_v3.jl` against `comprehensive_v3_specimen.json`. ")
+println(io, "This run adds three advanced-capability tests: multipart questions, time coherence, and dynamic relational triples.\n")
+
 println(io, "## Engine & specimen telemetry\n")
 println(io, "| Metric | Value |")
 println(io, "|---|---|")
@@ -180,37 +328,92 @@ println(io, "| EphemeralMLP rules | $n_mlp |")
 println(io, "| Arousal | $(round(arousal,digits=3)) |")
 println(io, "| RelationalJitter enabled | $jitter_on (ratio=$(round(jitter_r,digits=3))) |")
 println(io, "| CoherenceField weight | $(round(cf_weight,digits=3)) |")
+println(io, "| Time nodes | $n_time_nodes |")
+println(io, "| Time nodes opting into Fresh Memory (wants_context) | $n_wantsctx |")
+println(io, "| Nodes with dynamic (sigil) relational triples | $n_dynamic |")
 println(io, "")
+
 println(io, "## Decoherence verdict\n")
 verdict = (n_fallback == 0 && n_unique >= Int(round(0.8*n_total)) && avg_conf >= 0.3) ? "✅ NO DECOHERENCE" : "⚠️ CHECK"
 println(io, "$verdict\n")
 println(io, "| Metric | Value |")
 println(io, "|---|---|")
-println(io, "| Total missions | $n_total |")
+println(io, "| Total turns | $n_total |")
 println(io, "| Unique responses | $n_unique ($(round(100*n_unique/n_total,digits=1))%) |")
-println(io, "| Nodes fired | $n_fired |")
+println(io, "| Base missions fired (no empty-cave) | $base_fired / $(length(results)) |")
 println(io, "| Healthy confidence (>=0.30) | $n_healthy |")
 println(io, "| Average confidence | $(round(avg_conf,digits=3)) |")
 println(io, "| Generic fallback responses | $n_fallback |")
 println(io, "")
-println(io, "## Interaction Transcript\n")
-println(io, "Note on image nodes: the specimen contains `is_image_node=true` nodes ")
-println(io, "(`what is a mountain`, `what is a sunset`, `show me a picture of a sunset over water`). ")
-println(io, "These respond to image input rather than text, so they are persisted as a node-type ")
-println(io, "feature but not queried here. The grave node `what happened to extinct animals` is ")
-println(io, "persisted with `is_grave=true` and never fires by design, so it is also not queried.\n")
 
-# Strip the engine's verbose DEBUG TELEMETRY block from the spoken response so
-# the transcript reads like plain conversation. The real telemetry (node,
-# action, confidence) is already captured separately and shown on one line.
-function clean_speech(s::String)
-    idx = findfirst("--- DEBUG TELEMETRY", s)
-    body = idx === nothing ? s : s[1:first(idx)-1]
-    # collapse any leftover orchestration transition prefixes is unnecessary;
-    # just trim whitespace and stray newlines.
-    return strip(replace(body, r"\n+" => " "))
+# ---- Advanced section 1: multipart ----
+println(io, "## Advanced test 1 — multipart / intermediate questions\n")
+println(io, "Compound questions are detected and split by the InputDecomposer into a primary part and ")
+println(io, "support part(s); each sub-question is handled and the result merged. The \"split\" line below ")
+println(io, "is the engine's own decomposition. \"parts hit\" counts how many expected subjects appear in the reply.\n")
+println(io, "| Compound question | Decomposer split | Parts hit | Confidence |")
+println(io, "|---|---|---|---|")
+for (inp, resp, node, action, conf, expected, hits, decomp) in multipart_results
+    dshow = isempty(decomp) ? "—" : replace(decomp, "|" => "·")
+    println(io, "| $inp | $dshow | $(length(hits))/$(length(expected)) | $(round(conf,digits=3)) |")
+end
+println(io, "")
+for (inp, resp, node, action, conf, expected, hits, decomp) in multipart_results
+    println(io, "**$inp**  ")
+    isempty(decomp) || println(io, "_split: $(decomp)_  ")
+    println(io, "_parts hit $(length(hits))/$(length(expected)) · node $node · confidence $(round(conf,digits=3))_\n")
+    println(io, "Grug: $(clean_speech(resp))\n")
 end
 
+# ---- Advanced section 2: time coherence ----
+println(io, "## Advanced test 2 — time coherence (wants_context)\n")
+println(io, "First we warm up the conversation. Then present-tense time nodes ")
+println(io, "(`what is happening right now`, `what did we just talk about`) fire. Those nodes carry ")
+println(io, "`wants_context=true`, so the engine pulls Fresh Memory of the recent turns into the reply ")
+println(io, "(the `requesting_nodes` gate). Future/past time nodes deliberately do NOT request context.\n")
+println(io, "Warm-up turns:\n")
+for (w, resp, node, action, conf) in time_warmup_results
+    println(io, "**$w**  ")
+    println(io, "_node $node · confidence $(round(conf,digits=3))_\n")
+    println(io, "Grug: $(clean_speech(resp))\n")
+end
+println(io, "Present-tense probes (these request recent context):\n")
+println(io, "| Probe | Node | Orientation | wants_context honored | Confidence |")
+println(io, "|---|---|---|---|---|")
+for (p, resp, node, action, conf, wants_ctx, orient) in time_probe_results
+    println(io, "| $p | $node | $orient | $(wants_ctx ? "yes" : "no") | $(round(conf,digits=3)) |")
+end
+println(io, "")
+for (p, resp, node, action, conf, wants_ctx, orient) in time_probe_results
+    println(io, "**$p**  ")
+    println(io, "_node $node · orientation $orient · wants_context $(wants_ctx) · confidence $(round(conf,digits=3))_\n")
+    println(io, "Grug: $(clean_speech(resp))\n")
+end
+
+# ---- Advanced section 3: dynamic relational triples ----
+println(io, "## Advanced test 3 — dynamic relational triples (sigil relations)\n")
+println(io, "Each target node stores a relation as a sigil reference, e.g. `(fire, &causal, heat)`. ")
+println(io, "At match time the engine expands `&causal` to `causes / produces / creates / generates / ")
+println(io, "triggers / leads_to / ...`, so a single node matches the user no matter which causal verb ")
+println(io, "they use. Below, the same node fires for several different verbs — that is the dynamic part.\n")
+println(io, "| User triple | Sigil | Fired node | Matched target? | Confidence |")
+println(io, "|---|---|---|---|---|")
+for (inp, resp, node, action, conf, target, fired_pat, sigil) in dynamic_results
+    matched = fired_pat == target ? "✓ yes" : "≈ $(fired_pat)"
+    println(io, "| $inp | $sigil | $fired_pat | $matched | $(round(conf,digits=3)) |")
+end
+println(io, "")
+for (inp, resp, node, action, conf, target, fired_pat, sigil) in dynamic_results
+    println(io, "**$inp**  ")
+    println(io, "_sigil $sigil · fired node $fired_pat · confidence $(round(conf,digits=3))_\n")
+    println(io, "Grug: $(clean_speech(resp))\n")
+end
+
+# ---- Full base transcript ----
+println(io, "## Base interaction transcript\n")
+println(io, "Image nodes (`what is a mountain`, `what is a sunset`) respond to image input rather than ")
+println(io, "text, so they are persisted as a node-type feature but not queried here. The grave node ")
+println(io, "`what happened to extinct animals` is persisted with `is_grave=true` and never fires by design.\n")
 let cur = ""
     for (subject, inp, resp, node, action, conf) in results
         if subject != cur
@@ -225,5 +428,6 @@ let cur = ""
 end
 close(io)
 
-println("\n✅ Wrote interaction_results_v3.md ($n_total missions)")
+println("\n✅ Wrote interaction_results_v3.md ($n_total turns incl. advanced)")
 println("Decoherence verdict: $verdict")
+println("Time nodes: $n_time_nodes ($n_wantsctx request context) · Dynamic-triple nodes: $n_dynamic")

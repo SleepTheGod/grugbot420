@@ -165,6 +165,13 @@ function grow_lobe(lobe_id::String, entries::Vector)
             "initial_strength" => strength,
         )
         if haskey(extra, "voice_variants"); data["voice_variants"] = extra["voice_variants"]; end
+        # TIME COHERENCE: grow_nodes_from_packet copies the whole `data` dict into
+        # the node's json_data, so time_node / time_orientation / wants_context ride
+        # through grow directly. wants_context=true makes the node opt into Fresh
+        # Memory (requesting_nodes gate, Main.jl:1871) so "what now" probes recent context.
+        for k in ("time_node","time_orientation","wants_context","time_sigil")
+            if haskey(extra, k); data[k] = extra[k]; end
+        end
         node = Dict{String,Any}(
             "pattern"       => pat,
             "action_packet" => act,
@@ -172,10 +179,8 @@ function grow_lobe(lobe_id::String, entries::Vector)
             # Always provide an explicit, consistent 8-dim signal (decoherence fix).
             "signal"        => haskey(extra, "signal") ? extra["signal"] : pattern_signal(pat),
         )
-        # Top-level node-struct fields
-        for k in ("is_image_node","is_antimatch_node","is_grave","grave_reason",
-                  "drop_table","relational_patterns","required_relations",
-                  "relation_weights","response_times","is_unlinkable","max_neighbors")
+        # Top-level node-struct fields grow DOES read.
+        for k in ("is_image_node","is_antimatch_node","drop_table")
             if haskey(extra, k); node[k] = extra[k]; end
         end
         push!(nodes, node)
@@ -191,7 +196,8 @@ function grow_lobe(lobe_id::String, entries::Vector)
         pat, _, _, _, _, extra = e
         special = Dict{String,Any}()
         for k in ("is_grave","grave_reason","response_times","is_unlinkable",
-                  "max_neighbors","required_relations")
+                  "max_neighbors","required_relations","relational_patterns",
+                  "relation_weights")
             if haskey(extra, k); special[k] = extra[k]; end
         end
         if !isempty(special); _SPECIAL_FIELDS[pat] = special; end
@@ -335,6 +341,23 @@ verb_specs = [
     ("navigate","spatial"), ("recall","temporal"), ("anticipate","temporal"),
     ("empathize","social"), ("celebrate","emotional"), ("compose","creative"),
     ("illustrate","creative"), ("nourish","social"), ("photosynthesize","causal"),
+    # DYNAMIC RELATIONAL TRIPLES: register the verbs that the engine's relation
+    # sigils expand to, so user-side extract_relational_triples() actually
+    # recognizes them. Without this, "fire produces heat" extracts no triple
+    # (produces is unknown) and the dynamic node never gets its relational bonus.
+    # &causal expansion:
+    ("produces","causal"), ("creates","causal"), ("generates","causal"),
+    ("triggers","causal"), ("enables","causal"), ("brings_about","causal"),
+    ("leads_to","causal"), ("results_in","causal"),
+    # &temporal expansion:
+    ("precedes","temporal"), ("follows","temporal"), ("during","temporal"),
+    ("since","temporal"),
+    # &possessive expansion:
+    ("controls","includes"), ("owns","includes"), ("contains","includes"),
+    ("holds","includes"), ("carries","includes"),
+    # &similarity expansion:
+    ("resembles","contrasts_with"), ("mirrors","contrasts_with"),
+    ("balances","contrasts_with"),
 ]
 for (verb, cls) in verb_specs
     try
@@ -604,20 +627,27 @@ println("  ✅ Hippocampal pending ask seeded")
 # ============================================================
 # PHASE 20: TimeOrientation + time nodes
 # ============================================================
-println("\n⏳ Phase 20: Setting time orientation + marking temporal nodes...")
+println("\n⏳ Phase 20: Setting time orientation + verifying temporal nodes...")
 lock(_GLOBAL_PROMOTION_LOCK) do
     _GLOBAL_TIME_ORIENTATION[] = ("present", Dict{String,Any}("source"=>"specimen-build-v3","confidence"=>0.8))
 end
+# TIME COHERENCE: temporal nodes already carry correct per-node time_orientation
+# (past / present / future) and wants_context through grow (see specimen_v3_nodes.jl).
+# Do NOT blanket-override to "past" — that was the bug. Just verify and tally here.
+_tn_count = 0; _wc_count = 0
 lock(NODE_LOCK) do
     for (nid, node) in NODE_MAP
-        if get(Lobe.NODE_TO_LOBE_IDX, nid, "") == "lobe_temporal"
-            node.json_data["time_node"] = true
-            node.json_data["time_orientation"] = "past"
-            node.json_data["time_sigil"] = "temporal_anchor"
+        if get(node.json_data, "time_node", false) === true
+            global _tn_count; _tn_count += 1
+            # ensure a time_sigil tag is present for serialization
+            haskey(node.json_data, "time_sigil") || (node.json_data["time_sigil"] = "temporal_anchor")
+            if get(node.json_data, "wants_context", false) === true
+                global _wc_count; _wc_count += 1
+            end
         end
     end
 end
-println("  ✅ Global time orientation 'present', temporal nodes marked time_node=true")
+println("  ✅ Global orientation 'present'; $_tn_count time-nodes ($_wc_count opt into Fresh Memory via wants_context)")
 
 # ============================================================
 # PHASE 21: RelationalJitter
@@ -769,6 +799,24 @@ lock(NODE_LOCK) do
             if haskey(sf, "required_relations")
                 empty!(node.required_relations)
                 append!(node.required_relations, String.(sf["required_relations"]))
+            end
+            # DYNAMIC RELATIONAL TRIPLES: relational_patterns are (subject, relation, object)
+            # tuples where `relation` may be a sigil reference like "&causal" / "&temporal".
+            # At match time the engine calls expand_relation_if_sigil so the node matches
+            # ANY verb in the sigil's expansion (engine.jl:583). grow_nodes_from_packet does
+            # NOT read relational_patterns, so we build RelationalTriple objects here.
+            if haskey(sf, "relational_patterns")
+                empty!(node.relational_patterns)
+                for tup in sf["relational_patterns"]
+                    subj, rel, obj = String(tup[1]), String(tup[2]), String(tup[3])
+                    push!(node.relational_patterns, RelationalTriple(subj, rel, obj))
+                end
+            end
+            if haskey(sf, "relation_weights")
+                empty!(node.relation_weights)
+                for (k, v) in sf["relation_weights"]
+                    node.relation_weights[String(k)] = Float64(v)
+                end
             end
             global _applied; _applied += 1
         end

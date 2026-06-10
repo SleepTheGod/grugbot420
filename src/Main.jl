@@ -9113,11 +9113,15 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "flashcards")
             _fc_data = specimen["flashcards"]
+            # BUGFIX (specimen-build-v3): deserialize_flashcards!(data) takes the
+            # WHOLE Dict (lobe_id => [cards]) and iterates internally. The old code
+            # called it per-lobe with (lobe_id, cards) — a 2-arg call that has no
+            # matching method, so it MethodError'd and ZERO flashcards restored.
             _fc_count = 0
-            for (lobe_id, cards) in _fc_data
-                LobeTable.deserialize_flashcards!(lobe_id, cards)
-                _fc_count += length(cards)
+            for (_lobe_id, _cards) in _fc_data
+                _fc_count += length(_cards)
             end
+            LobeTable.deserialize_flashcards!(_fc_data)
             println("  📇  Flashcards loaded ($_fc_count cards)")
         end
     catch e
