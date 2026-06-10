@@ -349,6 +349,13 @@ verb_specs = [
     ("produces","causal"), ("creates","causal"), ("generates","causal"),
     ("triggers","causal"), ("enables","causal"), ("brings_about","causal"),
     ("leads_to","causal"), ("results_in","causal"),
+    # &causal expansion (user-facing): common verbs users ACTUALLY type in
+    # queries like "how do i make fire", "how do i find shelter", etc.
+    # Without these, extract_relational_triples() returns 0 triples for
+    # natural user queries, making relational anchoring useless for
+    # cross-lobe disambiguation (BUG-005: lobe decoherence).
+    ("make","causal"), ("find","causal"),
+    ("get","causal"), ("give","causal"),
     # &temporal expansion:
     ("precedes","temporal"), ("follows","temporal"), ("during","temporal"),
     ("since","temporal"),
@@ -547,11 +554,11 @@ println("\n🔮 Phase 15: Adding custom sigils...")
 SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE; name="mood", class=:lambda, applies_at=:bind,
     sigil_type=:string, provenance="specimen-build-v3", promote_at_tokenize=false)
 SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE; name="mathop", class=:macro, applies_at=:bind,
-    lexicon=["add","subtract","multiply","divide","calculate"], provenance="specimen-build-v3", promote_at_tokenize=true)
+    lexicon=["add","subtract","multiply","divide","calculate"], provenance="specimen-build-v3", promote_at_tokenize=false)
 SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE; name="emotion", class=:macro, applies_at=:bind,
-    lexicon=["happy","sad","angry","calm","excited","afraid"], provenance="specimen-build-v3", promote_at_tokenize=true)
+    lexicon=["happy","sad","angry","calm","excited","afraid"], provenance="specimen-build-v3", promote_at_tokenize=false)
 SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE; name="element", class=:macro, applies_at=:bind,
-    lexicon=["water","fire","earth","air","light"], provenance="specimen-build-v3", promote_at_tokenize=true)
+    lexicon=["water","fire","earth","air","light"], provenance="specimen-build-v3", promote_at_tokenize=false)
 SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE; name="philosophical", class=:tag, applies_at=:match,
     provenance="specimen-build-v3")
 SigilRegistry.register_relation_sigil!(_ENGINE_SIGIL_TABLE; name="produces",
@@ -560,7 +567,23 @@ SigilRegistry.register_relation_sigil!(_ENGINE_SIGIL_TABLE; name="opposes",
     expansion=["opposes","contradicts","negates","blocks"], provenance="specimen-build-v3")
 SigilRegistry.register_procedure_sigil!(_ENGINE_SIGIL_TABLE; name="math-chain",
     expansion=["&mathop","&n","then","verify"], provenance="specimen-build-v3")
-println("  ✅ 8 custom sigils registered (1 lambda, 3 macro, 1 tag, 1 procedure, 2 relation)")
+
+# BUG-005 FIX: Extend &causal sigil expansion with user-facing verbs.
+# The engine default &causal only has formal verbs (produces, creates, etc.).
+# Users type "how do i MAKE fire" not "how does fire PRODUCE warmth".
+# Without "make" in the expansion, extract_relational_triples() extracts the
+# triple (i, make, fire) but evaluate_relational_dialectics can't match it to
+# (fire, &causal, warmth) because "make" isn't in the &causal alternatives.
+# Adding user-facing verbs here + the cross-field partial match in engine.jl
+# (v7.57) gives relational anchoring the power to disambiguate cross-lobe
+# confusion (e.g. "how do i make fire" → lobe_surv not lobe_crea).
+SigilRegistry.register_relation_sigil!(_ENGINE_SIGIL_TABLE; name="causal",
+    expansion=["causes","produces","creates","generates","leads_to",
+               "results_in","triggers","enables","brings_about",
+               "make","makes","find","finds","get","gets","give","gives"],
+    provenance="specimen-build-v3-BUG005", overwrite=true)
+
+println("  ✅ 8 custom sigils registered (1 lambda, 3 macro, 1 tag, 1 procedure, 2 relation) + &causal extended")
 
 # ============================================================
 # PHASE 16: EphemeralMLP transformer rules

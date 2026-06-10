@@ -624,6 +624,16 @@ function evaluate_relational_dialectics(
                     match_score += jitter_s(2.0 * weight)
                 elseif ut.subject == nt.subject || ut.object == nt.object
                     match_score += jitter_s(1.0 * weight)
+                elseif ut.object == nt.subject || ut.subject == nt.object
+                    # GRUG v7.57: Cross-field partial match. When the user says
+                    # "i make fire" and the node triple is (fire, &causal, warmth),
+                    # the user's object "fire" matches the node's subject "fire".
+                    # This is a meaningful semantic overlap — the user's query is
+                    # ABOUT the same concept the node relates from. Use a lower
+                    # weight (0.7) than same-field partial (1.0) to differentiate
+                    # direct ownership from associative overlap, but high enough
+                    # to disambiguate cross-lobe confusion (e.g. fire vs music).
+                    match_score += jitter_s(0.7 * weight)
                 else
                     orthogonal_penalty += jitter_s(0.5 * weight)
                 end

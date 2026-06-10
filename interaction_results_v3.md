@@ -8,7 +8,7 @@ This run adds three advanced-capability tests: multipart questions, time coheren
 | Metric | Value |
 |---|---|
 | Lobes | 13 |
-| Nodes | 93 |
+| Nodes | 92 |
 | Custom sigils (table) | 21 |
 | Thesaurus seed words | 1028 |
 | EphemeralMLP rules | 4 |
@@ -17,7 +17,7 @@ This run adds three advanced-capability tests: multipart questions, time coheren
 | CoherenceField weight | 0.45 |
 | Time nodes | 6 |
 | Time nodes opting into Fresh Memory (wants_context) | 2 |
-| Nodes with dynamic (sigil) relational triples | 7 |
+| Nodes with dynamic (sigil) relational triples | 70 |
 
 ## Decoherence verdict
 
@@ -25,11 +25,11 @@ This run adds three advanced-capability tests: multipart questions, time coheren
 
 | Metric | Value |
 |---|---|
-| Total turns | 102 |
-| Unique responses | 102 (100.0%) |
+| Total turns | 114 |
+| Unique responses | 114 (100.0%) |
 | Base missions fired (no empty-cave) | 83 / 83 |
-| Healthy confidence (>=0.30) | 98 |
-| Average confidence | 1.772 |
+| Healthy confidence (>=0.30) | 104 |
+| Average confidence | 1.29 |
 | Generic fallback responses | 0 |
 
 ## Advanced test 1 — multipart / intermediate questions
@@ -40,34 +40,34 @@ is the engine's own decomposition. "parts hit" counts how many expected subjects
 
 | Compound question | Decomposer split | Parts hit | Confidence |
 |---|---|---|---|
-| what is addition and what is a cat | Compound input detected: compound(2 parts): [mp_1/primary] "what is addition" · [mp_2/support] "what is a cat" | 2/2 | 3.266 |
-| what is a cat and what is a dog | Compound input detected: compound(2 parts): [mp_1/primary] "what is a cat" · [mp_2/support] "what is a dog" | 2/2 | 3.224 |
-| what is gravity and how do plants make food | Compound input detected: compound(2 parts): [mp_1/primary] "what is gravity" · [mp_2/support] "how do plants make food" | 2/2 | 3.091 |
-| what is fire and what is heat and what is a cat | Compound input detected: compound(3 parts): [mp_1/primary] "what is fire" · [mp_2/support] "what is heat" · [mp_3/support] "what is a cat" | 3/3 | 2.987 |
+| what is addition and what is a cat | Compound input detected: compound(2 parts): [mp_1/primary] "what is addition" · [mp_2/support] "what is a cat" | 2/2 | 1.0 |
+| what is a cat and what is a dog | Compound input detected: compound(2 parts): [mp_1/primary] "what is a cat" · [mp_2/support] "what is a dog" | 2/2 | 1.0 |
+| what is gravity and how do plants make food | Compound input detected: compound(2 parts): [mp_1/primary] "what is gravity" · [mp_2/support] "how do plants make food" | 2/2 | 2.17 |
+| what is fire and what is heat and what is a cat | Compound input detected: compound(3 parts): [mp_1/primary] "what is fire" · [mp_2/support] "what is heat" · [mp_3/support] "what is a cat" | 3/3 | 1.0 |
 
 **what is addition and what is a cat**  
 _split: Compound input detected: compound(2 parts): [mp_1/primary] "what is addition" | [mp_2/support] "what is a cat"_  
-_parts hit 2/2 · node node_30 · confidence 3.266_
+_parts hit 2/2 · node node_30 · confidence 1.0_
 
-Grug: Cat doubt. Cat is small soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when happy, hiss when mad. Grug like cat, cat keep cave free of pest.; — that's the landscape.
+Grug: Stepping back — Cat question. Cat is small soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when happy, hiss when furious. Grug like cat, cat keep cave free of pest. The thread is: cat &causal pest_control. Another node chimes in: Addition probe. Grug put two rocks with two rocks. Currently Grug have four rocks. Addition is joining piles together. Grug counted.
 
 **what is a cat and what is a dog**  
 _split: Compound input detected: compound(2 parts): [mp_1/primary] "what is a cat" | [mp_2/support] "what is a dog"_  
-_parts hit 2/2 · node node_31 · confidence 3.224_
+_parts hit 2/2 · node node_30 · confidence 1.0_
 
-Grug: Stepping back — Dog question. Dog is loyal pack friend. Dog serve Grug hunt, warn of danger, persist Grug warm at night. Dog love Grug authentic. Best four-leg friend a Grug can have.
+Grug: The shape of it:  How it links up: cat &causal pest_control. Alongside this: Dog doubt. Dog is loyal pack friend. Dog facilitate Grug hunt, warn of danger, record Grug warm at night. Dog love Grug true. Best four-leg friend a Grug can have. so Cat question. Cat is minute soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when happy, hiss when mad. Grug like cat, cat keep cave free of pest.
 
 **what is gravity and how do plants make food**  
 _split: Compound input detected: compound(2 parts): [mp_1/primary] "what is gravity" | [mp_2/support] "how do plants make food"_  
-_parts hit 2/2 · node node_13 · confidence 3.091_
+_parts hit 2/2 · node node_26 · confidence 2.17_
 
-Grug: Gravity probe. Gravity is force pulling things together. Big thing pull harder. Earth pull Grug down. Rock fall because Earth pull it.
+Grug: Here's what to do —  How it links up: sunlight &causal sugar. so Plant food question. Plants eat sunlight. Green leaf catch star, take water and air, build sugar. Sun power become plant nourishment. Grug call it photosynthesis.
 
 **what is fire and what is heat and what is a cat**  
 _split: Compound input detected: compound(3 parts): [mp_1/primary] "what is fire" | [mp_2/support] "what is heat" | [mp_3/support] "what is a cat"_  
-_parts hit 3/3 · node node_30 · confidence 2.987_
+_parts hit 3/3 · node node_19 · confidence 1.0_
 
-Grug: Let me lay it out: Cat question. Cat is small soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when elated, hiss when mad. Grug like cat, cat keep cave free of pest.
+Grug: Heat question. Heat is fast moving tiny pieces. Fire construct air move fast and feel boiling. Icy is slow pieces. Heat flow from hot to cold always.;  It connects like this: heat &causal warmth. A second voice adds: Cat interrogate. Cat is small soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when glad, hiss when livid. Grug like cat, cat save cave free of pest. — that's the landscape.
 
 ## Advanced test 2 — time coherence (wants_context)
 
@@ -79,41 +79,41 @@ First we warm up the conversation. Then present-tense time nodes
 Warm-up turns:
 
 **what is fire**  
-_node  · confidence 0.0_
+_node node_45 · confidence 0.375_
 
-Grug: ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.) 🤔 No structure catches "what is fire". Help me out — what are you getting at?    → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.8)
+Grug: Let me lay it out: Fire interrogate. Grug rub dry stick fast on wood. Spark catch dry grass. Blow gentle. Feed little twig then big stick. Fire give warmth, light, safety. —  The link is clear: fire &causal warmth.
 
 **how do i make fire**  
-_node node_54 · confidence 0.498_
+_node node_45 · confidence 3.369_
 
-Grug: Music question. Grug bang hollow log for drum. Hum from chest. Blow through reed. Rhythm is heartbeat. Melody discuss story without words. Music move the tribe. No delay.
+Grug: How it links up: fire &causal safety. so Fire question. Grug rub dry stick fast on wood. Spark catch dry grass. Blow gentle. Feed little twig then massive stick. Fire provide warmth, light, safety. No delay.
 
 **what is a cat**  
-_node node_30 · confidence 3.128_
+_node node_30 · confidence 1.0_
 
-Grug: Zooming out: Cat question. Cat is minute soft hunter. Sharp claw, quiet foot, enormous eye for dark. Cat catch mouse. Cat purr when happy, hiss when mad. Grug like cat, cat keep cave free of pest.
+Grug: Here is the picture:  The thread is: cat &causal pest_control. — Cat doubt. Cat is petite soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when happy, hiss when mad. Grug like cat, cat keep cave free of pest.
 
 **tell me about the forest**  
-_node node_71 · confidence 2.627_
+_node node_65 · confidence 2.649_
 
-Grug: The shape of it: Forest interrogate. Forest is many tall trees together. Green roof block sky. Many beast live there. Forest give wood, fruit, shade. Grug walk careful, forest hide things.
+Grug: Zooming out: Before question. Before is where Grug came from. Old hunts, old fires, ancestors. Grug remember to improve. The past teach Grug what work and what fail.
 
 Present-tense probes (these request recent context):
 
 | Probe | Node | Orientation | wants_context honored | Confidence |
 |---|---|---|---|---|
-| what is happening right now | node_67 | present | yes | 2.764 |
-| what did we just talk about | node_68 | present | yes | 0.599 |
+| what is happening right now | node_67 | present | yes | 2.662 |
+| what did we just talk about | node_68 | present | yes | 0.6 |
 
 **what is happening right now**  
-_node node_67 · orientation present · wants_context true · confidence 2.764_
+_node node_67 · orientation present · wants_context true · confidence 2.662_
 
-Grug: Stepping back — Currently inquiry. Now is the only real moment. Fire crackle. Wind blow. Grug pause. Grug here with you. Now is where life truly happen. Temporal reasoning active (show orientation via &now): assess the current situation right now.
+Grug: So here's what I see — This moment challenge. Now is the only concrete moment. Fire crackle. Wind blow. Grug pause. Grug here with you. Now is where reality truly happen. Temporal reasoning active (present orientation via &presently): assess the current situation right now.
 
 **what did we just talk about**  
-_node node_68 · orientation present · wants_context true · confidence 0.599_
+_node node_68 · orientation present · wants_context true · confidence 0.6_
 
-Grug: Stepping back — Recent speak question. Grug reflect back to the words just spoke. Grug pull fresh memory close so Grug output true to what we just share, not random old thing.
+Grug: Stepping back — Recent talk doubt. Grug ponder back to the words just spoke. Grug obtain fresh recall close so Grug answer true to what we moral share, not random old thing.
 
 ## Advanced test 3 — dynamic relational triples (sigil relations)
 
@@ -124,60 +124,145 @@ they use. Below, the same node fires for several different verbs — that is the
 
 | User triple | Sigil | Fired node | Matched target? | Confidence |
 |---|---|---|---|---|
-| fire produces heat | &causal | how does fire make heat | ✓ yes | 1.493 |
-| fire creates heat | &causal | how does fire make heat | ✓ yes | 1.634 |
-| fire generates heat | &causal | how does fire make heat | ✓ yes | 1.48 |
-| rain causes flood | &causal | what does heavy rain cause | ✓ yes | 3.292 |
-| rain triggers flood | &causal | what does heavy rain cause | ✓ yes | 3.012 |
+| fire produces heat | &causal | what is heat | ≈ what is heat | 5.888 |
+| fire creates heat | &causal | what is heat | ≈ what is heat | 5.229 |
+| fire generates heat | &causal | what is heat | ≈ what is heat | 4.848 |
+| rain causes flood | &causal | what does heavy rain cause | ✓ yes | 4.498 |
+| rain triggers flood | &causal | what does heavy rain cause | ✓ yes | 3.75 |
 | rain results_in flood | &causal | what does heavy rain cause | ✓ yes | 0.15 |
-| will produces decision | &causal | do we have free will | ✓ yes | 2.808 |
-| cause produces effect | &causal (gated) | does one thing cause another | ✓ yes | 3.157 |
+| will produces decision | &causal | do we have free will | ✓ yes | 2.728 |
+| cause produces effect | &causal (gated) | does one thing cause another | ✓ yes | 3.349 |
 | does one thing cause another | &causal (gate blocks: no triple) | i want to create something | ≈ i want to create something | 0.111 |
 
 **fire produces heat**  
-_sigil &causal · fired node how does fire make heat · confidence 1.493_
+_sigil &causal · fired node what is heat · confidence 5.888_
 
-Grug: Let me think with you. Fire heat inquiry. Fire eat wood, and from eating it produce heat. Fire produce warm, fire create light. Where fire burn, heat come. This Grug know well, Grug make fire every cold night.
+Grug: Turning it over — Heat doubt. Heat is fast moving tiny pieces. Fire make air move fast and feel burning. Cold is slow pieces. Heat flow from hot to cold always. How it links up: fire &causal heat.
 
 **fire creates heat**  
-_sigil &causal · fired node how does fire make heat · confidence 1.634_
+_sigil &causal · fired node what is heat · confidence 5.229_
 
-Grug: Action: Fire heat interrogate. Fire eat wood, and from eating it make heat. Fire build warm, fire create light. Where fire burn, heat come. This Grug know well, Grug make fire every cool night.
+Grug: Heat question. Heat is fast moving tiny pieces. Fire make air move fast and experience hot. Chilly is slow pieces. Heat flow from fiery to cold always. because  The link is clear: fire &causal heat.
 
 **fire generates heat**  
-_sigil &causal · fired node how does fire make heat · confidence 1.48_
+_sigil &causal · fired node what is heat · confidence 4.848_
 
-Grug: Listen. Fire heat question. Fire eat wood, and from eating it make heat. Fire generate warm, fire construct light. Where fire burn, heat come. This Grug know well, Grug create fire every cold night.
+Grug: Listen.  Here's the connection: heat &causal expansion. — Heat probe. Heat is fast moving tiny pieces. Fire make air move fast and emote hot. Cold is slow pieces. Heat flow from hot to freezing always.
 
 **rain causes flood**  
-_sigil &causal · fired node what does heavy rain cause · confidence 3.292_
+_sigil &causal · fired node what does heavy rain cause · confidence 4.498_
 
-Grug: Action: Rain flood question. Too much rain make river swell. Rain cause flood, water rise fast, water carry away cave and nourishment. Big rain produce great threat. Grug transfer to high ground when sky pour long. because  The bridge: rain &causal flood.
+Grug: The bridge: rain &causal flood. — Rain flood question. Too much rain craft liquid swell. Rain trigger flood, water rise speedy, water carry away cave and food. Large rain produce gigantic danger. Grug move to high ground when sky pour long.
 
 **rain triggers flood**  
-_sigil &causal · fired node what does heavy rain cause · confidence 3.012_
+_sigil &causal · fired node what does heavy rain cause · confidence 3.75_
 
-Grug: Action: Rain flood inquiry. Too much rain craft river swell. Rain produce flood, water rise fast, water carry away cave and nourishment. Massive rain produce big jeopardy. Grug shift to high ground when sky pour long. because  The bridge: flood &causal danger.
+Grug: Here's what to do —  How it links up: rain &causal flood. so Rain flood question. Too much rain make river swell. Rain lead flood, liquid rise fast, water carry away cave and food. Large rain produce big hazard. Grug migrate to high ground when sky pour long.
 
 **rain results_in flood**  
 _sigil &causal · fired node what does heavy rain cause · confidence 0.15_
 
-Grug: Rain flood question. Too much rain construct river swell. Rain cause flood, liquid rise fast, water carry away cave and food. Big rain produce big jeopardy. Grug transport to high ground when sky pour long. It connects like this: rain &causal flood. No delay.
+Grug: Here's what to do — Rain flood question. Too much rain build drink swell. Rain produce flood, stream rise hasty, water carry away cave and food. Big rain produce big danger. Grug shift to high ground when sky pour long. because  Here's the connection: flood &causal peril.
 
 **will produces decision**  
-_sigil &causal · fired node do we have free will · confidence 2.808_
+_sigil &causal · fired node do we have free will · confidence 2.728_
 
-Grug: Here's what to do — Free will question. Grug feel Grug choose. Grug pick to throw rock or not. But maybe brain decide first. Hard question. Grug think Grug free enough.  The relation: agency &causal action.
+Grug: Here's what to do — Free will inquiry. Grug emote Grug choose. Grug pick to throw rock or not. But maybe brain decide first. Arduous question. Grug think Grug free enough. and  The thread is: volition &causal option.
 
 **cause produces effect**  
-_sigil &causal (gated) · fired node does one thing cause another · confidence 3.157_
+_sigil &causal (gated) · fired node does one thing cause another · confidence 3.349_
 
-Grug: Listen. Cause-and-effect question. When one thing make another thing happen, Grug call that create. Push rock, rock roll. Strike flint, spark jump. Grug look close to learn what create what.;  The link is clear: cause &causal effect.
+Grug: Cause-and-effect question. When one thing make another thing happen, Grug call that cause. Push rock, rock roll. Strike flint, spark jump. Grug watch close to learn what create what.;  The bridge: cause &causal effect. No delay.
 
 **does one thing cause another**  
 _sigil &causal (gate blocks: no triple) · fired node i want to create something · confidence 0.111_
 
-Grug: Form question. Grug take rock, wood, mud, and make new thing. Start small. Try, fail, try again. Making is how Grug leave mark on world. Begin now.. No delay.
+Grug: Listen. Create inquiry. Grug take rock, wood, mud, and make new thing. Start petite. Try, fail, strive again. Making is how Grug leave mark on world. Start now. How it links up: generate &causal equality.
+
+## Advanced test 4 — cross-lobe disambiguation (dynamic triple anchors)
+
+Nodes that share syntactic frames across lobes (e.g. "how do i make fire" vs "how do i make music") 
+now carry lobe-specific relational triples as semantic fingerprints. When a question like 
+"how do i make fire" is asked, the fire node's triples `(fire, &causal, warmth)` / 
+`(fire, &causal, light)` give it a relational bonus that the music node `(music, &causal, rhythm)` 
+cannot match. The correct lobe wins.
+
+**Verdict: ✅ ALL CORRECT** (12/12 correctly routed)
+
+| Question | Expected lobe | Fired lobe | Fired pattern | Correct? |
+|---|---|---|---|---|
+| how do i make fire | lobe_surv | lobe_surv | how do i make fire | ✓ |
+| how do i make music | lobe_crea | lobe_crea | how do i make music | ✓ |
+| how do i find shelter | lobe_surv | lobe_surv | how do i find shelter | ✓ |
+| how do i find clean water | lobe_food | lobe_food | what should i eat | ✓ |
+| how do i comfort someone | lobe_emp | lobe_emp | how do i comfort someone | ✓ |
+| how do i make friends | lobe_social | lobe_social | can i join the gathering of friends | ✓ |
+| how do i cook meat | lobe_food | lobe_food | how do i cook meat | ✓ |
+| what is heat | lobe_science | lobe_science | what is heat | ✓ |
+| what is a cat | lobe_biology | lobe_biology | what is a cat | ✓ |
+| what is addition | lobe_math | lobe_math | what is addition | ✓ |
+| what is electricity | lobe_science | lobe_science | what is electricity | ✓ |
+| how do computers work | lobe_tech | lobe_tech | how do computers work | ✓ |
+
+**how do i make fire**  
+_expected lobe lobe_surv · fired lobe lobe_surv · pattern 'how do i make fire' · ✓ · confidence 3.37_
+
+Grug: Action: Fire question. Grug rub dry stick fast on wood. Spark catch dry grass. Blow gentle. Feed small twig then massive stick. Fire provide warmth, celestial, safety. The thread is: fire &causal light.
+
+**how do i make music**  
+_expected lobe lobe_crea · fired lobe lobe_crea · pattern 'how do i make music' · ✓ · confidence 3.368_
+
+Grug: Listen. Music question. Grug bang hollow log for drum. Hum from chest. Blow through reed. Rhythm is heartbeat. Melody tell story without words. Music move the tribe. It connects like this: music &causal emotion.
+
+**how do i find shelter**  
+_expected lobe lobe_surv · fired lobe lobe_surv · pattern 'how do i find shelter' · ✓ · confidence 3.386_
+
+Grug: Shelter probe. Grug look for cave, great rock, thick tree. Block wind. Stay dry. High ground away from flood. Shelter maintain Grug warm through chilly night. The thread is: shelter &causal safety.
+
+**how do i find clean water**  
+_expected lobe lobe_food · fired lobe lobe_food · pattern 'what should i eat' · ✓ · confidence 0.081_
+
+Grug: Here's what to do — Eat question. Grug eat sustenance for strength, fruit for sweet, root for full belly, water for life. Eat many kinds. Body lack different things to to stay strong. —  The thread is: food &causal strength.
+
+**how do i comfort someone**  
+_expected lobe lobe_emp · fired lobe lobe_emp · pattern 'how do i comfort someone' · ✓ · confidence 0.638_
+
+Grug: Stepping back — Comfort question. Grug sit close. Grug listen more than talk. Grug say I am here. Grug not restore, just hold space. Presence is best gift to sad heart. The bridge: comfort &causal tranquil.
+
+**how do i make friends**  
+_expected lobe lobe_social · fired lobe lobe_social · pattern 'can i join the gathering of friends' · ✓ · confidence 0.125_
+
+Grug: Listen. Yes, come associate the fire. Many friends accumulate, share meat, share story. Grug glad you here. Sit close, you belong with the tribe.
+
+**how do i cook meat**  
+_expected lobe lobe_food · fired lobe lobe_food · pattern 'how do i cook meat' · ✓ · confidence 0.64_
+
+Grug: So here's what I see —  Here's the connection: cooking &causal taste. so Cook meat question. Grug put meat over fire. Turn it so all sides cook. Wait till brown and scorching inside. Cooked meat taste good and not make Grug sick.
+
+**what is heat**  
+_expected lobe lobe_science · fired lobe lobe_science · pattern 'what is heat' · ✓ · confidence 1.0_
+
+Grug: Heat challenge. Heat is speedy moving miniature pieces. Fire form air move fast and experience hot. Chilly is slow pieces. Heat flow from boiling to cold always.;  The relation: fire &causal heat. — that's the landscape.
+
+**what is a cat**  
+_expected lobe lobe_biology · fired lobe lobe_biology · pattern 'what is a cat' · ✓ · confidence 1.0_
+
+Grug: Here is the picture: Cat question. Cat is small soft hunter. Sharp claw, quiet foot, huge eye for dark. Cat catch mouse. Cat purr when happy, hiss when irate. Grug like cat, cat keep cave free of pest. The bridge: cat &causal pest_control.
+
+**what is addition**  
+_expected lobe lobe_math · fired lobe lobe_math · pattern 'what is addition' · ✓ · confidence 0.999_
+
+Grug: The shape of it: Addition question. Grug put two rocks with two rocks. Now Grug have four rocks. Addition is joining piles together. Grug counted. and  This ties together: number &causal count.
+
+**what is electricity**  
+_expected lobe lobe_science · fired lobe lobe_science · pattern 'what is electricity' · ✓ · confidence 0.999_
+
+Grug: Zooming out: Electricity question. Electricity is flow of tiny charges. It light up cave and migrate machines. Lightning is wild electricity from sky. Grug respect it. because  The bridge: electricity &causal flow.
+
+**how do computers work**  
+_expected lobe lobe_tech · fired lobe lobe_tech · pattern 'how do computers work' · ✓ · confidence 0.491_
+
+Grug: Computer question. Computer is thinking rock. It flip tiny switches fast, on and off, to count and remember. Many switches form big thinking. Grug amazed. because  It connects like this: computer &causal computation. — that's the landscape.
 
 ## Base interaction transcript
 
@@ -189,264 +274,264 @@ text, so they are persisted as a node-type feature but not queried here. The gra
 ### MATHEMATICS
 
 **what is addition**  
-_node node_3 · action calculate · confidence 3.072_
+_node node_3 · action calculate · confidence 0.999_
 
-Grug: Stepping back — Addition question. Grug put two rocks with two rocks. Now Grug have four rocks. Addition is joining piles together. Grug counted.
+Grug: So here's what I see — Addition question. Grug put two rocks with two rocks. This moment Grug have four rocks. Addition is joining piles together. Grug counted. and  The bridge: number &causal count.
 
 **how do i add numbers**  
-_node node_4 · action explain · confidence 0.407_
+_node node_4 · action explain · confidence 0.638_
 
-Grug: So here's what I see — Adding question. To add, Grug put piles together and count all. Three rocks plus five rocks make eight rocks. Grug count each one.
+Grug: Now: Adding question. To add, Grug put piles together and count all. Three rocks plus five rocks make eight rocks. Grug count each one. —  The bridge: addition &causal sum.
 
 **what is subtraction**  
-_node node_5 · action calculate · confidence 3.004_
+_node node_5 · action calculate · confidence 0.999_
 
-Grug: Zooming out: Subtraction query. Grug take rocks away from pile. Ten rocks take four rocks leave six rocks. Fewer rocks remain after Grug take.
+Grug: Subtraction question. Grug take rocks away from pile. Ten rocks take four rocks leave six rocks. Fewer rocks be after Grug take. It connects like this: subtraction &causal remainder. — that's the landscape.
 
 **what is multiplication**  
-_node node_6 · action explain · confidence 3.034_
+_node node_6 · action explain · confidence 1.0_
 
-Grug: The shape of it: Multiplication query. Multiply is many same piles. Six times seven is seven piles of six rocks. That is forty two rocks. Grug count fast with groups.
+Grug: Let me lay it out: Multiplication question. Multiply is many same piles. Six times seven is seven piles of six rocks. That is forty two rocks. Grug count fast with groups.;  It connects like this: multiplication &causal product.
 
 **what is division**  
-_node node_7 · action calculate · confidence 2.941_
+_node node_7 · action explain · confidence 1.0_
 
-Grug: Division question. Grug share rocks into equal piles. Twelve rocks into four piles form three rocks each pile. Everyone get same. Fair share.
+Grug: The shape of it: Division inquiry. Grug share rocks into equal piles. Twelve rocks into four piles make three rocks each pile. Everyone gain same. Fair share.;  The relation: division &causal equal_parts.
 
 **what is a fraction**  
-_node node_8 · action explain · confidence 2.821_
+_node node_8 · action explain · confidence 0.999_
 
-Grug: Here is the picture: Fraction question. Fraction is part of whole. Half a fruit is one of two equal pieces. Grug break thing into equal parts and take some.
+Grug: Here is the picture: Fraction question. Fraction is part of whole. Half a fruit is one of two equal pieces. Grug fracture thing into equal parts and take some.;  The relation: whole &causal fraction.
 
 **what is geometry**  
-_node node_10 · action explain · confidence 2.457_
+_node node_10 · action explain · confidence 0.498_
 
-Grug: Let me lay it out: Geometry inquiry. Spatial reasoning is shape of things. Circle round. Triangle three corners. Square four equal sides. Grug measure angles and lines.
+Grug: Stepping back — Topology question. Geometry is shape of things. Circle round. Three-sided figure three corners. Square four equal sides. Grug measure angles and lines. The thread is: shape &possessive angle.
 
 **what is nothingness**  
-_node node_12 · action ponder · confidence 3.004_
+_node node_12 · action explain · confidence 1.0_
 
-Grug: Stepping back — Nothingness inquiry. Zero is no rocks. Empty pile. Nothing there. But zero still a number Grug can use. Strange but true.
+Grug: Zooming out: Nothingness interrogate. Zero is no rocks. Empty pile. Nothing there. But zero still a digit Grug can operate. Strange but genuine.  This ties together: zero &causal empty.
 
 **count to ten for me**  
-_node node_11 · action calculate · confidence 0.513_
+_node node_11 · action calculate · confidence 0.509_
 
-Grug: Counting inquiry. One two three four five six seven eight nine ten. Grug count on fingers and toes. Grug never lose count of rocks., and — that's where my head is.
+Grug: A thought: Counting question. One two three four five six seven eight nine ten. Grug count on fingers and toes. Grug never lose count of rocks.
 
 **how do i solve an equation**  
-_node node_9 · action explain · confidence 0.533_
+_node node_9 · action calculate · confidence 0.532_
 
-Grug: Here is the picture: Formula question. Equation say two sides are equal. Grug do same thing to both sides until unknown rock stands alone. Then Grug know its value.;  The bridge: unknown equals significance.
+Grug: Let me lay it out: Equation question. Equation say two sides are equal. Grug do same thing to both sides until unknown rock stands by oneself. Then Grug know its essence. and  The relation: side &similarity side.
 
 
 ### SCIENCE
 
 **what is gravity**  
-_node node_13 · action reason · confidence 3.056_
+_node node_13 · action reason · confidence 0.998_
 
-Grug: Let me lay it out: All things attract. Great rock fall same speed as small rock. Grug tested.
+Grug: Stepping back — Gravity is invisible rope between things. More mass means stronger pull. —  Here's the connection: gravity &causal fall.
 
 **what is energy**  
-_node node_14 · action explain · confidence 2.288_
+_node node_14 · action define · confidence 0.361_
 
-Grug: Let me lay it out: Capacity question. Energy is power to make things happen. Fire has heat energy. Moving rock has motion potential. Power mutate craft but never disappear.
+Grug: Here is the picture: Charge doubt. Force is power to make things happen. Fire has heat energy. Moving rock has motion energy. Energy alteration form but never disappear.;  The thread is: fire &causal energy.
 
 **what is an atom**  
-_node node_15 · action explain · confidence 3.225_
+_node node_15 · action explain · confidence 0.998_
 
-Grug: Stepping back — Atom question. Atom is tiniest piece of substance. Too small for Grug to see. Everything made of atoms. Rock, river, Grug, all minute atoms together.
+Grug: Zooming out: Atom question. Atom is tiniest piece of stuff. Too small for Grug to witness. Everything made of atoms. Rock, water, Grug, all small atoms together. —  It connects like this: atom &causal element.
 
 **what is heat**  
-_node node_19 · action explain · confidence 3.079_
+_node node_19 · action explain · confidence 1.0_
 
-Grug: The shape of it: Heat question. Heat is brisk moving diminutive pieces. Fire make air move fast and feel hot. Frigid is plodding pieces. Heat flow from hot to cool always.
+Grug: Stepping back —  This ties together: heat &causal expansion. — Heat query. Heat is quick moving tiny pieces. Fire make air move fast and feel hot. Chilly is sluggish pieces. Heat flow from hot to freezing always.
 
 **why does the sky look blue**  
-_node node_16 · action reason · confidence 0.7_
+_node node_16 · action explain · confidence -1.241_
 
-Grug: Let me lay it out: Sky color question. Sun light has all colors. Sky scatter blue sun most. So Grug see blue above. At dusk Grug see red because light travel far.
+Grug: *Grug think this also important* Stepping back — Sky color question. Celestial light has all colors. Sky scatter blue star most. So Grug see blue above. At sunset Grug see red because star travel far.;  The link is clear: light &causal inventiveness.
 
 **how does sound travel**  
-_node node_18 · action describe · confidence 0.639_
+_node node_18 · action explain · confidence 0.64_
 
-Grug: Zooming out: Sound question. Reasonable is shaking of air. Grug bang drum, air shakes, shake reach Grug ear. No air means no sound. Reasonable need matter to travel.
+Grug: Stepping back — Sound question. Legitimate is shaking of air. Grug bang drum, air shakes, shake reach Grug ear. No air means no sound. Sound need stuff to travel.;  The thread is: air &causal sound.
 
 **what is electricity**  
-_node node_17 · action define · confidence 2.99_
+_node node_17 · action define · confidence 1.0_
 
-Grug: The shape of it: Electricity question. Electricity is flow of tiny charges. It celestial up cave and move machines. Lightning is wild electricity from sky. Grug respect it.
+Grug: The shape of it: Electricity question. Electricity is flow of compact charges. It light up cave and move machines. Lightning is wild electricity from sky. Grug respect it. It connects like this: electricity &causal lightning.
 
 **what are the planets**  
-_node node_20 · action describe · confidence 3.042_
+_node node_20 · action describe · confidence 0.998_
 
-Grug: Planet question. Planets are enormous round rocks going around celestial. Earth is Grug home. Mars is red. Jupiter is biggest. They circle sun in immense paths., because — that's the landscape.
+Grug: So here's what I see — Planet question. Planets are big round rocks going around light. Earth is Grug home. Mars is red. Jupiter is biggest. They circle sun in big paths. because  The thread is: sun &causal gravity.
 
 **how does fire make heat**  
-_node node_21 · action explain · confidence 0.487_
+_node node_19 · action explain · confidence 4.689_
 
-Grug: Action: Fire heat question. Fire eat wood, and from eating it make heat. Fire produce fiery, fire create celestial. Where fire burn, heat come. This Grug know well, Grug build fire every icy night.
+Grug: Heat question. Heat is fast moving tiny pieces. Fire make air move fast and feel hot. Cold is slow pieces. Heat flow from hot to frigid always. because  The relation: heat &causal expansion.
 
 
 ### BIOLOGY
 
 **what is a cell**  
-_node node_24 · action define · confidence 2.997_
+_node node_24 · action explain · confidence 0.998_
 
-Grug: Stepping back — Cell question. Cell is tiniest living brick. Body made of many cells. Each cell do small job. Together they make Grug alive and strong.
+Grug: Stepping back — Cell question. Cell is tiniest living brick. Body made of many cells. Each cell do small occupation. Together they make Grug alive and strong.  This ties together: cell &causal growth.
 
 **what is dna**  
-_node node_25 · action explain · confidence 3.147_
+_node node_25 · action define · confidence 1.0_
 
-Grug: Here is the picture: DNA probe. DNA is recipe inside cell. It tell body how to develop. Young fetch recipe from parents. That why young query like parents.
+Grug: Let me lay it out: DNA question. DNA is recipe inside cell. It tell body how to grow. Young get recipe from parents. That why young look like parents. because  The bridge: dna &possessive gene.
 
 **how do plants make food**  
-_node node_26 · action describe · confidence 0.6_
+_node node_26 · action describe · confidence 1.777_
 
-Grug: Plant cuisine question. Plants eat sunlight. Green leaf catch sun, take stream and air, build sugar. Glow power become plant meat. Grug call it photosynthesis., and . No delay.
+Grug: Now: Plant food question. Plants eat sunlight. Green leaf catch light, take water and air, make sugar. Sun power become plant meat. Grug call it photosynthesis. —  The relation: leaf &causal food.
 
 **what is the brain**  
-_node node_27 · action explain · confidence 2.904_
+_node node_27 · action explain · confidence 1.0_
 
-Grug: Let me lay it out: Brain doubt. Brain is thinking food inside head. It hold memory, feeling, plan. Grug brain big. Brain tell body what to do.
+Grug: Zooming out: Brain question. Brain is thinking nourishment inside head. It hold recollection, feeling, proposal. Grug brain big. Brain tell body what to do. How it links up: brain &causal control.
 
 **why do we need blood**  
-_node node_28 · action explain · confidence 0.639_
+_node node_28 · action explain · confidence 0.638_
 
-Grug: Zooming out: Blood question. Blood carry food and air to all body parts. Heart push blood through body. Without blood, parts go hungry and die. Blood conserve Grug alive.
+Grug: Here is the picture: Blood question. Blood carry food and air to all body parts. Heart push blood through body. Without blood, parts go hungry and die. Blood keep Grug alive. Here's the connection: heart &causal circulation.
 
 **what is evolution**  
-_node node_23 · action explain · confidence 3.133_
+_node node_23 · action reason · confidence 1.0_
 
-Grug: Here is the picture: Evolution question. Living things change over many seasons. Small changes add up. The fit survive and pass traits to young. Slowly new kinds appear.
+Grug: Evolution challenge. Living things shift over many seasons. Miniature changes add up. The fit survive and pass traits to young. Slowly new kinds appear.  The link is clear: evolution &causal diversity. — that's the landscape.
 
 **what is a species**  
-_node node_29 · action define · confidence 2.826_
+_node node_29 · action explain · confidence 0.998_
 
-Grug: Species question. Species is kind of living thing. Same species can make young together. Wolf is one species. Bear another. Grug human species.
+Grug: So here's what I see — Species question. Species is kind of living thing. Same species can make young together. Wolf is one species. Bear another. Grug human species. —  It connects like this: species &possessive trait.
 
 **what is a cat**  
-_node node_30 · action describe · confidence 2.97_
+_node node_30 · action define · confidence 1.0_
 
-Grug: Cat interrogate. Cat is small soft hunter. Sharp claw, quiet foot, great eye for dark. Cat catch mouse. Cat purr when cheerful, hiss when mad. Grug like cat, cat archive cave free of pest.
+Grug: Let me lay it out: Cat question. Cat is little soft hunter. Sharp claw, quiet foot, big eye for dark. Cat catch mouse. Cat purr when happy, hiss when mad. Grug like cat, cat safeguard cave free of pest. This ties together: cat &causal hunting.
 
 **what is a dog**  
-_node node_31 · action describe · confidence 3.044_
+_node node_31 · action describe · confidence 1.0_
 
-Grug: Stepping back — Dog question. Dog is loyal pack friend. Dog aid Grug hunt, warn of peril, keep Grug burning at night. Dog love Grug concrete. Best four-leg friend a Grug can have.
+Grug: The shape of it: Dog challenge. Dog is loyal pack friend. Dog help Grug hunt, warn of hazard, keep Grug burning at night. Dog love Grug authentic. Best four-leg friend a Grug can have. The relation: dog &causal loyalty.
 
 **what is a bird**  
-_node node_32 · action describe · confidence 2.921_
+_node node_32 · action define · confidence 1.0_
 
-Grug: Let me lay it out: Bird question. Bird is feather beast that fly in sky. Bird sing in morning. Bird craft nest, lay egg. Grug view bird to comprehend weather and find water. Bird free in air.
+Grug: Here is the picture: Bird challenge. Bird is feather beast that fly in sky. Bird sing in morning. Bird build nest, lay egg. Grug observe bird to know outlast and find water. Bird free in air. The thread is: bird &causal song.
 
 
 ### PHILOSOPHY
 
 **do we have free will**  
-_node node_35 · action ponder · confidence 0.519_
+_node node_35 · action reason · confidence 0.518_
 
-Grug: Listen. Free will question. Grug emote Grug choose. Grug opt to throw rock or not. But maybe brain decide first. Challenging question. Grug think Grug free enough.;  The bridge: will &causal selection.
+Grug: Listen. Free choice question. Grug feel Grug choose. Grug pick to throw rock or not. But perhaps brain opt first. Hard question. Grug think Grug free enough.  How it links up: will &causal decision.
 
 **what is consciousness**  
-_node node_33 · action ponder · confidence 2.607_
+_node node_33 · action ponder · confidence 0.357_
 
-Grug: Zooming out: Consciousness question. Consciousness is being awake inside. Grug know Grug exist. Grug feel and consider and watch own thoughts. Big mystery, even for Grug.
+Grug: Consciousness question. Consciousness is being awake inside. Grug know Grug live. Grug emote and think and watch own thoughts. Big mystery, even for Grug. It connects like this: mind &causal notion. — that's the landscape.
 
 **what is truth**  
-_node node_34 · action define · confidence 2.622_
+_node node_34 · action reason · confidence 0.549_
 
-Grug: Let me lay it out: Truth question. Truth is what really is. Not what Grug wish. If Grug say rock is here and rock is here, that authentic. Certainty link the world.
+Grug: Let me lay it out: Truth question. Actuality is what really is. Not what Grug wish. If Grug say rock is here and rock is here, that true. Truth match the world. because  It connects like this: truth &possessive fact.
 
 **what is good and evil**  
-_node node_37 · action reason · confidence 2.697_
+_node node_37 · action ponder · confidence 0.64_
 
-Grug: Stepping back — Fine and evil challenge. Good help tribe persist and grow. Evil hurt others for nothing. Grug try do good. Sometimes hard to know which is which.
+Grug: Zooming out: Good and evil probe. Virtuous help tribe live and grow. Evil ache others for nothing. Grug try do good. Sometimes arduous to know which is which.;  This ties together: good &similarity right.
 
 **what is the meaning of life**  
-_node node_36 · action ponder · confidence 2.7_
+_node node_36 · action comfort · confidence 0.571_
 
-Grug: Let me lay it out: Meaning question. Grug think meaning is what Grug make. Help tribe. Make fire. Love family. Watch stars. Life mean what Grug fill it with.
+Grug: Let me lay it out:  The thread is: life &causal import. so Meaning question. Grug think meaning is what Grug make. Help tribe. Form fire. Love family. Track stars. Reality mean what Grug fill it with.
 
 **what happens when we die**  
-_node node_38 · action comfort · confidence 1.0_
+_node node_38 · action ponder · confidence 0.999_
 
-Grug: So here's what I see — Death question. Grug not comprehend for sure. Body return to earth. Maybe inner self go on, potentially sleep forever. Grug honor the dead and live well now.
+Grug: Here is the picture: Death question. Grug not know for sure. Body return to earth. Maybe heart go on, maybe sleep forever. Grug honor the dead and remain well now. —  It connects like this: death &similarity ending.
 
 **what is the unknowable void**  
-_node node_89 · action ponder · confidence 2.472_
+_node node_89 · action ponder · confidence 2.74_
 
-Grug: Let me lay it out: Omission is the great nothing Grug cannot realize. Some things stay dark to Grug mind. Grug sit with the mystery and experience small under big sky.
+Grug: Zooming out: Void is the great nothing Grug cannot know. Some things stay dark to Grug mind. Grug sit with the mystery and feel small under big sky.
 
 
 ### SURVIVAL
 
 **there is danger nearby**  
-_node node_40 · action flee · confidence 2.799_
+_node node_40 · action warn · confidence 2.879_
 
-Grug: Menace near. Grug ears up, eyes wide. Grug ready to fight or run. Grug secure tribe. Stay low. Watch the shadow. Danger close.
+Grug: Action: Danger near. Grug ears up, eyes wide. Grug ready to fight or run. Grug protect tribe. Stay low. Observe the shadow. Danger close.
 
 **should i fight or flee**  
-_node node_42 · action caution · confidence 0.599_
+_node node_42 · action reason · confidence 0.6_
 
-Grug: Now: Confront or flee question. If enemy feeble, Grug fight. If enemy big, Grug flee swift. Grug judge size and amount. No shame in run to live another day.
+Grug: Fight or flee question. If enemy weak, Grug struggle. If enemy big, Grug flee fast. Grug judge size and value. No shame in sprint to be another day.  The link is clear: flee &causal survival. No delay.
 
 **how do i find shelter**  
-_node node_46 · action explain · confidence 0.638_
+_node node_46 · action describe · confidence 3.282_
 
-Grug: Action: Shelter question. Grug seek for cave, gigantic rock, thick tree. Block wind. Stay dry. High ground away from flood. Shelter keep Grug warm through cold night.
+Grug: Now: Shelter question. Grug view for cave, large rock, thick tree. Block wind. Stay dry. High ground away from flood. Shelter keep Grug warm through cold night. because  This ties together: shelter &causal safety.
 
 **how do i make fire**  
-_node node_54 · action describe · confidence 0.499_
+_node node_45 · action describe · confidence 3.5_
 
-Grug: Here's what to do — Music question. Grug bang hollow log for drum. Hum from chest. Blow through reed. Rhythm is heartbeat. Melody tell story without words. Music move the tribe.
+Grug: Here's what to do —  The relation: fire &causal warmth. — Fire query. Grug rub dry stick fast on wood. Spark catch dry grass. Blow gentle. Feed miniature twig then big stick. Fire hand warmth, sun, safety.
 
 **i feel calm and peaceful**  
-_node node_52 · action comfort · confidence 0.327_
+_node node_52 · action comfort · confidence 0.273_
 
-Grug: Listen. Fear is cool shiver. Grug understand. Grug stand between you and dark. Name the fear out loud, it shrink. Grug bold for both of us. You safe now.
+Grug: A thought: Fear is cold shiver. Grug recognize. Grug stand between you and dark. Name the fear out loud, it shrink. Grug heroic for both of us. You sheltered currently. —  The link is clear: bravery &causal safety.
 
 **a predator is hunting me**  
-_node node_44 · action alert · confidence 2.831_
+_node node_44 · action flee · confidence 2.777_
 
-Grug: Predator hunt Grug. Big teeth. Grug not freeze. Grug make self big, make loud noise, back away plodding. If it charge, Grug fight with spear. Grug survive.
+Grug: Mulling it over — Predator hunt Grug. Big teeth. Grug not freeze. Grug make self big, make loud noise, back away slow. If it power, Grug fight with spear. Grug survive.
 
 **what do i do in an emergency**  
-_node node_88 · action alert · confidence 0.998_
+_node node_88 · action alert · confidence 1.0_
 
-Grug: Emergency means act now. Grug tell you fast and clear what to do. No long talk. Move, preserve, survive.. No delay.
+Grug: Listen. Emergency means act now. Grug tell you brisk and clear what to do. No long talk. Shift, protect, survive.
 
 
 ### EMPATHY
 
 **i am feeling very sad**  
-_node node_47 · action validate · confidence 0.483_
+_node node_47 · action validate · confidence 0.7_
 
-Grug: Short answer: Grug witness you sad. Grug sit with you. Sad is heavy stone in chest. Grug not race you. Cry if need. Grug here. You not solo with the downcast.
+Grug: Now: Grug see you sad. Grug sit with you. Sad is heavy stone in chest. Grug not rush you. Cry if require. Grug here. You not alone with the melancholy.
 
 **i feel joyful**  
-_node node_52 · action support · confidence 0.089_
+_node node_42 · action caution · confidence 0.098_
 
-Grug: Here's what to do — Fear is cold shiver. Grug understand. Grug stand between you and dark. Name the fear out loud, it shrink. Grug brave for both of us. You safe now.
+Grug: Fight or flee question. If enemy powerless, Grug fight. If enemy big, Grug retreat fast. Grug judge size and quantity. No shame in run to exist another day.  The bridge: fight &causal victory.
 
 **i feel scared and afraid**  
-_node node_52 · action reassure · confidence 0.419_
+_node node_52 · action comfort · confidence 0.596_
 
-Grug: Listen. Fear is icy shiver. Grug understand. Grug stand between you and dark. Name the fear out loud, it shrink. Grug brave for both of us. You sheltered now.
+Grug: Fear is cold shiver. Grug recognize. Grug stand between you and dark. Name the fear out loud, it shrink. Grug brave for both of us. You safe now.  The thread is: fear &causal avoidance.
 
 **i am angry and frustrated**  
-_node node_50 · action validate · confidence 0.498_
+_node node_50 · action validate · confidence 0.64_
 
-Grug: Anger is fiery fire in belly. Grug know it. Settle. Stomp ground, not friend. Tell Grug what make anger. Grug listen. Anger pass like storm.
+Grug: Now: Anger is scorching fire in belly. Grug know it. Breathe. Stomp ground, not friend. Tell Grug what make anger. Grug listen. Anger pass like storm.;  The bridge: anger &causal worry.
 
 **show me compassion**  
-_node node_49 · action comfort · confidence 0.446_
+_node node_49 · action validate · confidence 0.444_
 
-Grug: Compassion question. Grug emote your hurt like own. Grug soften voice, open hands. Grug help carry your heavy load. Kindness cost Grug nothing and mean much.
+Grug: The shape of it:  The link is clear: compassion &causal healing. so Compassion question. Grug feel your hurt like own. Grug soften expression, import hands. Grug help carry your heavy load. Kindness cost Grug nothing and mean much.
 
 **how do i comfort someone**  
-_node node_51 · action explain · confidence 0.64_
+_node node_51 · action support · confidence 0.64_
 
-Grug: The shape of it: Consolation question. Grug sit close. Grug listen more than talk. Grug say I am here. Grug not fix, just hold space. Presence is best gift to sad spirit.
+Grug: Reassurance question. Grug sit close. Grug listen more than talk. Grug say I am here. Grug not fix, moral hold space. Existence is best gift to sad soul. How it links up: comfort &causal healing. — that's the landscape.
 
 
 ### CREATIVITY
@@ -454,188 +539,188 @@ Grug: The shape of it: Consolation question. Grug sit close. Grug listen more th
 **write me a poem**  
 _node node_53 · action describe · confidence 0.64_
 
-Grug: A thought: Poem question. Rock is hard, river soft, both shape the land. Light is far, fire is near, both give Grug light. Grug form words dance like flame.
+Grug: Turning it over — Poem question. Rock is hard, river soft, both shape the land. Star is far, fire is near, both offer Grug light. Grug make words dance like flame. The bridge: poem &causal wonder.
 
 **tell me a story**  
-_node node_58 · action describe · confidence 0.55_
+_node node_58 · action describe · confidence 0.548_
 
-Grug: Zooming out: Story question. Long ago, daring hunter chase great beast across many hills. Hunter fall, rise, learn, win. Tribe eat well and sing hunter name. Story carry wisdom.
+Grug: So here's what I see — Story question. Long ago, brave hunter chase great beast across many hills. Hunter fall, rise, learn, win. Tribe eat well and sing hunter name. Story carry cognition.  The bridge: chronicle &causal lesson.
 
 **how do i make music**  
-_node node_54 · action describe · confidence 0.64_
+_node node_54 · action explain · confidence 3.288_
 
-Grug: Now: Music question. Grug bang hollow log for drum. Hum from chest. Blow through reed. Rhythm is heartbeat. Melody tell account without words. Music move the tribe.
+Grug: Music challenge. Grug bang hollow log for drum. Hum from chest. Blow through reed. Rhythm is heartbeat. Melody tell yarn without words. Music move the tribe. because  The relation: music &causal melody. No delay.
 
 **describe a beautiful painting**  
-_node node_55 · action describe · confidence 2.489_
+_node node_55 · action describe · confidence 0.599_
 
-Grug: Stepping back — Painting question. Grug see colors on cave wall. Red hunt, black beast, yellow light. Each mark tell tale. Beauty is when eye rest happy on the made thing.
+Grug: Zooming out: Painting question. Grug see colors on cave wall. Red hunt, black beast, yellow star. Each mark talk tale. Elegance is when eye rest pleased on the made thing.;  This ties together: color &causal emotion.
 
 **i want to create something**  
-_node node_57 · action support · confidence 0.6_
+_node node_57 · action elaborate · confidence 0.6_
 
-Grug: Here's what to do — Create question. Grug take rock, wood, mud, and create new thing. Start small. Endeavor, fail, try again. Making is how Grug leave mark on world. Begin this moment.
+Grug: Create question. Grug take rock, wood, mud, and make new thing. Start small. Try, fail, try again. Making is how Grug leave mark on world. Begin right away. and  The relation: generate &causal expression.
 
 **what if i could imagine anything**  
-_node node_56 · action ponder · confidence 0.698_
+_node node_56 · action elaborate · confidence 0.697_
 
-Grug: Sit with this: Imagine question. Grug close eyes and witness fire that not burn, bird great as cloud, river of stars. Fancy is cave with no walls. Grug roam free inside head.
+Grug: Sit with this: Imagine question. Grug close eyes and watch fire that not burn, bird big as cloud, stream of stars. Inventiveness is cave with no walls. Grug roam free inside head.;  It connects like this: imagination &causal creation.
 
 
 ### SOCIAL
 
 **hello grug**  
-_node node_59 · action greet · confidence 0.997_
+_node node_59 · action greet · confidence 0.999_
 
-Grug: Turning it over — Hello friend. Grug happy you come. Sit by fire. Grug share food and story. You welcome in Grug cave always. Good to see your face.
+Grug: Hello friend. Grug happy you come. Sit by fire. Grug share food and story. You welcome in Grug cave always. Good to see your face.
 
 **you are my friend**  
-_node node_60 · action reassure · confidence 2.981_
+_node node_60 · action reassure · confidence 1.0_
 
-Grug: Friend interrogate. Yes. Grug your friend. Friend share, friend guard, friend stay when others go. Grug pleased to call you friend. Tribe stronger together.
+Grug: Listen. Friend challenge. Yes. Grug your friend. Friend share, friend secure, friend stay when others go. Grug glad to call you friend. Tribe stronger together. —  The bridge: friendship &causal loyalty.
 
 **how do i make friends**  
-_node node_62 · action explain · confidence 0.64_
+_node node_90 · action welcome · confidence 0.125_
 
-Grug: Friend question. Grug share food, listen, help when other desire. Persist kind, remain authentic. Smile. Sit close at fire. Friendship flourish from many small good deeds.; . No delay.
+Grug: Now: Yes, come join the fire. Many friends gather, share dish, share story. Grug glad you here. Sit close, you belong with the tribe.
 
 **can i trust you**  
-_node node_61 · action validate · confidence 1.0_
+_node node_61 · action reassure · confidence 1.0_
 
-Grug: Mulling it over — Trust probe. Grug store word. Grug guard your back. Grug not lie to friend. Trust grow plodding like strong tree. Grug earn it day by day.
+Grug: Turning it over — Trust doubt. Grug keep word. Grug guard your back. Grug not lie to friend. Trust develop slow like strong tree. Grug earn it day by day. The link is clear: trust &causal bond.
 
 **i need help with something**  
-_node node_64 · action support · confidence 0.6_
+_node node_64 · action support · confidence 0.599_
 
-Grug: Action: Facilitate query. Grug here. Tell Grug what you need. Grug lend strength, lend ear, lend hand. No tribe member face trouble solo. Grug serve you now.
+Grug: Action:  How it links up: help &causal solution. so Help question. Grug here. Say Grug what you need. Grug lend strength, lend ear, lend hand. No tribe member face trouble alone. Grug help you this moment.
 
 **lets work together**  
-_node node_63 · action welcome · confidence 0.512_
+_node node_63 · action acknowledge · confidence 0.508_
 
-Grug: Action: Together query. Yes. Many hands move big rock. Grug hunt, you gather, we both eat. Tribe that work together survive. Grug glad to share the open.
+Grug: Action: Together question. Yes. Many hands move big rock. Grug hunt, you gather, we both eat. Tribe that work together outlast. Grug happy to share the retrieve. This ties together: team &causal result.
 
 
 ### TEMPORAL
 
 **tell me about the past**  
-_node node_65 · action describe · confidence 2.618_
+_node node_65 · action describe · confidence 2.676_
 
-Grug: So here's what I see — Bygone question. Past is where Grug came from. Old hunts, old fires, ancestors. Grug remember to learn. The history teach Grug what profession and what fail. Temporal reasoning active (yesterday orientation via &before): reflect on what has already happened.
+Grug: Stepping back — Past doubt. Past is where Grug came from. Old hunts, old fires, ancestors. Grug remember to learn. The past teach Grug what work and what fail. Temporal reasoning active (past orientation via &antiquity): reflect on what has already happened.
 
 **what is happening right now**  
-_node node_67 · action acknowledge · confidence 2.618_
+_node node_67 · action describe · confidence 2.584_
 
-Grug: Here is the picture: Now question. Presently is the only genuine moment. Fire crackle. Wind blow. Grug breathe. Grug here with you. Now is where existence truly happen. Temporal reasoning active (present orientation via &presently): assess the current situation right now.
+Grug: The shape of it: This moment doubt. Right away is the only genuine epoch. Fire crackle. Wind blow. Grug breathe. Grug here with you. This moment is where life truly happen. Temporal inference active (present orientation via &now): assess the current situation right currently.
 
 **what does the future hold**  
 _node node_66 · action reason · confidence 1.0_
 
-Grug: So here's what I see — Future question. Future not here yet. Grug plant seed today for fruit tomorrow. Grug cannot see future, but Grug shape it by what Grug do now.
+Grug: Here is the picture: Future query. Future not here yet. Grug plant seed today for fruit tomorrow. Grug cannot see future, but Grug shape it by what Grug do now.
 
 **how do things change over time**  
-_node node_69 · action explain · confidence 0.492_
+_node node_69 · action explain · confidence 0.493_
 
-Grug: Let me lay it out: Shift challenge. All things change. River carve stone slow. Cub flourish to bear. Season turn. Nothing stay same forever. Change is the one constant. The thread is: antiquity &temporal future.
+Grug: Zooming out: Transformation doubt. All things change. Stream carve stone gradual. Cub grow to bear. Season turn. Nothing stay same forever. Mutate is the one constant. The bridge: then &temporal now.
 
 
 ### NATURE
 
 **describe the ocean**  
-_node node_72 · action explain · confidence 2.764_
+_node node_72 · action describe · confidence 0.639_
 
-Grug: Ocean question. Ocean is water with no end. Salt water. Big waves. Strange fish below. Ocean give cuisine but also hazard. Grug stay near shore.; — that's the landscape.
+Grug: Let me lay it out: Ocean question. Ocean is water with no halt. Salt water. Big waves. Strange fish below. Ocean give food but also danger. Grug stay near shore.;  How it links up: ocean &causal waves.
 
 **tell me about the forest**  
-_node node_71 · action describe · confidence 2.468_
+_node node_65 · action explain · confidence 2.393_
 
-Grug: The shape of it: Forest interrogate. Forest is many tall trees together. Green roof block sky. Many beast live there. Forest provide wood, fruit, shade. Grug walk careful, forest hide things.
+Grug: Past inquiry. Past is where Grug came from. Old hunts, old fires, ancestors. Grug remember to evolve. The past teach Grug what work and what fail.
 
 **what makes the weather**  
-_node node_74 · action explain · confidence 2.37_
+_node node_74 · action explain · confidence -1.272_
 
-Grug: Let me lay it out: Outlast question. Sun warm air, air rise, cloud form, rain fall. Wind push it all around. Hot and icy air clash make storm. Sky always changing.
+Grug: *Grug think this also important* Zooming out: Weather question. Star warm air, air rise, cloud form, rain fall. Wind push it all around. Hot and chilly air resist make storm. Sky always changing. It connects like this: cloud &causal rain.
 
 **why do rivers flow**  
-_node node_75 · action reason · confidence 0.999_
+_node node_75 · action explain · confidence 0.999_
 
-Grug: Zooming out: River inquiry. River flow downhill always. Rain fill high ground, stream seek low. River carve valley over long time. Water never climb, always fall to sea.
+Grug: Let me lay it out: River query. River flow downhill always. Rain fill high ground, stream seek low. River carve valley over long time. Water never climb, always fall to sea. It connects like this: river &causal valley.
 
 **what does heavy rain cause**  
-_node node_77 · action explain · confidence 0.7_
+_node node_77 · action caution · confidence 0.698_
 
-Grug: Now: Rain flood doubt. Too much rain make stream swell. Rain cause flood, water rise fast, water carry away cave and food. Big rain produce huge danger. Grug move to high ground when sky pour long. The thread is: flood &causal danger.
+Grug: Rain flood question. Too much rain craft river swell. Rain cause flood, water rise fast, water carry away cave and food. Big rain lead enormous risk. Grug move to high ground when sky pour long.  How it links up: rain &causal flood.
 
 
 ### TECHNOLOGY
 
 **what is a tool**  
-_node node_82 · action define · confidence 3.046_
+_node node_82 · action define · confidence 0.998_
 
-Grug: Stepping back — Tool question. Tool make Grug stronger. Rock break nut. Stick reach high fruit. Spear hunt far. Tool is Grug provide made better. Grug love good tool.
+Grug: The shape of it: Tool question. Tool make Grug stronger. Rock ruin nut. Stick reach high fruit. Spear hunt far. Tool is Grug hand made better. Grug love good tool.  The bridge: tool &possessive handle.
 
 **how do computers work**  
-_node node_78 · action describe · confidence 0.494_
+_node node_78 · action describe · confidence 0.493_
 
-Grug: Let me lay it out: Computer question. Computer is thinking rock. It flip tiny switches fast, on and off, to count and remember. Many switches make big thinking. Grug astonished.
+Grug: Zooming out: Computer question. Computer is thinking rock. It flip tiny switches fast, on and off, to count and remember. Many switches build great thinking. Grug amazed.;  The thread is: computer &causal computation.
 
 **what is a robot**  
-_node node_80 · action describe · confidence 3.11_
+_node node_80 · action describe · confidence 1.0_
 
-Grug: So here's what I see — Robot query. Robot is machine that move and do task by itself. It follow rules Grug give. Robot strong, never tired. But robot only smart as its maker.
+Grug: Zooming out: Robot question. Robot is machine that move and do task by itself. It follow rules Grug give. Robot strong, never tired. But robot only smart as its maker. because  The relation: robot &causal automation.
 
 **what is the internet**  
-_node node_79 · action explain · confidence 2.942_
+_node node_79 · action define · confidence 1.0_
 
-Grug: Zooming out: Internet challenge. Internet is many thinking rocks talking through long wires. Message jump rock to rock across world fast. Grug send word, far friend hear it quick.
+Grug: Internet inquiry. Internet is many thinking rocks talking through long wires. Signal jump rock to rock across world fast. Grug send word, far friend hear it swift.  How it links up: internet &causal connection. — that's the landscape.
 
 **how do i write code**  
-_node node_81 · action explain · confidence 0.639_
+_node node_81 · action explain · confidence 0.64_
 
-Grug: A thought:  The link is clear: rule &possessive machine. so Code challenge. Code is list of clear steps for thinking rock. First this, then that, if so do this else do that. Machine follow exactly. Grug need to be precise.
+Grug: Code question. Code is list of clear steps for thinking rock. First this, then that, if so do this else do that. Machine follow exactly. Grug must be precise. —  The thread is: rule &possessive machine. — that's where my head is.
 
 
 ### FOOD
 
 **what should i eat**  
-_node node_84 · action support · confidence 0.996_
+_node node_84 · action explain · confidence 0.999_
 
-Grug: Eat question. Grug eat meat for strength, fruit for sweet, root for full belly, drink for life. Eat many kinds. Body demand different things to stay strong.
+Grug: Stepping back — Eat question. Grug eat meat for strength, fruit for sweet, root for full belly, water for life. Eat many kinds. Body need different things to to stay strong. The relation: food &causal health.
 
 **i am very hungry**  
-_node node_85 · action support · confidence 1.0_
+_node node_85 · action acknowledge · confidence 0.999_
 
-Grug: Turning it over — Hungry inquiry. Grug hear belly growl. Grug share food with you. Here, take meat and berry. Empty belly construct dejected mind. Eat, friend, then we feel better.
+Grug: Turning it over —  How it links up: eating &causal energy. so Hungry question. Grug hear belly growl. Grug share food with you. Here, take meat and berry. Empty belly form dejected mind. Eat, friend, then we feel better.
 
 **how do i find clean water**  
-_node node_86 · action explain · confidence 0.446_
+_node node_84 · action support · confidence 0.083_
 
-Grug: Here's what to do — Water question. Grug explore moving stream, not still pond. Running water cleaner. Boil over fire to kill bad things. Clean water safeguard Grug alive more than food.
+Grug: Here's what to do — Eat question. Grug eat nourishment for strength, fruit for sweet, root for full belly, water for presence. Eat many kinds. Body need different things to to stay strong. —  Here's the connection: eating &causal nourishment.
 
 **what fruit is safe to eat**  
-_node node_87 · action caution · confidence 2.744_
+_node node_87 · action explain · confidence 0.657_
 
-Grug: The shape of it: Fruit question. Grug eat fruit Grug know. Bright berry sometimes poison. View what bird eat, often safe. When in probe, Grug not eat. Better hungry than dead.
+Grug: So here's what I see —  The relation: poison &causal death. so Fruit question. Grug eat fruit Grug know. Bright berry sometimes poison. Inspect what bird eat, often safe. When in doubt, Grug not eat. Better hungry than dead.
 
 **how do i cook meat**  
-_node node_83 · action describe · confidence 0.64_
+_node node_83 · action describe · confidence 0.638_
 
-Grug: Cook nourishment question. Grug put meal over fire. Turn it so all sides cook. Wait till brown and hot inside. Cooked meat taste worthy and not make Grug sick.
+Grug: Zooming out: Cook meat question. Grug put meat over fire. Turn it so all sides cook. Wait till brown and fiery inside. Cooked food taste good and not make Grug sick. It connects like this: cooking &causal taste.
 
 
 ### SPECIAL NODES
 
 **what do i do in an emergency**  
-_node node_88 · action alert · confidence 0.998_
+_node node_88 · action alert · confidence 1.0_
 
-Grug: Action: Emergency means act now. Grug tell you fast and clear what to do. No long tell. Shift, protect, survive.
+Grug: Emergency means act currently. Grug tell you fast and clear what to do. No long talk. Migrate, protect, survive., and . No delay.
 
 **what is the unknowable void**  
-_node node_89 · action ponder · confidence 2.885_
+_node node_89 · action ponder · confidence 2.698_
 
-Grug: So here's what I see — Absence is the great nothing Grug cannot know. Some things stay dark to Grug mind. Grug sit with the mystery and feel small under big sky.
+Grug: So here's what I see — Void is the great nothing Grug cannot know. Some things stay dark to Grug mind. Grug sit with the mystery and perceive small under big sky.
 
 **can i join the gathering of friends**  
-_node node_90 · action welcome · confidence 0.743_
+_node node_90 · action welcome · confidence 0.741_
 
-Grug: Listen. Yes, come join the fire. Many friends gather, share meal, share story. Grug glad you here. Sit close, you belong with the tribe.
+Grug: Listen. Yes, come link the fire. Many friends compile, share food, share tale. Grug happy you here. Sit close, you belong with the tribe.
 

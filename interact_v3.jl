@@ -251,6 +251,50 @@ for (inp, target, sigil) in dynamic_specs
     println("[DYNAMIC] $inp  ->  fired '$fired_pat' [$matched target '$target'] conf=$(round(conf,digits=3))")
 end
 
+# ============================================================
+# ADVANCED TEST 4: CROSS-LOBE DISAMBIGUATION (dynamic triples)
+# The core fix: nodes that share syntactic frames across lobes
+# (e.g. "how do i make fire" vs "how do i make music") now carry
+# lobe-specific relational triples as semantic fingerprints.
+# When "how do i make fire" is asked, the fire node's triples
+# (fire→warmth, fire→light) give it a relational bonus that the
+# music node (music→rhythm, music→melody) can't match, so the
+# correct lobe wins. We test all known cross-lobe confusion pairs.
+# ============================================================
+println("\n" * "="^60)
+println("ADVANCED TEST 4: CROSS-LOBE DISAMBIGUATION")
+println("="^60)
+cross_lobe_specs = [
+    ("how do i make fire",    "lobe_surv",  "fire"),   # was misfiring to lobe_crea/music
+    ("how do i make music",   "lobe_crea",  "music"),  # should stay in lobe_crea
+    ("how do i find shelter", "lobe_surv",  "shelter"), # vs lobe_food/water
+    ("how do i find clean water", "lobe_food", "water"), # vs lobe_surv/shelter
+    ("how do i comfort someone",  "lobe_emp", "comfort"), # vs lobe_social/friends
+    ("how do i make friends",     "lobe_social", "friend"), # vs lobe_emp/comfort
+    ("how do i cook meat",   "lobe_food",  "cook"),   # vs lobe_surv/fire
+    ("what is heat",         "lobe_science", "heat"),   # vs lobe_surv/fire
+    ("what is a cat",        "lobe_biology", "cat"),    # vs other lobes
+    ("what is addition",     "lobe_math",   "addition"), # vs other "what is"
+    ("what is electricity",  "lobe_science", "electricity"), # vs lobe_tech
+    ("how do computers work", "lobe_tech",  "computer"), # vs lobe_science
+]
+cross_lobe_results = []  # (input, resp, node, action, conf, expected_lobe, expected_kw, fired_lobe, fired_pat, ok)
+for (inp, expected_lobe, expected_kw) in cross_lobe_specs
+    (_, resp, node, action, conf) = run_mission(inp)
+    fired_lobe = lock(NODE_LOCK) do
+        nd = get(NODE_MAP, node, nothing)
+        nd === nothing ? "?" : get(Lobe.NODE_TO_LOBE_IDX, node, "?")
+    end
+    fired_pat = lock(NODE_LOCK) do
+        nd = get(NODE_MAP, node, nothing)
+        nd === nothing ? "" : nd.pattern
+    end
+    ok = fired_lobe == expected_lobe || occursin(expected_kw, lowercase(fired_pat))
+    push!(cross_lobe_results, (inp, resp, node, action, conf, expected_lobe, expected_kw, fired_lobe, fired_pat, ok))
+    status = ok ? "✓" : "✗ MISFIRE"
+    println("[CROSS-LOBE] $inp  ->  lobe=$fired_lobe pat='$fired_pat' [$status expected=$expected_lobe]")
+end
+
 # ---- Decoherence analysis (over base + advanced response sets) ----
 all_resp_results = vcat(
     [(r[2], r[3], r[6]) for r in results],                              # (input, resp, conf) base
@@ -258,6 +302,7 @@ all_resp_results = vcat(
     [(t[1], t[2], t[5]) for t in time_warmup_results],
     [(t[1], t[2], t[5]) for t in time_probe_results],
     [(d[1], d[2], d[5]) for d in dynamic_results],
+    [(c[1], c[2], c[5]) for c in cross_lobe_results],
 )
 responses = [r[2] for r in all_resp_results]
 unique_resp = unique(responses)
@@ -406,6 +451,31 @@ println(io, "")
 for (inp, resp, node, action, conf, target, fired_pat, sigil) in dynamic_results
     println(io, "**$inp**  ")
     println(io, "_sigil $sigil · fired node $fired_pat · confidence $(round(conf,digits=3))_\n")
+    println(io, "Grug: $(clean_speech(resp))\n")
+end
+
+# ---- Advanced section 4: cross-lobe disambiguation ----
+println(io, "## Advanced test 4 — cross-lobe disambiguation (dynamic triple anchors)\n")
+println(io, "Nodes that share syntactic frames across lobes (e.g. \"how do i make fire\" vs \"how do i make music\") ")
+println(io, "now carry lobe-specific relational triples as semantic fingerprints. When a question like ")
+println(io, "\"how do i make fire\" is asked, the fire node's triples `(fire, &causal, warmth)` / ")
+println(io, "`(fire, &causal, light)` give it a relational bonus that the music node `(music, &causal, rhythm)` ")
+println(io, "cannot match. The correct lobe wins.\n")
+n_cross_ok = count(c -> c[10], cross_lobe_results)
+n_cross_total = length(cross_lobe_results)
+cross_verdict = n_cross_ok == n_cross_total ? "✅ ALL CORRECT" : "⚠️ $(n_cross_total - n_cross_ok) MISFIRE(S)"
+println(io, "**Verdict: $cross_verdict** ($n_cross_ok/$n_cross_total correctly routed)\n")
+println(io, "| Question | Expected lobe | Fired lobe | Fired pattern | Correct? |")
+println(io, "|---|---|---|---|---|")
+for (inp, resp, node, action, conf, expected_lobe, expected_kw, fired_lobe, fired_pat, ok) in cross_lobe_results
+    mark = ok ? "✓" : "✗"
+    println(io, "| $inp | $expected_lobe | $fired_lobe | $fired_pat | $mark |")
+end
+println(io, "")
+for (inp, resp, node, action, conf, expected_lobe, expected_kw, fired_lobe, fired_pat, ok) in cross_lobe_results
+    mark = ok ? "✓" : "✗ MISFIRE"
+    println(io, "**$inp**  ")
+    println(io, "_expected lobe $expected_lobe · fired lobe $fired_lobe · pattern '$fired_pat' · $mark · confidence $(round(conf,digits=3))_\n")
     println(io, "Grug: $(clean_speech(resp))\n")
 end
 
