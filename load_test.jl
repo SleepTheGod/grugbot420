@@ -1,26 +1,18 @@
-#!/usr/bin/env julia
-# load_test.jl — Verify Main.jl loads and the v81 specimen loads without errors.
-using Pkg
-Pkg.activate(".")
-
-println("=== LOADING Main.jl ===")
-flush(stdout)
 include("src/Main.jl")
-println("=== Main.jl LOADED OK ===")
-flush(stdout)
-
-println("=== LOADING v81 specimen ===")
-flush(stdout)
-res = load_specimen_from_file!("comprehensive_specimen_v81.json")
-println(res)
-println("=== specimen LOADED ===")
-flush(stdout)
-
-# Snapshot state
-_n = lock(() -> length(NODE_MAP), NODE_LOCK)
-println("NODE_MAP count: $_n")
-_alive = lock(() -> count(n -> !n.is_grave, values(NODE_MAP)), NODE_LOCK)
-println("Alive nodes: $_alive")
-println("Lobes: $(length(Lobe.LOBE_REGISTRY))")
-println("=== ALL OK ===")
-flush(stdout)
+result = load_specimen_from_file!(joinpath(@__DIR__, "specimens", "comprehensive_v2_specimen.json"))
+println("LOAD RESULT: $result")
+println("Nodes loaded: ", length(NODE_MAP))
+println("Lobes loaded: ", length(Lobe.LOBE_REGISTRY))
+println("Bridges loaded: ", length(BRIDGE_MAP))
+println("Sigils in table: ", length(_ENGINE_SIGIL_TABLE.entries))
+println("Rules loaded: ", length(AIML_DROP_TABLE))
+println("Thesaurus seeds: ", length(Thesaurus._THESAURUS_MAP))
+println("Inhibitions: ", length(InputQueue._INHIBITION_SET))
+println("AIML lobes: ", length(AIMLNodeSystem.get_registered_lobes()))
+println("MLP rules: ", length(EphemeralMLP._MLP_RULES))
+println("Automaton rules: ", length(EphemeralAutomaton._AUTOMATON_RULES))
+println("Message history: ", length(_MESSAGE_HISTORY))
+println("Coherence config weight: ", CoherenceField.COHERENCE_FIELD_CONFIG.weight)
+println("Time orientation: ", _GLOBAL_TIME_ORIENTATION[])
+println("Relational jitter enabled: ", RelationalJitter.is_jitter_enabled())
+println("Answer modes: ", sort(collect(keys(_ANSWER_MODE_CONFIG))))

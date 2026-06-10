@@ -1910,7 +1910,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     evaluated_rules = String[]
     try
-        for rule in lock(engine._DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end
+        for rule in lock(_DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end
             # Parse a leading [action_name "..."] tag, if present.
             # Pattern: optional whitespace, '[', action_name (word chars +
             # hyphen/underscore), at least one space, then a quote. This is
@@ -6343,7 +6343,7 @@ function save_specimen_to_file!(filepath::String)::String
     # GRUG: r.text and r.fire_probability are the actual struct field names.
     # Academic: Previously used r.rule_text / r.fire_prob which would cause a
     # Julia field access error at runtime. Fixed in v2.1.
-    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(engine._DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end]
+    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(_DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end]
     specimen["rules"] = rule_list
 
     # ── 4. MESSAGE HISTORY ────────────────────────────────────────────────
@@ -7626,7 +7626,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # Wipe AIML rules
-    lock(engine._DROP_TABLE_LOCK) do; empty!(AIML_DROP_TABLE) end
+    lock(_DROP_TABLE_LOCK) do; empty!(AIML_DROP_TABLE) end
 
     # GRUG: Wipe AIML node tribes. All lobe registrations, populations, cycle state.
     # A brain transplant must clear executive memory too, not just cave nodes.
@@ -8065,7 +8065,7 @@ function load_specimen_from_file!(filepath::String)::String
             try
                 rtext = String(rentry["text"])
                 rprob = Float64(get(rentry, "prob", 1.0))
-                push!(lock(engine._DROP_TABLE_LOCK) do; AIML_DROP_TABLE end, StochasticRule(rtext, rprob))
+                push!(lock(_DROP_TABLE_LOCK) do; AIML_DROP_TABLE end, StochasticRule(rtext, rprob))
                 n_rules += 1
             catch e
                 error("!!! FATAL: /loadSpecimen failed to restore rule: $e !!!")
