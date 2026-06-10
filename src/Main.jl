@@ -439,6 +439,16 @@ const RUNTIME_ID_COUNTER   = Atomic{Int}(0)
 end
 const MESSAGE_HISTORY_LOCK = ReentrantLock()  # GRUG: Lock for phagy forensics read-access to MESSAGE_HISTORY
 
+# GRUG: Capture the most recent AIML spoken output so external harnesses
+# (interaction scripts, REPLs, tests) can read the actual response text
+# instead of scraping stdout or the one-line digest stored in history.
+# Written by process_mission at the scaffold-print site. Read-only for callers.
+const _LAST_AIML_OUTPUT      = Ref("")
+const _LAST_AIML_OUTPUT_LOCK = ReentrantLock()
+const _LAST_FIRED_NODE       = Ref("")
+const _LAST_PRIMARY_ACTION   = Ref("")
+const _LAST_CONFIDENCE       = Ref(0.0)
+
 # GRUG v7.12: Track which messages contributed to the LAST /mission's
 # Fresh Memory so /right and /wrong can reinforce/punish them. Reset at
 # the top of every mission cycle via refresh_message_intensities!.
@@ -5227,6 +5237,15 @@ function process_mission(mission_text::String)
         # strain → ask question → user answers → strain resolved.
         ask_output = generate_ask_question(mission_text; reason="empty_cave")
         println("\n🤖 AIML Ask Question:\n$ask_output")
+        try
+            lock(_LAST_AIML_OUTPUT_LOCK) do
+                _LAST_AIML_OUTPUT[]    = ask_output
+                _LAST_FIRED_NODE[]     = ""
+                _LAST_PRIMARY_ACTION[] = "ask"
+                _LAST_CONFIDENCE[]     = 0.0
+            end
+        catch
+        end
         return
     end
 
@@ -5749,6 +5768,27 @@ function process_mission(mission_text::String)
         @error "[MAIN] Vigilance dispatch FAILED (non-fatal, scaffold unmodified): $e"
     end
     println("\n🤖 AIML Output Scaffold:\n$output")
+
+    # GRUG: Capture the actual spoken output + winning-vote metadata so
+    # external harnesses can read the real response (not the stdout scrape
+    # or the one-line history digest). Non-fatal: never breaks the cycle.
+    try
+        lock(_LAST_AIML_OUTPUT_LOCK) do
+            _LAST_AIML_OUTPUT[] = output
+            if !isempty(contributing_votes)
+                _win = contributing_votes[1]
+                _LAST_FIRED_NODE[]     = _win.node_id
+                _LAST_PRIMARY_ACTION[] = String(_win.action)
+                _LAST_CONFIDENCE[]     = Float64(_win.confidence)
+            else
+                _LAST_FIRED_NODE[]     = ""
+                _LAST_PRIMARY_ACTION[] = ""
+                _LAST_CONFIDENCE[]     = 0.0
+            end
+        end
+    catch e
+        @warn "[MAIN] last-output capture failed (non-fatal): $e"
+    end
 
     # ── AUTOGROWTH: LIVE CONVERSATION EVIDENCE ACCUMULATION ──────────────
     # GRUG: Every user message carries evidence of gaps. Accumulate now.
@@ -7160,10 +7200,15 @@ function save_specimen_to_file!(filepath::String)::String
     # are stored as lookup table entries, not nodes. Without persisting
     # them, reload forgets every math fact Grug ever learned.
     try
+        # BUGFIX (specimen-build-v3): serialize_flashcards() takes NO args and
+        # returns ALL lobes at once (Dict lobe_id => Vector{card}). The previous
+        # per-lobe loop passed a lobe_id positionally, hitting a MethodError on
+        # the first lobe and aborting the entire flashcard-save block — so NO
+        # flashcards were ever persisted. Call it once and use the result.
         _fc_all = Dict{String, Any}()
         _fc_count = 0
-        for (lobe_id, lrec) in Lobe.LOBE_REGISTRY
-            _fc_data = LobeTable.serialize_flashcards(lobe_id)
+        _fc_serialized = LobeTable.serialize_flashcards()
+        for (lobe_id, _fc_data) in _fc_serialized
             if !isempty(_fc_data)
                 _fc_all[lobe_id] = _fc_data
                 _fc_count += length(_fc_data)
