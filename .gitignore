@@ -121,7 +121,6 @@ specimens/v7*_decoherence_*.md
 test_interaction_v*.jl
 test_idle_systems_*.jl
 test_mitosis*.jl
-test_mlp_*.jl
 test_smoke_relational.jl
 test_v727_session.jl
 test_verify.jl

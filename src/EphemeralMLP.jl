@@ -90,7 +90,8 @@ export to_specimen_dict, from_specimen_dict!
 export register_right_feedback!, register_wrong_feedback!
 export get_activation_mode, get_novelty_score
 export set_observation_threshold!, get_observation_threshold
-export get_strain_energy, is_hippocampal_warrant_active, dampen_strain!
+export get_strain_energy, is_hippocampal_warrant_active, dampen_strain!, get_last_result
+export get_novelty_tracker_stats, get_input_correlation_stats, get_active_rule_hints
 export STRAIN_NOVELTY_WEIGHT, STRAIN_QUALITY_WEIGHT, STRAIN_THRESHOLD, STRAIN_FLOOR, STRAIN_CEILING
 export MLP_TRANSFORM_FUZZY, MLP_TRANSFORM_SOLID
 export phase_mix_hidden!
@@ -2370,6 +2371,11 @@ function get_mlp_status()::Dict{String, Any}
             "observation_threshold"  => st.observation_threshold,
             "adjustments_enabled"   => st.adjustments_enabled,
             "input_correlations"    => st.input_correlations.total_correlations,
+            "input_correlation_hashes" => length(st.input_correlations.input_quality_ema),
+            "input_correlation_mean_quality" => isempty(st.input_correlations.input_quality_ema) ? 0.5 :
+                round(sum(values(st.input_correlations.input_quality_ema)) / length(st.input_correlations.input_quality_ema); digits=4),
+            "novelty_history_mean"   => isempty(st.novelty_tracker.history) ? 0.5 :
+                round(sum(st.novelty_tracker.history) / length(st.novelty_tracker.history); digits=4),
             "last_user_input"       => st.last_user_input,
             "strain_energy"         => round(st.strain_energy; digits=4),
             "hippocampal_warrant"   => st.hippocampal_warrant_active,
@@ -2468,6 +2474,132 @@ function dampen_strain!(factor::Float64=0.5)
         # Re-evaluate warrant: if strain dropped below threshold, warrant deactivates.
         st.hippocampal_warrant_active = st.strain_energy >= STRAIN_THRESHOLD && st.adjustments_enabled
         return (old=old_strain, new=st.strain_energy)
+    end
+end
+
+"""
+    get_last_result()::Dict{String, Float64}
+
+Return the last MLP output head values (semantic_score, relevance_score,
+disambiguation) from the most recent transform. Used by idle-cycle
+AutoLinker and AutoGrowth to get MLP signal without a full status call.
+
+GRUG: Lightweight getter for the three "extra" heads. The active path
+      computes these from the mlp_result dict already, but the idle
+      path doesn't have a fresh transform — it uses the LAST values.
+"""
+function get_last_result()::Dict{String, Float64}
+    st = _state()
+    lock(st.lock) do
+        return Dict{String, Float64}(
+            "semantic_score"   => st.last_semantic_score,
+            "relevance_score"  => st.last_relevance_score,
+            "disambiguation"   => st.last_disambiguation,
+        )
+    end
+end
+
+
+
+# ==============================================================================
+# DEEP MLP GETTERS — for AutoGrowth/AutoLinker deeper integration
+# ==============================================================================
+
+"""
+    get_novelty_tracker_stats()::Dict{String, Any}
+
+Return statistics from the novelty tracker for deeper AutoGrowth integration.
+Provides: total_observations, unique_hashes_tracked, history_mean (recent
+novelty average), history_variance (recent novelty variance).
+
+GRUG: The novelty tracker knows how familiar the brain is with recent inputs.
+      High history_mean = mostly novel inputs recently = brain is exploring
+      new territory = stronger growth signal. Low variance = stuck in a rut.
+      AutoGrowth can use this to modulate evidence intensity.
+"""
+function get_novelty_tracker_stats()::Dict{String, Any}
+    st = _state()
+    lock(st.lock) do
+        tracker = st.novelty_tracker
+        h_mean = isempty(tracker.history) ? 0.5 :
+                 sum(tracker.history) / length(tracker.history)
+        h_var = if length(tracker.history) >= 2
+            mean_h = h_mean
+            sum((x - mean_h)^2 for x in tracker.history) / length(tracker.history)
+        else
+            0.0
+        end
+        return Dict{String, Any}(
+            "total_observations"   => tracker.total_observations,
+            "unique_hashes"        => length(tracker.hash_counts),
+            "history_mean"         => round(h_mean; digits=4),
+            "history_variance"     => round(h_var; digits=4),
+            "history_length"       => length(tracker.history),
+        )
+    end
+end
+
+"""
+    get_input_correlation_stats()::Dict{String, Any}
+
+Return statistics from the input correlation tracker for deeper AutoGrowth
+integration. Provides: total_correlations, num_input_hashes (distinct inputs
+seen), mean_quality_ema (average EMA quality across all known inputs).
+
+GRUG: Input correlations tell us which inputs the brain has LEARNED to handle
+      well. When mean_quality_ema is high, the brain's existing knowledge is
+      well-established — gaps in that knowledge are MORE meaningful because
+      they represent REAL unknowns, not just noise. AutoGrowth should boost
+      evidence for gaps when correlation quality is high.
+"""
+function get_input_correlation_stats()::Dict{String, Any}
+    st = _state()
+    lock(st.lock) do
+        ic = st.input_correlations
+        n_hashes = length(ic.input_quality_ema)
+        mean_q_ema = if n_hashes > 0
+            sum(values(ic.input_quality_ema)) / n_hashes
+        else
+            0.5  # neutral default
+        end
+        return Dict{String, Any}(
+            "total_correlations"   => ic.total_correlations,
+            "num_input_hashes"     => n_hashes,
+            "mean_quality_ema"     => round(mean_q_ema; digits=4),
+        )
+    end
+end
+
+"""
+    get_active_rule_hints()::Vector{Dict{String, Any}}
+
+Return hints from recently-active MLP rules that can inform growth type
+selection. Each hint has: rule_id, transform_type (:fuzzy or :solid),
+payload (arbitrary data the rule carries), fire_count, and last_fire_time.
+
+GRUG: Rules are the MLP's way of saying "I've seen this pattern before and
+      here's what I know about it." If a rule fires frequently with :fuzzy
+      type, the pattern is still uncertain = growth should favor :match type.
+      If a rule fires with :solid type, the pattern is well-established but
+      incomplete = growth should favor :thesaurus or :sigil type. The payload
+      can carry arbitrary hints from user-defined rules.
+"""
+function get_active_rule_hints()::Vector{Dict{String, Any}}
+    st = _state()
+    lock(st.lock) do
+        hints = Dict{String, Any}[]
+        for (rid, rule) in st.rules.rules
+            if rule.enabled && rule.fire_count > 0
+                push!(hints, Dict{String, Any}(
+                    "rule_id"        => rid,
+                    "transform_type" => String(rule.transform_type),
+                    "payload"        => copy(rule.payload),
+                    "fire_count"     => rule.fire_count,
+                    "last_fire_time" => rule.last_fire_time,
+                ))
+            end
+        end
+        return hints
     end
 end
 

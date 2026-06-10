@@ -148,6 +148,31 @@ const WORD_CO_OCCUR_INCREMENT   = 0.7
 # Must match engine.jl MAX_BRIDGES = 4.
 const ENGINE_MAX_BRIDGES        = 4
 
+# ── GRUG v10: NEW MLP-signal evidence thresholds ──
+# GRUG: When mlp_disambiguation exceeds this, cross-lobe pairs get bonus evidence.
+# High disambiguation = the MLP thinks there are multiple possible interpretations
+# = nodes that disambiguate each other should be linked.
+const DISAMBIGUATION_BRIDGE_THRESHOLD = 0.60
+
+# GRUG: When mlp_relevance_score is BELOW this, the MLP thinks the current
+# relevance mapping is weak = cross-lobe pairs that might restore relevance
+# get bonus evidence. Low relevance = gap = link opportunity.
+const RELEVANCE_CROSS_LOBE_THRESHOLD = 0.45
+
+# GRUG: Intensity increment for disambiguation-bridge evidence.
+# When MLP disambiguation is high, pairs of co-fired nodes get this per pair.
+const DISAMBIGUATION_BRIDGE_INCREMENT = 0.4
+
+# GRUG: Intensity increment for relevance-cross-lobe evidence.
+# When MLP relevance is low, cross-lobe co-fired pairs get this bonus.
+const RELEVANCE_CROSS_LOBE_INCREMENT = 0.5
+
+# GRUG: Intensity increment for chatter residual co-occurrence evidence.
+# ChatterResiduals detects word pairs that co-occur in vote-stealing context.
+# Each pair gets its intensity * this increment as link evidence.
+const NOVELTY_CO_FIRE_BOOST = 0.4   # GRUG v10: boost co-fire evidence during high novelty
+const CHATTER_RESIDUAL_INCREMENT = 0.6
+
 # ==============================================================================
 # DATA STRUCTURES
 # ==============================================================================
@@ -247,6 +272,22 @@ Evidence sources (each is a kwarg):
   - strain_nodes: Vector{String} — node IDs currently under strain
   - co_occur_map: Dict{Tuple{String,String}, Int} — word co-occurrence from AutoGrowth
   - co_activation_pairs: Vector{Tuple{String,String,Float64}} — explicit (id_a, id_b, intensity) pairs from CO_ACC
+  - mlp_disambiguation: Float64 — EphemeralMLP head 4 disambiguation score (0-1)
+  - mlp_relevance_score: Float64 — EphemeralMLP head 3 relevance score (0-1)
+  - chatter_co_occur_pairs: Vector{Tuple{String,String,Float64}} — ChatterResiduals co-occurrence (word_a, word_b, intensity)
+
+EVIDENCE SOURCES (full list):
+  a. CO-FIRING — nodes that fire in the same scan cycle
+  b. INPUT CO-OCCURRENCE — nodes touched by the same user input
+  c. SYNONYM BRIDGE — nodes whose patterns are thesaurus synonyms
+  d. OPPOSING-LOBE CO-ACTIVATION — cross-lobe nodes co-activated
+  e. STRAIN PAIR — two nodes both registering strain from novel input
+  f. ATTACHMENT NEIGHBOR — indirect: A→B→C suggests A↔C
+  g. CO-OCCURRENCE MAP — word-level co-occurrence implies node-level link
+  h. EXPLICIT CO-ACTIVATION PAIRS — direct pair evidence from RelationalGovernance
+  i. DISAMBIGUATION BRIDGE — MLP head 4: high disambiguation → co-fired pairs are disambiguators
+  j. RELEVANCE CROSS-LOBE — MLP head 3: low relevance → cross-lobe pairs fill the gap
+  k. CHATTER RESIDUAL CO-OCCURRENCE — ChatterResiduals underground word pairs
 """
 function accumulate_link_evidence!(;
     co_fired_ids::Vector{String} = String[],
@@ -259,6 +300,12 @@ function accumulate_link_evidence!(;
     strain_nodes::Vector{String} = String[],
     co_occur_map::Dict{Tuple{String,String}, Int} = Dict{Tuple{String,String}, Int}(),
     co_activation_pairs::Vector{Tuple{String,String,Float64}} = Tuple{String,String,Float64}[],
+    # ── GRUG v10: NEW EphemeralMLP signal evidence sources ──
+    mlp_disambiguation::Float64 = 0.5,
+    mlp_relevance_score::Float64 = 0.5,
+    chatter_co_occur_pairs::Vector{Tuple{String,String,Float64}} = Tuple{String,String,Float64}[],
+    # GRUG v10: Deep MLP integration kwarg
+    mlp_novelty_score::Float64 = 0.5,
 )
     t_now = time()
 
@@ -460,6 +507,135 @@ function accumulate_link_evidence!(;
             end
         end
     end
+
+    # ── SOURCE 9: DISAMBIGUATION BRIDGE (MLP head 4) ──────────────────────────
+    # GRUG: When MLP disambiguation is HIGH, the input has multiple possible
+    # interpretations. Nodes that co-fired during ambiguous input should be linked
+    # because they disambiguate each other — together they resolve the ambiguity.
+    # This is the MLP telling us: "these nodes carry complementary signals."
+    if mlp_disambiguation > DISAMBIGUATION_BRIDGE_THRESHOLD && length(co_fired_ids) >= 2
+        # GRUG: Only add evidence for co-fired pairs during high disambiguation.
+        # The MLP detected ambiguity — the co-fired nodes are the disambiguators.
+        for i in 1:length(co_fired_ids)
+            for j in (i+1):length(co_fired_ids)
+                id_a = co_fired_ids[i]
+                id_b = co_fired_ids[j]
+                la = lobe_of_fn(id_a)
+                lb = lobe_of_fn(id_b)
+                # GRUG: Cross-lobe disambiguation pairs are especially valuable —
+                # they provide ALTERNATIVE perspectives on the same ambiguous input.
+                cross_bonus = (!isnothing(la) && !isnothing(lb) && la != lb) ? 1.5 : 1.0
+                _add_link_evidence!(id_a, id_b,
+                                    DISAMBIGUATION_BRIDGE_INCREMENT * mlp_disambiguation * cross_bonus,
+                                    "disambiguation_bridge", lobe_of_fn;
+                                    force_cross_lobe = cross_bonus > 1.0,
+                                    explicit_lobe_a = something(la, ""),
+                                    explicit_lobe_b = something(lb, ""))
+            end
+        end
+    end
+
+    # ── SOURCE 10: RELEVANCE CROSS-LOBE (MLP head 3) ──────────────────────────
+    # GRUG: When MLP relevance_score is LOW, the current node coverage is weak —
+    # the input doesn't match well to existing knowledge. Cross-lobe pairs that
+    # co-fired during low-relevance input should be linked because they represent
+    # ALTERNATIVE paths that might restore relevance. Low relevance = gap in the
+    # cave's connectivity. Linking the cross-lobe survivors fills that gap.
+    if mlp_relevance_score < RELEVANCE_CROSS_LOBE_THRESHOLD && length(co_fired_ids) >= 2
+        for i in 1:length(co_fired_ids)
+            for j in (i+1):length(co_fired_ids)
+                id_a = co_fired_ids[i]
+                id_b = co_fired_ids[j]
+                la = lobe_of_fn(id_a)
+                lb = lobe_of_fn(id_b)
+                # GRUG: ONLY cross-lobe pairs get this bonus. Same-lobe pairs
+                # already share context — they don't fill the relevance gap.
+                if !isnothing(la) && !isnothing(lb) && la != lb
+                    gap_magnitude = 1.0 - mlp_relevance_score  # GRUG: bigger gap = more evidence
+                    _add_link_evidence!(id_a, id_b,
+                                        RELEVANCE_CROSS_LOBE_INCREMENT * gap_magnitude,
+                                        "relevance_cross_lobe", lobe_of_fn;
+                                        force_cross_lobe = true,
+                                        explicit_lobe_a = la,
+                                        explicit_lobe_b = lb)
+                end
+            end
+        end
+    end
+
+    # ── SOURCE 11: CHATTER RESIDUAL CO-OCCURRENCE ──────────────────────────────
+    # GRUG: ChatterResiduals detects word pairs that co-occur during vote-stealing
+    # and Markov crossover — residual patterns that the normal scan cycle misses.
+    # These are "underground" co-occurrence signals. If two words keep showing up
+    # together in chatter residuals, their nodes should be linked.
+    # Each chatter_co_occur pair is (word_a, word_b, pair_intensity).
+    # We look up which nodes contain each word and add evidence between them.
+    if !isempty(chatter_co_occur_pairs) && !isempty(node_ids_patterns)
+        # GRUG: Build word -> node_id index (same as SOURCE 7)
+        word_to_nodes = Dict{String, Vector{String}}()
+        for (nid, pat) in node_ids_patterns
+            for w in split(lowercase(strip(pat)))
+                if length(w) > 3
+                    if !haskey(word_to_nodes, w)
+                        word_to_nodes[w] = String[]
+                    end
+                    push!(word_to_nodes[w], nid)
+                    word_to_nodes[w] = unique(word_to_nodes[w])
+                end
+            end
+        end
+
+        checked_chatter = Set{String}()
+        for (word_a, word_b, pair_intensity) in chatter_co_occur_pairs
+            if pair_intensity < 0.1
+                continue  # GRUG: Skip negligible chatter
+            end
+            nodes_a = get(word_to_nodes, word_a, String[])
+            nodes_b = get(word_to_nodes, word_b, String[])
+            for na in nodes_a
+                for nb in nodes_b
+                    if na != nb
+                        pk = _pair_key(na, nb)
+                        if !in(pk, checked_chatter)
+                            push!(checked_chatter, pk)
+                            _add_link_evidence!(na, nb,
+                                                CHATTER_RESIDUAL_INCREMENT * pair_intensity * 0.5,
+                                                "chatter_residual", lobe_of_fn)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+
+    # ── SOURCE 12: NOVELTY-AMPLIFIED CO-FIRING (MLP novelty_score) ──────
+    # GRUG v10: When EphemeralMLP novelty_score is high, the brain is seeing
+    # novel input. Co-firing during novel input is MORE significant than
+    # co-firing during familiar input, because novel co-firing represents
+    # new associations forming. We boost co-fire pairs that fired during
+    # high novelty. This is separate from SOURCE 1 (base co-fire) because
+    # it applies a novelty-dependent multiplier.
+    if mlp_novelty_score > 0.6 && length(co_fired_ids) >= 2
+        novelty_mult = 1.0 + NOVELTY_CO_FIRE_BOOST * (mlp_novelty_score - 0.6) / 0.4
+        for i in 1:length(co_fired_ids)
+            for j in (i+1):length(co_fired_ids)
+                id_a = co_fired_ids[i]
+                id_b = co_fired_ids[j]
+                la = lobe_of_fn(id_a)
+                lb = lobe_of_fn(id_b)
+                # GRUG: Cross-lobe novel co-firing = gold + platinum
+                cross_bonus = (!isnothing(la) && !isnothing(lb) && la != lb) ? 1.5 : 1.0
+                _add_link_evidence!(id_a, id_b,
+                                    CO_FIRE_INCREMENT * (novelty_mult - 1.0) * cross_bonus,
+                                    "novelty_co_fire", lobe_of_fn;
+                                    force_cross_lobe = cross_bonus > 1.0,
+                                    explicit_lobe_a = something(la, ""),
+                                    explicit_lobe_b = something(lb, ""))
+            end
+        end
+    end
+
 
     # ── DECAY ───────────────────────────────────────────────────────
     if t_now - _LAST_LINK_DECAY[] > LINK_DECAY_INTERVAL
@@ -830,6 +1006,11 @@ function get_autolink_status_summary()::String
     push!(lines, "║    cross_lobe_bonus=$(CROSS_LOBE_BONUS)x")
     push!(lines, "║    same_lobe_penalty=$(SAME_LOBE_PENALTY)x")
     push!(lines, "║    decay_half_life=$(LINK_DECAY_HALFLIFE)s")
+    push!(lines, "║    disambiguation_bridge_thresh=$(DISAMBIGUATION_BRIDGE_THRESHOLD)")
+    push!(lines, "║    relevance_cross_lobe_thresh=$(RELEVANCE_CROSS_LOBE_THRESHOLD)")
+    push!(lines, "║    chatter_residual_increment=$(CHATTER_RESIDUAL_INCREMENT)")
+    push!(lines, "║    disambiguation_bridge_increment=$(DISAMBIGUATION_BRIDGE_INCREMENT)")
+    push!(lines, "║    relevance_cross_lobe_increment=$(RELEVANCE_CROSS_LOBE_INCREMENT)")
     push!(lines, "║")
 
     if !isempty(top5)
@@ -953,5 +1134,8 @@ export LINK_EVIDENCE_FLOOR, SAME_LOBE_EVIDENCE_FLOOR, LINK_EVIDENCE_SCALE
 export LINK_COINFLIP_CAP, CROSS_LOBE_BONUS, SAME_LOBE_PENALTY
 export LINK_FREQUENCY_FLOOR, MAX_LINK_PER_TURN, LINK_EVIDENCE_CAP
 export LINK_DECAY_HALFLIFE
+export DISAMBIGUATION_BRIDGE_THRESHOLD, RELEVANCE_CROSS_LOBE_THRESHOLD
+export DISAMBIGUATION_BRIDGE_INCREMENT, RELEVANCE_CROSS_LOBE_INCREMENT
+export CHATTER_RESIDUAL_INCREMENT
 
 end # module AutoLinker

@@ -72,7 +72,7 @@ mutable struct EvidenceRecord
     sources::Set{String}         # Which warrant sources noticed this gap
     last_seen::Float64           # Unix timestamp of most recent observation
     first_seen::Float64          # Unix timestamp of first observation
-    growth_type::Symbol          # :match, :time, :aiml, :antimatch, :sigil, :thesaurus, :lobe_whitelist
+    growth_type::Symbol          # :match, :time, :aiml, :antimatch, :sigil, :thesaurus, :lobe_whitelist, :flashcard
     lobe_hint::String            # Inferred lobe for this candidate
     # GRUG: Evidence-biased coinflip needs these to be mutable.
     # Decay happens every cycle — accumulated_intensity shrinks over time.
@@ -90,7 +90,7 @@ end
 
 struct AutoGrowthStats
     pattern::String
-    growth_type::String         # "match", "time", "aiml", "antimatch", "sigil", "thesaurus", "lobe_whitelist"
+    growth_type::String         # "match", "time", "aiml", "antimatch", "sigil", "thesaurus", "lobe_whitelist", "flashcard"
     evidence_intensity::Float64
     evidence_frequency::Int
     coinflip_prob::Float64
@@ -194,6 +194,47 @@ const TIME_NODE_KEYWORDS = Set([
 # 0.5 = 50% chance per qualifying evidence (whitelist growth is cheap).
 const LOBE_WHITELIST_GROWTH_RATE = 0.5
 
+# GRUG v10: Flashcard growth rate. When arithmetic facts accumulate evidence,
+# write to flashcard instead of growing a node. Flashcard growth is CHEAP.
+const FLASHCARD_GROWTH_RATE = 0.8
+
+# GRUG v10: Curiosity growth rate. When curiosity accumulator overflows,
+# it's very likely a real question should be asked. High rate.
+
+# ── GRUG v10: MLP HEAD EVIDENCE THRESHOLDS ─────────────────────────────
+# GRUG: The 3 unused EphemeralMLP output heads now feed evidence.
+# These thresholds control when each head value becomes a signal.
+
+# When semantic_score < this, the brain can't find semantically coherent matches.
+const SEMANTIC_GAP_THRESHOLD        = 0.35
+
+# When relevance_score < this, the brain's responses aren't relevant.
+const RELEVANCE_DROPOUT_THRESHOLD   = 0.30
+
+# When disambiguation > this, the brain sees ambiguity it can't resolve.
+const DISAMBIGUATION_PRESSURE_THRESHOLD = 0.65
+
+# When |ΔΦ| > this and negative, coherence is dropping.
+const COHERENCE_DROP_THRESHOLD      = -0.15
+
+# ── GRUG v10: CURIOSITY ACCUMULATOR ────────────────────────────────────
+# GRUG: Curiosity is passive — it accumulates from the same signals that
+# feed evidence. When it overflows, the system asks a question autonomously.
+const CURIOSITY_OVERFLOW_THRESHOLD  = 0.85
+const CURIOSITY_COOLDOWN            = 300.0   # seconds after quench before next overflow
+const CURIOSITY_PER_TOKEN           = 0.05    # intensity per uncovered token
+const CURIOSITY_NOVELTY_WEIGHT      = 0.10    # novelty contribution to curiosity
+const CURIOSITY_SEMANTIC_WEIGHT     = 0.08    # low-semantic contribution to curiosity
+
+# ── GRUG v10: Deep MLP integration constants ──────────────────────────
+const NOVELTY_SURGE_THRESHOLD    = 0.65   # novelty above this = surge (boost evidence)
+const NOVELTY_SURGE_BOOST        = 0.35   # how much to boost evidence during novelty surge
+const ACTIVATION_RELU_GROWTH_MULT = 1.25  # ReLU path (novel) multiplies growth evidence
+const ACTIVATION_SIGMOID_GROWTH_MULT = 0.8  # sigmoid path (familiar) dampens growth evidence
+const HASH_RARITY_FLOOR         = 3      # patterns seen fewer times than this = rare
+const HASH_RARITY_BOOST         = 0.25   # boost for evidence when pattern is rare
+const CORRELATION_QUALITY_BOOST = 0.20   # boost when input correlations are well-established
+
 # GRUG: Stopwords for token extraction (same set as MitosisMode)
 const STOPWORDS = Set([
     "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
@@ -223,6 +264,14 @@ const _GROWTH_LOG_LOCK = ReentrantLock()
 const _GROWTH_LOG_MAX = 100
 const _CO_OCCUR_MAP = Dict{Tuple{String,String}, Int}()  # (word_a, word_b) -> count
 const _CO_OCCUR_LOCK = ReentrantLock()
+
+# GRUG v10: Curiosity accumulator state — stored in memory, not in evidence Dict.
+# Curiosity is a separate channel that overflows into autonomous questions.
+const _CURIOSITY_BUFFER    = Ref{Vector{String}}(String[])     # queued unknown patterns
+const _CURIOSITY_INTENSITY = Ref{Float64}(0.0)                 # accumulated curiosity (0.0-1.0)
+const _CURIOSITY_QUENCHED  = Ref{Float64}(0.0)                 # timestamp of last quench
+const _CURIOSITY_OVERFLOW_COUNT = Ref{Int}(0)                  # total overflow events
+const _CURIOSITY_LOCK      = ReentrantLock()
 
 # ==============================================================================
 # EVIDENCE ACCUMULATION — called every user message
@@ -268,6 +317,18 @@ function accumulate_evidence!(;
     sigil_table_entries::Dict = Dict{String,Any}(),
     strain_energy::Float64 = 0.0,
     hippocampal_warrant_active::Bool = false,
+    # ── GRUG v10: NEW EphemeralMLP head evidence sources ──
+    mlp_semantic_score::Float64 = 0.5,
+    mlp_relevance_score::Float64 = 0.5,
+    mlp_disambiguation::Float64 = 0.5,
+    coherence_delta_phi::Float64 = 0.0,
+    observer_recurring_gap::Bool = false,
+    observer_gap_pattern::String = "",
+    # GRUG v10: Deep MLP integration kwargs
+    mlp_novelty_score::Float64 = 0.5,
+    mlp_activation_mode::Symbol = :sigmoid,
+    mlp_hash_rarity::Float64 = 0.0,
+    mlp_correlation_quality::Float64 = 0.5,
 )
     isempty(strip(user_text)) && return nothing
 
@@ -421,6 +482,226 @@ function accumulate_evidence!(;
         end
     end
 
+
+    # ── SOURCE 9: SEMANTIC COHERENCE GAP ──────────────────────────────────
+    # GRUG v10: When EphemeralMLP reports low semantic_score, the brain
+    # can't find semantically coherent matches. Stronger than mere silence.
+    if mlp_semantic_score < SEMANTIC_GAP_THRESHOLD && intensity > 0.5
+        semantic_deficit = 1.0 - mlp_semantic_score
+        for tok in tokens
+            if !_is_covered(tok, node_patterns) && length(tok) > 2 && !in(tok, STOPWORDS)
+                _add_evidence!(tok, intensity * semantic_deficit * 0.4, "semantic_gap", :match;
+                              lobe_hint = _infer_lobe_from_token(tok))
+            end
+        end
+    end
+
+    # ── SOURCE 10: RELEVANCE DROPOUT ──────────────────────────────────────
+    # GRUG v10: Low relevance_score means responses aren't relevant.
+    # Often means thesaurus is incomplete - missing synonym connections.
+    if mlp_relevance_score < RELEVANCE_DROPOUT_THRESHOLD
+        relevance_deficit = 1.0 - mlp_relevance_score
+        for tok in tokens
+            if _is_covered(tok, node_patterns)
+                try
+                    expanded = thesaurus_gate_filter(tok)
+                    for syn in expanded
+                        syn_lower = lowercase(strip(syn))
+                        if !_is_covered(syn_lower, node_patterns) && length(syn_lower) > 2
+                            _add_evidence!(syn_lower, intensity * relevance_deficit * 0.3,
+                                          "relevance_dropout", :thesaurus;
+                                          lobe_hint = _infer_lobe_from_token(syn_lower))
+                        end
+                    end
+                catch; end
+            end
+        end
+    end
+
+    # ── SOURCE 11: DISAMBIGUATION PRESSURE ─────────────────────────────────
+    # GRUG v10: High disambiguation means the brain sees ambiguity it
+    # can't resolve. New sigil entries and patterns provide resolution.
+    if mlp_disambiguation > DISAMBIGUATION_PRESSURE_THRESHOLD
+        for (sig_name, _) in sigil_table_entries
+            if occursin(sig_name, lowercase(user_text))
+                _add_evidence!("sigil:$sig_name", intensity * mlp_disambiguation * 0.3,
+                              "disambiguation_pressure", :sigil;
+                              lobe_hint = "default")
+            end
+        end
+        full_pattern = _extract_activator_verb_pattern(user_text)
+        if !isempty(strip(full_pattern)) && length(full_pattern) > 2
+            if !_is_covered(lowercase(full_pattern), node_patterns)
+                _add_evidence!(lowercase(full_pattern), mlp_disambiguation * 0.25,
+                              "disambiguation_pressure", :match;
+                              lobe_hint = _infer_lobe_from_token(full_pattern))
+            end
+        end
+    end
+
+    # ── SOURCE 12: COHERENCE FIELD DELTA ──────────────────────────────────
+    # GRUG v10: Large negative dPhi means coherence dropping. Growth fills gaps.
+    if coherence_delta_phi < COHERENCE_DROP_THRESHOLD
+        coherence_magnitude = abs(coherence_delta_phi)
+        for tok in tokens
+            if !_is_covered(tok, node_patterns) && length(tok) > 2 && !in(tok, STOPWORDS)
+                _add_evidence!(tok, coherence_magnitude * 0.5 * intensity,
+                              "coherence_drop", :match;
+                              lobe_hint = _infer_lobe_from_token(tok))
+            end
+        end
+    end
+
+    # ── SOURCE 13: SELF-OBSERVER PATTERN ───────────────────────────────────
+    # GRUG v10: SelfObserver recurring gap = independent validation signal.
+    if observer_recurring_gap && !isempty(observer_gap_pattern)
+        _add_evidence!(lowercase(strip(observer_gap_pattern)), intensity * 0.5,
+                      "observer_pattern", :match;
+                      lobe_hint = _infer_lobe_from_token(observer_gap_pattern))
+    end
+
+    # ── SOURCE 14: NOVELTY SURGE ── high novelty boosts ALL evidence ──────
+    # GRUG v10: When EphemeralMLP novelty_score is high, the brain is seeing
+    # unfamiliar territory. This doesn't add NEW evidence entries - it MODULATES
+    # the intensity of evidence that was just added. High novelty = "I don't know
+    # what I'm looking at" = more aggressive growth. The intensity boost is
+    # proportional to how novel the input is above the threshold.
+    if mlp_novelty_score > NOVELTY_SURGE_THRESHOLD
+        surge_boost = NOVELTY_SURGE_BOOST * (mlp_novelty_score - NOVELTY_SURGE_THRESHOLD) / (1.0 - NOVELTY_SURGE_THRESHOLD)
+        # GRUG: Apply boost to ALL evidence entries from THIS cycle.
+        # We do this by bumping the intensity of recent evidence entries.
+        lock(_EVIDENCE_LOCK) do
+            for (key, entry) in _EVIDENCE
+                if t_now - entry.last_seen < 2.0  # GRUG: Only entries from this cycle
+                    _EVIDENCE[key] = EvidenceRecord(
+                        entry.pattern,
+                        entry.accumulated_intensity + surge_boost * entry.accumulated_intensity,
+                        entry.frequency,
+                        entry.sources,
+                        t_now,  # refresh last_seen
+                        entry.first_seen,
+                        entry.growth_type,
+                        entry.lobe_hint
+                    )
+                end
+            end
+        end
+    end
+
+    # ── SOURCE 15: ACTIVATION MODE BIAS ── ReLU vs sigmoid modulates growth urgency ──
+    # GRUG v10: The MLP's activation mode tells us HOW it processed this input.
+    # ReLU path = novel/exploratory = brain is in learning mode = growth is more
+    # urgent. Sigmoid path = familiar/refinement = brain is in consolidation mode
+    # = growth is less urgent. This modifies the intensity of evidence entries
+    # from THIS cycle, similar to SOURCE 14 but based on activation mode.
+    activation_mult = if mlp_activation_mode == :relu
+        ACTIVATION_RELU_GROWTH_MULT
+    else
+        ACTIVATION_SIGMOID_GROWTH_MULT
+    end
+    if activation_mult != 1.0
+        lock(_EVIDENCE_LOCK) do
+            for (key, entry) in _EVIDENCE
+                if t_now - entry.last_seen < 2.0  # GRUG: Only entries from this cycle
+                    delta = (activation_mult - 1.0) * entry.accumulated_intensity
+                    _EVIDENCE[key] = EvidenceRecord(
+                        entry.pattern,
+                        max(0.0, entry.accumulated_intensity + delta),
+                        entry.frequency,
+                        entry.sources,
+                        entry.last_seen,
+                        entry.first_seen,
+                        entry.growth_type,
+                        entry.lobe_hint
+                    )
+                end
+            end
+        end
+    end
+
+    # ── SOURCE 16: PATTERN FREQUENCY (NOVELTY TRACKER HASH RARITY) ──────
+    # GRUG v10: The novelty_tracker's hash_counts tell us how many times each
+    # input pattern hash has been seen. The mlp_hash_rarity stat (computed in
+    # Main.jl from get_novelty_tracker_stats) represents what fraction of known
+    # hashes are rare (seen fewer than HASH_RARITY_FLOOR times). When many
+    # patterns are rare, the brain is in exploration mode and evidence for
+    # uncovered tokens should be boosted. Rare patterns = more growth.
+    if mlp_hash_rarity > 0.3
+        rarity_boost = HASH_RARITY_BOOST * mlp_hash_rarity
+        for tok in tokens
+            if !_is_covered(tok, node_patterns) && length(tok) > 2 && !in(tok, STOPWORDS)
+                _add_evidence!(tok, rarity_boost * intensity, "hash_rarity", :match;
+                              lobe_hint = _infer_lobe_from_token(tok))
+            end
+        end
+    end
+
+    # ── SOURCE 17: INPUT CORRELATION QUALITY BOOST ──────────────────────
+    # GRUG v10: When the MLP has well-established input-quality correlations
+    # (high mean_quality_ema), the brain knows its existing knowledge well.
+    # Gaps in well-established knowledge are MORE significant than gaps in
+    # uncharted territory. If correlation quality is high AND there are still
+    # uncovered tokens, those gaps are REAL unknowns, not just noise.
+    # This boosts evidence for thesaurus gap discovery when the brain has
+    # enough correlation data to trust its own gap detection.
+    if mlp_correlation_quality > 0.6
+        quality_boost = CORRELATION_QUALITY_BOOST * (mlp_correlation_quality - 0.5) / 0.5
+        for tok in tokens
+            if _is_covered(tok, node_patterns)
+                try
+                    expanded = thesaurus_gate_filter(tok)
+                    for syn in expanded
+                        syn_lower = lowercase(strip(syn))
+                        if !_is_covered(syn_lower, node_patterns) && length(syn_lower) > 2
+                            _add_evidence!(syn_lower, intensity * quality_boost * 0.3,
+                                          "correlation_quality_boost", :thesaurus;
+                                          lobe_hint = _infer_lobe_from_token(syn_lower))
+                        end
+                    end
+                catch; end
+            end
+        end
+    end
+
+
+    # ── CURIOSITY ACCUMULATION ─────────────────────────────────────────────
+    # GRUG v10: Feed curiosity accumulator. Separate channel that overflows
+    # into autonomous questions. Doesn't grow nodes - asks the USER.
+    lock(_CURIOSITY_LOCK) do
+        n_uncovered = count(t -> !_is_covered(t, node_patterns) && length(t) > 2 && !in(t, STOPWORDS), tokens)
+        _CURIOSITY_INTENSITY[] = clamp(
+            _CURIOSITY_INTENSITY[] + n_uncovered * CURIOSITY_PER_TOKEN,
+            0.0, 1.0
+        )
+        if strain_energy > 0.55
+            _CURIOSITY_INTENSITY[] = clamp(
+                _CURIOSITY_INTENSITY[] + strain_energy * CURIOSITY_NOVELTY_WEIGHT,
+                0.0, 1.0
+            )
+        end
+        if mlp_semantic_score < SEMANTIC_GAP_THRESHOLD
+            _CURIOSITY_INTENSITY[] = clamp(
+                _CURIOSITY_INTENSITY[] + (1.0 - mlp_semantic_score) * CURIOSITY_SEMANTIC_WEIGHT,
+                0.0, 1.0
+            )
+        end
+        # GRUG v10: Deep MLP — novelty also feeds curiosity. Novel input = curious.
+        if mlp_novelty_score > NOVELTY_SURGE_THRESHOLD
+            _CURIOSITY_INTENSITY[] = clamp(
+                _CURIOSITY_INTENSITY[] + mlp_novelty_score * 0.06,
+                0.0, 1.0
+            )
+        end
+        for tok in tokens
+            if !_is_covered(tok, node_patterns) && length(tok) > 2 && !in(tok, STOPWORDS)
+                tok_lower = lowercase(strip(tok))
+                if !(tok_lower in _CURIOSITY_BUFFER[])
+                    push!(_CURIOSITY_BUFFER[], tok_lower)
+                end
+            end
+        end
+    end
+
     # ── DECAY — expire stale evidence ──────────────────────────────────
     # GRUG: Decay evidence periodically, not every call (too expensive).
     # Every EVIDENCE_DECAY_INTERVAL seconds, halve all accumulated intensities.
@@ -516,6 +797,8 @@ function maybe_grow_from_evidence!(;
     evaluate_dialectics_fn = nothing,
     words_to_signal_fn = nothing,
     scan_latch_candidates_fn = nothing,
+    # GRUG v10: Deep MLP integration — rule hints for growth type suggestion
+    mlp_rule_hints::Vector{Dict{String, Any}} = Dict{String, Any}[],
 )::Union{AutoGrowthStats, Nothing}
     t0 = time()
 
@@ -577,6 +860,8 @@ function maybe_grow_from_evidence!(;
         p_grow *= ANTIMATCH_GROWTH_RATE
     elseif best_record.growth_type == :lobe_whitelist
         p_grow = min(p_grow * LOBE_WHITELIST_GROWTH_RATE, GROWTH_COINFLIP_CAP)
+    elseif best_record.growth_type == :flashcard
+        p_grow = min(p_grow * FLASHCARD_GROWTH_RATE, GROWTH_COINFLIP_CAP)
     end
 
     won_coinflip = rand() < p_grow
@@ -609,6 +894,34 @@ function maybe_grow_from_evidence!(;
     lobe_hint = best_record.lobe_hint
     new_id = ""
     notes = ""
+
+    # ── GRUG v10: MLP RULE HINT INFLUENCE ──────────────────────────
+    # When the best evidence has generic growth_type=:match, MLP rules
+    # can suggest a more specific type. Rules that fire with :solid
+    # transform_type mean the pattern is well-established but incomplete
+    # → upgrade to :thesaurus. Rules with :fuzzy mean uncertain → keep
+    # :match. Rules with payload["suggest_growth_type"] override directly.
+    if growth_type == :match && !isempty(mlp_rule_hints)
+        for hint in mlp_rule_hints
+            tt = get(hint, "transform_type", "")
+            payload = get(hint, "payload", Dict{String,Any}())
+            # GRUG: Direct hint from rule payload takes priority
+            if haskey(payload, "suggest_growth_type")
+                suggested = Symbol(payload["suggest_growth_type"])
+                if suggested in (:thesaurus, :sigil, :lobe_whitelist, :flashcard, :time)
+                    growth_type = suggested
+                    notes = "MLP rule hint: $(get(hint, "rule_id", "?")) suggested :$(suggested)"
+                    break
+                end
+            end
+            # GRUG: Solid rules = well-established pattern, upgrade to thesaurus
+            if tt == "solid" && get(hint, "fire_count", 0) >= 3
+                growth_type = :thesaurus
+                notes = "MLP rule hint: solid rule $(get(hint, "rule_id", "?")) (fired $(get(hint, "fire_count", 0))x) suggests thesaurus"
+                break
+            end
+        end
+    end
 
     if growth_type == :match || growth_type == :time || growth_type == :antimatch
         # ── MATCH / TIME / ANTIMATCH NODE GROWTH ───────────────────────
@@ -711,6 +1024,20 @@ function maybe_grow_from_evidence!(;
                 notes = "Whitelist growth: no add_lobe_whitelist_fn provided"
             end
         end
+    elseif growth_type == :flashcard
+        # ── FLASHCARD GROWTH ───────────────────────────────────────────────
+        # GRUG v10: Pattern is "fc:<expression>". Compute arithmetic and write
+        # to flashcard. No node needed - just a lookup table entry.
+        if startswith(pattern, "fc:")
+            expr = pattern[4:end]  # strip "fc:" prefix
+            if !isempty(expr)
+                new_id = "fc:$expr"
+                notes = "Flashcard candidate: $expr (needs computation)"
+            end
+        else
+            notes = "Flashcard growth: invalid pattern format '$pattern'"
+        end
+
     else
         notes = "Unknown growth type: $growth_type"
     end
@@ -1356,6 +1683,11 @@ function get_autogrowth_status_summary()::String
         "  evidence_scale=$EVIDENCE_SCALE, coinflip_cap=$GROWTH_COINFLIP_CAP",
         "  decay_halflife=$(EVIDENCE_DECAY_HALFLIFE)s, decay_interval=$(EVIDENCE_DECAY_INTERVAL)s",
         "  evidence_cap=$EVIDENCE_CAP, population_cap=$POPULATION_CAP",
+        "  ── v10 MLP head thresholds ──",
+        "  semantic_gap<$(SEMANTIC_GAP_THRESHOLD), relevance_dropout<$(RELEVANCE_DROPOUT_THRESHOLD)",
+        "  disambiguation_pressure>$(DISAMBIGUATION_PRESSURE_THRESHOLD), coherence_drop<$(COHERENCE_DROP_THRESHOLD)",
+        "  ── v10 Curiosity accumulator ──",
+        "  overflow_threshold=$(CURIOSITY_OVERFLOW_THRESHOLD), cooldown=$(CURIOSITY_COOLDOWN)s",
     ]
 
     lock(_EVIDENCE_LOCK) do
@@ -1373,6 +1705,13 @@ function get_autogrowth_status_summary()::String
 
     lock(_CO_OCCUR_LOCK) do
         push!(lines, "  co_occurrence_pairs=$(length(_CO_OCCUR_MAP))")
+    end
+
+    # GRUG v10: Curiosity accumulator status
+    curiosity = get_curiosity_status()
+    push!(lines, "  curiosity: intensity=$(curiosity["intensity"]) buffer=$(curiosity["buffer_size"]) overflows=$(curiosity["overflow_count"])")
+    if curiosity["is_overflowing"]
+        push!(lines, "  *** CURIOSITY OVERFLOW PENDING ***")
     end
 
     log = get_growth_log()
@@ -1496,5 +1835,127 @@ export get_evidence_snapshot, load_evidence_snapshot!
 export get_co_occur_snapshot, load_co_occur_snapshot!
 export EVIDENCE_FLOOR, EVIDENCE_SCALE, GROWTH_COINFLIP_CAP, EVIDENCE_CAP
 export EVIDENCE_FREQUENCY_FLOOR, EVIDENCE_DECAY_HALFLIFE
+# GRUG v10: Curiosity accumulator exports
+export check_curiosity_overflow, get_curiosity_status, quench_curiosity!
+export serialize_curiosity, deserialize_curiosity!
+# GRUG v10: New evidence source thresholds
+export SEMANTIC_GAP_THRESHOLD, RELEVANCE_DROPOUT_THRESHOLD
+export DISAMBIGUATION_PRESSURE_THRESHOLD, COHERENCE_DROP_THRESHOLD
+export CURIOSITY_OVERFLOW_THRESHOLD, CURIOSITY_COOLDOWN
+# GRUG v10: New growth type rates
+export FLASHCARD_GROWTH_RATE
+
+# ==============================================================================
+# CURIOSITY ACCUMULATOR API — GRUG v10
+# ==============================================================================
+
+"""
+    check_curiosity_overflow() -> Union{String, Nothing}
+
+Check if the curiosity accumulator has overflowed. If so, return the
+highest-frequency pattern from the buffer as a question target.
+Returns nothing if not overflowing or in cooldown.
+"""
+function check_curiosity_overflow()::Union{String, Nothing}
+    lock(_CURIOSITY_LOCK) do
+        # GRUG: Check cooldown
+        if time() - _CURIOSITY_QUENCHED[] < CURIOSITY_COOLDOWN
+            return nothing
+        end
+        # GRUG: Check overflow threshold
+        if _CURIOSITY_INTENSITY[] < CURIOSITY_OVERFLOW_THRESHOLD
+            return nothing
+        end
+        if isempty(_CURIOSITY_BUFFER[])
+            return nothing
+        end
+        # GRUG: Find the highest-frequency pattern in the buffer
+        # Cross-reference with evidence records to find the most-observed one
+        best_pattern = _CURIOSITY_BUFFER[][1]
+        best_freq = 0
+        for pat in _CURIOSITY_BUFFER[]
+            lock(_EVIDENCE_LOCK) do
+                if haskey(_EVIDENCE, pat)
+                    freq = _EVIDENCE[pat].frequency
+                    if freq > best_freq
+                        best_freq = freq
+                        best_pattern = pat
+                    end
+                end
+            end
+        end
+        return best_pattern
+    end
+end
+
+"""
+    quench_curiosity!()
+
+Reset the curiosity accumulator after an overflow. Empties buffer,
+zeros intensity, records quench time.
+"""
+function quench_curiosity!()
+    lock(_CURIOSITY_LOCK) do
+        _CURIOSITY_BUFFER[] = String[]
+        _CURIOSITY_INTENSITY[] = 0.0
+        _CURIOSITY_QUENCHED[] = time()
+        _CURIOSITY_OVERFLOW_COUNT[] += 1
+    end
+end
+
+"""
+    get_curiosity_status() -> Dict{String, Any}
+
+Return curiosity accumulator state for diagnostics.
+"""
+function get_curiosity_status()::Dict{String, Any}
+    lock(_CURIOSITY_LOCK) do
+        Dict{String, Any}(
+            "intensity"      => round(_CURIOSITY_INTENSITY[]; digits=3),
+            "buffer_size"    => length(_CURIOSITY_BUFFER[]),
+            "buffer_top5"    => _CURIOSITY_BUFFER[][1:min(5, length(_CURIOSITY_BUFFER[]))],
+            "quenched_at"    => _CURIOSITY_QUENCHED[],
+            "overflow_count" => _CURIOSITY_OVERFLOW_COUNT[],
+            "is_overflowing" => _CURIOSITY_INTENSITY[] >= CURIOSITY_OVERFLOW_THRESHOLD,
+            "cooldown_remaining" => max(0.0, CURIOSITY_COOLDOWN - (time() - _CURIOSITY_QUENCHED[])),
+        )
+    end
+end
+
+"""
+    serialize_curiosity() -> Dict{String, Any}
+
+Serialize curiosity accumulator state for specimen save.
+"""
+function serialize_curiosity()::Dict{String, Any}
+    lock(_CURIOSITY_LOCK) do
+        Dict{String, Any}(
+            "buffer"          => String[_CURIOSITY_BUFFER[]...],
+            "intensity"       => _CURIOSITY_INTENSITY[],
+            "quenched_at"     => _CURIOSITY_QUENCHED[],
+            "overflow_count"  => _CURIOSITY_OVERFLOW_COUNT[],
+        )
+    end
+end
+
+"""
+    deserialize_curiosity!(data::Any)
+
+Restore curiosity accumulator state from specimen load.
+"""
+function deserialize_curiosity!(data::Any)
+    if data === nothing || !isa(data, AbstractDict)
+        return
+    end
+    lock(_CURIOSITY_LOCK) do
+        buf = get(data, "buffer", [])
+        if isa(buf, AbstractVector)
+            _CURIOSITY_BUFFER[] = String[string(b) for b in buf]
+        end
+        _CURIOSITY_INTENSITY[] = clamp(Float64(get(data, "intensity", 0.0)), 0.0, 1.0)
+        _CURIOSITY_QUENCHED[] = Float64(get(data, "quenched_at", 0.0))
+        _CURIOSITY_OVERFLOW_COUNT[] = Int(get(data, "overflow_count", 0))
+    end
+end
 
 end # module AutoGrowth

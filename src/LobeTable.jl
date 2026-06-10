@@ -37,8 +37,9 @@ const CHUNK_JSON     = "json"
 const CHUNK_DROP     = "drop"
 const CHUNK_HOPFIELD = "hopfield"
 const CHUNK_META     = "meta"
+const CHUNK_FLASHCARD = "flashcard"  # GRUG v10: arithmetic facts + simple lookups. No node needed.
 
-const VALID_CHUNKS = Set{String}([CHUNK_NODES, CHUNK_JSON, CHUNK_DROP, CHUNK_HOPFIELD, CHUNK_META])
+const VALID_CHUNKS = Set{String}([CHUNK_NODES, CHUNK_JSON, CHUNK_DROP, CHUNK_HOPFIELD, CHUNK_META, CHUNK_FLASHCARD])
 
 # ============================================================================
 # NODE REF - Lightweight handle stored in CHUNK_NODES
@@ -629,9 +630,245 @@ function table_exists(lobe_id::String)::Bool
     end
 end
 
+# ============================================================================
+# FLASHCARD API - GRUG v10: Simple arithmetic facts + lookups live here.
+# No need to grow a node for "3+5=8". Flashcard is instant write/read.
+# ============================================================================
+
+"""
+    flashcard_put!(lobe_id, expression, result; result_num, card_type, ttl)
+
+Write a flashcard to the flashcard chunk. Key is derived from expression.
+If the card already exists, update it (incremental hit counter preserved).
+"""
+function flashcard_put!(lobe_id::String, expression::String, result::String;
+                        result_num::Float64=NaN, card_type::Symbol=:arithmetic, ttl::Float64=0.0)
+    isempty(strip(expression)) && return nothing
+    key = lowercase(strip(expression))
+    card = Dict{String, Any}(
+        "expression"  => expression,
+        "result"      => result,
+        "result_num"  => result_num,
+        "type"        => string(card_type),
+        "lobe_id"     => lobe_id,
+        "created_at"  => time(),
+        "hits"        => 0,
+        "ttl"         => ttl,
+    )
+    # GRUG: Preserve hit count if card already exists (upgrade, don't overwrite)
+    existing = flashcard_get(lobe_id, expression)
+    if existing !== nothing
+        card["hits"] = get(existing, "hits", 0)
+        card["created_at"] = get(existing, "created_at", time())
+    end
+    table_put!(lobe_id, CHUNK_FLASHCARD, key, card)
+    return card
+end
+
+"""
+    flashcard_get(lobe_id, expression) -> Union{Dict, Nothing}
+
+Read a flashcard. Returns the card Dict or nothing if not found.
+"""
+function flashcard_get(lobe_id::String, expression::String)::Union{Dict{String,Any}, Nothing}
+    isempty(strip(expression)) && return nothing
+    key = lowercase(strip(expression))
+    card = table_get(lobe_id, CHUNK_FLASHCARD, key)
+    if card === nothing
+        return nothing
+    end
+    # GRUG: Check TTL expiry
+    ttl = Float64(get(card, "ttl", 0.0))
+    if ttl > 0.0
+        created = Float64(get(card, "created_at", 0.0))
+        if time() - created > ttl
+            # GRUG: Card expired. Delete and return nothing.
+            flashcard_delete!(lobe_id, expression)
+            return nothing
+        end
+    end
+    return card
+end
+
+"""
+    flashcard_has(lobe_id, expression) -> Bool
+
+Check if a flashcard exists for this expression.
+"""
+function flashcard_has(lobe_id::String, expression::String)::Bool
+    isempty(strip(expression)) && return false
+    return table_has(lobe_id, CHUNK_FLASHCARD, lowercase(strip(expression)))
+end
+
+"""
+    flashcard_delete!(lobe_id, expression) -> Bool
+
+Delete a flashcard. Returns true if it existed and was deleted.
+"""
+function flashcard_delete!(lobe_id::String, expression::String)::Bool
+    isempty(strip(expression)) && return false
+    return table_delete!(lobe_id, CHUNK_FLASHCARD, lowercase(strip(expression)))
+end
+
+"""
+    flashcard_hit!(lobe_id, expression) -> Bool
+
+Increment the hit counter on a flashcard. Returns false if card doesn't exist.
+"""
+function flashcard_hit!(lobe_id::String, expression::String)::Bool
+    isempty(strip(expression)) && return false
+    key = lowercase(strip(expression))
+    card = table_get(lobe_id, CHUNK_FLASHCARD, key)
+    if card === nothing
+        return false
+    end
+    card["hits"] = Int(get(card, "hits", 0)) + 1
+    table_put!(lobe_id, CHUNK_FLASHCARD, key, card)
+    return true
+end
+
+"""
+    flashcard_query(lobe_id; card_type, min_hits) -> Vector{Dict}
+
+Query flashcards by type and minimum hit count. Returns matching cards.
+"""
+function flashcard_query(lobe_id::String; card_type::Union{Symbol,Nothing}=nothing, min_hits::Int=0)::Vector{Dict{String,Any}}
+    if !table_exists(lobe_id)
+        return Dict{String,Any}[]
+    end
+    all_keys = table_keys(lobe_id, CHUNK_FLASHCARD)
+    results = Dict{String,Any}[]
+    for key in all_keys
+        card = table_get(lobe_id, CHUNK_FLASHCARD, key)
+        if card === nothing
+            continue
+        end
+        # GRUG: Filter by type
+        if card_type !== nothing
+            card_type_str = get(card, "type", "")
+            if card_type_str != string(card_type)
+                continue
+            end
+        end
+        # GRUG: Filter by min hits
+        if Int(get(card, "hits", 0)) < min_hits
+            continue
+        end
+        push!(results, card)
+    end
+    return results
+end
+
+"""
+    flashcard_evict!(lobe_id) -> Int
+
+Evict expired flashcards (ttl > 0 and past expiry). Returns count of evicted cards.
+"""
+function flashcard_evict!(lobe_id::String)::Int
+    if !table_exists(lobe_id)
+        return 0
+    end
+    all_keys = table_keys(lobe_id, CHUNK_FLASHCARD)
+    evicted = 0
+    t_now = time()
+    for key in all_keys
+        card = table_get(lobe_id, CHUNK_FLASHCARD, key)
+        if card === nothing
+            continue
+        end
+        ttl = Float64(get(card, "ttl", 0.0))
+        if ttl > 0.0
+            created = Float64(get(card, "created_at", 0.0))
+            if t_now - created > ttl
+                table_delete!(lobe_id, CHUNK_FLASHCARD, key)
+                evicted += 1
+            end
+        end
+    end
+    return evicted
+end
+
+"""
+    flashcard_count(lobe_id) -> Int
+
+Count flashcards in a lobe's flashcard chunk.
+"""
+function flashcard_count(lobe_id::String)::Int
+    if !table_exists(lobe_id)
+        return 0
+    end
+    return table_size(lobe_id, CHUNK_FLASHCARD)
+end
+
+"""
+    serialize_flashcards() -> Dict{String, Vector{Dict}}
+
+Serialize all flashcard data across all lobes for specimen save.
+Returns Dict mapping lobe_id -> Vector of card Dicts.
+"""
+function serialize_flashcards()::Dict{String, Vector{Dict{String,Any}}}
+    result = Dict{String, Vector{Dict{String,Any}}}()
+    lock(TABLE_REGISTRY_LOCK) do
+        for (lobe_id, rec) in LOBE_TABLE_REGISTRY
+            if haskey(rec.chunks, CHUNK_FLASHCARD)
+                chunk = rec.chunks[CHUNK_FLASHCARD]
+                cards = lock(chunk.lock) do
+                    collect(values(chunk.store))
+                end
+                if !isempty(cards)
+                    result[lobe_id] = [Dict{String,Any}(pair) for pair in cards]
+                end
+            end
+        end
+    end
+    return result
+end
+
+"""
+    deserialize_flashcards!(data::Dict)
+
+Restore flashcard data from specimen load.
+Expects Dict mapping lobe_id -> Vector of card Dicts.
+"""
+function deserialize_flashcards!(data::Any)
+    if data === nothing
+        return
+    end
+    if !isa(data, AbstractDict)
+        return
+    end
+    for (lobe_id, cards) in data
+        if !isa(cards, AbstractVector)
+            continue
+        end
+        # GRUG: Ensure table exists
+        if !table_exists(string(lobe_id))
+            create_lobe_table!(string(lobe_id))
+        end
+        for card in cards
+            if !isa(card, AbstractDict)
+                continue
+            end
+            expr = string(get(card, "expression", ""))
+            result = string(get(card, "result", ""))
+            if isempty(expr) || isempty(result)
+                continue
+            end
+            result_num = Float64(get(card, "result_num", NaN))
+            card_type_str = string(get(card, "type", "arithmetic"))
+            card_type = Symbol(card_type_str)
+            ttl = Float64(get(card, "ttl", 0.0))
+            # GRUG: Write the card directly to preserve all fields
+            key = lowercase(strip(expr))
+            table_put!(string(lobe_id), CHUNK_FLASHCARD, key, Dict{String,Any}(card))
+        end
+    end
+end
+
 # GRUG say: LobeTable done. Every lobe has its own chunked hash table.
 # Flat lists are gone. Pattern activation works. JSON intake converts clean.
 # Drop table is now O(1). Hopfield is per-lobe. Node refs indexed by lobe.
+# Flashcards give instant lookup for math facts. No node needed for simple stuff.
 # No silent failures. Grug very happy with organized cave storage.
 
 end # module LobeTable

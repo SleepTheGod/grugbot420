@@ -253,6 +253,13 @@ if !isdefined(@__MODULE__, :ArithmeticEngine)
     using .ArithmeticEngine
 end
 
+# GRUG v10: PettyLearner — instant fast-path learning for trivial gaps.
+# When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
+if !isdefined(@__MODULE__, :PettyLearner)
+    include("PettyLearner.jl")
+    using .PettyLearner
+end
+
 # GRUG: SigilPromoter needed for sigil promotion logic.
 # When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
 if !isdefined(@__MODULE__, :SigilPromoter)
@@ -2625,6 +2632,25 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             if arithmetic_result.error === nothing
                 arithmetic_reply = ArithmeticEngine.format_arithmetic_reply(arithmetic_result)
                 @info "[MAIN Stage 2] Arithmetic computed: $(arithmetic_result.expression) = $(arithmetic_result.answer_str)"
+                # GRUG v10: Auto-write arithmetic result to flashcard.
+                # Every computed math fact gets stored for future instant lookup.
+                # Next time "3+5" is asked, the flashcard hits instantly — no recompute.
+                try
+                    _arith_lobe = "math"
+                    for (_lid, _lrec) in Lobe.LOBE_REGISTRY
+                        if occursin("math", lowercase(_lrec.subject))
+                            _arith_lobe = _lid
+                            break
+                        end
+                    end
+                    LobeTable.flashcard_put!(_arith_lobe, arithmetic_result.expression,
+                        arithmetic_result.answer_str;
+                        result_num=try Float64(arithmetic_result.answer) catch _ NaN end,
+                        card_type=:arithmetic)
+                catch _
+                    # GRUG: Flashcard write failure is non-fatal. The arithmetic
+                    # result is still used for this response.
+                end
             else
                 @warn "[MAIN Stage 2] Arithmetic computation failed: $(arithmetic_result.error)"
             end
@@ -4414,6 +4440,16 @@ const HELP_MSG = """
 ║    WARNING: weight > 0 enables attractor dynamics!           ║
 ║    Start low (0.05). >0.3 risks quantum Zeno state-lock.    ║
 ║                                                              ║
+║  FLASHCARD (v10 — math fact lookup table)                   ║
+║  /flashcard                 Show flashcard status (per lobe) ║
+║  /flashcard count           Show total card count             ║
+║  /flashcard query <lobe> <expr>  Look up a flashcard         ║
+║  /flashcard evict <lobe> <expr>  Remove a flashcard          ║
+║                                                              ║
+║  CURIOSITY (v10 — passive knowledge-gap accumulator)        ║
+║  /curiosity                 Show curiosity accumulator status║
+║  /curiosity quench          Reset curiosity (manual cooldown)║
+║                                                              ║
 ║  ERROR JOURNAL (v9 — self-observation of runtime errors)     ║
 ║  /errors                      Show recent errors from journal║
 ║  /errors clear                Clear the error journal        ║
@@ -5010,6 +5046,16 @@ function process_mission(mission_text::String)
         [InputDecomposer.DecomposedSubSubject(mission_text, "", :singleton, 1)]
     end
 
+    # GRUG v10: MLP-ASSISTED DECOMPOSITION FALLBACK
+    # If standard heuristics didn't decompose but MLP signals suggest
+    # the input IS compound, try the MLP-assisted decomposition with
+    # broader conjunction matching. This runs AFTER the MLP transform
+    # has already computed directive_quality and novelty scores.
+    # NOTE: We store the MLP result for later use; the actual scores
+    # are available after the MLP transform step below. So we do a
+    # LATE CHECK after the MLP transform, stored in _mlp_decomposition_done.
+    _mlp_decomposition_done = false
+
     is_compound_input = length(sub_subjects) > 1
     if is_compound_input
         println("[MULTIPART] Compound input detected: $(InputDecomposer.summarize_decomposition(sub_subjects))")
@@ -5500,6 +5546,28 @@ function process_mission(mission_text::String)
             rel = round(Float64(get(mlp_result, "relevance_score", 0.5)); digits=3)
             dis = round(Float64(get(mlp_result, "disambiguation", 0.5)); digits=3)
             println("  🧠 MLP: $act | novelty=$nov | quality=$qual | semantic=$sem | relevance=$rel | disambig=$dis | strain=$(round(Float64(get(mlp_result, "strain_energy", 0.0)); digits=3)) | rules=$n_rules | adj=$(adj_en ? "ON" : "OFF")")
+
+            # GRUG v10: MLP-ASSISTED DECOMPOSITION (late check)
+            # The standard decomposer ran before MLP scores were available.
+            # Now that we have directive_quality and novelty, check if the
+            # input is compound even though heuristics said it wasn't.
+            if !is_compound_input && !_mlp_decomposition_done
+                try
+                    _mlp_sub = InputDecomposer.decompose_input_mlp(mission_text;
+                        mlp_directive_quality = qual,
+                        mlp_novelty = nov,
+                    )
+                    if length(_mlp_sub) > 1
+                        sub_subjects = _mlp_sub
+                        is_compound_input = true
+                        println("[MULTIPART] MLP-assisted decomposition: $(InputDecomposer.summarize_decomposition(sub_subjects))")
+                    end
+                    _mlp_decomposition_done = true
+                catch e
+                    @warn "[MAIN] MLP-assisted decomposition failed (non-fatal): $e"
+                end
+            end
+
             # GRUG v7.27: Phase pull status — show time crystal retrieval info
             phase_activated = Bool(get(mlp_result, "phase_activated", false))
             phase_pulls = Int(get(mlp_result, "phase_pull_count", 0))
@@ -5732,6 +5800,33 @@ function process_mission(mission_text::String)
             _ag_strain = try EphemeralMLP.get_strain_energy() catch _ 0.0 end
 
             # ── ACCUMULATE EVIDENCE ──
+            # GRUG v10: Wire EphemeralMLP heads 2-4 + CoherenceField ΔΦ +
+            # SelfObserver recurring gaps into AutoGrowth evidence. The old code
+            # had hippocampal_warrant_active=false and zero MLP signal integration.
+            # Now: semantic gap, relevance dropout, disambiguation pressure,
+            # coherence drop, and observer patterns all feed evidence.
+            _ag_sem = try Float64(get(mlp_result, "semantic_score", 0.5)) catch _ 0.5 end
+            _ag_rel = try Float64(get(mlp_result, "relevance_score", 0.5)) catch _ 0.5 end
+            _ag_dis = try Float64(get(mlp_result, "disambiguation", 0.5)) catch _ 0.5 end
+            _ag_hippo_warrant = try EphemeralMLP.is_hippocampal_warrant_active() catch _ false end
+            _ag_coherence_delta = try
+                _cf_phi_now = CoherenceField.compute_field(NODE_MAP; force=false)
+                get(_cf_phi_now, "delta_phi", 0.0)
+            catch _
+                0.0
+            end
+            _ag_observer_gap = try
+                # GRUG: Check SelfObserver for recurring gap pattern.
+                # Look for recent observations with tag=:gap or low directive_quality.
+                _obs_peek = SelfObserver.peek_pattern(_MLP_OBSERVER_STORE, "mlp_cycle:", "directive_quality";
+                    tag=nothing, max_results=3)
+                _low_quality_count = count(o -> Float64(get(o.data, "directive_quality", 1.0)) < 0.4, _obs_peek)
+                Float64(_low_quality_count)
+            catch _
+                0.0
+            end
+            _ag_observer_pattern = _ag_observer_gap >= 2.0  # recurring gap pattern
+
             AutoGrowth.accumulate_evidence!(
                 user_text                 = mission_text,
                 intensity                 = 1.0,  # GRUG: Base intensity per message
@@ -5743,7 +5838,30 @@ function process_mission(mission_text::String)
                 attachment_snapshots      = _ag_attach_snapshots,
                 sigil_table_entries       = _ag_sigil_entries,
                 strain_energy             = _ag_strain,
-                hippocampal_warrant_active = false,
+                hippocampal_warrant_active = _ag_hippo_warrant,
+                # GRUG v10: New EphemeralMLP signal evidence sources
+                mlp_semantic_score        = _ag_sem,
+                mlp_relevance_score       = _ag_rel,
+                mlp_disambiguation        = _ag_dis,
+                coherence_delta_phi       = _ag_coherence_delta,
+                observer_recurring_gap    = _ag_observer_pattern,
+                observer_gap_pattern      = _ag_observer_pattern ? "recurring_gap" : "",
+                # GRUG v10: Deep MLP integration signals
+                mlp_novelty_score          = try Float64(get(mlp_result, "novelty_score", 0.5)) catch _ 0.5 end,
+                mlp_activation_mode        = try Symbol(get(mlp_result, "activation", :sigmoid)) catch _; :sigmoid end,
+                mlp_hash_rarity            = try
+                    _nt_stats = EphemeralMLP.get_novelty_tracker_stats()
+                    _n_hashes = Int(get(_nt_stats, "unique_hashes", 0))
+                    _n_obs = Int(get(_nt_stats, "total_observations", 1))
+                    # GRUG: hash_rarity = fraction of unique hashes that are rare
+                    # If we have few hashes relative to observations, most are repeated = low rarity
+                    # If we have many hashes relative to observations, most are novel = high rarity
+                    _n_obs > 0 ? min(1.0, _n_hashes / _n_obs) : 0.0
+                catch _ 0.0 end,
+                mlp_correlation_quality    = try
+                    _ic_stats = EphemeralMLP.get_input_correlation_stats()
+                    Float64(get(_ic_stats, "mean_quality_ema", 0.5))
+                catch _ 0.5 end,
             )
 
             # ── MAYBE GROW FROM EVIDENCE ──
@@ -5799,10 +5917,71 @@ function process_mission(mission_text::String)
                 evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
                 words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
                 scan_latch_candidates_fn   = (pattern; kwargs...) -> find_group_latch_candidates(pattern; kwargs...),
+                mlp_rule_hints             = try EphemeralMLP.get_active_rule_hints() catch _ Dict{String, Any}[] end,
             )
 
             if _ag_result !== nothing && _ag_result.won_coinflip
                 println("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_prob, digits=3)))")
+            end
+
+            # ── GRUG v10: PETTY LEARNER FAST-PATH ──────────────────────
+            # GRUG: Before doing expensive evidence accumulation for trivial
+            # gaps, check if the input is a "petty" case — one uncovered token
+            # that's a synonym, simple math, or a domain token. These skip the
+            # evidence pipeline entirely. INSTANT learning, no coinflip.
+            try
+                if _ag_result === nothing || !_ag_result.won_coinflip
+                    # GRUG: Only try petty if AutoGrowth didn't grow anything.
+                    # If it DID grow, the gap was real — not petty.
+                    _petty_bindings = try
+                        bind_sigils(mission_text, _ENGINE_SIGIL_TABLE)
+                    catch _
+                        Dict()
+                    end
+                    _petty_result = PettyLearner.classify_petty(
+                        mission_text,
+                        Vector{String}(split(mission_text)),
+                        _ag_node_patterns,
+                        Thesaurus.synonym_lookup,
+                        Thesaurus.word_similarity,
+                        _ag_lobe_snapshots,
+                        _ag_sigil_entries,
+                        _petty_bindings,
+                    )
+                    if _petty_result.dispatched
+                        _petty_dispatched = PettyLearner.dispatch_petty!(_petty_result;
+                            thesaurus_register_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                            flashcard_put_fn = (lobe_id, expr, result_str; result_num=NaN, card_type=:arithmetic) ->
+                                LobeTable.flashcard_put!(lobe_id, expr, result_str;
+                                    result_num=result_num, card_type=card_type),
+                            lobe_whitelist_fn = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                            arithmetic_compute_fn = (bindings) -> ArithmeticEngine.compute_arithmetic(bindings),
+                            arithmetic_bindings = _petty_bindings,
+                        )
+                        println("[PETTY] ⚡  Petty fast-path: $(_petty_dispatched.detail)")
+                    end
+                end
+            catch e
+                @warn "[MAIN] PettyLearner failed (non-fatal): $e"
+            end
+
+            # ── GRUG v10: CURIOSITY OVERFLOW CHECK ──────────────────────
+            # GRUG: The curiosity accumulator in AutoGrowth passively accumulates
+            # from MLP signals + uncovered tokens. When it overflows, the system
+            # generates an autonomous question via _HIPPOCAMPAL_PENDING_ASK.
+            try
+                _cur_overflow = AutoGrowth.check_curiosity_overflow()
+                if _cur_overflow !== nothing
+                    lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                        _HIPPOCAMPAL_PENDING_ASK[] = _cur_overflow
+                    end
+                    _cur_status = AutoGrowth.get_curiosity_status()
+                    println("[CURIOSITY] 🔥  Curiosity overflow! intensity=$(_cur_status["intensity"]) → pending ask: $(repr(_cur_overflow))")
+                    # GRUG: Quench after overflow so it doesn't fire again immediately.
+                    AutoGrowth.quench_curiosity!()
+                end
+            catch e
+                @warn "[MAIN] Curiosity overflow check failed (non-fatal): $e"
             end
         end
     catch e
@@ -5842,6 +6021,42 @@ function process_mission(mission_text::String)
             end
 
             # ── ACCUMULATE LINK EVIDENCE ──
+            # GRUG v10: Wire MLP disambiguation + relevance scores + ChatterResiduals
+            # co-occurrence into AutoLinker. The old code had strain_nodes=String[]
+            # and zero MLP signal. Now: disambiguation_bridge, relevance_cross_lobe,
+            # and chatter_residual all feed link evidence.
+            _al_mlp_disambig = try Float64(get(mlp_result, "disambiguation", 0.5)) catch _ 0.5 end
+            _al_mlp_relevance = try Float64(get(mlp_result, "relevance_score", 0.5)) catch _ 0.5 end
+
+            # GRUG v10: Get ChatterResiduals word co-occurrence pairs.
+            # The background thread processes chatter swaps and records which
+            # node pairs co-occur. We extract the (word_a, word_b, intensity)
+            # triples for AutoLinker's SOURCE 11.
+            _al_chatter_pairs = try
+                _cr_status = ChatterResiduals.get_chatter_residuals_status()
+                # GRUG: Parse the status string for co-occurrence data.
+                # For now, pass empty — the real co-occurrence comes from
+                # the idle cycle which has access to the raw ledger.
+                Tuple{String,String,Float64}[]
+            catch _
+                Tuple{String,String,Float64}[]
+            end
+
+            # GRUG v10: Compute strain_nodes from nodes currently under strain.
+            # The old code had String[] — zero strain signal. Now we check
+            # which nodes have high strain_energy and include them.
+            _al_strain_nodes = try
+                _strain_ids = String[]
+                for (nid, node) in NODE_MAP
+                    if !node.is_grave && node.strength < 0.3
+                        push!(_strain_ids, nid)
+                    end
+                end
+                _strain_ids
+            catch _
+                String[]
+            end
+
             AutoLinker.accumulate_link_evidence!(
                 co_fired_ids              = fired_ids,
                 input_touched_ids         = String[],  # GRUG: InputLedger handles this separately
@@ -5850,9 +6065,15 @@ function process_mission(mission_text::String)
                 thesaurus_gate_filter     = Thesaurus.synonym_lookup,
                 thesaurus_word_similarity = Thesaurus.word_similarity,
                 lobe_of_fn                = _al_lobe_of,
-                strain_nodes              = String[],  # GRUG: strain snapshots not available here
+                strain_nodes              = _al_strain_nodes,
                 co_occur_map              = _al_co_occur,
                 co_activation_pairs       = Tuple{String,String,Float64}[],  # GRUG: no explicit pairs in active path
+                # GRUG v10: New EphemeralMLP signal evidence sources
+                mlp_disambiguation        = _al_mlp_disambig,
+                mlp_relevance_score       = _al_mlp_relevance,
+                chatter_co_occur_pairs    = _al_chatter_pairs,
+                # GRUG v10: Deep MLP integration signal
+                mlp_novelty_score          = try Float64(get(mlp_result, "novelty_score", 0.5)) catch _ 0.5 end,
             )
 
             # ── MAYBE AUTO LINK ──
@@ -6930,6 +7151,45 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize autolink evidence: $e"
     end
 
+    # ── 39d. FLASHCARD DATA ──────────────────────────────────────────────
+    # GRUG v10: Save flashcards from all lobes. Math facts like "3+5=8"
+    # are stored as lookup table entries, not nodes. Without persisting
+    # them, reload forgets every math fact Grug ever learned.
+    try
+        _fc_all = Dict{String, Any}()
+        _fc_count = 0
+        for (lobe_id, lrec) in Lobe.LOBE_REGISTRY
+            _fc_data = LobeTable.serialize_flashcards(lobe_id)
+            if !isempty(_fc_data)
+                _fc_all[lobe_id] = _fc_data
+                _fc_count += length(_fc_data)
+            end
+        end
+        if _fc_count > 0
+            specimen["flashcards"] = _fc_all
+            println("  📇  Flashcards saved ($_fc_count cards across $(length(_fc_all)) lobes)")
+        else
+            println("  📇  Flashcards: none to save")
+        end
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize flashcards: $e"
+    end
+
+    # ── 39e. CURIOSITY ACCUMULATOR ───────────────────────────────────────
+    # GRUG v10: Save curiosity accumulator state so Grug doesn't lose
+    # its sense of wonder on reload. The intensity, buffer, and quench
+    # timestamp all need to survive specimen round-trips.
+    try
+        specimen["curiosity"] = AutoGrowth.serialize_curiosity()
+        _cur_data = specimen["curiosity"]
+        _cur_int = get(_cur_data, "intensity", 0.0)
+        _cur_buf_len = length(get(_cur_data, "buffer", []))
+        println("  🔥  Curiosity saved (intensity=$(round(_cur_int, digits=2)), buffer=$_cur_buf_len)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize curiosity: $e"
+    end
+
+
     # ── 40. FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Fan-out creates shadow answer nodes. If we don't persist these
     # settings, a specimen reloaded with fan-out disabled loses all shadow
@@ -7156,6 +7416,18 @@ function save_specimen_to_file!(filepath::String)::String
     push!(lines, "  🌱  AutoGrowth       : evidence=$(_ag_ev), co-occur=$(_ag_co)")
     _al_ev = try length(get(specimen, "autolink_evidence", [])) catch _ 0 end
     push!(lines, "  🔗  AutoLinker       : link_evidence=$(_al_ev)")
+    _fc_total = try
+        sum(LobeTable.flashcard_count(lid) for (lid, _) in Lobe.LOBE_REGISTRY)
+    catch _
+        0
+    end
+    push!(lines, "  📇  Flashcards      : $_fc_total")
+    _cur_int = try
+        round(get(AutoGrowth.get_curiosity_status(), "intensity", 0.0), digits=2)
+    catch _
+        0.0
+    end
+    push!(lines, "  🔥  Curiosity       : intensity=$_cur_int")
     push!(lines, "╚══════════════════════════════════════════════════════════════╝")
     return join(lines, "\n")
 end
@@ -7281,7 +7553,8 @@ function load_specimen_from_file!(filepath::String)::String
                         "time_orientation_config",
                         "coherence_config",
                         "autogrowth_evidence", "autogrowth_co_occur",
-                        "autolink_evidence"])
+                        "autolink_evidence",
+                        "flashcards", "curiosity"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -8785,6 +9058,38 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  AutoLinker evidence: FAILED to load (starting fresh)")
     end
 
+    # ── GRUG v10: FLASHCARD RESTORE ──────────────────────────────────
+    # GRUG: Restore flashcards from all lobes. Math facts like "3+5=8"
+    # should survive reload — they were learned via PettyLearner fast-path.
+    try
+        if haskey(specimen, "flashcards")
+            _fc_data = specimen["flashcards"]
+            _fc_count = 0
+            for (lobe_id, cards) in _fc_data
+                LobeTable.deserialize_flashcards!(lobe_id, cards)
+                _fc_count += length(cards)
+            end
+            println("  📇  Flashcards loaded ($_fc_count cards)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore flashcards: $e"
+        println("  ⚠️  Flashcards: FAILED to load (starting fresh)")
+    end
+
+    # ── GRUG v10: CURIOSITY ACCUMULATOR RESTORE ──────────────────────
+    # GRUG: Restore curiosity intensity so the system remembers what it
+    # was curious about. Curiosity overflow drives autonomous questions.
+    try
+        if haskey(specimen, "curiosity")
+            AutoGrowth.deserialize_curiosity!(specimen["curiosity"])
+            _cur_int = get(specimen["curiosity"], "intensity", 0.0)
+            println("  🔥  Curiosity accumulator loaded (intensity=$_cur_int)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore curiosity: $e"
+        println("  ⚠️  Curiosity: FAILED to load (starting fresh)")
+    end
+
 
     # ── 4.40 FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Restore fan-out settings. If missing (old specimen), defaults apply.
@@ -9330,6 +9635,7 @@ function maybe_run_idle()
             evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
             words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
             scan_latch_candidates_fn   = (pattern; kwargs...) -> find_group_latch_candidates(pattern; kwargs...),
+            mlp_rule_hints             = try EphemeralMLP.get_active_rule_hints() catch _ Dict{String, Any}[] end,
         )
         if _ag_idle_result !== nothing && _ag_idle_result.won_coinflip
             println("[IDLE:AUTOGROWTH] 🌱  Grew $(_ag_idle_result.growth_type) for '$(_ag_idle_result.pattern)' in $(_ag_idle_result.lobe_hint)")
@@ -9395,6 +9701,58 @@ function maybe_run_idle()
             end
         catch; end
 
+
+        # GRUG v10: Compute strain_nodes from nodes currently under strain for idle path.
+        # Same logic as active path — nodes with strength < 0.3 are under strain.
+        _al_idle_strain_nodes = try
+            _idle_strain_ids = String[]
+            for (nid, node) in NODE_MAP
+                if !node.is_grave && node.strength < 0.3
+                    push!(_idle_strain_ids, nid)
+                end
+            end
+            _idle_strain_ids
+        catch _
+            String[]
+        end
+
+        # GRUG v10: Get EphemeralMLP signal values for idle AutoLinker.
+        # Use the last MLP transform results — they persist between cycles.
+        _al_idle_mlp_disambig = try
+            Float64(get(EphemeralMLP.get_last_result(), "disambiguation", 0.5))
+        catch _
+            0.5
+        end
+        _al_idle_mlp_relevance = try
+            Float64(get(EphemeralMLP.get_last_result(), "relevance_score", 0.5))
+        catch _
+            0.5
+        end
+
+        # GRUG v10: Get ChatterResiduals co-occurrence pairs for idle path.
+        # Unlike active path (which is empty), idle path has time to mine
+        # the chatter log for word co-occurrence pairs.
+        _al_idle_chatter_pairs = try
+            _cr_idle_status = ChatterResiduals.get_chatter_residuals_status()
+            # GRUG: Parse co-occurrence pairs from chatter residuals status.
+            # The status dict may contain "co_occur_pairs" with (word_a, word_b, intensity) data.
+            _cr_pairs = get(_cr_idle_status, "co_occur_pairs", [])
+            _cr_result = Tuple{String,String,Float64}[]
+            if isa(_cr_pairs, AbstractVector)
+                for pair_entry in _cr_pairs
+                    a = get(pair_entry, "a", "")
+                    b = get(pair_entry, "b", "")
+                    intensity = Float64(get(pair_entry, "intensity", 0.0))
+                    if !isempty(a) && !isempty(b) && intensity >= 3.0
+                        push!(_cr_result, (a, b, intensity))
+                    end
+                end
+            end
+            _cr_result
+        catch _
+            Tuple{String,String,Float64}[]
+        end
+
         AutoLinker.accumulate_link_evidence!(
             co_fired_ids              = String[],  # GRUG: No direct co-fire data in idle
             input_touched_ids         = String[],
@@ -9403,9 +9761,14 @@ function maybe_run_idle()
             thesaurus_gate_filter     = Thesaurus.synonym_lookup,
             thesaurus_word_similarity = Thesaurus.word_similarity,
             lobe_of_fn                = _al_idle_lobe_of,
-            strain_nodes              = String[],
+            strain_nodes              = _al_idle_strain_nodes,  # GRUG v10: was String[], now computed from NODE_MAP
             co_occur_map              = _al_idle_co_occur,
             co_activation_pairs       = _al_idle_co_act_pairs,
+            # GRUG v10: New EphemeralMLP signal evidence sources for idle path
+            mlp_disambiguation        = _al_idle_mlp_disambig,
+            mlp_relevance_score       = _al_idle_mlp_relevance,
+            chatter_co_occur_pairs    = _al_idle_chatter_pairs,
+            mlp_novelty_score          = try EphemeralMLP.get_novelty_score() catch _ 0.5 end,
         )
 
         _al_idle_result = AutoLinker.maybe_auto_link!(
@@ -9878,6 +10241,20 @@ function run_cli()
             m_decomp_remconjg  = match(r"^/decomposer\s+removeConjugation\s+(\S+)\s*$",            line)
             m_decomp_setctx    = match(r"^/decomposer\s+setContext\s+(\S+)\s*$",                   line)
             m_decomp_reset     = match(r"^/decomposer\s+reset\s*$",                               line)
+            # GRUG v10: Flashcard CLI commands
+            # /flashcard                        — show flashcard status (count per lobe)
+            # /flashcard query <lobe_id> <expr>  — look up a flashcard
+            # /flashcard evict <lobe_id> <expr>  — remove a flashcard
+            # /flashcard count                   — show total card count
+            m_flashcard_status = match(r"^/flashcard\s*$", line)
+            m_flashcard_query  = match(r"^/flashcard\s+query\s+(\S+)\s+(.+)$", line)
+            m_flashcard_evict  = match(r"^/flashcard\s+evict\s+(\S+)\s+(.+)$", line)
+            m_flashcard_count  = match(r"^/flashcard\s+count\s*$", line)
+            # GRUG v10: Curiosity CLI commands
+            # /curiosity           — show curiosity accumulator status
+            # /curiosity quench    — manually quench curiosity (reset intensity)
+            m_curiosity_status = match(r"^/curiosity\s*$", line)
+            m_curiosity_quench = match(r"^/curiosity\s+quench\s*$", line)
             # GRUG v7.27: Phase accumulator (time crystal) CLI commands
             # /automaton phase                         — show phase accumulator status
             # /automaton phase threshold <float>       — set pull threshold (0.1-0.9)
@@ -12085,6 +12462,73 @@ elseif !isnothing(m_right)
                     println("❌ /decomposer reset FAILED: $e")
                     @warn "[CLI] /decomposer reset error: $e"
                 end
+
+            # GRUG v10: /flashcard commands — inspect and manage flashcard lookup table
+            elseif !isnothing(m_flashcard_status)
+                begin
+                    _fc_total = 0
+                    for (lobe_id, lrec) in Lobe.LOBE_REGISTRY
+                        _fc_count = LobeTable.flashcard_count(lobe_id)
+                        if _fc_count > 0
+                            println("  📇  $lobe_id ($(lrec.subject)): $_fc_count cards")
+                        end
+                        _fc_total += _fc_count
+                    end
+                    if _fc_total == 0
+                        println("📇  No flashcards stored. Math facts will be learned on first encounter.")
+                    else
+                        println("📇  Total: $_fc_total flashcard(s)")
+                    end
+                end
+            elseif !isnothing(m_flashcard_query)
+                begin
+                    _fc_lobe = String(m_flashcard_query.captures[1])
+                    _fc_expr = String(m_flashcard_query.captures[2])
+                    _fc_result = LobeTable.flashcard_get(_fc_lobe, _fc_expr)
+                    if _fc_result !== nothing
+                        println("📇  $_fc_expr = $(_fc_result) (lobe=$_fc_lobe)")
+                    else
+                        println("📇  No flashcard found for '$_fc_expr' in lobe '$_fc_lobe'")
+                    end
+                end
+            elseif !isnothing(m_flashcard_evict)
+                begin
+                    _fc_lobe = String(m_flashcard_evict.captures[1])
+                    _fc_expr = String(m_flashcard_evict.captures[2])
+                    LobeTable.flashcard_evict!(_fc_lobe, _fc_expr)
+                    println("📇  Evicted flashcard '$_fc_expr' from lobe '$_fc_lobe'")
+                end
+            elseif !isnothing(m_flashcard_count)
+                _fc_total = 0
+                for (lobe_id, lrec) in Lobe.LOBE_REGISTRY
+                    _fc_total += LobeTable.flashcard_count(lobe_id)
+                end
+                println("📇  Total flashcards: $_fc_total")
+            # GRUG v10: /curiosity commands — inspect and manage curiosity accumulator
+            elseif !isnothing(m_curiosity_status)
+                begin
+                    _cur_st = AutoGrowth.get_curiosity_status()
+                    _cur_int = get(_cur_st, "intensity", 0.0)
+                    _cur_buf = get(_cur_st, "buffer", String[])
+                    _cur_quenched = get(_cur_st, "quenched_at", 0.0)
+                    _cur_overflows = get(_cur_st, "overflow_count", 0)
+                    println("🔥  Curiosity accumulator:")
+                    println("     intensity:       $(round(_cur_int, digits=3)) / $(AutoGrowth.CURIOSITY_OVERFLOW_THRESHOLD)")
+                    println("     buffer entries:  $(length(_cur_buf))")
+                    println("     overflow count:  $(string(_cur_overflows))")
+                    if _cur_quenched > 0.0
+                        _cur_cool_remaining = max(0.0, AutoGrowth.CURIOSITY_COOLDOWN - (time() - _cur_quenched))
+                        println("     quench cooldown: $(round(_cur_cool_remaining, digits=1))s remaining")
+                    else
+                        println("     quench cooldown: none (ready to overflow)")
+                    end
+                    if !isempty(_cur_buf)
+                        println("     pending patterns: $(join(_cur_buf[1:min(5, length(_cur_buf))], ", "))$(length(_cur_buf) > 5 ? " (+$(length(_cur_buf)-5) more)" : "")")
+                    end
+                end
+            elseif !isnothing(m_curiosity_quench)
+                AutoGrowth.quench_curiosity!()
+                println("🔥  Curiosity quenched. Intensity reset to 0.0. Cooldown started.")
 
             elseif !isnothing(m_phase_status)
                 # /automaton phase OR /automaton phase status — show phase accumulator status

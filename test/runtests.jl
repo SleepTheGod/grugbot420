@@ -64,6 +64,15 @@ const ALL_TESTS = [
     "test_multipart_integration.jl",
     "test_right_feedback_tiered.jl",
     "test_hippocampal_modulator.jl",
+    # ---- v10 additions ----
+    "test_flashcard.jl",
+    "test_petty_learner.jl",
+    "test_mlp_autogrowth_signals.jl",
+    "test_mlp_autolinker_signals.jl",
+    "test_coherence_delta_evidence.jl",
+    "test_input_decomposer_enhanced.jl",
+    "test_v10_pipeline_integration.jl",
+    "test_specimen_v10_roundtrip.jl",
 ]
 
 @testset "GrugBot420 Tests" begin
