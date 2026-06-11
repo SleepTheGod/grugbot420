@@ -57,6 +57,15 @@ module AutoGrowth
 
 using Base.Threads: ReentrantLock
 
+# GRUG: Bring in sibling module SigilRegistry for verb→sigil reverse lookup.
+# AutoGrowth is a submodule of Main and cannot see sibling modules without this.
+using ..SigilRegistry
+
+# GRUG v7.58: Bring in RelationalTriple from engine.jl so _grow_node! can
+# construct relational_patterns. Without this, UndefVarError(:RelationalTriple)
+# silently kills the relational pattern assignment block.
+import ..RelationalTriple
+
 # GRUG: Bring in sibling modules for node creation, sigil registration, etc.
 # These are injected as function kwargs — no `using` needed for the core module.
 # The module is self-contained; callers inject the needed functions.
@@ -74,14 +83,16 @@ mutable struct EvidenceRecord
     first_seen::Float64          # Unix timestamp of first observation
     growth_type::Symbol          # :match, :time, :aiml, :antimatch, :sigil, :thesaurus, :lobe_whitelist, :flashcard
     lobe_hint::String            # Inferred lobe for this candidate
+    user_triples::Vector{Tuple{String,String,String}}  # GRUG v7.58: Relational triples from user input that triggered this evidence. Promoted to sigil refs at growth time.
     # GRUG: Evidence-biased coinflip needs these to be mutable.
     # Decay happens every cycle — accumulated_intensity shrinks over time.
 end
 
 function EvidenceRecord(pattern::String, growth_type::Symbol;
-                        lobe_hint::String = "default")
+                        lobe_hint::String = "default",
+                        user_triples::Vector{Tuple{String,String,String}} = Tuple{String,String,String}[])
     t = time()
-    EvidenceRecord(pattern, 0.0, 0, Set{String}(), t, t, growth_type, lobe_hint)
+    EvidenceRecord(pattern, 0.0, 0, Set{String}(), t, t, growth_type, lobe_hint, user_triples)
 end
 
 # ==============================================================================
@@ -329,6 +340,11 @@ function accumulate_evidence!(;
     mlp_activation_mode::Symbol = :sigmoid,
     mlp_hash_rarity::Float64 = 0.0,
     mlp_correlation_quality::Float64 = 0.5,
+    # GRUG v7.58: Relational triple extraction for SOURCE 18
+    extract_triples_fn::Union{Function,Nothing} = nothing,
+    evaluate_dialectics_fn::Union{Function,Nothing} = nothing,
+    node_map = nothing,
+    node_lock = nothing,
 )
     isempty(strip(user_text)) && return nothing
 
@@ -581,7 +597,8 @@ function accumulate_evidence!(;
                         t_now,  # refresh last_seen
                         entry.first_seen,
                         entry.growth_type,
-                        entry.lobe_hint
+                        entry.lobe_hint,
+                        entry.user_triples  # GRUG v7.58: preserve relational triples
                     )
                 end
             end
@@ -612,7 +629,8 @@ function accumulate_evidence!(;
                         entry.last_seen,
                         entry.first_seen,
                         entry.growth_type,
-                        entry.lobe_hint
+                        entry.lobe_hint,
+                        entry.user_triples  # GRUG v7.58: preserve relational triples
                     )
                 end
             end
@@ -660,6 +678,107 @@ function accumulate_evidence!(;
                     end
                 catch; end
             end
+        end
+    end
+
+
+    # ── SOURCE 18: RELATIONAL TRIPLE GAP ────────────────────────────────
+    # GRUG v7.58: Dynamic sigil relationals for AutoGrowth. When the user's
+    # input produces relational triples that don't match ANY existing node's
+    # relational_patterns, that's strong evidence for a new node that WOULD
+    # match those triples. This is the "obvious" thing — the user is telling
+    # us about a RELATION (fire makes warmth, water gives life), and if no
+    # node captures that relation, we need one.
+    #
+    # How it works:
+    #   1. Extract triples from user input via extract_triples_fn
+    #   2. For each triple, scan ALL existing nodes for a relational match
+    #   3. If NO node matches a triple → that triple's subject/object are gaps
+    #   4. Accumulate evidence for those gap tokens WITH the user triple attached
+    #   5. At growth time, the stored triple becomes the new node's relational_patterns
+    #
+    # This works for ALL growth types:
+    #   - :match nodes get relational_patterns for disambiguation
+    #   - :time nodes get &temporal relational anchoring
+    #   - :aiml nodes get relational context for template selection
+    #   - :antimatch nodes get anti-relations (inverse triples)
+    #   - :sigil growth uses relational context for expansion discovery
+    #   - :thesaurus pairs are discovered from co-occurrence IN relational context
+    #   - :lobe_whitelist entries gain relational fingerprints
+    #   - :flashcard entries anchor to arithmetic relations
+    if extract_triples_fn !== nothing && node_map !== nothing && node_lock !== nothing
+        try
+            user_triples = extract_triples_fn(user_text)
+            if !isempty(user_triples)
+                for ut in user_triples
+                    ut_subj = lowercase(strip(ut.relation === nothing ? string(ut[1]) : ut.subject))
+                    ut_rel  = lowercase(strip(ut.relation === nothing ? string(ut[2]) : ut.relation))
+                    ut_obj  = lowercase(strip(ut.relation === nothing ? string(ut[3]) : ut.object))
+
+                    # GRUG: Skip triples with stopword components
+                    (ut_subj in STOPWORDS || ut_rel in STOPWORDS || ut_obj in STOPWORDS) && continue
+                    (length(ut_subj) < 2 || length(ut_obj) < 2) && continue
+
+                    # GRUG: Check if ANY existing node matches this triple
+                    matched_any = false
+                    if evaluate_dialectics_fn !== nothing
+                        lock(node_lock) do
+                            for (_, node) in node_map
+                                node.is_grave && continue
+                                if !isempty(node.relational_patterns)
+                                    try
+                                        (score, is_anti) = evaluate_dialectics_fn(
+                                            [ut],  # user triple as single-element vector
+                                            node.relational_patterns,
+                                            node.required_relations,
+                                            node.relation_weights
+                                        )
+                                        # GRUG: Positive score = some node already captures this relation
+                                        # -9999.0 sentinel = hard miss, is_anti = antimatch
+                                        if score > RELATIONAL_GAP_SCORE_FLOOR && !is_anti
+                                            matched_any = true
+                                            break
+                                        end
+                                    catch
+                                        # GRUG: evaluation error = can't confirm match, keep checking
+                                        continue
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if !matched_any
+                        # GRUG: This triple is UNMATCHED — evidence for both subject and object
+                        triple_tuple = (ut_subj, ut_rel, ut_obj)
+
+                        # GRUG: Subject token as gap evidence
+                        if !_is_covered(ut_subj, node_patterns) && length(ut_subj) > 2
+                            _add_evidence!(ut_subj, intensity * 0.6, "relational_gap", :match;
+                                          lobe_hint = _infer_lobe_from_token(ut_subj),
+                                          user_triples = [triple_tuple])
+                        end
+
+                        # GRUG: Object token as gap evidence
+                        if !_is_covered(ut_obj, node_patterns) && length(ut_obj) > 2
+                            _add_evidence!(ut_obj, intensity * 0.6, "relational_gap", :match;
+                                          lobe_hint = _infer_lobe_from_token(ut_obj),
+                                          user_triples = [triple_tuple])
+                        end
+
+                        # GRUG: Full "subj rel obj" pattern as higher-order gap
+                        full_pat = "$(ut_subj) $(ut_rel) $(ut_obj)"
+                        if !_is_covered(lowercase(full_pat), node_patterns) && length(full_pat) > 5
+                            _add_evidence!(lowercase(full_pat), intensity * 0.4, "relational_gap", :match;
+                                          lobe_hint = _infer_lobe_from_token(ut_subj),
+                                          user_triples = [triple_tuple])
+                        end
+                    end
+                end
+            end
+        catch
+            # GRUG: SOURCE 18 is non-fatal. If triple extraction or evaluation
+            # fails, the other 17 sources still work fine.
         end
     end
 
@@ -799,6 +918,10 @@ function maybe_grow_from_evidence!(;
     evaluate_dialectics_fn = nothing,
     words_to_signal_fn = nothing,
     scan_latch_candidates_fn = nothing,
+    # GRUG v7.58: Relational sigil integration — verb→sigil reverse mapping + user text
+    verb_class_of_fn::Union{Function,Nothing} = nothing,
+    user_text::String = "",
+    sigil_table::Union{Any,Nothing} = nothing,
     # GRUG v10: Deep MLP integration — rule hints for growth type suggestion
     mlp_rule_hints::Vector{Dict{String, Any}} = Dict{String, Any}[],
 )::Union{AutoGrowthStats, Nothing}
@@ -948,6 +1071,11 @@ function maybe_grow_from_evidence!(;
             evaluate_dialectics_fn=evaluate_dialectics_fn,
             words_to_signal_fn=words_to_signal_fn,
             scan_latch_candidates_fn=scan_latch_candidates_fn,
+            # GRUG v7.58: Pass relational sigil integration through to _grow_node!
+            user_text=user_text,
+            user_triples_from_evidence=best_record.user_triples,
+            verb_class_of_fn=verb_class_of_fn,
+            sigil_table=sigil_table,
         )
 
     elseif growth_type == :aiml
@@ -1083,7 +1211,11 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
                      group_avg_strength_fn=nothing, group_for_fn=nothing,
                      sigil_promote_fn=nothing, extract_triples_fn=nothing,
                      evaluate_dialectics_fn=nothing, words_to_signal_fn=nothing,
-                     scan_latch_candidates_fn=nothing)
+                     scan_latch_candidates_fn=nothing,
+                     user_text::String="",
+                     user_triples_from_evidence::Vector{Tuple{String,String,String}}=Tuple{String,String,String}[],
+                     verb_class_of_fn::Union{Function,Nothing}=nothing,
+                     sigil_table::Union{Any,Nothing}=nothing)
     new_id = ""
     notes = ""
 
@@ -1143,6 +1275,76 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
             end
         end
 
+        # ── GRUG v7.58: ASSIGN RELATIONAL PATTERNS FROM USER TRIPLES ──────────
+        # When AutoGrowth grows a node from relational gap evidence, the user's
+        # triples (stored in the EvidenceRecord) get promoted to sigil refs and
+        # assigned to the new node's relational_patterns + relation_weights.
+        # This gives autogrown nodes the SAME disambiguation power as hand-crafted
+        # specimen nodes — a node with (fire, &causal, warmth) matches ANY verb
+        # in &causal's expansion, not just the one verb the user happened to type.
+        #
+        # Works for ALL growth types: :match, :time, :aiml, :antimatch, :sigil,
+        # :thesaurus, :lobe_whitelist, :flashcard. Every node type benefits from
+        # relational anchoring — it's how the node gets FOUND by the scan pipeline.
+        if !isempty(new_id) && (extract_triples_fn !== nothing || !isempty(user_triples_from_evidence))
+            try
+                # GRUG: Get triples — prefer evidence-stored triples (already extracted,
+                # already filtered for relevance), fall back to extracting from user_text.
+                raw_triples = if !isempty(user_triples_from_evidence)
+                    user_triples_from_evidence
+                elseif !isempty(user_text) && extract_triples_fn !== nothing
+                    ut = extract_triples_fn(user_text)
+                    # GRUG: Convert RelationalTriple structs to plain tuples if needed
+                    [(lowercase(strip(t.relation === nothing ? string(t[1]) : t.subject)),
+                      lowercase(strip(t.relation === nothing ? string(t[2]) : t.relation)),
+                      lowercase(strip(t.relation === nothing ? string(t[3]) : t.object)))
+                     for t in ut]
+                else
+                    Tuple{String,String,String}[]
+                end
+
+                if !isempty(raw_triples)
+                    (promoted, weights) = _compute_relational_patterns_from_triples(
+                        raw_triples, pattern; verb_class_of_fn=verb_class_of_fn,
+                        sigil_table=sigil_table)
+
+                    if !isempty(promoted)
+                        # GRUG: Mutate the newly created node directly.
+                        # Node is mutable struct, so we can modify its fields.
+                        new_node_obj = lock(node_lock) do
+                            get(node_map, new_id, nothing)
+                        end
+                        if new_node_obj !== nothing
+                            for (subj, rel, obj) in promoted
+                                push!(new_node_obj.relational_patterns,
+                                      RelationalTriple(subj, rel, obj))
+                            end
+                            for (k, v) in weights
+                                new_node_obj.relation_weights[k] = v
+                            end
+                            # GRUG: Also store in json_data for specimen persistence
+                            json_data["relational_patterns"] = [
+                                Dict("subject" => s, "relation" => r, "object" => o)
+                                for (s, r, o) in promoted
+                            ]
+                            json_data["relation_weights"] = weights
+                            # GRUG: Update node's json_data with relational info
+                            try
+                                if hasproperty(new_node_obj, :json_data)
+                                    merge!(new_node_obj.json_data, json_data)
+                                end
+                            catch; end
+                        end
+                    end
+                end
+            catch e_relational
+                # GRUG: Relational pattern assignment is non-fatal.
+                # The node was still created — it just won't have relational patterns.
+                # Group latching will still work via thesaurus/Jaccard fallback.
+                @warn "[AutoGrowth] Relational pattern assignment failed for '$pattern': $e_relational"
+            end
+        end
+
         # GRUG: Group latching — same logic as MitosisMode
         _latched_group_id = ""
         _latched_to_id = ""
@@ -1177,6 +1379,11 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
                              group_avg_strength_fn=group_avg_strength_fn,
                              group_for_fn=group_for_fn,
                              scan_latch_candidates_fn=scan_latch_candidates_fn,
+                             # GRUG v7.58: Pass relational sigil kwargs for full 3-gate pipeline
+                             sigil_promote_fn=sigil_promote_fn,
+                             extract_triples_fn=extract_triples_fn,
+                             evaluate_dialectics_fn=evaluate_dialectics_fn,
+                             words_to_signal_fn=words_to_signal_fn,
                              growth_type=growth_type,
                              _latched_group_id_ref = Ref(_latched_group_id),
                              _latched_to_id_ref = Ref(_latched_to_id),
@@ -1212,6 +1419,11 @@ function _try_group_latch!(new_id, pattern, action_packet, lobe_hint;
                            group_avg_strength_fn=nothing,
                            group_for_fn=nothing,
                            scan_latch_candidates_fn=nothing,
+                           # GRUG v7.58: Relational sigil kwargs for _scan_latch_candidates
+                           sigil_promote_fn=nothing,
+                           extract_triples_fn=nothing,
+                           evaluate_dialectics_fn=nothing,
+                           words_to_signal_fn=nothing,
                            growth_type=:match,
                            _latched_group_id_ref=Ref(""),
                            _latched_to_id_ref=Ref(""))
@@ -1226,6 +1438,11 @@ function _try_group_latch!(new_id, pattern, action_packet, lobe_hint;
                 node_map=node_map, node_lock=node_lock,
                 lobe_id=lobe_hint,
                 thesaurus_fn=thesaurus_word_similarity,
+                # GRUG v7.58: Pass relational sigil kwargs for full 3-gate pipeline
+                sigil_promote_fn=sigil_promote_fn,
+                extract_triples_fn=extract_triples_fn,
+                evaluate_dialectics_fn=evaluate_dialectics_fn,
+                words_to_signal_fn=words_to_signal_fn,
             )
             if !isempty(candidates)
                 # GRUG: Filter by time-node isolation if needed
@@ -1376,8 +1593,142 @@ end
 # EVIDENCE HELPERS
 # ==============================================================================
 
+# ==============================================================================
+# GRUG v7.58: DYNAMIC SIGIL RELATIONAL HELPERS
+# When AutoGrowth grows a node, it needs to assign relational_patterns that use
+# sigil references (&causal, &temporal, etc.) instead of concrete verbs ("make",
+# "before"). This gives autogrown nodes the SAME disambiguation power as hand-
+# crafted specimen nodes — a node with (fire, &causal, warmth) matches ANY verb
+# in &causal's expansion, not just the one verb the user happened to type.
+#
+# The reverse mapping: verb → verb_class_of(verb) → "&$(class_name)".
+# Example: "make" → "causal" → "&causal".
+# ==============================================================================
+
+"""
+    _verb_to_sigil_ref(verb::String; verb_class_of_fn=nothing, sigil_table=nothing) -> String
+
+Map a concrete verb to its sigil reference if possible.
+E.g. "make" → "&causal", "before" → "&temporal", "has" → "&possessive".
+Strategy:
+  1. Try SemanticVerbs verb_class_of reverse map (fast, O(1))
+  2. Fall back to SigilRegistry verb_to_relation_sigil (searches expansion lists)
+If no sigil matches, return the verb as-is (concrete triple, no expansion).
+"""
+function _verb_to_sigil_ref(verb::String;
+                            verb_class_of_fn::Union{Function,Nothing}=nothing,
+                            sigil_table::Union{Any,Nothing}=nothing)::String
+    v = lowercase(strip(verb))
+    isempty(v) && return verb
+
+    # GRUG: Try the verb→class reverse map from SemanticVerbs (fast O(1))
+    if verb_class_of_fn !== nothing
+        try
+            cls = verb_class_of_fn(v)
+            if cls !== nothing && cls != ""
+                return "&$cls"
+            end
+        catch
+            # GRUG: verb_class_of failed — try sigil table fallback
+        end
+    end
+
+    # GRUG v7.58: Fallback — search SigilRegistry relation sigil expansion lists.
+    # This catches verbs like "before", "has", "after" that are in sigil expansions
+    # but not in the SemanticVerbs _VERB_REGISTRY.
+    if sigil_table !== nothing
+        try
+            sigil_name = SigilRegistry.verb_to_relation_sigil(sigil_table, v)
+            if sigil_name !== nothing && sigil_name != ""
+                return "&$sigil_name"
+            end
+        catch
+            # GRUG: sigil table lookup failed — return verb as-is
+        end
+    end
+
+    return verb
+end
+
+"""
+    _promote_triple_to_sigil(triple; verb_class_of_fn) -> Tuple{String,String,String}
+
+Promote a concrete (subject, verb, object) triple to sigil form.
+The verb gets mapped to a sigil reference if possible.
+Subject and object stay concrete — they're the nouns that anchor the node.
+Returns (subject, sigil_ref_or_verb, object).
+"""
+function _promote_triple_to_sigil(triple::Tuple{String,String,String};
+                                  verb_class_of_fn::Union{Function,Nothing}=nothing,
+                                  sigil_table::Union{Any,Nothing}=nothing)::Tuple{String,String,String}
+    (subj, rel, obj) = triple
+    sigil_ref = _verb_to_sigil_ref(rel; verb_class_of_fn=verb_class_of_fn, sigil_table=sigil_table)
+    return (subj, sigil_ref, obj)
+end
+
+"""
+    _compute_relational_patterns_from_triples(user_triples, pattern; verb_class_of_fn)
+    -> (Vector{Tuple{String,String,String}}, Dict{String,Float64})
+
+Given the user's relational triples and the growth pattern, compute the
+relational_patterns and relation_weights for a newly autogrown node.
+
+Strategy:
+  - Each user triple is promoted to sigil form: (subj, &sigil, obj)
+  - The pattern's tokens become the node's subject/object anchors
+  - relation_weights get a default boost for each sigil reference used
+  - This makes autogrown nodes relational-aware from birth
+"""
+function _compute_relational_patterns_from_triples(
+    user_triples::Vector{Tuple{String,String,String}},
+    pattern::String;
+    verb_class_of_fn::Union{Function,Nothing}=nothing,
+    sigil_table::Union{Any,Nothing}=nothing
+)::Tuple{Vector{Tuple{String,String,String}}, Dict{String,Float64}}
+    promoted = Tuple{String,String,String}[]
+    weights = Dict{String,Float64}()
+
+    pat_lower = lowercase(strip(pattern))
+
+    for ut in user_triples
+        (subj, sigil_ref, obj) = _promote_triple_to_sigil(ut;
+            verb_class_of_fn=verb_class_of_fn, sigil_table=sigil_table)
+
+        # GRUG: Only keep triples where the pattern overlaps with subject or object.
+        # A triple like ("weather", &causal, "mood") doesn't belong on a "fire" node.
+        # But ("fire", &causal, "warmth") absolutely belongs on a "fire" node.
+        pat_tokens = Set(split(pat_lower))
+        subj_lower = lowercase(strip(subj))
+        obj_lower  = lowercase(strip(obj))
+        relevant = subj_lower in pat_tokens || obj_lower in pat_tokens ||
+                   occursin(subj_lower, pat_lower) || occursin(obj_lower, pat_lower) ||
+                   occursin(pat_lower, subj_lower) || occursin(pat_lower, obj_lower)
+
+        if relevant
+            push!(promoted, (subj, sigil_ref, obj))
+            # GRUG: Sigil reference weights — higher for sigil refs (they expand to many verbs)
+            # Concrete verb weights stay at 1.0 (they only match themselves)
+            if startswith(sigil_ref, "&")
+                weights[sigil_ref] = get(weights, sigil_ref, 0.0) + 1.3
+            else
+                weights[sigil_ref] = get(weights, sigil_ref, 0.0) + 1.0
+            end
+        end
+    end
+
+    # GRUG: Deduplicate promoted triples
+    unique_promoted = collect(Set(promoted))
+
+    return (unique_promoted, weights)
+end
+
+# GRUG v7.58: Threshold for SOURCE 18 — how much relational mismatch
+# counts as a "gap" worth accumulating evidence for.
+const RELATIONAL_GAP_SCORE_FLOOR = 0.5
+
 function _add_evidence!(pattern::String, intensity::Float64, source::String,
-                        growth_type::Symbol; lobe_hint::String = "default")
+                        growth_type::Symbol; lobe_hint::String = "default",
+                        user_triples::Vector{Tuple{String,String,String}} = Tuple{String,String,String}[])
     lock(_EVIDENCE_LOCK) do
         if haskey(_EVIDENCE, pattern)
             rec = _EVIDENCE[pattern]
@@ -1390,8 +1741,20 @@ function _add_evidence!(pattern::String, intensity::Float64, source::String,
             if growth_type != :match && rec.growth_type == :match
                 rec.growth_type = growth_type
             end
+            # GRUG v7.58: Merge in user triples — keep the richest set.
+            # If new triples are non-empty and existing are empty, replace.
+            # If both non-empty, merge unique triples.
+            if !isempty(user_triples)
+                existing_set = Set(rec.user_triples)
+                for ut in user_triples
+                    if !(ut in existing_set)
+                        push!(rec.user_triples, ut)
+                        push!(existing_set, ut)
+                    end
+                end
+            end
         else
-            rec = EvidenceRecord(pattern, growth_type; lobe_hint=lobe_hint)
+            rec = EvidenceRecord(pattern, growth_type; lobe_hint=lobe_hint, user_triples=user_triples)
             rec.accumulated_intensity = intensity
             rec.frequency = 1
             push!(rec.sources, source)
@@ -1589,7 +1952,7 @@ function _infer_action_packet_from_lobe(lobe_hint::String, lobe_registry;
     return get(default_packets, lobe_hint, default_packets["default"])
 end
 
-function _parse_action_name(part::String)::String
+function _parse_action_name(part::AbstractString)::String
     m = match(r"^(.+?)\[", part)
     m !== nothing && return strip(m.captures[1])
     m2 = match(r"^(.+?)\^", part)
@@ -1597,7 +1960,7 @@ function _parse_action_name(part::String)::String
     return strip(part)
 end
 
-function _parse_action_weight(part::String)::Float64
+function _parse_action_weight(part::AbstractString)::Float64
     m = match(r"\^(\d+)", part)
     m !== nothing && return parse(Float64, m.captures[1])
     return 1.0
@@ -1780,6 +2143,8 @@ function get_evidence_snapshot()::Vector{Dict{String,Any}}
             "first_seen" => rec.first_seen,
             "growth_type" => string(rec.growth_type),
             "lobe_hint" => rec.lobe_hint,
+            # GRUG v7.58: Serialize user_triples for specimen persistence
+            "user_triples" => [[s, r, o] for (s, r, o) in rec.user_triples],
         ) for rec in values(_EVIDENCE)]
     end
 end
@@ -1791,8 +2156,24 @@ function load_evidence_snapshot!(snapshots::Vector)
             pattern = get(entry, "pattern", "")
             isempty(pattern) && continue
             growth_type_sym = Symbol(get(entry, "growth_type", "match"))
+            # GRUG v7.58: Deserialize user_triples from specimen
+            raw_triples = get(entry, "user_triples", [])
+            user_triples = Tuple{String,String,String}[]
+            for t in raw_triples
+                if isa(t, AbstractVector) && length(t) >= 3
+                    push!(user_triples, (string(t[1]), string(t[2]), string(t[3])))
+                elseif isa(t, AbstractDict)
+                    s = get(t, "1", get(t, "subject", ""))
+                    r = get(t, "2", get(t, "relation", ""))
+                    o = get(t, "3", get(t, "object", ""))
+                    if !isempty(s) && !isempty(r) && !isempty(o)
+                        push!(user_triples, (s, r, o))
+                    end
+                end
+            end
             rec = EvidenceRecord(pattern, growth_type_sym;
-                                 lobe_hint=get(entry, "lobe_hint", "default"))
+                                 lobe_hint=get(entry, "lobe_hint", "default"),
+                                 user_triples=user_triples)
             rec.accumulated_intensity = get(entry, "accumulated_intensity", 0.0)
             rec.frequency = get(entry, "frequency", 0)
             rec.last_seen = get(entry, "last_seen", time())

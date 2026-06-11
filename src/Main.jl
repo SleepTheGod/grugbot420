@@ -449,6 +449,10 @@ const _LAST_FIRED_NODE       = Ref("")
 const _LAST_PRIMARY_ACTION   = Ref("")
 const _LAST_CONFIDENCE       = Ref(0.0)
 
+# GRUG v7.58: Track the last loaded specimen path for save-on-exit prompt.
+const _LAST_SPECIMEN_PATH = Ref("")
+const _LAST_SPECIMEN_PATH_LOCK = ReentrantLock()
+
 # GRUG v7.12: Track which messages contributed to the LAST /mission's
 # Fresh Memory so /right and /wrong can reinforce/punish them. Reset at
 # the top of every mission cycle via refresh_message_intensities!.
@@ -5235,6 +5239,135 @@ function process_mission(mission_text::String)
         # asks a coherent question about the input it doesn't understand, and prompts
         # the user to use /answer or /antiAnswer. This is the hippocampal ask step:
         # strain → ask question → user answers → strain resolved.
+
+        # ── AUTOGROWTH: EMPTY-CAVE EVIDENCE ACCUMULATION ──
+        # GRUG v7.58: An empty cave is the STRONGEST gap signal — zero nodes
+        # matched the user's input. Accumulate evidence now (before the early
+        # return) so AutoGrowth can grow a node for the uncovered pattern.
+        # We use simplified defaults for MLP signals (no specimens = no MLP run),
+        # but the gap itself provides strong evidence intensity.
+        if !is_image
+            try
+                _ec_node_patterns = lock(NODE_LOCK) do
+                    Set{String}(lowercase(strip(n.pattern)) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:"))
+                end
+                _ec_node_ids_patterns = lock(NODE_LOCK) do
+                    [(n.id, n.pattern) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:")]
+                end
+                _ec_lobe_snapshots = Tuple{String,String,Set{String}}[]
+                for (lid, lrec) in Lobe.LOBE_REGISTRY
+                    _ec_nids = Set{String}()
+                    for (nid, assigned_lid) in Lobe.NODE_TO_LOBE_IDX
+                        if assigned_lid == lid; push!(_ec_nids, nid) end
+                    end
+                    push!(_ec_lobe_snapshots, (lid, lrec.subject, _ec_nids))
+                end
+                _ec_attach_snapshots = Tuple{String,String,Bool}[]
+                lock(BRIDGE_LOCK) do
+                    for (target_id, bridges) in BRIDGE_MAP
+                        for br in bridges
+                            push!(_ec_attach_snapshots, (target_id, join(br.seam_tokens, " "), br.is_crystalized))
+                        end
+                    end
+                end
+                _ec_sigil_entries = Dict{String,Any}()
+                for (sname, sentry) in _ENGINE_SIGIL_TABLE.entries
+                    _ec_sigil_entries[sname] = Dict{String,Any}(
+                        "lexicon"   => sentry.lexicon,
+                        "expansion" => sentry.expansion,
+                        "class"     => string(sentry.class),
+                    )
+                end
+                _ec_strain = try EphemeralMLP.get_strain_energy() catch _ 0.0 end
+
+                AutoGrowth.accumulate_evidence!(
+                    user_text                 = mission_text,
+                    intensity                 = 2.0,  # GRUG: Empty cave = double intensity gap signal
+                    node_patterns             = _ec_node_patterns,
+                    node_ids_patterns         = _ec_node_ids_patterns,
+                    thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+                    thesaurus_word_similarity = Thesaurus.word_similarity,
+                    lobe_snapshots            = _ec_lobe_snapshots,
+                    attachment_snapshots      = _ec_attach_snapshots,
+                    sigil_table_entries       = _ec_sigil_entries,
+                    strain_energy             = _ec_strain,
+                    hippocampal_warrant_active = false,  # GRUG: No MLP run for empty cave
+                    mlp_semantic_score        = 0.3,   # GRUG: Low semantic = gap signal
+                    mlp_relevance_score       = 0.3,   # GRUG: Low relevance = gap signal
+                    mlp_disambiguation        = 0.5,
+                    coherence_delta_phi       = 0.0,
+                    observer_recurring_gap    = true,   # GRUG: Empty cave IS a recurring gap
+                    observer_gap_pattern      = "empty_cave",
+                    mlp_novelty_score         = 0.8,   # GRUG: Novel input = high novelty
+                    mlp_activation_mode       = :sigmoid,
+                    mlp_hash_rarity           = 0.7,
+                    mlp_correlation_quality   = 0.5,
+                    extract_triples_fn        = (pat) -> extract_relational_triples(pat),
+                    evaluate_dialectics_fn    = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                    node_map                  = NODE_MAP,
+                    node_lock                 = NODE_LOCK,
+                )
+
+                # GRUG: Also try to grow from this evidence immediately.
+                # Empty cave means we should be aggressive about filling the gap.
+                _ec_result = AutoGrowth.maybe_grow_from_evidence!(
+                    node_map                   = NODE_MAP,
+                    node_lock                  = NODE_LOCK,
+                    create_node_fn             = create_node,
+                    add_to_group_fn            = add_to_group!,
+                    register_group_fn          = register_group!,
+                    group_map                  = GROUP_MAP,
+                    group_lock                 = GROUP_LOCK,
+                    lobe_registry              = Lobe.LOBE_REGISTRY,
+                    immune_gate_fn             = (pattern, data) -> begin
+                        json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                        immune_gate("/autogrowth", json_text; is_critical=false)
+                    end,
+                    thesaurus_gate_filter      = Thesaurus.synonym_lookup,
+                    thesaurus_word_similarity  = Thesaurus.word_similarity,
+                    add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                    register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
+                    register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                    stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
+                        AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+                    group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                        find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                    link_to_group_member_fn    = link_to_group_member,
+                    group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
+                        grp = get(GROUP_MAP, gid, nothing)
+                        grp === nothing && return 0.0
+                        isempty(grp.node_ids) && return 0.0
+                        total = 0.0; count = 0
+                        for nid in grp.node_ids
+                            n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                            if n !== nothing && !n.is_grave; total += n.strength; count += 1 end
+                        end
+                        count > 0 ? total / count : 0.0
+                    end,
+                    group_for_fn               = (nid) -> lock(GROUP_LOCK) do
+                        for (gid, grp) in GROUP_MAP
+                            if nid in grp.node_ids; return gid end
+                        end
+                        nothing
+                    end,
+                    sigil_promote_fn           = (text) -> SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, text),
+                    extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+                    evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                    words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
+                    scan_latch_candidates_fn   = (pattern, action_packet; kwargs...) -> _scan_latch_candidates(pattern, action_packet; kwargs...),
+                    verb_class_of_fn           = (verb) -> SemanticVerbs.verb_class_of(verb),
+                    user_text                  = mission_text,
+                    sigil_table                = _ENGINE_SIGIL_TABLE,
+                    mlp_rule_hints             = Dict{String,Any}[],
+                )
+                if _ec_result !== nothing && _ec_result.won_coinflip
+                    println("[AUTOGROWTH:EMPTY_CAVE] 🌱  Grew $(_ec_result.growth_type) node for '$(_ec_result.pattern)' in $(_ec_result.lobe_hint) (intensity=$(round(_ec_result.evidence_intensity, digits=2)), p=$(round(_ec_result.coinflip_prob, digits=3)))")
+                end
+            catch e_ec_ag
+                @warn "[MAIN] AutoGrowth empty-cave accumulation failed (non-fatal): $e_ec_ag"
+            end
+        end
+
         ask_output = generate_ask_question(mission_text; reason="empty_cave")
         println("\n🤖 AIML Ask Question:\n$ask_output")
         try
@@ -5905,6 +6038,11 @@ function process_mission(mission_text::String)
                     _ic_stats = EphemeralMLP.get_input_correlation_stats()
                     Float64(get(_ic_stats, "mean_quality_ema", 0.5))
                 catch _ 0.5 end,
+                # GRUG v7.58: Relational triple extraction for SOURCE 18
+                extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+                evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                node_map                   = NODE_MAP,
+                node_lock                  = NODE_LOCK,
             )
 
             # ── MAYBE GROW FROM EVIDENCE ──
@@ -5959,7 +6097,11 @@ function process_mission(mission_text::String)
                 extract_triples_fn         = (pat) -> extract_relational_triples(pat),
                 evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
                 words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
-                scan_latch_candidates_fn   = (pattern; kwargs...) -> find_group_latch_candidates(pattern; kwargs...),
+                scan_latch_candidates_fn   = (pattern, action_packet; kwargs...) -> _scan_latch_candidates(pattern, action_packet; kwargs...),
+                # GRUG v7.58: verb→sigil reverse mapping + user text for relational pattern promotion
+                verb_class_of_fn           = (verb) -> SemanticVerbs.verb_class_of(verb),
+                user_text                  = mission_text,
+                sigil_table                = _ENGINE_SIGIL_TABLE,
                 mlp_rule_hints             = try EphemeralMLP.get_active_rule_hints() catch _ Dict{String, Any}[] end,
             )
 
@@ -7512,6 +7654,11 @@ function load_specimen_from_file!(filepath::String)::String
 
     if !isfile(filepath)
         error("!!! FATAL: /loadSpecimen file not found: '$filepath'! Check path and try again! !!!")
+    end
+
+    # GRUG v7.58: Record specimen path for save-on-exit prompt.
+    lock(_LAST_SPECIMEN_PATH_LOCK) do
+        _LAST_SPECIMEN_PATH[] = filepath
     end
 
     t_start = time()
@@ -9684,7 +9831,11 @@ function maybe_run_idle()
             extract_triples_fn         = (pat) -> extract_relational_triples(pat),
             evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
             words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
-            scan_latch_candidates_fn   = (pattern; kwargs...) -> find_group_latch_candidates(pattern; kwargs...),
+            scan_latch_candidates_fn   = (pattern, action_packet; kwargs...) -> _scan_latch_candidates(pattern, action_packet; kwargs...),
+            # GRUG v7.58: verb→sigil reverse mapping + user text for relational pattern promotion
+            verb_class_of_fn           = (verb) -> SemanticVerbs.verb_class_of(verb),
+            user_text                  = try MESSAGE_HISTORY[end].text catch _ "" end,
+            sigil_table                = _ENGINE_SIGIL_TABLE,
             mlp_rule_hints             = try EphemeralMLP.get_active_rule_hints() catch _ Dict{String, Any}[] end,
         )
         if _ag_idle_result !== nothing && _ag_idle_result.won_coinflip
@@ -10060,6 +10211,34 @@ GRUG: Main REPL loop. Prints boot message, then loops forever reading input.
 Dispatches commands (/ prefix) or runs mission scan. Triggers idle chatter/phagy
 between inputs via maybe_run_idle(). This is the top-level entry point.
 """
+# GRUG v7.58: Save-on-exit prompt. When the user quits, ask if they want
+# to save the current specimen (autogrowth may have mutated state).
+function _maybe_save_specimen_on_exit()
+    last_path = lock(_LAST_SPECIMEN_PATH_LOCK) do
+        _LAST_SPECIMEN_PATH[]
+    end
+    if isempty(last_path)
+        # No specimen was ever loaded — skip prompt
+        return
+    end
+    try
+        print("
+[GRUG] 💾 Would you like to save the current specimen? (y/n): ")
+        answer = lowercase(strip(readline()))
+        if startswith(answer, "y")
+            # Save to the same path it was loaded from
+            println("[GRUG] Saving specimen to: $last_path")
+            result = save_specimen_to_file!(last_path)
+            println("[GRUG] $result")
+        else
+            println("[GRUG] Specimen not saved. Goodbye.")
+        end
+    catch
+        # readline may fail if stdin is already closed (scripted exit)
+        # Just skip silently
+    end
+end
+
 function run_cli()
     print(BOOT_MSG)
 
@@ -10131,6 +10310,8 @@ function run_cli()
         # terminated on its own, not via a /quit command.
         if eof(stdin)
             println("\n[GRUG] ☁ stdin closed (EOF). Cave goes quiet. Shutting down CLI loop.")
+            # GRUG v7.58: Try to save specimen before EOF exit (may fail if stdin is closed).
+            _maybe_save_specimen_on_exit()
             break
         end
 
@@ -10164,6 +10345,8 @@ function run_cli()
             catch
                 # GRUG: Best-effort. Thread might already be stopped.
             end
+            # GRUG v7.58: Ask if user wants to save specimen before exit.
+            _maybe_save_specimen_on_exit()
             break
         end
 

@@ -859,6 +859,29 @@ function is_relation_sigil(table::SigilTable, name::AbstractString)::Bool
 end
 
 """
+    verb_to_relation_sigil(table, verb) -> Union{String, Nothing}
+
+Reverse lookup: given a concrete verb (e.g. "before", "has"), find the
+name of the :relation sigil whose expansion list contains it.
+Returns the sigil name WITHOUT the & prefix (e.g. "temporal"), or nothing.
+Used by AutoGrowth to promote concrete verbs to sigil references.
+"""
+function verb_to_relation_sigil(table::SigilTable, verb::AbstractString)::Union{String, Nothing}
+    v = lowercase(strip(String(verb)))
+    isempty(v) && return nothing
+    for (name, entry) in table.entries
+        entry.class === :relation || continue
+        entry.expansion === nothing && continue
+        for alt in entry.expansion
+            if lowercase(strip(String(alt))) == v
+                return String(name)
+            end
+        end
+    end
+    return nothing
+end
+
+"""
     expand_relation_if_sigil(table, relation_str) -> Vector{String}
 
 If `relation_str` starts with `&` and names a registered :relation sigil,
@@ -1236,6 +1259,6 @@ export register_procedure_sigil!, expand_procedure_sigil, is_procedure_sigil,
 # ==============================================================================
 
 export register_relation_sigil!, expand_relation_sigil, is_relation_sigil,
-       expand_relation_if_sigil
+       expand_relation_if_sigil, verb_to_relation_sigil
 
 end # module SigilRegistry
