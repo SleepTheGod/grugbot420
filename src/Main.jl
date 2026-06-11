@@ -1543,6 +1543,15 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
             is_relay = any(t -> getfield(t, :relation) == "relay_attached" ||
                                 getfield(t, :relation) == "cascade_bridge", v.node_triples)
 
+            # GRUG BUG-010: Grave shadow inhibition — dead knowledge casts shadows.
+            # Group-scoped for regular nodes, global for AIML. Antimatch = 1.0.
+            grave_shadow = try
+                compute_grave_shadow(v.node_id)
+            catch e
+                @warn "[ORCHESTRATOR] grave_shadow failed for $(v.node_id): $e (using 1.0)"
+                1.0
+            end
+
             push!(vote_candidates, VoteOrchestrator.VoteCandidate(
                 v.node_id, v.confidence, node.strength;
                 strength_cap      = STRENGTH_CAP,
@@ -1553,6 +1562,7 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
                 peak_dominance    = peak_dom,
                 frame_match_multiplier = frame_mult,
                 is_relay          = is_relay,
+                grave_shadow_multiplier = grave_shadow,
                 # recency_bonus left NaN — Node struct lacks last_fire_cycle
                 # so we can't compute honest recency without adding tracking.
                 # Knob is plumbed; fill in when the field exists.
@@ -3373,7 +3383,10 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
 
     if !isnothing(target_lobe)
         try
-            Lobe.add_node_to_lobe!(target_lobe, nid)
+            # GRUG BUG-010: Graved nodes don't eat cap space — pass alive count
+            # so cap enforcement only sees living nodes. Graves create vacant spots.
+            alive = count_alive_nodes_in_lobe(target_lobe)
+            Lobe.add_node_to_lobe!(target_lobe, nid; alive_count=alive)
         catch e
             @warn "[MAIN] /answer: failed to assign node $nid to lobe '$target_lobe': $e"
         end
@@ -6769,6 +6782,7 @@ function save_specimen_to_file!(filepath::String)::String
                 "last_chatter_at"  => grp.last_chatter_at,
                 "chatter_count"    => grp.chatter_count,
                 "has_grave_slot"   => grp.has_grave_slot,
+                "grave_count"      => grp.grave_count,
                 "max_occupancy"    => grp.max_occupancy,
                 "is_time_node_group" => grp.is_time_node_group,
                 "is_chatter_eligible" => grp.is_chatter_eligible,
@@ -8491,6 +8505,13 @@ function load_specimen_from_file!(filepath::String)::String
                     last_ct  = Float64(get(gentry, "last_chatter_at", 0.0))
                     ccount   = Int(get(gentry, "chatter_count", 0))
                     grave_slot = Bool(get(gentry, "has_grave_slot", false))
+                    # GRUG BUG-010: grave_count — how many vacant grave slots in this group.
+                    # Backward compat: old specimens lack this field, default to 0.
+                    # If has_grave_slot is true but grave_count is 0, infer 1 (at least one grave).
+                    grave_cnt = Int(get(gentry, "grave_count", 0))
+                    if grave_slot && grave_cnt == 0
+                        grave_cnt = 1  # legacy specimen had has_grave_slot=true but no count
+                    end
 
                     max_occ = Int(get(gentry, "max_occupancy", GROUP_MAX_OCCUPANCY))
                     is_tng = Bool(get(gentry, "is_time_node_group", false))
@@ -8505,7 +8526,7 @@ function load_specimen_from_file!(filepath::String)::String
                         # GRUG: Migration from old sentinel — chatter_count=-1 means NOCHAT
                         is_chatter_eligible = (ccount >= 0)
                     end
-                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, max_occ, is_tng, is_chatter_eligible)
+                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, grave_cnt, max_occ, is_tng, is_chatter_eligible)
                     GROUP_MAP[gid] = grp
                     for m in members
                         NODE_TO_GROUP[m] = gid

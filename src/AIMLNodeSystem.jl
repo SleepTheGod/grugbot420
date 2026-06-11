@@ -29,6 +29,41 @@ end
 using .RelationalJitter
 
 # ==============================================================================
+# GRAVE SHADOW CONSTANTS — local copies with VoteOrchestrator fallback
+# ==============================================================================
+# GRUG BUG-010: These constants control the AIML global grave shadow.
+# When running inside Main.jl (via GrugBot420.jl), they delegate to
+# VoteOrchestrator's canonical values. When running standalone (tests),
+# they fall back to local defaults. This avoids a hard dependency on
+# VoteOrchestrator being loaded before AIMLNodeSystem.
+
+function _grave_shadow_floor()::Float64
+    try
+        parent = parentmodule(@__MODULE__)
+        if isdefined(parent, :VoteOrchestrator)
+            vo = getfield(parent, :VoteOrchestrator)
+            if isdefined(vo, :GRAVE_SHADOW_FLOOR)
+                return getfield(vo, :GRAVE_SHADOW_FLOOR)
+            end
+        end
+    catch; end
+    return 0.70  # local fallback
+end
+
+function _grave_shadow_min_graves()::Int
+    try
+        parent = parentmodule(@__MODULE__)
+        if isdefined(parent, :VoteOrchestrator)
+            vo = getfield(parent, :VoteOrchestrator)
+            if isdefined(vo, :GRAVE_SHADOW_MIN_GRAVES)
+                return getfield(vo, :GRAVE_SHADOW_MIN_GRAVES)
+            end
+        end
+    catch; end
+    return 1  # local fallback
+end
+
+# ==============================================================================
 # ERROR TYPES — GRUG hate silent failures!
 # ==============================================================================
 
@@ -538,6 +573,54 @@ function current_cycle()::Int
 end
 
 # ==============================================================================
+# GRAVE SHADOW — Global AIML inhibition from dead executive knowledge
+# ==============================================================================
+
+"""
+    compute_aiml_grave_shadow(lobe_id::String)::Float64
+
+GRUG BUG-010: AIML nodes are globally active — grave shadow is tribe-wide,
+not group-scoped. When many AIML nodes have died in a lobe's tribe, the
+surviving nodes' strength feedback gets dampened. Dead executives cast
+long shadows: a tribe that has lost many templates is a weaker responder.
+
+Formula: shadow = 1.0 - (grave_ratio * (1.0 - GRAVE_SHADOW_FLOOR))
+  - 0 graves → 1.0 (full strength feedback)
+  - some graves → <1.0 (dampened)
+  - all graves → GRAVE_SHADOW_FLOOR (maximum dampening)
+
+Called from _apply_strength_delta! to modulate delta magnitude.
+"""
+function compute_aiml_grave_shadow(lobe_id::String)::Float64
+    lock(AIML_LOCK) do
+        if !haskey(AIML_REGISTRY, lobe_id)
+            return 1.0  # no tribe — no shadow
+        end
+        tribe = AIML_REGISTRY[lobe_id]
+        grave_count = 0
+        alive_count = 0
+        for (nid, node) in tribe
+            if node.is_grave
+                grave_count += 1
+            else
+                alive_count += 1
+            end
+        end
+        if grave_count < _grave_shadow_min_graves()
+            return 1.0  # not enough graves to cast a shadow
+        end
+        total = Float64(grave_count + alive_count)
+        if total <= 0
+            return 1.0
+        end
+        grave_ratio = Float64(grave_count) / total
+        floor = _grave_shadow_floor()
+        shadow = 1.0 - (grave_ratio * (1.0 - floor))
+        return clamp(shadow, floor, 1.0)
+    end
+end
+
+# ==============================================================================
 # STRENGTH DYNAMICS — use-based gain, feedback-based change
 # ==============================================================================
 
@@ -549,6 +632,14 @@ function _apply_strength_delta!(node::AIMLNode, delta::Float64)
         # GRUG: Grave nodes are permanent negative reinforcement. No resurrection
         # via passive strength nudges. Phagy or explicit revive would be needed.
         return
+    end
+    # GRUG BUG-010: AIML grave shadow — global inhibition from dead executives.
+    # Positive deltas (rewards) are dampened by the shadow; negative deltas
+    # (penalties) pass through unmodified. Dead knowledge weakens the tribe's
+    # ability to benefit from reinforcement, but doesn't protect it from decay.
+    if delta > 0.0
+        shadow = compute_aiml_grave_shadow(node.lobe_id)
+        delta = delta * shadow
     end
     # GRUG: Every strength delta gets a small zero-mean nudge at application
     # time. Sign is preserved (ratio < 1 so +1.0 stays positive, −1.0 stays
@@ -1080,6 +1171,7 @@ export begin_cycle!, current_cycle
 export record_fire!, record_vote!
 export apply_aiml_right!, apply_aiml_wrong!
 export aiml_phagy_sweep!
+export compute_aiml_grave_shadow
 export get_aiml_status_summary, reset_all!
 export serialize_aiml_state, deserialize_aiml_state!
 

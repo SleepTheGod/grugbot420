@@ -1587,6 +1587,10 @@ mutable struct NodeGroup
     has_grave_slot::Bool             # GRUG: True after a member is graved \u2014 grants UNLINKABLE override
                                      #       so a fresh node can fill the empty slot. Cleared when
                                      #       the slot is filled.
+    grave_count::Int                 # GRUG BUG-010: Number of currently-vacant grave slots in this
+                                     #       group. Incremented when a member is graved, decremented
+                                     #       when a replacement fills the slot. Used by grave_shadow
+                                     #       to compute local inhibition from dead knowledge.
     max_occupancy::Int               # GRUG: Cap on members. Graved nodes create vacancies below this.
                                      #       New nodes can join if length(members) < max_occupancy.
     is_time_node_group::Bool         # GRUG v7.56a: True when seed node is a time node. Time nodes
@@ -1602,13 +1606,13 @@ mutable struct NodeGroup
 end
 
 # GRUG: Backwards-friendly constructor. Most callers only know id+seed.
-# Calls the default inner constructor (9 positional fields) provided by Julia.
+# Calls the default inner constructor (11 positional fields) provided by Julia.
 NodeGroup(id::String, seed_node_id::String, centroid_pattern::String; is_time_node_group::Bool=false, is_chatter_eligible::Bool=true) =
-    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, GROUP_MAX_OCCUPANCY, is_time_node_group, is_chatter_eligible)
+    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, 0, GROUP_MAX_OCCUPANCY, is_time_node_group, is_chatter_eligible)
 
-# NOTE: No explicit 11-arg outer constructor needed — Julia's default inner
+# NOTE: No explicit 12-arg outer constructor needed — Julia's default inner
 # constructor already provides NodeGroup(id, members, centroid_pattern,
-# created_at, last_chatter_at, chatter_count, has_grave_slot, max_occupancy,
+# created_at, last_chatter_at, chatter_count, has_grave_slot, grave_count, max_occupancy,
 # is_time_node_group, is_chatter_eligible).
 # Defining an outer constructor with the same signature as the inner one
 # replaces it and causes infinite recursion (StackOverflowError).
@@ -1710,8 +1714,17 @@ function add_to_group!(group::NodeGroup, node_id::String)::Bool
         end
         push!(group.members, node_id)
         NODE_TO_GROUP[node_id] = group.id
-        # GRUG: Filling a graved slot clears the override.
-        group.has_grave_slot = false
+        # GRUG: Filling a graved slot clears the override and decrements grave_count.
+        if group.has_grave_slot
+            group.has_grave_slot = false
+            group.grave_count = max(0, group.grave_count - 1)
+            # GRUG: If grave_count dropped to zero, no more vacant slots.
+            # If still > 0, there are more graves to fill — re-enable slot flag
+            # so the next join also gets the override.
+            if group.grave_count > 0
+                group.has_grave_slot = true
+            end
+        end
 
         # GRUG v7.39: NOCHAT graduation. When a NOCHAT group (is_chatter_eligible=false)
         # grows to have enough connected members, it automatically graduates to
@@ -1758,6 +1771,10 @@ function mark_group_grave_slot!(node_id::String)
         filter!(m -> m != node_id, grp.members)
         delete!(NODE_TO_GROUP, node_id)
         grp.has_grave_slot = true
+        # GRUG BUG-010: Track how many grave vacancies this group has.
+        # Each grave increments the count; add_to_group! decrements when
+        # a replacement fills the slot. Used by grave_shadow_multiplier.
+        grp.grave_count += 1
     end
 end
 
@@ -1795,6 +1812,101 @@ function group_avg_strength(group::NodeGroup; node_map, node_lock)::Float64
         end
     end
     return count > 0 ? total / Float64(count) : 0.0
+end
+
+"""
+    compute_grave_shadow(node_id::String; node_map=NODE_MAP, node_lock=NODE_LOCK,
+                         group_map=GROUP_MAP, group_lock=GROUP_LOCK,
+                         aiml_tribe=nothing)::Float64
+
+GRUG BUG-010: Compute the grave shadow multiplier for a voting node.
+Dead knowledge casts shadows on surviving neighbors — the more graves in
+a node's scope, the deeper the shadow. This is a multiplicative penalty
+applied in composite_vote_score() after frame_match_multiplier.
+
+Scoping rules:
+  - Antimatch nodes → 1.0 (suppressors don't die, don't cast shadows)
+  - AIML nodes → GLOBAL: grave ratio across the entire AIML tribe
+  - Regular nodes → LOCAL GROUP: grave ratio within the node's NodeGroup
+
+Formula: shadow = 1.0 - (grave_ratio * (1.0 - GRAVE_SHADOW_FLOOR))
+  where grave_ratio = grave_count / max(grave_count + alive_count, 1)
+  - 0 graves → shadow = 1.0 (no penalty)
+  - some graves → shadow < 1.0 (inhibited)
+  - all graves → shadow = GRAVE_SHADOW_FLOOR (maximum inhibition)
+
+If the node has no group (orphan), grave_shadow = 1.0 (no local shadow).
+"""
+function compute_grave_shadow(node_id::String;
+                              node_map = NODE_MAP,
+                              node_lock = NODE_LOCK,
+                              group_map = GROUP_MAP,
+                              group_lock = GROUP_LOCK,
+                              aiml_tribe = nothing)::Float64
+    # GRUG: Antimatch nodes don't die. No shadows on suppressors.
+    node = lock(node_lock) do
+        get(node_map, node_id, nothing)
+    end
+    if isnothing(node)
+        return 1.0  # vanished node — no opinion
+    end
+    if node.is_antimatch_node
+        return 1.0  # suppressors don't die, don't cast shadows
+    end
+    if node.is_grave
+        return 1.0  # already dead — no self-shadow (grave nodes don't vote anyway)
+    end
+
+    # GRUG: AIML nodes are globally active — use tribe-level grave ratio.
+    if !isnothing(aiml_tribe)
+        # aiml_tribe is the Dict{String, AIMLNode} for this lobe
+        grave_count = 0
+        alive_count = 0
+        for (nid, an) in aiml_tribe
+            if an.is_grave
+                grave_count += 1
+            else
+                alive_count += 1
+            end
+        end
+        if grave_count < VoteOrchestrator.GRAVE_SHADOW_MIN_GRAVES
+            return 1.0  # not enough graves to cast a shadow
+        end
+        total = grave_count + alive_count
+        if total <= 0
+            return 1.0  # empty tribe — no opinion
+        end
+        grave_ratio = Float64(grave_count) / Float64(total)
+        floor = VoteOrchestrator.GRAVE_SHADOW_FLOOR
+        shadow = 1.0 - (grave_ratio * (1.0 - floor))
+        return clamp(shadow, floor, 1.0)
+    end
+
+    # GRUG: Regular nodes are sparse — use group-scoped grave ratio.
+    grp = lock(group_lock) do
+        gid = get(NODE_TO_GROUP, node_id, nothing)
+        isnothing(gid) ? nothing : get(group_map, gid, nothing)
+    end
+
+    if isnothing(grp)
+        return 1.0  # orphan node — no local shadow
+    end
+
+    grave_cnt = grp.grave_count
+    alive_cnt = length(grp.members)  # graved members already removed from members list
+
+    if grave_cnt < VoteOrchestrator.GRAVE_SHADOW_MIN_GRAVES
+        return 1.0  # not enough graves to cast a shadow
+    end
+    if alive_cnt <= 0 && grave_cnt <= 0
+        return 1.0  # empty group — no opinion
+    end
+
+    total = Float64(grave_cnt + alive_cnt)
+    grave_ratio = Float64(grave_cnt) / total
+    floor = VoteOrchestrator.GRAVE_SHADOW_FLOOR
+    shadow = 1.0 - (grave_ratio * (1.0 - floor))
+    return clamp(shadow, floor, 1.0)
 end
 
 """
