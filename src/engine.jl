@@ -224,6 +224,13 @@ gives you the user's raw token for that capture, and `.raw_position`
 indexes into the raw token stream.
 """
 function current_promotion_raw()::Union{String,Nothing}
+    # GRUG: Prefer module-level Ref — it survives @spawn, just like bindings.
+    global_raw = lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_PROMOTION_RAW[]
+    end
+    if !isempty(global_raw)
+        return global_raw
+    end
     return get(task_local_storage(), _PROMOTION_RAW_KEY, nothing)
 end
 
@@ -4996,9 +5003,71 @@ end
     scan_and_expand(input::String; chunks=[])
 
 Public compatibility wrapper for the historical three-pass scan API.
+
+STAGE 1.5a — FRONT-DOOR SIGIL PROMOTION:
+Before scanning, run the input through SigilPromoter.promote_input().
+Two layers:
+  Layer 1 — thesaurus canonicalization ("two plus two" -> "2 + 2")
+  Layer 2 — registry shape promotion   ("2 + 2"        -> "&n &op &n")
+Bindings are stashed in both task-local storage and module-level Refs so
+downstream code (ArithmeticEngine, ATP, generate_aiml_payload) can read them
+across Task boundaries. The PROMOTED text is passed to scan_specimens so that
+nodes with &n/&op patterns can match the promoted form.
 """
 function scan_and_expand(input::String; chunks=[])
-    return scan_specimens(input; chunks=chunks)
+    # ── STAGE 1.5a — FRONT-DOOR SIGIL PROMOTION ──────────────────────────
+    promoted_text, promotion_bindings = SigilPromoter.promote_input(
+        _ENGINE_SIGIL_TABLE, input)
+
+    # GRUG: Stash promotion results. Each scan_and_expand call OVERWRITES
+    # any prior binding so stale state from a previous input never leaks.
+    # Write to BOTH task-local storage AND module-level Refs:
+    #   - Task-local: backward compat for code in the same task
+    #   - Module-level Refs: survive @spawn Task boundaries (BUG-5 fix).
+    task_local_storage(_PROMOTION_RAW_KEY,       input)
+    task_local_storage(_PROMOTION_REWRITTEN_KEY, promoted_text)
+    task_local_storage(_PROMOTION_BINDINGS_KEY,  promotion_bindings)
+    lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_PROMOTION_RAW[]        = input
+        _GLOBAL_PROMOTION_REWRITTEN[]  = promoted_text
+        _GLOBAL_PROMOTION_BINDINGS[]   = promotion_bindings
+    end
+
+    # GRUG v8.1: TIME ORIENTATION — extract temporal orientation from promotion
+    # bindings and stash it the same way (task-local + global Ref).
+    time_orient, time_meta = extract_time_orientation(promotion_bindings)
+    task_local_storage(_TIME_ORIENTATION_KEY, (time_orient, time_meta))
+    lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_TIME_ORIENTATION[] = (time_orient, time_meta)
+    end
+    if time_orient != "none"
+        @info "[ENGINE v8.1] Time orientation detected: $(time_orient) (sigil=$(get(time_meta, "sigil_name", "?")), surface='$(get(time_meta, "surface", ""))')"
+    end
+
+    # GRUG: From here on, scan_specimens sees the PROMOTED text, not the raw
+    # text. That is the whole point — one shape, one node.
+    return scan_specimens(promoted_text; chunks=chunks)
+end
+
+"""
+    bind_sigils(input_text::String, sigil_table) -> Dict{String,Vector{Any}}
+
+GRUG: Convenience function that runs sigil promotion on an input string and
+returns bindings grouped by name (via SigilPromoter.bindings_by_name).
+Used by PettyLearner to get arithmetic bindings without having to know
+about the promotion internals. Returns empty Dict on error.
+"""
+function bind_sigils(input_text::String, sigil_table)::Dict{String,Vector{Any}}
+    if isempty(strip(input_text))
+        return Dict{String,Vector{Any}}()
+    end
+    try
+        _, bindings = SigilPromoter.promote_input(sigil_table, input_text)
+        return SigilPromoter.bindings_by_name(bindings)
+    catch e
+        @warn "[ENGINE] bind_sigils failed: $e"
+        return Dict{String,Vector{Any}}()
+    end
 end
 
 # ==============================================================================
