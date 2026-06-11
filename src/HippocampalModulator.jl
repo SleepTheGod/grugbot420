@@ -80,6 +80,7 @@ export ENTRY_SURE, ENTRY_LOW_CONFIDENCE, ENTRY_ADDITIVE
 export create_action_log!, wipe_action_log!, add_entry!, next_pending!
 export complete_entry!, fail_entry!, get_entry, log_entries, log_summary
 export modulate_objectives!, assemble_output!
+export all_sure_done
 
 # ==============================================================================
 # ERROR TYPES — NO SILENT FAILURES
@@ -180,6 +181,7 @@ mutable struct ActionEntry
     reserved_step::Int              # Position in final output assembly — ensures step coherence
     is_supplementary::Bool          # True = gets supplementary prefix
     entry_type::ActionEntryType     # Sure / low-confidence / additive
+    scoped_mission::String          # GRUG v8.2: Sub-subject text for this entry (not full mission)
 end
 
 # ==============================================================================
@@ -277,7 +279,8 @@ function add_entry!(log::ActionLog;
                     confidence::Float64 = 0.0,
                     reserved_step::Int = 0,
                     is_supplementary::Bool = false,
-                    entry_type::ActionEntryType = ENTRY_SURE)::ActionEntry
+                    entry_type::ActionEntryType = ENTRY_SURE,
+                    scoped_mission::String = "")::ActionEntry
     seq = length(log.entries) + 1
     entry = ActionEntry(
         seq,
@@ -293,6 +296,7 @@ function add_entry!(log::ActionLog;
         reserved_step,
         is_supplementary,
         entry_type,
+        scoped_mission,        # GRUG v8.2: sub-subject text
     )
     push!(log.entries, entry)
     return entry
@@ -363,6 +367,27 @@ function fail_entry!(log::ActionLog, seq::Int)
     entry = get_entry(log, seq)
     entry.status = ENTRY_FAILED
     return nothing
+end
+
+"""
+    all_sure_done(log::ActionLog) -> Bool
+
+GRUG v8.2: Check whether ALL sure/low-confidence entries in the log are
+either ENTRY_DONE or ENTRY_FAILED. This is the "cycle complete" gate —
+the signal that tells AIML it's safe to commit the final response because
+every sub-objective has been resolved.
+
+Returns true if:
+  - There are no sure/low-confidence entries at all (edge case), OR
+  - Every ENTRY_SURE and ENTRY_LOW_CONFIDENCE entry has status DONE or FAILED
+
+Additive entries are excluded — they're supplementary extras, not part of
+the core answer. The system should not wait for additives before committing.
+"""
+function all_sure_done(log::ActionLog)::Bool
+    core_entries = filter(e -> e.entry_type in (ENTRY_SURE, ENTRY_LOW_CONFIDENCE), log.entries)
+    isempty(core_entries) && return true
+    return all(e -> e.status in (ENTRY_DONE, ENTRY_FAILED), core_entries)
 end
 
 # ==============================================================================
@@ -456,7 +481,8 @@ function log_summary(log::ActionLog)::String
         conf_str = " conf=$(round(e.confidence, digits=3))"
         step_str = " step=$(e.reserved_step)"
         type_str = e.is_supplementary ? " [$(e.entry_type)]" : ""
-        push!(lines, "  [$(e.sequence_number)] $obj_str | votes=$n_votes (sure=$n_sure unsure=$n_unsure)$conf_str$step_str$type_str | $status_str$(dep_str)$(ctx_str)$(out_str)")
+        scoped_str = isempty(e.scoped_mission) ? "" : " scoped=\"$(first(e.scoped_mission, 40))$(length(e.scoped_mission) > 40 ? "..." : "")\""
+        push!(lines, "  [$(e.sequence_number)] $obj_str | votes=$n_votes (sure=$n_sure unsure=$n_unsure)$conf_str$step_str$type_str | $status_str$(dep_str)$(ctx_str)$(out_str)$(scoped_str)")
     end
     return join(lines, "\n")
 end
@@ -547,7 +573,8 @@ from a previous cycle.
 =#
 function modulate_objectives!(log::ActionLog, objectives::AbstractVector;
                               prior_outputs::Dict{String, String} = Dict{String, String}(),
-                              nonwinner_votes::AbstractVector = Any[])
+                              nonwinner_votes::AbstractVector = Any[],
+                              scoped_text_of::Function = _ -> "")
     # GRUG v7.47: Sort ALL objectives by confidence (descending).
     # Highest confidence = dispatched first = sequence 1.
     sorted_objs = sort(objectives, by = _objective_confidence, rev = true)
@@ -607,6 +634,12 @@ function modulate_objectives!(log::ActionLog, objectives::AbstractVector;
 
         sure_step += 1
 
+        # GRUG v8.2: Look up the sub-subject text for this objective.
+        # For multipart objectives, this is the specific part of the input
+        # that this sub-objective should answer. For singletons, it's empty
+        # (the full mission text will be used as fallback in the dispatch loop).
+        _scoped_text = scoped_text_of(obj.group_id)
+
         entry = add_entry!(log;
             objective_id    = obj.group_id,
             scoped_votes    = all_votes,
@@ -618,6 +651,7 @@ function modulate_objectives!(log::ActionLog, objectives::AbstractVector;
             reserved_step   = sure_step,
             is_supplementary = is_low_conf,
             entry_type      = etype,
+            scoped_mission  = _scoped_text,
         )
 
         if obj.is_multipart
@@ -710,6 +744,9 @@ function modulate_objectives!(log::ActionLog, objectives::AbstractVector;
             end
         end
 
+        # GRUG v8.2: Look up scoped text for this additive entry if it has a group.
+        _add_scoped = scoped_text_of(_safe_multipart_group(additive_vote))
+
         add_entry!(log;
             objective_id     = _safe_multipart_group(additive_vote),
             scoped_votes     = Any[additive_vote],
@@ -721,6 +758,7 @@ function modulate_objectives!(log::ActionLog, objectives::AbstractVector;
             reserved_step    = additive_step,
             is_supplementary = true,
             entry_type       = ENTRY_ADDITIVE,
+            scoped_mission   = _add_scoped,
         )
     end
 

@@ -299,6 +299,92 @@ function get_multipart_lobe_state(group_id::String)::Union{Nothing, Tuple{Vector
     end
 end
 
+# GRUG v8.2: PER-GROUP SCOPED MISSION TEXT STASH for multipart sub-objectives.
+# When a compound input ("what is 2+2 also what is a cat") is decomposed,
+# each sub-subject has its own text that should be used as the mission for
+# that sub-objective's AIML payload. Without this, every COMMANDS handler
+# receives the FULL compound input as `mission`, so generate_aiml_payload
+# generates a response about the whole input, not just the sub-subject.
+# This is the root cause of "Grug only answers one part" — each entry's
+# AIML call sees the full question and naturally gravitates toward the
+# highest-confidence sub-subject, ignoring the others.
+#
+# Fix: stash each sub-subject's text under its group_id. The ActionLog
+# picks it up and stores it as scoped_mission on each ActionEntry.
+# The COMMANDS dispatch loop then passes scoped_mission instead of mission.
+const _MULTIPART_GROUP_SCOPED_TEXT::Dict{String, String} = Dict{String, String}()
+
+"""
+    stash_multipart_scoped_text!(group_id, scoped_text)
+
+GRUG v8.2: Store the sub-subject text for a specific multipart group.
+Called during process_mission decomposition so each sub-objective knows
+what part of the input it's actually answering.
+"""
+function stash_multipart_scoped_text!(group_id::String, scoped_text::String)
+    isempty(group_id) && return nothing
+    lock(_MULTIPART_GROUP_LOCK) do
+        _MULTIPART_GROUP_SCOPED_TEXT[group_id] = scoped_text
+    end
+    return nothing
+end
+
+"""
+    get_multipart_scoped_text(group_id) -> String or ""
+
+GRUG v8.2: Look up the sub-subject text for a specific multipart group.
+Returns empty string if group has no stashed text (singleton/fallback).
+
+For compound chunk groups like "chk_1_2" (votes from chunks 1 AND 2),
+joins the text from each constituent chunk with " and ".
+"""
+function get_multipart_scoped_text(group_id::String)::String
+    isempty(group_id) && return ""
+    lock(_MULTIPART_GROUP_LOCK) do
+        # Direct lookup first
+        text = get(_MULTIPART_GROUP_SCOPED_TEXT, group_id, "")
+        if !isempty(text)
+            return text
+        end
+        # GRUG v8.2: Handle compound chunk groups like "chk_1_2" or "chk_1_2_3".
+        # These are created by group_votes_by_chunks when votes from multiple
+        # chunks overlap. We look up each constituent chunk's text and join them.
+        if startswith(group_id, "chk_")
+            parts = split(group_id[5:end], "_")
+            chunk_texts = String[]
+            for p in parts
+                idx = tryparse(Int, p)
+                isnothing(idx) && continue
+                # Try both "chk_X" and "mp_X" naming schemes
+                ct = get(_MULTIPART_GROUP_SCOPED_TEXT, "chk_$(idx)", "")
+                if isempty(ct)
+                    ct = get(_MULTIPART_GROUP_SCOPED_TEXT, "mp_$(idx)", "")
+                end
+                if !isempty(ct)
+                    push!(chunk_texts, ct)
+                end
+            end
+            if !isempty(chunk_texts)
+                return join(chunk_texts, " and ")
+            end
+        end
+        return ""
+    end
+end
+
+"""
+    clear_multipart_scoped_text!()
+
+GRUG v8.2: Clear all per-group scoped text. Called at the start of
+process_mission so stale text from previous cycles doesn't leak.
+"""
+function clear_multipart_scoped_text!()
+    lock(_MULTIPART_GROUP_LOCK) do
+        empty!(_MULTIPART_GROUP_SCOPED_TEXT)
+    end
+    return nothing
+end
+
 # GRUG v8.1: Time orientation — same pattern as promotion bindings.
 # scan_and_expand writes; generate_aiml_payload reads across Task boundaries.
 const _TIME_ORIENTATION_KEY::Symbol = :grugbot420_time_orientation

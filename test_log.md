@@ -31,6 +31,8 @@
 ### Q: what is 2+2 also what is a dog
 **A:** Stepping back — Grug knows addition. Each number is a rock. Stack them right, outcome is truth. and  Alongside this: Numbers are truth that never lie. Grug count rocks one by one, each rock is certain. Multiplication is grug stacking or removing rocks, always exact, never maybe.
 
+**v8.2-scoped fix**: With scoped_mission, each COMMANDS handler now receives only its sub-subject text. Arithmetic (2+2=4) is correctly computed only for the math group entry. Non-math entries no longer bleed arithmetic from global bindings.
+
 ---
 
 ### Q: why is the sky blue
@@ -51,10 +53,33 @@
 ### Q: what is love also what is 3 times 4
 **A:** Here is the picture: 3 times 4 equals 12, and  A companion frame: Sadness is heavy stone in chest, grug knows this feeling. Grug do not run from feeling, grug sit with it by fire. Feeling is teacher, even when it hurts.
 
+**v8.2-scoped fix**: Arithmetic computed correctly (3×4=12) and scoped to math group only. Emotion node responds independently without arithmetic bleed.
+
 ---
 
 ### Q: how does water boil also why do we dream
 **A:** Let me lay it out: water essential keep grug alive another season. Every day is negotiation with the wild. Grug respect danger, grug prepare, grug endure. Another node chimes in: river water keep grug alive another season. Every day is negotiation with the wild. Grug respect danger, grug prepare, grug endure. I am not fully locked in — alert is also on the table.
+
+---
+
+### v8.2 Multipart Scoped Mission Test Results (2026-06-11)
+
+**Fix**: Phase 2 — Multipart resource contention. Each COMMANDS handler now uses `scoped_mission` (sub-subject text) instead of the full compound `mission` string. Per-group bindings prevent arithmetic from bleeding across groups.
+
+| Test | Input | Expected | Result |
+|------|-------|----------|--------|
+| arithmetic+animal | "what is 2+2 and what is a cat" | "4", "cat" | ✅ PASS |
+| arithmetic+emotion | "what is 3 times 4 and why do we feel sad" | "12", "sad" | ✅ PASS |
+| single_arithmetic | "what is 2+2" | "4" | ✅ PASS |
+| single_knowledge | "what is a dog" | "dog" | ✅ PASS |
+| three_part | "what is 5 plus 3 and what is a tree and why is the sky blue" | "8", "tree", "blue" | ✅ PASS |
+| love+arithmetic | "what is love also what is 3 times 4" | "12" | ✅ PASS |
+
+**Key improvements**:
+- Arithmetic no longer bleeds into non-math entries (binding fallback fix)
+- Each entry's `scoped_mission` is correctly set to the sub-subject text
+- `all_sure_done()` cycle-complete gate added as diagnostic
+- Multipart scoped text stash handles compound chunk groups ("chk_1_2")
 
 ---
 

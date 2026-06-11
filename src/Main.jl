@@ -1701,8 +1701,11 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
         # vote that didn't win its objective but had something to say gets
         # its own section. This works for ALL missions, not just multipart.
         nonwinner_votes = Vote[candidate_to_vote[vc.node_id] for vc in rejected_tier if haskey(candidate_to_vote, vc.node_id)]
+        # GRUG v8.2: Pass scoped_text_of function so modulate_objectives!
+        # can look up each objective's sub-subject text from the engine stash.
         HippocampalModulator.modulate_objectives!(action_log, objectives;
-            nonwinner_votes = nonwinner_votes)
+            nonwinner_votes = nonwinner_votes,
+            scoped_text_of = get_multipart_scoped_text)
         println("[HIPPOCAMPAL] Action log built:\n$(HippocampalModulator.log_summary(action_log))")
 
         # GRUG v7.47: Execute entries from the log one at a time, dispatched
@@ -1733,7 +1736,10 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
                 end
                 # GRUG: Additive entries get a lightweight output — just the
                 # node's response. No full COMMANDS treatment, just the additive info.
-                additive_output = COMMANDS[additive_vote.action](mission, additive_node, additive_vote, Vote[], Vote[additive_vote], Vote[additive_vote])
+                # GRUG v8.2: Use scoped_mission if available (sub-subject text),
+                # fall back to full mission for singletons/old behavior.
+                _add_mission = isempty(entry.scoped_mission) ? mission : entry.scoped_mission
+                additive_output = COMMANDS[additive_vote.action](_add_mission, additive_node, additive_vote, Vote[], Vote[additive_vote], Vote[additive_vote])
                 if !isempty(additive_output)
                     HippocampalModulator.complete_entry!(action_log, entry.sequence_number, additive_output)
                     any_entry_completed = true
@@ -1756,10 +1762,15 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
 
             # GRUG: Generate output for this entry using ONLY its scoped votes.
             # This is the key fix: COMMANDS no longer receives the full vote pile.
+            # GRUG v8.2: Use scoped_mission (sub-subject text) instead of full
+            # compound mission. This is the fix for "Grug only answers one part" —
+            # each entry now answers only its own sub-subject, not the whole input.
+            # Fall back to full mission for singletons (no scoped text available).
+            entry_mission = isempty(entry.scoped_mission) ? mission : entry.scoped_mission
             entry_sure = Vote[entry.sure_votes...]
             entry_unsure = Vote[entry.unsure_votes...]
             entry_all = Vote[entry.scoped_votes...]
-            entry_output = COMMANDS[entry_primary.action](mission, entry_node, entry_primary, entry_sure, entry_unsure, entry_all)
+            entry_output = COMMANDS[entry_primary.action](entry_mission, entry_node, entry_primary, entry_sure, entry_unsure, entry_all)
 
             # GRUG: Mark entry complete — output stored for context carry-forward.
             if !isempty(entry_output)
@@ -1776,6 +1787,12 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
         # GRUG v7.47: Assemble final output using reserved_step ordering
         # with supplementary prefixes. This is the confidence-ordered,
         # step-coherent output — NOT the raw dispatch order.
+        # GRUG v8.2: Verify cycle-complete gate — all sure entries should be
+        # done before we commit. Log a warning if any are still pending (should
+        # be impossible after the while loop, but defensive check).
+        if !HippocampalModulator.all_sure_done(action_log)
+            @warn "[ORCHESTRATOR] Cycle-complete gate: NOT all sure entries done before assembly! Possible partial response."
+        end
         if any_entry_completed
             output = HippocampalModulator.assemble_output!(action_log)
         else
@@ -2696,17 +2713,22 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         # Look up per-group bindings FIRST; fall back to global Ref for
         # singleton inputs (no multipart_group).
         _mp_group = getfield(primary_vote, :multipart_group)
-        # GRUG v8.1-coherence-fix: Per-group binding lookup with global fallback.
-        # Singleton inputs store bindings under group="" in scan_and_expand,
-        # but cast_vote_chunked assigns "mp_N" from chunk_boundaries even for
-        # single-chunk inputs.  When per-group lookup returns empty, fall back
-        # to the global Ref which always holds the most recent scan's bindings.
+        # GRUG v8.2-scoped: Per-group binding lookup with CORRECT fallback.
+        # Multipart: each sub-objective has its own bindings stashed under
+        # its group_id. If a group has NO bindings (e.g. "what is a cat"),
+        # we must NOT fall back to global — global contains ALL groups'
+        # bindings including arithmetic from other sub-subjects, which would
+        # cause every entry to output the arithmetic result.
+        # Singleton (group="" or empty): global fallback is correct.
         _group_bindings = !isempty(_mp_group) ? get_multipart_bindings(_mp_group) : SigilPromoter.SigilBinding[]
-        bindings = if !isempty(_mp_group) && !isempty(_group_bindings)
+        bindings = if !isempty(_mp_group)
+            # MULTIPART: use per-group bindings ONLY. Empty means this group
+            # genuinely has no sigil bindings — do NOT bleed other groups'
+            # bindings (especially arithmetic) into this entry.
             _group_bindings
         else
-            # Per-group was empty or group is "" — use global ref (which has
-            # the singleton / most-recent scan bindings).
+            # SINGLETON: no multipart_group, use global ref which holds
+            # the (only) scan's bindings.
             current_promotion_bindings()
         end
         _math_bindings_present = ArithmeticEngine.has_math_bindings(bindings)
@@ -3136,14 +3158,14 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         end
     else
         try
-            # GRUG v8.1-coherence-fix: Use per-group bindings for telemetry too.
-            # Same fallback logic as the arithmetic section above.
+            # GRUG v8.2-scoped: Use per-group bindings for telemetry too.
+            # Same scoped logic as the arithmetic section above.
             _mp_group = getfield(primary_vote, :multipart_group)
             _grp_binds = !isempty(_mp_group) ? get_multipart_bindings(_mp_group) : SigilPromoter.SigilBinding[]
-            bindings = if !isempty(_mp_group) && !isempty(_grp_binds)
-                _grp_binds
+            bindings = if !isempty(_mp_group)
+                _grp_binds   # MULTIPART: per-group only, no global bleed
             else
-                current_promotion_bindings()
+                current_promotion_bindings()  # SINGLETON: global is correct
             end
             if ArithmeticEngine.has_math_bindings(bindings)
                 println(payload_io, "Arithmetic: math bindings present but computation was not run")
@@ -5007,6 +5029,7 @@ function process_mission(mission_text::String)
     # leak into the current one.
     clear_multipart_bindings!()
     clear_multipart_lobe_states!()
+    clear_multipart_scoped_text!()
 
     # GRUG: Start a new AIML cycle. Resets all per-cycle bookkeeping flags on every
     # AIML node so /aimlRight and /aimlWrong can see only explicit orchestration
@@ -5218,6 +5241,13 @@ function process_mission(mission_text::String)
         # multipart_group and role. Merged into one pool for voting.
         merged = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}, String, Symbol}[]
         for sub in sub_subjects
+            # GRUG v8.2: Stash the sub-subject text under its group_id so
+            # the ActionLog can look it up later. Without this, every
+            # COMMANDS handler receives the full compound mission text and
+            # generates a response about the whole input, not just the
+            # sub-subject it's supposed to answer.
+            stash_multipart_scoped_text!(sub.multipart_group, sub.text)
+
             # GRUG v7.23: Compute chunk boundaries for this sub-subject.
             # Each sub-subject gets its own chunk resolution pass.
             sub_chunks = try
@@ -5225,6 +5255,17 @@ function process_mission(mission_text::String)
             catch e
                 @warn "[MAIN] chunk_boundaries failed for sub-subject (using empty): $e"
                 InputDecomposer.InputChunk[]
+            end
+            # GRUG v8.2: Also stash each chunk's text under "mp_{chunk_index}"
+            # and "chk_{chunk_index}" naming schemes. The MultipartOrchestrator
+            # uses chunk-based grouping (chk_1, chk_2, etc.) when votes have
+            # input_chunks, so we need scoped text available under both naming
+            # conventions. Each sub-subject typically produces one chunk.
+            for chk in sub_chunks
+                if !isempty(chk.text)
+                    stash_multipart_scoped_text!("mp_$(chk.chunk_index)", chk.text)
+                    stash_multipart_scoped_text!("chk_$(chk.chunk_index)", chk.text)
+                end
             end
             sub_task_name, sub_task = VoteOrchestrator.dispatch_task_with_timeout(
                 () -> scan_and_expand(sub.text; chunks=sub_chunks, multipart_group=sub.multipart_group),
