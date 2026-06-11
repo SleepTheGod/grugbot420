@@ -44,12 +44,14 @@
 module ActionTonePredictor
 
 using Random
+using Base.Threads: ReentrantLock
 
 export ActionFamily, ToneFamily, PredictionResult,
        predict_action_tone, apply_prediction_to_arousal!,
        get_action_weight_multiplier, format_prediction_summary,
        reset_trajectory!, get_trajectory_state, TrajectoryConfig,
        LAST_PREDICTION,
+       get_last_prediction, get_last_escalation_trace,
        # GRUG v7.20: heavy-fallback classifier surface
        LOW_SIGNAL_THRESHOLD, FALLBACK_DAMP_THRESHOLD,
        get_predictor_telemetry, reset_predictor_telemetry!,
@@ -123,6 +125,11 @@ end
 # Cleared to nothing on module init; never NaN'd in place — a fresh Ref each
 # call keeps the read race-free without a lock.
 const LAST_PREDICTION = Ref{Union{Nothing, PredictionResult}}(nothing)
+
+# GRUG v10: Lock guarding LAST_PREDICTION, _TONAL_OBSERVATION,
+# PREDICTOR_TELEMETRY, and LAST_ESCALATION_TRACE. These are read/written
+# from the main cycle and from diagnostic readers without synchronization.
+const _STATE_LOCK = ReentrantLock()
 
 # ==============================================================================
 # v7.21b-1: TONAL OBSERVATION RUNNING STATE (observation-only)
@@ -201,7 +208,23 @@ In v7.21b-1 this is observation-only — useful for diagnostics, logging,
 and tests. v7.21b-2 will let prediction read this to modulate jitter
 envelopes per-tone.
 """
-get_tonal_observation() = _TONAL_OBSERVATION[]
+get_tonal_observation() = lock(_STATE_LOCK) do; _TONAL_OBSERVATION[] end
+
+"""
+    get_last_prediction() -> Union{Nothing, PredictionResult}
+
+Thread-safe read of LAST_PREDICTION. Returns the most recent ATP result
+or nothing if no prediction has been computed yet this session.
+"""
+get_last_prediction() = lock(_STATE_LOCK) do; LAST_PREDICTION[] end
+
+"""
+    get_last_escalation_trace() -> Any
+
+Thread-safe read of LAST_ESCALATION_TRACE. Returns the most recent
+escalation trace dict or nothing.
+"""
+get_last_escalation_trace() = lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] end
 
 """
     reset_tonal_observation!()
@@ -604,7 +627,7 @@ GRUG v7.20: Return a copy of the predictor telemetry counters. Copy so
 callers can't mutate our internal counter dict.
 """
 function get_predictor_telemetry()::Dict{Symbol, Int}
-    return copy(PREDICTOR_TELEMETRY)
+    return lock(_STATE_LOCK) do; copy(PREDICTOR_TELEMETRY) end
 end
 
 """
@@ -614,8 +637,10 @@ GRUG v7.20: Zero the predictor telemetry. Used by tests to isolate runs;
 not called during normal operation (counters accumulate over a session).
 """
 function reset_predictor_telemetry!()
-    for k in keys(PREDICTOR_TELEMETRY)
-        PREDICTOR_TELEMETRY[k] = 0
+    lock(_STATE_LOCK) do
+        for k in keys(PREDICTOR_TELEMETRY)
+            PREDICTOR_TELEMETRY[k] = 0
+        end
     end
     return nothing
 end
@@ -1178,8 +1203,10 @@ function predict_action_tone(
                 action_scores[fam] += s
             end
             classifier_mode = :fallback
-            PREDICTOR_TELEMETRY[:fallback_path]    += 1
-            PREDICTOR_TELEMETRY[:fallback_low_sig] += 1
+            lock(_STATE_LOCK) do
+                PREDICTOR_TELEMETRY[:fallback_path]    += 1
+                PREDICTOR_TELEMETRY[:fallback_low_sig] += 1
+            end
         else
             # GRUG: Even the fallback found nothing. Honest ASSERT default
             # with the original boost preserved (so downstream confidence
@@ -1331,8 +1358,10 @@ function predict_action_tone(
                 predicted_action  = new_action
                 action_confidence = new_conf
                 classifier_mode   = :fallback
-                PREDICTOR_TELEMETRY[:fallback_path]   += 1
-                PREDICTOR_TELEMETRY[:fallback_damp_lc] += 1
+                lock(_STATE_LOCK) do
+                    PREDICTOR_TELEMETRY[:fallback_path]   += 1
+                    PREDICTOR_TELEMETRY[:fallback_damp_lc] += 1
+                end
                 @info "[PREDICTOR] 🌀 damped+low-conf → heavy fallback adopted " *
                       "(action=$(predicted_action), conf=$(round(action_confidence, digits=3)))"
             end
@@ -1340,9 +1369,11 @@ function predict_action_tone(
     end
 
     # GRUG v7.20: Telemetry — every prediction increments total + path.
-    PREDICTOR_TELEMETRY[:predictions_total] += 1
-    if classifier_mode === :lexicon
-        PREDICTOR_TELEMETRY[:lexicon_path] += 1
+    lock(_STATE_LOCK) do
+        PREDICTOR_TELEMETRY[:predictions_total] += 1
+        if classifier_mode === :lexicon
+            PREDICTOR_TELEMETRY[:lexicon_path] += 1
+        end
     end
 
     # ------------------------------------------------------------------
@@ -1410,20 +1441,24 @@ function predict_action_tone(
 
     # GRUG: Stash for downstream consumers (vote orchestrator scoring,
     # diagnostic readers) so they don't have to re-run classification.
-    LAST_PREDICTION[] = result
+    lock(_STATE_LOCK) do
+        LAST_PREDICTION[] = result
+    end
 
     # GRUG v7.21b-1: Update the tonal observation running state AFTER the
     # result is fully built. b-1 only writes here — nothing in this call
     # READ the state before this point. b-2 will add a read at the top of
     # predict_action_tone to let the previous observation modulate the
     # current jitter envelope.
-    _TONAL_OBSERVATION[] = (
-        last_tone = predicted_tone,
-        last_action = predicted_action,
-        last_arousal = arousal_nudge,
-        last_emotional_coherence = coherence,
-        ts = result.timestamp
-    )
+    lock(_STATE_LOCK) do
+        _TONAL_OBSERVATION[] = (
+            last_tone = predicted_tone,
+            last_action = predicted_action,
+            last_arousal = arousal_nudge,
+            last_emotional_coherence = coherence,
+            ts = result.timestamp
+        )
+    end
 
     return result
 end
@@ -1644,20 +1679,20 @@ function maybe_escalate(prediction::PredictionResult;
                         automaton_module::Union{Module, Nothing} = nothing)::Any
     # GRUG: No automaton module provided? Can't escalate. Return nothing.
     if automaton_module === nothing
-        LAST_ESCALATION_TRACE[] = nothing
+        lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] = nothing end
         return nothing
     end
 
     # GRUG: Check condition 1 — is this action family escalation-worthy?
     action_sym = Symbol(prediction.action_family)
     if !(action_sym in ESCALATION_FAMILIES)
-        LAST_ESCALATION_TRACE[] = nothing
+        lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] = nothing end
         return nothing
     end
 
     # GRUG: Check condition 2 — is confidence high enough?
     if prediction.confidence < ESCALATION_CONFIDENCE_FLOOR
-        LAST_ESCALATION_TRACE[] = nothing
+        lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] = nothing end
         return nothing
     end
 
@@ -1669,18 +1704,18 @@ function maybe_escalate(prediction::PredictionResult;
         )
     catch e
         @warn "[ATP-ESCALATE] Automaton dispatch failed (non-fatal): $e"
-        LAST_ESCALATION_TRACE[] = nothing
+        lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] = nothing end
         return nothing
     end
 
     if trace === nothing
         # GRUG: No matching rule. Not an error — sparse activation.
-        LAST_ESCALATION_TRACE[] = nothing
+        lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] = nothing end
         return nothing
     end
 
     # GRUG: ESCALATION FIRED! Store trace and log.
-    LAST_ESCALATION_TRACE[] = trace
+    lock(_STATE_LOCK) do; LAST_ESCALATION_TRACE[] = trace end
     @info "[ATP-ESCALATE] Automaton rule '$(trace.rule_id)' fired " *
           "($(length(trace.sequence)) steps, $(length(trace.jittered)) jittered) " *
           "for action=$(prediction.action_family) conf=$(round(prediction.confidence, digits=3))"

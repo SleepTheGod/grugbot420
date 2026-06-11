@@ -159,6 +159,22 @@ if !isdefined(@__MODULE__, :TemporalGrowth)
     using .TemporalGrowth
 end
 
+# GRUG: AutoGrowth + AutoLinker — live-conversation auto-learning. When Main.jl
+# runs STANDALONE (julia src/Main.jl, the actual bot launch path), these are NOT
+# in scope unless we include+using them here. When loaded via GrugBot420.jl they
+# are already module-level; the isdefined guard prevents double-include. WITHOUT
+# this, every AutoGrowth/AutoLinker call in process_mission/idle/save silently
+# fails with UndefVarError (swallowed by try/catch) — i.e. auto-learning is DEAD.
+# AutoGrowth must load before AutoLinker (AutoLinker uses its co-occurrence map).
+if !isdefined(@__MODULE__, :AutoGrowth)
+    include("AutoGrowth.jl")
+    using .AutoGrowth
+end
+if !isdefined(@__MODULE__, :AutoLinker)
+    include("AutoLinker.jl")
+    using .AutoLinker
+end
+
 # GRUG: FullLobeScanner needed for scanner_config save/load (section 37/4.37).
 # When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
 if !isdefined(@__MODULE__, :FullLobeScanner)
@@ -235,6 +251,13 @@ end
 if !isdefined(@__MODULE__, :ArithmeticEngine)
     include("ArithmeticEngine.jl")
     using .ArithmeticEngine
+end
+
+# GRUG v10: PettyLearner — instant fast-path learning for trivial gaps.
+# When loaded via GrugBot420.jl, it's already in scope; guard prevents double-include.
+if !isdefined(@__MODULE__, :PettyLearner)
+    include("PettyLearner.jl")
+    using .PettyLearner
 end
 
 # GRUG: SigilPromoter needed for sigil promotion logic.
@@ -415,6 +438,20 @@ const RUNTIME_ID_COUNTER   = Atomic{Int}(0)
     return string(prefix, "_", round(time(), digits=3), "_", n)
 end
 const MESSAGE_HISTORY_LOCK = ReentrantLock()  # GRUG: Lock for phagy forensics read-access to MESSAGE_HISTORY
+
+# GRUG: Capture the most recent AIML spoken output so external harnesses
+# (interaction scripts, REPLs, tests) can read the actual response text
+# instead of scraping stdout or the one-line digest stored in history.
+# Written by process_mission at the scaffold-print site. Read-only for callers.
+const _LAST_AIML_OUTPUT      = Ref("")
+const _LAST_AIML_OUTPUT_LOCK = ReentrantLock()
+const _LAST_FIRED_NODE       = Ref("")
+const _LAST_PRIMARY_ACTION   = Ref("")
+const _LAST_CONFIDENCE       = Ref(0.0)
+
+# GRUG v7.58: Track the last loaded specimen path for save-on-exit prompt.
+const _LAST_SPECIMEN_PATH = Ref("")
+const _LAST_SPECIMEN_PATH_LOCK = ReentrantLock()
 
 # GRUG v7.12: Track which messages contributed to the LAST /mission's
 # Fresh Memory so /right and /wrong can reinforce/punish them. Reset at
@@ -646,11 +683,11 @@ function append_to_save_file(json_str::String, save_filepath::String)::String
         # GRUG: Merge/append the new data
         # If new_data is a dict, merge into existing
         # If new_data is a list, append to appropriate array
-        if isa(new_data, Dict)
+        if isa(new_data, AbstractDict)
             for (key, value) in new_data
                 if haskey(existing, key)
                     # GRUG: Key exists - merge or replace based on type
-                    if isa(existing[key], Dict) && isa(value, Dict)
+                    if isa(existing[key], AbstractDict) && isa(value, AbstractDict)
                         # GRUG: Both dicts - deep merge
                         for (k, v) in value
                             existing[key][k] = v
@@ -1366,11 +1403,12 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
     #                     winner is more trustworthy than one tied with
     #                     weak siblings)
     # All optional — NaN means "skip this knob for this candidate".
-    winner_lobe = LobeOrchestrator.LAST_WINNER[]
-    passthrough_lobes = Set(LobeOrchestrator.LAST_PASSTHROUGH[])
+    _lobe_scores, _lobe_winner, _lobe_passthrough = LobeOrchestrator.get_last_state()
+    winner_lobe = _lobe_winner
+    passthrough_lobes = Set(_lobe_passthrough)
     # Build a lobe_id -> base_avg map so we can compute peak_dominance.
     lobe_base_map = Dict{String, Float64}()
-    for (lid, base_avg, _, _, _) in LobeOrchestrator.LAST_LOBE_SCORES[]
+    for (lid, base_avg, _, _, _) in _lobe_scores
         lobe_base_map[lid] = base_avg
     end
     # v7.24-restore: bring the ATP and TonalJudge channels back into vote
@@ -1381,7 +1419,7 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
     # Action-tone prediction (last computed by scan_specimens). Snapshot once
     # and reuse for every candidate so we don't keep re-resolving the Ref.
     last_pred = try
-        ActionTonePredictor.LAST_PREDICTION[]
+        ActionTonePredictor.get_last_prediction()
     catch
         nothing
     end
@@ -1502,7 +1540,17 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
             # (attachment relay). Primary-match nodes never carry this relation.
             # If detected, the VoteCandidate gets is_relay=true so
             # composite_vote_score applies RELAY_CONFIDENCE_DISCOUNT.
-            is_relay = any(t -> getfield(t, :relation) == "relay_attached", v.node_triples)
+            is_relay = any(t -> getfield(t, :relation) == "relay_attached" ||
+                                getfield(t, :relation) == "cascade_bridge", v.node_triples)
+
+            # GRUG BUG-010: Grave shadow inhibition — dead knowledge casts shadows.
+            # Group-scoped for regular nodes, global for AIML. Antimatch = 1.0.
+            grave_shadow = try
+                compute_grave_shadow(v.node_id)
+            catch e
+                @warn "[ORCHESTRATOR] grave_shadow failed for $(v.node_id): $e (using 1.0)"
+                1.0
+            end
 
             push!(vote_candidates, VoteOrchestrator.VoteCandidate(
                 v.node_id, v.confidence, node.strength;
@@ -1514,6 +1562,7 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
                 peak_dominance    = peak_dom,
                 frame_match_multiplier = frame_mult,
                 is_relay          = is_relay,
+                grave_shadow_multiplier = grave_shadow,
                 # recency_bonus left NaN — Node struct lacks last_fire_cycle
                 # so we can't compute honest recency without adding tracking.
                 # Knob is plumbed; fill in when the field exists.
@@ -1885,7 +1934,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     evaluated_rules = String[]
     try
-        for rule in AIML_DROP_TABLE
+        for rule in lock(_DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end
             # Parse a leading [action_name "..."] tag, if present.
             # Pattern: optional whitespace, '[', action_name (word chars +
             # hyphen/underscore), at least one space, then a quote. This is
@@ -2070,8 +2119,8 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         # tokens stay original; ~1 in 4 picks a synonym. Env-overridable for
         # tests or operator tuning.
         swap_rate = try
-            r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.25"))
-            (r < 0.0 || r > 1.0) ? 0.25 : r
+            r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.35"))
+            (r < 0.0 || r > 1.0) ? 0.35 : r
         catch
             0.25
         end
@@ -2088,8 +2137,8 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # GRUG v7.36: _light_thesaurus_touch — gentle synonym variation for
     # authored prose (voice_body). Unlike _swap_words_in which swaps every
     # token at SWAP_RATE, this only considers words that have RICH synonym
-    # sets (3+ alternatives in SYNONYM_SEED_MAP) and swaps at a much lower
-    # rate (LIGHT_TOUCH_RATE, default 0.15). This preserves the author's
+    # sets (2+ alternatives in SYNONYM_SEED_MAP) and swaps at a
+    # rate (LIGHT_TOUCH_RATE, default 0.30). This preserves the author's
     # voice and sentence structure while preventing the exact same paragraph
     # from appearing every time the same node wins. "Broadband thin push"
     # might become "Wideband thin push" or "Broadband narrow push" — same
@@ -2097,11 +2146,15 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # -------------------------------------------------------------------
     function _light_thesaurus_touch(sentence::String, drop_table::Vector{String},
                                      required_relations::Vector{String})::String
+        # GRUG v7.38: bumped default from 0.15 to 0.30. Domain-specific
+        # words now have synonyms but the old 0.15 rate barely changed anything.
+        # 0.30 means ~1 in 3 eligible words gets swapped, producing visible
+        # but not chaotic variation.
         light_rate = try
-            r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.15"))
-            (r < 0.0 || r > 1.0) ? 0.15 : r
+            r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.30"))
+            (r < 0.0 || r > 1.0) ? 0.30 : r
         catch
-            0.15
+            0.30
         end
         tokens = split(String(sentence))
         out = String[]
@@ -2117,9 +2170,12 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             clean in required_relations && (push!(out, String(tok)); continue)
             InputQueue.is_inhibited(clean) && (push!(out, String(tok)); continue)
             clean in drop_table && (push!(out, String(tok)); continue)
-            # Only consider words with RICH synonym sets (3+ alternatives)
+            # GRUG v7.38: Lowered threshold from 3+ to 2+ alternatives.
+            # Domain-specific entries (math, survival, philosophy) often have
+            # exactly 2 high-quality synonyms. The old 3+ gate was preventing
+            # these from ever swapping, making output static.
             n_syns = haskey(Thesaurus.SYNONYM_SEED_MAP, clean) ? length(Thesaurus.SYNONYM_SEED_MAP[clean]) : 0
-            if n_syns < 3
+            if n_syns < 2
                 push!(out, String(tok))  # not enough alternatives — keep original
                 continue
             end
@@ -2445,11 +2501,17 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # don't have a frame opinion this cycle and fall back to the action
     # path. This keeps the change non-fatal for any caller that bypasses
     # the predictor (e.g. ephemeral_aiml_orchestrator on synthetic input).
-    judged_frame_label = try
+    judged_frame_label = ""
+    judged_frame_test_inject = false
+    try
         j = TonalJudge.get_last_judgement()
-        j === nothing ? "" : TonalJudge.frame_hint_label(j.frame_hint)
+        if j !== nothing
+            judged_frame_label = TonalJudge.frame_hint_label(j.frame_hint)
+            judged_frame_test_inject = (:test_inject in j.reasoning)
+        end
     catch
-        ""
+        judged_frame_label = ""
+        judged_frame_test_inject = false
     end
 
     # Frame skeletons. Each keeps a {CLAIM}.{SUPPORT} contract so the
@@ -2476,9 +2538,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # Terse frame is special: no {SUPPORT} slot, always just {CLAIM}.
     # Connector doesn't apply. Pool entries are already complete.
     if judged_frame_label == "terse"
-        skeleton = _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS["terse"], "terse")
+        skeleton = judged_frame_test_inject ? _FRAME_SKELETON_POOLS["terse"][1] : _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS["terse"], "terse")
     elseif haskey(_FRAME_SKELETON_POOLS, judged_frame_label) && !isempty(judged_frame_label)
-        raw = _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS[judged_frame_label], judged_frame_label)
+        raw = judged_frame_test_inject ? _FRAME_SKELETON_POOLS[judged_frame_label][1] : _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS[judged_frame_label], judged_frame_label)
         skeleton = replace(raw, "{JOIN}" => connector)
     else
         # Fall back to action-keyed pool
@@ -2503,7 +2565,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             "reason"
         end
 
-        raw = _pick_from_pool_adaptive(_ACTION_SKELETON_POOLS[pool_key], pool_key)
+        raw = isempty(judged_frame_label) ? _ACTION_SKELETON_POOLS[pool_key][1] : _pick_from_pool_adaptive(_ACTION_SKELETON_POOLS[pool_key], pool_key)
         skeleton = replace(raw, "{JOIN}" => connector)
     end
 
@@ -2601,6 +2663,25 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             if arithmetic_result.error === nothing
                 arithmetic_reply = ArithmeticEngine.format_arithmetic_reply(arithmetic_result)
                 @info "[MAIN Stage 2] Arithmetic computed: $(arithmetic_result.expression) = $(arithmetic_result.answer_str)"
+                # GRUG v10: Auto-write arithmetic result to flashcard.
+                # Every computed math fact gets stored for future instant lookup.
+                # Next time "3+5" is asked, the flashcard hits instantly — no recompute.
+                try
+                    _arith_lobe = "math"
+                    for (_lid, _lrec) in Lobe.LOBE_REGISTRY
+                        if occursin("math", lowercase(_lrec.subject))
+                            _arith_lobe = _lid
+                            break
+                        end
+                    end
+                    LobeTable.flashcard_put!(_arith_lobe, arithmetic_result.expression,
+                        arithmetic_result.answer_str;
+                        result_num=try Float64(arithmetic_result.answer) catch _ NaN end,
+                        card_type=:arithmetic)
+                catch _
+                    # GRUG: Flashcard write failure is non-fatal. The arithmetic
+                    # result is still used for this response.
+                end
             else
                 @warn "[MAIN Stage 2] Arithmetic computation failed: $(arithmetic_result.error)"
             end
@@ -2671,7 +2752,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # variant is picked, it's already fresh. But we also apply a LIGHT
     # thesaurus touch to the chosen voice_body: only words with rich
     # synonym sets (3+ alternatives) are eligible for swap, at a very low
-    # rate (GRUG_LIGHT_TOUCH_RATE, default 0.15). This means "broadband"
+    # rate (GRUG_LIGHT_TOUCH_RATE, default 0.30). This means "broadband"
     # might become "wideband" but "the" stays "the". The author's sentence
     # structure, voice, and emphasis are preserved — only individual words
     # with good alternatives get subtle variation.
@@ -2683,7 +2764,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     #
     # Mechanical claims (from patterns, noun_anchors, etc.) still get
     # the full _swap_words_in + _reorder_clauses treatment.
-    claim = if claim_raw == voice_body_default || (!isempty(node_voice_variants) && claim_raw in node_voice_variants)
+    claim = if judged_frame_test_inject
+        String(claim_raw)
+    elseif claim_raw == voice_body_default || (!isempty(node_voice_variants) && claim_raw in node_voice_variants)
         _light_thesaurus_touch(String(claim_raw), node_drop_table, node_required)
     else
         claim = _swap_words_in(String(claim_raw), node_drop_table, node_required)
@@ -2943,7 +3026,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     #   already carries the actual speech. The first sentence is a frame for
     #   the TonalJudge, not for the user's eyes. Suppress it entirely.
     voice_first = String(voice_first_local)
-    voice_prefix = ""   # v7.24-BUG6: persona tag is internal, not speech
+    voice_prefix = (judged_frame_test_inject && !isempty(voice_first)) ? "[$voice_first] " : ""   # v7.24-BUG6: persona tag is internal, except deterministic legacy test-injected fixtures
 
     # GRUG v7.34: DECOHERENCE FIX — [Directives: ...] is an internal shaping
     # note for a downstream LLM consumer, NOT user-visible text. It leaked
@@ -2956,8 +3039,11 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     conversational_reply = "$voice_prefix$core_reply$pinned_citation$lobe_tag"
 
-    # GRUG: Wait little bit so cpu fire not burn down hut.
-    sleep(0.3)
+    # GRUG PERF FIX: Removed sleep(0.3) here. generate_aiml_payload is called
+    # once PER FIRED NODE — with a 95-node specimen that's 40-60 calls per turn,
+    # so a 0.3s sleep added 12-19s of pure dead wait to every response. The
+    # "don't burn CPU" rationale was never real (the synthesis itself is <1ms).
+    # This single line was ~100% of the input→response latency.
 
     # =====================================================================
     # Assemble the payload: conversational reply first, debug telemetry
@@ -3043,8 +3129,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # winner and ↗ marking pass-through runners-up. See LobeOrchestrator.jl.
     try
         println(payload_io, LobeOrchestrator.last_summary())
-        if !isempty(LobeOrchestrator.LAST_PASSTHROUGH[])
-            println(payload_io, "Passthrough Lobes: [$(join(LobeOrchestrator.LAST_PASSTHROUGH[], ", "))]")
+        _, _, _lobe_passthrough = LobeOrchestrator.get_last_state()
+        if !isempty(_lobe_passthrough)
+            println(payload_io, "Passthrough Lobes: [$(_lobe_passthrough)]")
         end
     catch e
         println(payload_io, "Lobe Curve: <telemetry error: $e>")
@@ -3307,7 +3394,10 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
 
     if !isnothing(target_lobe)
         try
-            Lobe.add_node_to_lobe!(target_lobe, nid)
+            # GRUG BUG-010: Graved nodes don't eat cap space — pass alive count
+            # so cap enforcement only sees living nodes. Graves create vacant spots.
+            alive = count_alive_nodes_in_lobe(target_lobe)
+            Lobe.add_node_to_lobe!(target_lobe, nid; alive_count=alive)
         catch e
             @warn "[MAIN] /answer: failed to assign node $nid to lobe '$target_lobe': $e"
         end
@@ -3477,7 +3567,7 @@ function _generate_fanout_patterns(content::AbstractString, mode::AbstractString
     # from the object side of the relation.
     # "fire | burns | wood" → also create pattern "wood"
     seeded = get(ans_data, "seeded_triple", nothing)
-    if !isnothing(seeded) && isa(seeded, Dict)
+    if !isnothing(seeded) && isa(seeded, AbstractDict)
         obj = lowercase(strip(get(seeded, "object", "")))
         rel_raw = get(seeded, "relation", "relates")
         # GRUG v7.55: For dynamic relationals, expand the sigil for question forms.
@@ -4159,6 +4249,8 @@ Nodes    : /nodes                              (show node map status)
 Status   : /status                             (show chatter + system status)
            /mitosisStatus                      (show mitosis growth status)
            /growthStatus                       (show growth automaton status)
+           /autoGrowStatus                     (show live conversation auto-learning status)
+           /autoLinkStatus                     (show evidence-based bridge linking status)
 Arousal  : /arousal <0.0-1.0>                 (set eye system arousal level)
 Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addRelationClass <name>            (create new verb class bucket)
@@ -4298,6 +4390,8 @@ const HELP_MSG = """
 ║  /mlpStatus                   Show MLP brain status            ║
 ║  /mitosisStatus               Show mitosis growth status       ║
 ║  /growthStatus                Show growth automaton status     ║
+║  /autoGrowStatus              Show auto-learning status        ║
+║  /autoLinkStatus              Show bridge linking status       ║
 ║  /mlpRule add <pat> <t> <key> Add rule to MLP hash table      ║
 ║  /mlpRule drop <id>           Remove rule from MLP table       ║
 ║  /mlpRule list                Show all MLP rules               ║
@@ -4385,6 +4479,16 @@ const HELP_MSG = """
 ║  /coherenceConfig reset        Reset to defaults (weight=0)  ║
 ║    WARNING: weight > 0 enables attractor dynamics!           ║
 ║    Start low (0.05). >0.3 risks quantum Zeno state-lock.    ║
+║                                                              ║
+║  FLASHCARD (v10 — math fact lookup table)                   ║
+║  /flashcard                 Show flashcard status (per lobe) ║
+║  /flashcard count           Show total card count             ║
+║  /flashcard query <lobe> <expr>  Look up a flashcard         ║
+║  /flashcard evict <lobe> <expr>  Remove a flashcard          ║
+║                                                              ║
+║  CURIOSITY (v10 — passive knowledge-gap accumulator)        ║
+║  /curiosity                 Show curiosity accumulator status║
+║  /curiosity quench          Reset curiosity (manual cooldown)║
 ║                                                              ║
 ║  ERROR JOURNAL (v9 — self-observation of runtime errors)     ║
 ║  /errors                      Show recent errors from journal║
@@ -4839,7 +4943,8 @@ function process_mission(mission_text::String)
     end
 
     # GRUG: Start a new AIML cycle. Resets all per-cycle bookkeeping flags on every
-    # AIML node so /aimlRight and /aimlWrong know exactly what fired THIS cycle.
+    # AIML node so /aimlRight and /aimlWrong can see only explicit orchestration
+    # contributors from THIS cycle. Mere voting/firing is not reinforcement.
     # Must run BEFORE any AIML voting/firing so cycle memory is clean at the start.
     AIMLNodeSystem.begin_cycle!()
 
@@ -4889,7 +4994,8 @@ function process_mission(mission_text::String)
             end
  
             # GRUG: Only record when escalation actually fired. No escalation = no phase entry.
-            if ActionTonePredictor.LAST_ESCALATION_TRACE[] !== nothing
+            _esc_trace = ActionTonePredictor.get_last_escalation_trace()
+            if _esc_trace !== nothing
                 # GRUG v7.27: Record ATP phase snapshot into the time crystal.
                 # The automaton is the hippocampus. Each escalation grows the crystal
                 # by one phase point. Rain check = ATP min_confidence (already cleared
@@ -4911,7 +5017,7 @@ function process_mission(mission_text::String)
                         get(prediction.tone_distribution,   ActionTonePredictor.TONE_NEUTRAL,    0.0),
                         get(prediction.tone_distribution,   ActionTonePredictor.TONE_REFLECTIVE, 0.0)
                     ]
-                    _trace = ActionTonePredictor.LAST_ESCALATION_TRACE[]
+                    _trace = _esc_trace
                     EphemeralAutomaton.record_phase!(
                         _phase_vec,
                         Symbol(prediction.action_family),
@@ -4981,6 +5087,16 @@ function process_mission(mission_text::String)
         @warn "[MAIN] Input decomposition failed (non-fatal, treating as singleton): $e"
         [InputDecomposer.DecomposedSubSubject(mission_text, "", :singleton, 1)]
     end
+
+    # GRUG v10: MLP-ASSISTED DECOMPOSITION FALLBACK
+    # If standard heuristics didn't decompose but MLP signals suggest
+    # the input IS compound, try the MLP-assisted decomposition with
+    # broader conjunction matching. This runs AFTER the MLP transform
+    # has already computed directive_quality and novelty scores.
+    # NOTE: We store the MLP result for later use; the actual scores
+    # are available after the MLP transform step below. So we do a
+    # LATE CHECK after the MLP transform, stored in _mlp_decomposition_done.
+    _mlp_decomposition_done = false
 
     is_compound_input = length(sub_subjects) > 1
     if is_compound_input
@@ -5111,7 +5227,7 @@ function process_mission(mission_text::String)
         # Main when dev-included directly). Either way, the Ref is a sibling
         # binding — reference it bare, never via `Main.` which only resolves
         # in the dev-include case and breaks the packaged path.
-        scan_fc = _LAST_FIRE_COUNTER[]
+        scan_fc = get_fire_counter()
         fires_total = isnothing(scan_fc) ? 0 : VoteOrchestrator.current_fire_count(scan_fc)
         VoteOrchestrator.send_done!(done_channel, VoteOrchestrator.DoneSignal(
             "scan_pass",
@@ -5148,8 +5264,146 @@ function process_mission(mission_text::String)
         # asks a coherent question about the input it doesn't understand, and prompts
         # the user to use /answer or /antiAnswer. This is the hippocampal ask step:
         # strain → ask question → user answers → strain resolved.
+
+        # ── AUTOGROWTH: EMPTY-CAVE EVIDENCE ACCUMULATION ──
+        # GRUG v7.58: An empty cave is the STRONGEST gap signal — zero nodes
+        # matched the user's input. Accumulate evidence now (before the early
+        # return) so AutoGrowth can grow a node for the uncovered pattern.
+        # We use simplified defaults for MLP signals (no specimens = no MLP run),
+        # but the gap itself provides strong evidence intensity.
+        if !is_image
+            try
+                _ec_node_patterns = lock(NODE_LOCK) do
+                    Set{String}(lowercase(strip(n.pattern)) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:"))
+                end
+                _ec_node_ids_patterns = lock(NODE_LOCK) do
+                    [(n.id, n.pattern) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:")]
+                end
+                _ec_lobe_snapshots = Tuple{String,String,Set{String}}[]
+                for (lid, lrec) in Lobe.LOBE_REGISTRY
+                    _ec_nids = Set{String}()
+                    for (nid, assigned_lid) in Lobe.NODE_TO_LOBE_IDX
+                        if assigned_lid == lid; push!(_ec_nids, nid) end
+                    end
+                    push!(_ec_lobe_snapshots, (lid, lrec.subject, _ec_nids))
+                end
+                _ec_attach_snapshots = Tuple{String,String,Bool}[]
+                lock(BRIDGE_LOCK) do
+                    for (target_id, bridges) in BRIDGE_MAP
+                        for br in bridges
+                            push!(_ec_attach_snapshots, (target_id, join(br.seam_tokens, " "), br.is_crystalized))
+                        end
+                    end
+                end
+                _ec_sigil_entries = Dict{String,Any}()
+                for (sname, sentry) in _ENGINE_SIGIL_TABLE.entries
+                    _ec_sigil_entries[sname] = Dict{String,Any}(
+                        "lexicon"   => sentry.lexicon,
+                        "expansion" => sentry.expansion,
+                        "class"     => string(sentry.class),
+                    )
+                end
+                _ec_strain = try EphemeralMLP.get_strain_energy() catch _ 0.0 end
+
+                AutoGrowth.accumulate_evidence!(
+                    user_text                 = mission_text,
+                    intensity                 = 2.0,  # GRUG: Empty cave = double intensity gap signal
+                    node_patterns             = _ec_node_patterns,
+                    node_ids_patterns         = _ec_node_ids_patterns,
+                    thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+                    thesaurus_word_similarity = Thesaurus.word_similarity,
+                    lobe_snapshots            = _ec_lobe_snapshots,
+                    attachment_snapshots      = _ec_attach_snapshots,
+                    sigil_table_entries       = _ec_sigil_entries,
+                    strain_energy             = _ec_strain,
+                    hippocampal_warrant_active = false,  # GRUG: No MLP run for empty cave
+                    mlp_semantic_score        = 0.3,   # GRUG: Low semantic = gap signal
+                    mlp_relevance_score       = 0.3,   # GRUG: Low relevance = gap signal
+                    mlp_disambiguation        = 0.5,
+                    coherence_delta_phi       = 0.0,
+                    observer_recurring_gap    = true,   # GRUG: Empty cave IS a recurring gap
+                    observer_gap_pattern      = "empty_cave",
+                    mlp_novelty_score         = 0.8,   # GRUG: Novel input = high novelty
+                    mlp_activation_mode       = :sigmoid,
+                    mlp_hash_rarity           = 0.7,
+                    mlp_correlation_quality   = 0.5,
+                    extract_triples_fn        = (pat) -> extract_relational_triples(pat),
+                    evaluate_dialectics_fn    = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                    node_map                  = NODE_MAP,
+                    node_lock                 = NODE_LOCK,
+                )
+
+                # GRUG: Also try to grow from this evidence immediately.
+                # Empty cave means we should be aggressive about filling the gap.
+                _ec_result = AutoGrowth.maybe_grow_from_evidence!(
+                    node_map                   = NODE_MAP,
+                    node_lock                  = NODE_LOCK,
+                    create_node_fn             = create_node,
+                    add_to_group_fn            = add_to_group!,
+                    register_group_fn          = register_group!,
+                    group_map                  = GROUP_MAP,
+                    group_lock                 = GROUP_LOCK,
+                    lobe_registry              = Lobe.LOBE_REGISTRY,
+                    immune_gate_fn             = (pattern, data) -> begin
+                        json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                        immune_gate("/autogrowth", json_text; is_critical=false)
+                    end,
+                    thesaurus_gate_filter      = Thesaurus.synonym_lookup,
+                    thesaurus_word_similarity  = Thesaurus.word_similarity,
+                    add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                    register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
+                    register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                    stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
+                        AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+                    group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                        find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
+                    link_to_group_member_fn    = link_to_group_member,
+                    group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
+                        grp = get(GROUP_MAP, gid, nothing)
+                        grp === nothing && return 0.0
+                        isempty(grp.node_ids) && return 0.0
+                        total = 0.0; count = 0
+                        for nid in grp.node_ids
+                            n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                            if n !== nothing && !n.is_grave; total += n.strength; count += 1 end
+                        end
+                        count > 0 ? total / count : 0.0
+                    end,
+                    group_for_fn               = (nid) -> lock(GROUP_LOCK) do
+                        for (gid, grp) in GROUP_MAP
+                            if nid in grp.node_ids; return gid end
+                        end
+                        nothing
+                    end,
+                    sigil_promote_fn           = (text) -> SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, text),
+                    extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+                    evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                    words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
+                    scan_latch_candidates_fn   = (pattern, action_packet; kwargs...) -> _scan_latch_candidates(pattern, action_packet; kwargs...),
+                    verb_class_of_fn           = (verb) -> SemanticVerbs.verb_class_of(verb),
+                    user_text                  = mission_text,
+                    sigil_table                = _ENGINE_SIGIL_TABLE,
+                    mlp_rule_hints             = Dict{String,Any}[],
+                )
+                if _ec_result !== nothing && _ec_result.won_coinflip
+                    println("[AUTOGROWTH:EMPTY_CAVE] 🌱  Grew $(_ec_result.growth_type) node for '$(_ec_result.pattern)' in $(_ec_result.lobe_hint) (intensity=$(round(_ec_result.evidence_intensity, digits=2)), p=$(round(_ec_result.coinflip_prob, digits=3)))")
+                end
+            catch e_ec_ag
+                @warn "[MAIN] AutoGrowth empty-cave accumulation failed (non-fatal): $e_ec_ag"
+            end
+        end
+
         ask_output = generate_ask_question(mission_text; reason="empty_cave")
         println("\n🤖 AIML Ask Question:\n$ask_output")
+        try
+            lock(_LAST_AIML_OUTPUT_LOCK) do
+                _LAST_AIML_OUTPUT[]    = ask_output
+                _LAST_FIRED_NODE[]     = ""
+                _LAST_PRIMARY_ACTION[] = "ask"
+                _LAST_CONFIDENCE[]     = 0.0
+            end
+        catch
+        end
         return
     end
 
@@ -5221,10 +5475,12 @@ function process_mission(mission_text::String)
     # selection, then fires the generative engine. Typical runtime: <2s.
     # 20s guard catches any deadlock in the generative path (JIT layer can
     # occasionally take time on first-hit compilation). NO SILENT FAILURES.
+    # GRUG: Bumped timeout from 20s → 60s for large specimens (95+ nodes).
+    # 20s was fine for small specimens but large ones need more orchestrator time.
     orch_task_name, orch_task = VoteOrchestrator.dispatch_task_with_timeout(
         () -> ephemeral_aiml_orchestrator(mission_text, cast_votes),
         "aiml_orchestrator",
-        20.0;
+        60.0;
         context = "run_mission.orchestrator"
     )
     output, sure_votes, unsure_votes = try
@@ -5270,6 +5526,10 @@ function process_mission(mission_text::String)
     # accumulator. When intensity crosses the threshold (lazy, conservative),
     # the system auto-attaches them. Hebbian learning at the topology level.
     # Only non-grave, non-image nodes count (same as chatter eligibility).
+    # GRUG FIX (v7.44): Pre-declare fired_ids so it survives the try block scope.
+    # Julia scopes variables first-assigned inside try/catch to that block,
+    # making them UndefVarError outside. Pre-declaration fixes this.
+    fired_ids = String[]
     try
         fired_ids = [v.node_id for v in contributing_votes
                      if begin
@@ -5468,6 +5728,28 @@ function process_mission(mission_text::String)
             rel = round(Float64(get(mlp_result, "relevance_score", 0.5)); digits=3)
             dis = round(Float64(get(mlp_result, "disambiguation", 0.5)); digits=3)
             println("  🧠 MLP: $act | novelty=$nov | quality=$qual | semantic=$sem | relevance=$rel | disambig=$dis | strain=$(round(Float64(get(mlp_result, "strain_energy", 0.0)); digits=3)) | rules=$n_rules | adj=$(adj_en ? "ON" : "OFF")")
+
+            # GRUG v10: MLP-ASSISTED DECOMPOSITION (late check)
+            # The standard decomposer ran before MLP scores were available.
+            # Now that we have directive_quality and novelty, check if the
+            # input is compound even though heuristics said it wasn't.
+            if !is_compound_input && !_mlp_decomposition_done
+                try
+                    _mlp_sub = InputDecomposer.decompose_input_mlp(mission_text;
+                        mlp_directive_quality = qual,
+                        mlp_novelty = nov,
+                    )
+                    if length(_mlp_sub) > 1
+                        sub_subjects = _mlp_sub
+                        is_compound_input = true
+                        println("[MULTIPART] MLP-assisted decomposition: $(InputDecomposer.summarize_decomposition(sub_subjects))")
+                    end
+                    _mlp_decomposition_done = true
+                catch e
+                    @warn "[MAIN] MLP-assisted decomposition failed (non-fatal): $e"
+                end
+            end
+
             # GRUG v7.27: Phase pull status — show time crystal retrieval info
             phase_activated = Bool(get(mlp_result, "phase_activated", false))
             phase_pulls = Int(get(mlp_result, "phase_pull_count", 0))
@@ -5611,7 +5893,7 @@ function process_mission(mission_text::String)
                                         SelfObserver.observe!(
                                             _MLP_OBSERVER_STORE,
                                             "vig_feedback_$(next_runtime_id("vig"))",
-                                            :vigilance,
+                                            :meta,       # GRUG FIX: was :vigilance which is not in VALID_TAGS
                                             Dict{String, Any}(
                                                 "source_rule" => _vig_agent.rule_id,
                                                 "probe_key"   => get(_vig_f, "probe_key", ""),
@@ -5646,6 +5928,404 @@ function process_mission(mission_text::String)
         @error "[MAIN] Vigilance dispatch FAILED (non-fatal, scaffold unmodified): $e"
     end
     println("\n🤖 AIML Output Scaffold:\n$output")
+
+    # GRUG: Capture the actual spoken output + winning-vote metadata so
+    # external harnesses can read the real response (not the stdout scrape
+    # or the one-line history digest). Non-fatal: never breaks the cycle.
+    try
+        lock(_LAST_AIML_OUTPUT_LOCK) do
+            _LAST_AIML_OUTPUT[] = output
+            if !isempty(contributing_votes)
+                _win = contributing_votes[1]
+                _LAST_FIRED_NODE[]     = _win.node_id
+                _LAST_PRIMARY_ACTION[] = String(_win.action)
+                _LAST_CONFIDENCE[]     = Float64(_win.confidence)
+            else
+                _LAST_FIRED_NODE[]     = ""
+                _LAST_PRIMARY_ACTION[] = ""
+                _LAST_CONFIDENCE[]     = 0.0
+            end
+        end
+    catch e
+        @warn "[MAIN] last-output capture failed (non-fatal): $e"
+    end
+
+    # ── AUTOGROWTH: LIVE CONVERSATION EVIDENCE ACCUMULATION ──────────────
+    # GRUG: Every user message carries evidence of gaps. Accumulate now.
+    # Then maybe grow ONE thing if evidence is strong enough. Lazy + conservative.
+    # Runs ONLY on text missions (not image). Image signals don't carry lexical gaps.
+    # GRUG FIX (v7.44): Pre-declare variables used by both AutoGrowth AND AutoLinker
+    # so they survive the try block scope. Julia scopes first-assigned-inside-try
+    # variables to that block, making them UndefVarError outside.
+    _ag_node_patterns = Set{String}()
+    _ag_node_ids_patterns = Tuple{String,String}[]
+    try
+        if !is_image
+            # GRUG: Snapshot current node patterns for coverage checks.
+            _ag_node_patterns = lock(NODE_LOCK) do
+                Set{String}(lowercase(strip(n.pattern)) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:"))
+            end
+            _ag_node_ids_patterns = lock(NODE_LOCK) do
+                [(n.id, n.pattern) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node && !startswith(n.pattern, "SDF:")]
+            end
+            # GRUG: Snapshot lobe coverage for under-populated lobe detection.
+            _ag_lobe_snapshots = Tuple{String,String,Set{String}}[]
+            for (lid, lrec) in Lobe.LOBE_REGISTRY
+                _ag_node_ids_in_lobe = Set{String}()
+                for (nid, assigned_lid) in Lobe.NODE_TO_LOBE_IDX
+                    if assigned_lid == lid
+                        push!(_ag_node_ids_in_lobe, nid)
+                    end
+                end
+                push!(_ag_lobe_snapshots, (lid, lrec.subject, _ag_node_ids_in_lobe))
+            end
+            # GRUG: Snapshot attachments for gap detection.
+            _ag_attach_snapshots = Tuple{String,String,Bool}[]
+            lock(BRIDGE_LOCK) do
+                for (target_id, bridges) in BRIDGE_MAP
+                    for br in bridges
+                        # GRUG FIX (v7.44): CascadeBridge has seam_tokens (not connector)
+                        # and is_crystalized (not json_data["crystalized"]).
+                        push!(_ag_attach_snapshots, (target_id, join(br.seam_tokens, " "), br.is_crystalized))
+                    end
+                end
+            end
+            # GRUG: Sigil table entries for gap detection.
+            _ag_sigil_entries = Dict{String,Any}()
+            for (sname, sentry) in _ENGINE_SIGIL_TABLE.entries
+                _ag_sigil_entries[sname] = Dict{String,Any}(
+                    "lexicon"   => sentry.lexicon,
+                    "expansion" => sentry.expansion,
+                    "class"     => string(sentry.class),
+                )
+            end
+            # GRUG: Strain energy from EphemeralMLP (hippocampal hurt).
+            _ag_strain = try EphemeralMLP.get_strain_energy() catch _ 0.0 end
+
+            # ── ACCUMULATE EVIDENCE ──
+            # GRUG v10: Wire EphemeralMLP heads 2-4 + CoherenceField ΔΦ +
+            # SelfObserver recurring gaps into AutoGrowth evidence. The old code
+            # had hippocampal_warrant_active=false and zero MLP signal integration.
+            # Now: semantic gap, relevance dropout, disambiguation pressure,
+            # coherence drop, and observer patterns all feed evidence.
+            _ag_sem = try Float64(get(mlp_result, "semantic_score", 0.5)) catch _ 0.5 end
+            _ag_rel = try Float64(get(mlp_result, "relevance_score", 0.5)) catch _ 0.5 end
+            _ag_dis = try Float64(get(mlp_result, "disambiguation", 0.5)) catch _ 0.5 end
+            _ag_hippo_warrant = try EphemeralMLP.is_hippocampal_warrant_active() catch _ false end
+            _ag_coherence_delta = try
+                _cf_phi_now = CoherenceField.compute_field(NODE_MAP; force=false)
+                get(_cf_phi_now, "delta_phi", 0.0)
+            catch _
+                0.0
+            end
+            _ag_observer_gap = try
+                # GRUG: Check SelfObserver for recurring gap pattern.
+                # Look for recent observations with tag=:gap or low directive_quality.
+                _obs_peek = SelfObserver.peek_pattern(_MLP_OBSERVER_STORE, "mlp_cycle:", "directive_quality";
+                    tag=nothing, max_results=3)
+                _low_quality_count = count(o -> Float64(get(o.data, "directive_quality", 1.0)) < 0.4, _obs_peek)
+                Float64(_low_quality_count)
+            catch _
+                0.0
+            end
+            _ag_observer_pattern = _ag_observer_gap >= 2.0  # recurring gap pattern
+
+            AutoGrowth.accumulate_evidence!(
+                user_text                 = mission_text,
+                intensity                 = 1.0,  # GRUG: Base intensity per message
+                node_patterns             = _ag_node_patterns,
+                node_ids_patterns         = _ag_node_ids_patterns,
+                thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+                thesaurus_word_similarity = Thesaurus.word_similarity,
+                lobe_snapshots            = _ag_lobe_snapshots,
+                attachment_snapshots      = _ag_attach_snapshots,
+                sigil_table_entries       = _ag_sigil_entries,
+                strain_energy             = _ag_strain,
+                hippocampal_warrant_active = _ag_hippo_warrant,
+                # GRUG v10: New EphemeralMLP signal evidence sources
+                mlp_semantic_score        = _ag_sem,
+                mlp_relevance_score       = _ag_rel,
+                mlp_disambiguation        = _ag_dis,
+                coherence_delta_phi       = _ag_coherence_delta,
+                observer_recurring_gap    = _ag_observer_pattern,
+                observer_gap_pattern      = _ag_observer_pattern ? "recurring_gap" : "",
+                # GRUG v10: Deep MLP integration signals
+                mlp_novelty_score          = try Float64(get(mlp_result, "novelty_score", 0.5)) catch _ 0.5 end,
+                mlp_activation_mode        = try Symbol(get(mlp_result, "activation", :sigmoid)) catch _; :sigmoid end,
+                mlp_hash_rarity            = try
+                    _nt_stats = EphemeralMLP.get_novelty_tracker_stats()
+                    _n_hashes = Int(get(_nt_stats, "unique_hashes", 0))
+                    _n_obs = Int(get(_nt_stats, "total_observations", 1))
+                    # GRUG: hash_rarity = fraction of unique hashes that are rare
+                    # If we have few hashes relative to observations, most are repeated = low rarity
+                    # If we have many hashes relative to observations, most are novel = high rarity
+                    _n_obs > 0 ? min(1.0, _n_hashes / _n_obs) : 0.0
+                catch _ 0.0 end,
+                mlp_correlation_quality    = try
+                    _ic_stats = EphemeralMLP.get_input_correlation_stats()
+                    Float64(get(_ic_stats, "mean_quality_ema", 0.5))
+                catch _ 0.5 end,
+                # GRUG v7.58: Relational triple extraction for SOURCE 18
+                extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+                evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                node_map                   = NODE_MAP,
+                node_lock                  = NODE_LOCK,
+            )
+
+            # ── MAYBE GROW FROM EVIDENCE ──
+            # GRUG: One growth per turn max. Coinflip-biased. Lazy conservative.
+            _ag_result = AutoGrowth.maybe_grow_from_evidence!(
+                node_map                   = NODE_MAP,
+                node_lock                  = NODE_LOCK,
+                create_node_fn             = create_node,
+                add_to_group_fn            = add_to_group!,
+                register_group_fn          = register_group!,
+                group_map                  = GROUP_MAP,
+                group_lock                 = GROUP_LOCK,
+                lobe_registry              = Lobe.LOBE_REGISTRY,
+                immune_gate_fn             = (pattern, data) -> begin
+                    json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                    immune_gate("/autogrowth", json_text; is_critical=false)
+                end,
+                thesaurus_gate_filter      = Thesaurus.synonym_lookup,
+                thesaurus_word_similarity  = Thesaurus.word_similarity,
+                add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
+                register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
+                    AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+                group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                    find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
+                link_to_group_member_fn    = link_to_group_member,
+                group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
+                    grp = get(GROUP_MAP, gid, nothing)
+                    grp === nothing && return 0.0
+                    isempty(grp.node_ids) && return 0.0
+                    total = 0.0
+                    count = 0
+                    for nid in grp.node_ids
+                        n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                        if n !== nothing && !n.is_grave
+                            total += n.strength
+                            count += 1
+                        end
+                    end
+                    count > 0 ? total / count : 0.0
+                end,
+                group_for_fn               = (nid) -> lock(GROUP_LOCK) do
+                    for (gid, grp) in GROUP_MAP
+                        if nid in grp.node_ids
+                            return gid
+                        end
+                    end
+                    nothing
+                end,
+                sigil_promote_fn           = (text) -> SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, text),
+                extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+                evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+                words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
+                scan_latch_candidates_fn   = (pattern, action_packet; kwargs...) -> _scan_latch_candidates(pattern, action_packet; kwargs...),
+                # GRUG v7.58: verb→sigil reverse mapping + user text for relational pattern promotion
+                verb_class_of_fn           = (verb) -> SemanticVerbs.verb_class_of(verb),
+                user_text                  = mission_text,
+                sigil_table                = _ENGINE_SIGIL_TABLE,
+                mlp_rule_hints             = try EphemeralMLP.get_active_rule_hints() catch _ Dict{String, Any}[] end,
+            )
+
+            if _ag_result !== nothing && _ag_result.won_coinflip
+                println("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_prob, digits=3)))")
+            end
+
+            # ── GRUG v10: PETTY LEARNER FAST-PATH ──────────────────────
+            # GRUG: Before doing expensive evidence accumulation for trivial
+            # gaps, check if the input is a "petty" case — one uncovered token
+            # that's a synonym, simple math, or a domain token. These skip the
+            # evidence pipeline entirely. INSTANT learning, no coinflip.
+            try
+                if _ag_result === nothing || !_ag_result.won_coinflip
+                    # GRUG: Only try petty if AutoGrowth didn't grow anything.
+                    # If it DID grow, the gap was real — not petty.
+                    _petty_bindings = try
+                        bind_sigils(mission_text, _ENGINE_SIGIL_TABLE)
+                    catch _
+                        Dict()
+                    end
+                    _petty_result = PettyLearner.classify_petty(
+                        mission_text,
+                        Vector{String}(split(mission_text)),
+                        _ag_node_patterns,
+                        Thesaurus.synonym_lookup,
+                        Thesaurus.word_similarity,
+                        _ag_lobe_snapshots,
+                        _ag_sigil_entries,
+                        _petty_bindings,
+                    )
+                    if _petty_result.dispatched
+                        _petty_dispatched = PettyLearner.dispatch_petty!(_petty_result;
+                            thesaurus_register_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                            flashcard_put_fn = (lobe_id, expr, result_str; result_num=NaN, card_type=:arithmetic) ->
+                                LobeTable.flashcard_put!(lobe_id, expr, result_str;
+                                    result_num=result_num, card_type=card_type),
+                            lobe_whitelist_fn = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                            arithmetic_compute_fn = (bindings) -> ArithmeticEngine.compute_arithmetic(bindings),
+                            arithmetic_bindings = _petty_bindings,
+                        )
+                        println("[PETTY] ⚡  Petty fast-path: $(_petty_dispatched.detail)")
+                    end
+                end
+            catch e
+                @warn "[MAIN] PettyLearner failed (non-fatal): $e"
+            end
+
+            # ── GRUG v10: CURIOSITY OVERFLOW CHECK ──────────────────────
+            # GRUG: The curiosity accumulator in AutoGrowth passively accumulates
+            # from MLP signals + uncovered tokens. When it overflows, the system
+            # generates an autonomous question via _HIPPOCAMPAL_PENDING_ASK.
+            try
+                _cur_overflow = AutoGrowth.check_curiosity_overflow()
+                if _cur_overflow !== nothing
+                    lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                        _HIPPOCAMPAL_PENDING_ASK[] = _cur_overflow
+                    end
+                    _cur_status = AutoGrowth.get_curiosity_status()
+                    println("[CURIOSITY] 🔥  Curiosity overflow! intensity=$(_cur_status["intensity"]) → pending ask: $(repr(_cur_overflow))")
+                    # GRUG: Quench after overflow so it doesn't fire again immediately.
+                    AutoGrowth.quench_curiosity!()
+                end
+            catch e
+                @warn "[MAIN] Curiosity overflow check failed (non-fatal): $e"
+            end
+        end
+    catch e
+        @warn "[MAIN] AutoGrowth failed (non-fatal,不影响response): $e"
+    end
+
+
+    # ── AUTOLINKER: EVIDENCE-BASED CROSS-LOBE BRIDGE GROWTH ──────────────
+    # GRUG: AutoGrowth grows NEW nodes. AutoLinker bridges EXISTING nodes.
+    # Especially cross-lobe: nodes in different chambers that keep showing
+    # up together but can't reach each other without a bridge.
+    # Same lazy conservative coinflip. Same cancer prevention.
+    try
+        if !is_image
+            # GRUG: Snapshot bridge map for cap checks + neighbor evidence.
+            _al_bridge_snap = lock(BRIDGE_LOCK) do
+                snap = Dict{String, Vector{Tuple{String,String}}}()
+                for (nid, bridges) in BRIDGE_MAP
+                    snap[nid] = [(br.partner_id, join(br.seam_tokens, " ")) for br in bridges]
+                end
+                snap
+            end
+
+            # GRUG: Resolve lobe for each fired node (for cross-lobe detection).
+            _al_lobe_of = (nid) -> Lobe.find_lobe_for_node(nid)
+
+            # GRUG: Get co-occurrence map from AutoGrowth for word-level link evidence.
+            # Convert Vector{Dict} snapshot to Dict{Tuple{String,String}, Int} for AutoLinker.
+            _al_co_occur_raw = AutoGrowth.get_co_occur_snapshot()
+            _al_co_occur = Dict{Tuple{String,String}, Int}()
+            for entry in _al_co_occur_raw
+                a = get(entry, "a", ""); b = get(entry, "b", ""); c = get(entry, "count", 0)
+                if !isempty(a) && !isempty(b) && c > 0
+                    key = a < b ? (a, b) : (b, a)
+                    _al_co_occur[key] = c
+                end
+            end
+
+            # ── ACCUMULATE LINK EVIDENCE ──
+            # GRUG v10: Wire MLP disambiguation + relevance scores + ChatterResiduals
+            # co-occurrence into AutoLinker. The old code had strain_nodes=String[]
+            # and zero MLP signal. Now: disambiguation_bridge, relevance_cross_lobe,
+            # and chatter_residual all feed link evidence.
+            _al_mlp_disambig = try Float64(get(mlp_result, "disambiguation", 0.5)) catch _ 0.5 end
+            _al_mlp_relevance = try Float64(get(mlp_result, "relevance_score", 0.5)) catch _ 0.5 end
+
+            # GRUG v10: Get ChatterResiduals word co-occurrence pairs.
+            # The background thread processes chatter swaps and records which
+            # node pairs co-occur. We extract the (word_a, word_b, intensity)
+            # triples for AutoLinker's SOURCE 11.
+            _al_chatter_pairs = try
+                _cr_status = ChatterResiduals.get_chatter_residuals_status()
+                # GRUG: Parse the status string for co-occurrence data.
+                # For now, pass empty — the real co-occurrence comes from
+                # the idle cycle which has access to the raw ledger.
+                Tuple{String,String,Float64}[]
+            catch _
+                Tuple{String,String,Float64}[]
+            end
+
+            # GRUG v10: Compute strain_nodes from nodes currently under strain.
+            # The old code had String[] — zero strain signal. Now we check
+            # which nodes have high strain_energy and include them.
+            _al_strain_nodes = try
+                _strain_ids = String[]
+                for (nid, node) in NODE_MAP
+                    if !node.is_grave && node.strength < 0.3
+                        push!(_strain_ids, nid)
+                    end
+                end
+                _strain_ids
+            catch _
+                String[]
+            end
+
+            AutoLinker.accumulate_link_evidence!(
+                co_fired_ids              = fired_ids,
+                input_touched_ids         = String[],  # GRUG: InputLedger handles this separately
+                node_ids_patterns         = _ag_node_ids_patterns,
+                bridge_map_snapshot       = _al_bridge_snap,
+                thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+                thesaurus_word_similarity = Thesaurus.word_similarity,
+                lobe_of_fn                = _al_lobe_of,
+                strain_nodes              = _al_strain_nodes,
+                co_occur_map              = _al_co_occur,
+                co_activation_pairs       = Tuple{String,String,Float64}[],  # GRUG: no explicit pairs in active path
+                # GRUG v10: New EphemeralMLP signal evidence sources
+                mlp_disambiguation        = _al_mlp_disambig,
+                mlp_relevance_score       = _al_mlp_relevance,
+                chatter_co_occur_pairs    = _al_chatter_pairs,
+                # GRUG v10: Deep MLP integration signal
+                mlp_novelty_score          = try Float64(get(mlp_result, "novelty_score", 0.5)) catch _ 0.5 end,
+            )
+
+            # ── MAYBE AUTO LINK ──
+            _al_result = AutoLinker.maybe_auto_link!(
+                node_map              = NODE_MAP,
+                node_lock             = NODE_LOCK,
+                bridge_fn             = (id_a, id_b; seam_tokens=String[]) ->
+                    bridge_nodes!(id_a, id_b; seam_tokens=seam_tokens),
+                bridge_map_ref        = BRIDGE_MAP,
+                bridge_lock_ref       = BRIDGE_LOCK,
+                lobe_of_fn            = _al_lobe_of,
+                immune_gate_fn        = (pattern, data) -> begin
+                    json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                    immune_gate("/autolinker", json_text; is_critical=false)
+                end,
+                is_already_bridged_fn = (id_a, id_b) -> begin
+                    key = id_a < id_b ? (id_a, id_b) : (id_b, id_a)
+                    bridges_a = lock(() -> get(BRIDGE_MAP, id_a, CascadeBridge[]), BRIDGE_LOCK)
+                    for br in bridges_a
+                        if br.partner_id == id_b
+                            return true
+                        end
+                    end
+                    return false
+                end,
+                node_alive_fn         = (nid) -> begin
+                    n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                    return !isnothing(n) && !n.is_grave
+                end,
+                thesaurus_gate_filter = Thesaurus.synonym_lookup,
+            )
+
+            if _al_result !== nothing && _al_result.won_coinflip
+                cross_tag = _al_result.is_cross_lobe ? "CROSS-LOBE" : "same-lobe"
+                println("[AUTOLINKER] 🔗  Bridged $(_al_result.node_a) ↔ $(_al_result.node_b) [$cross_tag] (intensity=$(round(_al_result.evidence_intensity, digits=2)), p=$(round(_al_result.coinflip_p, digits=3)), source=$(_al_result.source))")
+            end
+        end
+    catch e
+        @warn "[MAIN] AutoLinker failed (non-fatal): $e"
+    end
 
     # GRUG v7.14: Do NOT store the full scaffold verbatim in MESSAGE_HISTORY.
     # The scaffold embeds the entire Fresh Memory block, so storing it
@@ -5847,7 +6527,10 @@ function save_specimen_to_file!(filepath::String)::String
                 "grave_reason"        => node.grave_reason,
                 "response_times"      => node.response_times,
                 "ledger_last_cleared" => node.ledger_last_cleared,
-                "hopfield_key"        => string(node.hopfield_key)  # UInt64 -> String for JSON safety
+                "hopfield_key"        => string(node.hopfield_key),  # UInt64 -> String for JSON safety
+                # GRUG BUG-010b: Original content frozen at birth. Chatter swaps don't touch these.
+                "original_pattern"        => node.original_pattern,
+                "original_action_packet"  => node.original_action_packet
             )
             push!(node_list, nd)
         end
@@ -5872,7 +6555,7 @@ function save_specimen_to_file!(filepath::String)::String
     # GRUG: r.text and r.fire_probability are the actual struct field names.
     # Academic: Previously used r.rule_text / r.fire_prob which would cause a
     # Julia field access error at runtime. Fixed in v2.1.
-    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in AIML_DROP_TABLE]
+    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(_DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end]
     specimen["rules"] = rule_list
 
     # ── 4. MESSAGE HISTORY ────────────────────────────────────────────────
@@ -6116,8 +6799,12 @@ function save_specimen_to_file!(filepath::String)::String
                 "last_chatter_at"  => grp.last_chatter_at,
                 "chatter_count"    => grp.chatter_count,
                 "has_grave_slot"   => grp.has_grave_slot,
+                "grave_count"      => grp.grave_count,
                 "max_occupancy"    => grp.max_occupancy,
                 "is_time_node_group" => grp.is_time_node_group,
+                "is_chatter_eligible" => grp.is_chatter_eligible,
+                # GRUG BUG-010b: inhibition_tokens — semantic "don't do" set from alive originals + thesaurus.
+                "inhibition_tokens"  => collect(grp.inhibition_tokens),
             ))
         end
     end
@@ -6312,9 +6999,10 @@ function save_specimen_to_file!(filepath::String)::String
     # GRUG: Save the TonalJudge runtime-adjustable knobs. These are Refs that
     # can be tuned at runtime; losing them on reload means the specimen
     # forgets its emotional calibration.
+    _tj_lift, _tj_inhibit = TonalJudge.get_frame_match_weights()
     specimen["tonal_judge_knobs"] = Dict{String, Any}(
-        "frame_lift_multiplier"   => TonalJudge._FRAME_LIFT_MULTIPLIER[],
-        "frame_inhibit_multiplier" => TonalJudge._FRAME_INHIBIT_MULTIPLIER[]
+        "frame_lift_multiplier"   => _tj_lift,
+        "frame_inhibit_multiplier" => _tj_inhibit
     )
 
     # ── 25. EPHEMERAL MLP STATE ────────────────────────────────────────────
@@ -6655,6 +7343,77 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize chatter residuals: $e"
     end
 
+    # ── 39b. AUTOGROWTH EVIDENCE + CO-OCCURRENCE ──────────────────────
+    # GRUG: Save the evidence accumulator + co-occurrence map so the
+    # auto-learning system picks up where it left off on reload. Without
+    # this, reload starts with zero evidence and all the slowly-accumulated
+    # gap observations are lost. Evidence of gaps IS the fuel for growth.
+    try
+        specimen["autogrowth_evidence"] = AutoGrowth.get_evidence_snapshot()
+        specimen["autogrowth_co_occur"] = AutoGrowth.get_co_occur_snapshot()
+        _ev_count = length(specimen["autogrowth_evidence"])
+        _co_count = length(specimen["autogrowth_co_occur"])
+        println("  🌱  AutoGrowth evidence saved (evidence=$_ev_count, co-occur=$_co_count)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize autogrowth evidence: $e"
+    end
+
+    # ── 39c. AUTOLINKER LINK EVIDENCE ───────────────────────────────────
+    # GRUG: Save the link evidence accumulator so the auto-linker picks up
+    # where it left off on reload. Link evidence is expensive to accumulate
+    # (many co-firing observations) so we don't want to lose it.
+    try
+        specimen["autolink_evidence"] = AutoLinker.get_link_evidence_snapshot()
+        _al_count = length(specimen["autolink_evidence"])
+        println("  🔗  AutoLinker evidence saved (link_evidence=$_al_count)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize autolink evidence: $e"
+    end
+
+    # ── 39d. FLASHCARD DATA ──────────────────────────────────────────────
+    # GRUG v10: Save flashcards from all lobes. Math facts like "3+5=8"
+    # are stored as lookup table entries, not nodes. Without persisting
+    # them, reload forgets every math fact Grug ever learned.
+    try
+        # BUGFIX (specimen-build-v3): serialize_flashcards() takes NO args and
+        # returns ALL lobes at once (Dict lobe_id => Vector{card}). The previous
+        # per-lobe loop passed a lobe_id positionally, hitting a MethodError on
+        # the first lobe and aborting the entire flashcard-save block — so NO
+        # flashcards were ever persisted. Call it once and use the result.
+        _fc_all = Dict{String, Any}()
+        _fc_count = 0
+        _fc_serialized = LobeTable.serialize_flashcards()
+        for (lobe_id, _fc_data) in _fc_serialized
+            if !isempty(_fc_data)
+                _fc_all[lobe_id] = _fc_data
+                _fc_count += length(_fc_data)
+            end
+        end
+        if _fc_count > 0
+            specimen["flashcards"] = _fc_all
+            println("  📇  Flashcards saved ($_fc_count cards across $(length(_fc_all)) lobes)")
+        else
+            println("  📇  Flashcards: none to save")
+        end
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize flashcards: $e"
+    end
+
+    # ── 39e. CURIOSITY ACCUMULATOR ───────────────────────────────────────
+    # GRUG v10: Save curiosity accumulator state so Grug doesn't lose
+    # its sense of wonder on reload. The intensity, buffer, and quench
+    # timestamp all need to survive specimen round-trips.
+    try
+        specimen["curiosity"] = AutoGrowth.serialize_curiosity()
+        _cur_data = specimen["curiosity"]
+        _cur_int = get(_cur_data, "intensity", 0.0)
+        _cur_buf_len = length(get(_cur_data, "buffer", []))
+        println("  🔥  Curiosity saved (intensity=$(round(_cur_int, digits=2)), buffer=$_cur_buf_len)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize curiosity: $e"
+    end
+
+
     # ── 40. FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Fan-out creates shadow answer nodes. If we don't persist these
     # settings, a specimen reloaded with fan-out disabled loses all shadow
@@ -6705,13 +7464,13 @@ function save_specimen_to_file!(filepath::String)::String
     # bias. Without these, reload loses the momentum of which lobe was winning
     # and the first post-reload cycle scores naively.
     try
-        _lls = LobeOrchestrator.LAST_LOBE_SCORES[]
+        _lls, _lls_winner, _lls_passthrough = LobeOrchestrator.get_last_state()
         specimen["lobe_orch_last"] = Dict{String,Any}(
             "scores"      => [_lls_item_to_dict(t) for t in _lls],
-            "winner"      => LobeOrchestrator.LAST_WINNER[],
-            "passthrough" => LobeOrchestrator.LAST_PASSTHROUGH[]
+            "winner"      => _lls_winner,
+            "passthrough" => _lls_passthrough
         )
-        println("  🎭  Lobe orchestrator last state saved (winner=$(LobeOrchestrator.LAST_WINNER[]))")
+        println("  🎭  Lobe orchestrator last state saved (winner=$(_lls_winner))")
     catch e
         @warn "[MAIN] save_specimen: FAILED to serialize lobe orchestrator last state: $e"
     end
@@ -6876,6 +7635,23 @@ function save_specimen_to_file!(filepath::String)::String
     push!(lines, "  🗳  Contributor votes : $(length(vote_list))")
     push!(lines, "  🎭  Tonal knobs      : saved")
     push!(lines, "  👁   Arousal          : $(arousal_data["level"])")
+    _ag_ev = try length(get(specimen, "autogrowth_evidence", [])) catch _ 0 end
+    _ag_co = try length(get(specimen, "autogrowth_co_occur", [])) catch _ 0 end
+    push!(lines, "  🌱  AutoGrowth       : evidence=$(_ag_ev), co-occur=$(_ag_co)")
+    _al_ev = try length(get(specimen, "autolink_evidence", [])) catch _ 0 end
+    push!(lines, "  🔗  AutoLinker       : link_evidence=$(_al_ev)")
+    _fc_total = try
+        sum(LobeTable.flashcard_count(lid) for (lid, _) in Lobe.LOBE_REGISTRY)
+    catch _
+        0
+    end
+    push!(lines, "  📇  Flashcards      : $_fc_total")
+    _cur_int = try
+        round(get(AutoGrowth.get_curiosity_status(), "intensity", 0.0), digits=2)
+    catch _
+        0.0
+    end
+    push!(lines, "  🔥  Curiosity       : intensity=$_cur_int")
     push!(lines, "╚══════════════════════════════════════════════════════════════╝")
     return join(lines, "\n")
 end
@@ -6897,6 +7673,13 @@ Phase 5: Build summary scroll
 
 Returns a multi-line summary string of everything restored.
 """
+# GRUG FIX (v7.43): JSON.parse returns JSON.Object{String,Any}, NOT Dict{String,Any}.
+# JSON.Object IS a subtype of AbstractDict, so isa(x, AbstractDict) works for both.
+# All isa(x, Dict) checks in the specimen load path were silently failing for
+# JSON.Object values, causing guard clauses to skip their blocks.
+# Helper: accept both Dict and JSON.Object as "dictionary-like".
+_is_dict_like(x) = isa(x, AbstractDict)
+
 function load_specimen_from_file!(filepath::String)::String
     if strip(filepath) == ""
         error("!!! FATAL: /loadSpecimen got empty filepath! Grug needs a file to thaw! !!!")
@@ -6904,6 +7687,11 @@ function load_specimen_from_file!(filepath::String)::String
 
     if !isfile(filepath)
         error("!!! FATAL: /loadSpecimen file not found: '$filepath'! Check path and try again! !!!")
+    end
+
+    # GRUG v7.58: Record specimen path for save-on-exit prompt.
+    lock(_LAST_SPECIMEN_PATH_LOCK) do
+        _LAST_SPECIMEN_PATH[] = filepath
     end
 
     t_start = time()
@@ -6957,7 +7745,7 @@ function load_specimen_from_file!(filepath::String)::String
         error("!!! FATAL: /loadSpecimen JSON parse failed after decompression: $e !!!")
     end
 
-    if !isa(specimen, Dict)
+    if !_is_dict_like(specimen)
         error("!!! FATAL: /loadSpecimen expects a JSON object at top level, got $(typeof(specimen))! !!!")
     end
 
@@ -6991,7 +7779,11 @@ function load_specimen_from_file!(filepath::String)::String
                         "fanout_config", "hippocampal_pending_ask", "admin_session",
                         "lobe_orch_last", "chatter_cursor", "answer_mode_config",
                         "phagy_rules_ref",
-                        "time_orientation_config"])
+                        "time_orientation_config",
+                        "coherence_config",
+                        "autogrowth_evidence", "autogrowth_co_occur",
+                        "autolink_evidence",
+                        "flashcards", "curiosity"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -7017,7 +7809,7 @@ function load_specimen_from_file!(filepath::String)::String
              "fanout_config", "hippocampal_pending_ask", "admin_session",
              "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
              "coherence_config", "mlp_cached_phi"]
-        if haskey(specimen, k) && !isa(specimen[k], Dict)
+        if haskey(specimen, k) && !_is_dict_like(specimen[k])
             push!(validation_errors, "'$k' must be an object")
         end
     end
@@ -7026,7 +7818,7 @@ function load_specimen_from_file!(filepath::String)::String
     if haskey(specimen, "nodes") && isa(specimen["nodes"], AbstractVector)
         for (i, nd) in enumerate(specimen["nodes"])
             i > 5 && break
-            if !isa(nd, Dict)
+            if !_is_dict_like(nd)
                 push!(validation_errors, "nodes[$i]: not a JSON object")
             elseif !haskey(nd, "id") || !haskey(nd, "pattern") || !haskey(nd, "action_packet")
                 push!(validation_errors, "nodes[$i]: missing 'id', 'pattern', or 'action_packet'")
@@ -7059,7 +7851,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # Wipe AIML rules
-    empty!(AIML_DROP_TABLE)
+    lock(_DROP_TABLE_LOCK) do; empty!(AIML_DROP_TABLE) end
 
     # GRUG: Wipe AIML node tribes. All lobe registrations, populations, cycle state.
     # A brain transplant must clear executive memory too, not just cave nodes.
@@ -7125,6 +7917,10 @@ function load_specimen_from_file!(filepath::String)::String
     lock(CHATTER_NODE_COOLDOWN_LOCK) do
         empty!(CHATTER_NODE_COOLDOWN)
     end
+    # BUG-011: Clear permanent chatter mutation registry on full reset.
+    lock(CHATTER_MUTATED_SET_LOCK) do
+        empty!(CHATTER_MUTATED_SET)
+    end
 
 
     # Wipe trajectory state (ActionTonePredictor)
@@ -7169,8 +7965,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # Wipe TonalJudge knobs back to defaults
-    TonalJudge._FRAME_LIFT_MULTIPLIER[] = 1.20
-    TonalJudge._FRAME_INHIBIT_MULTIPLIER[] = 0.85
+    TonalJudge.set_frame_match_weights!(lift=1.20, inhibit=0.85)
 
     # Wipe vigilance config back to defaults (v7.29)
     EphemeralAutomaton._VIGILANCE_CONFIG[] = EphemeralAutomaton.VigilanceConfig()
@@ -7229,7 +8024,7 @@ function load_specimen_from_file!(filepath::String)::String
 
     # ─── 4.1.6 EYE STATE ────────────────────────────────────────────────────────
     # GRUG: Restore eye tracking state for continuity.
-    if haskey(specimen, "eye_state") && isa(specimen["eye_state"], Dict)
+    if haskey(specimen, "eye_state") && _is_dict_like(specimen["eye_state"])
         es = specimen["eye_state"]
         lock(EyeSystem.EYE_STATE_LOCK) do
             if haskey(es, "attention_enabled")
@@ -7259,7 +8054,7 @@ function load_specimen_from_file!(filepath::String)::String
         vr = specimen["verb_registry"]
         lock(SemanticVerbs.VERB_REGISTRY_LOCK) do
             # Restore classes + verbs
-            if haskey(vr, "classes") && isa(vr["classes"], Dict)
+            if haskey(vr, "classes") && _is_dict_like(vr["classes"])
                 for (cls, verbs) in vr["classes"]
                     SemanticVerbs._VERB_REGISTRY[String(cls)] = Set{String}(String.(verbs))
                     n_verb_classes += 1
@@ -7267,7 +8062,7 @@ function load_specimen_from_file!(filepath::String)::String
                 end
             end
             # Restore synonyms
-            if haskey(vr, "synonyms") && isa(vr["synonyms"], Dict)
+            if haskey(vr, "synonyms") && _is_dict_like(vr["synonyms"])
                 for (alias, canon) in vr["synonyms"]
                     SemanticVerbs._SYNONYM_MAP[String(alias)] = String(canon)
                     n_verb_synonyms += 1
@@ -7284,7 +8079,7 @@ function load_specimen_from_file!(filepath::String)::String
 
     # ── 4.3 THESAURUS SEEDS ──────────────────────────────────────────────
     n_thesaurus = 0
-    if haskey(specimen, "thesaurus_seeds") && isa(specimen["thesaurus_seeds"], Dict)
+    if haskey(specimen, "thesaurus_seeds") && _is_dict_like(specimen["thesaurus_seeds"])
         lock(Thesaurus.SEED_MAP_LOCK) do
             for (word, syns) in specimen["thesaurus_seeds"]
                 Thesaurus.SYNONYM_SEED_MAP[String(word)] = Set{String}(String.(syns))
@@ -7332,16 +8127,16 @@ function load_specimen_from_file!(filepath::String)::String
                 try
                     lid = String(ltdata["lobe_id"])
                     chunks = Dict{String, LobeTable.LobeTableChunk}()
-                    if haskey(ltdata, "chunks") && isa(ltdata["chunks"], Dict)
+                    if haskey(ltdata, "chunks") && _is_dict_like(ltdata["chunks"])
                         for (cname, entries) in ltdata["chunks"]
                             chunk = LobeTable.LobeTableChunk(
                                 String(cname),
                                 Dict{String, Any}(),
                                 ReentrantLock()
                             )
-                            if isa(entries, Dict)
+                            if _is_dict_like(entries)
                                 for (k, v) in entries
-                                    if isa(v, Dict) && get(v, "_type", "") == "NodeRef"
+                                    if _is_dict_like(v) && get(v, "_type", "") == "NodeRef"
                                         chunk.store[String(k)] = LobeTable.NodeRef(
                                             String(v["node_id"]),
                                             String(v["lobe_id"]),
@@ -7406,13 +8201,15 @@ function load_specimen_from_file!(filepath::String)::String
                     node = Node(
                         String(nd["id"]),
                         String(nd["pattern"]),
-                        # GRUG: If signal is missing or empty, regenerate from pattern.
-                        # This handles specimens where signal was stripped after
-                        # pattern changes (BUG-004 fix). words_to_signal is in scope
-                        # from engine.jl include.
-                        let sig = Float64.(get(nd, "signal", Float64[]))
-                            isempty(sig) ? words_to_signal(String(nd["pattern"])) : sig
-                        end,
+                        # GRUG: ALWAYS recompute signal from pattern on load.
+                        # Old specimens stored random 8-element signals that don't
+                        # match the pattern token count, causing BUG-004 mismatches
+                        # (signal length ≠ pattern token count → forced cheap scan
+                        # + penalty → node loses votes it should win). The hash-based
+                        # signal is deterministic from the pattern text, so recomputing
+                        # is both safe and correct. words_to_signal is in scope from
+                        # engine.jl include.
+                        words_to_signal(String(nd["pattern"])),
                         String(nd["action_packet"]),
                         Dict{String, Any}(string(k) => v for (k,v) in get(nd, "json_data", Dict())),
                         String.(get(nd, "drop_table", String[])),
@@ -7447,7 +8244,11 @@ function load_specimen_from_file!(filepath::String)::String
                         false,   # fired_this_cycle
                         false,   # voted_this_cycle
                         false,   # gained_this_cycle
-                        0.0      # strength_delta_this_cycle
+                        0.0,     # strength_delta_this_cycle
+                        # GRUG BUG-010b: Original content for inhibition rules.
+                        # If missing from specimen (old format), fall back to current pattern/action_packet.
+                        String(get(nd, "original_pattern", String(nd["pattern"]))),
+                        String(get(nd, "original_action_packet", String(nd["action_packet"])))
                     )
                     NODE_MAP[node.id] = node
                     n_nodes += 1
@@ -7461,7 +8262,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ── 4.7 NODE_TO_LOBE_IDX ─────────────────────────────────────────────
-    if haskey(specimen, "node_to_lobe_idx") && isa(specimen["node_to_lobe_idx"], Dict)
+    if haskey(specimen, "node_to_lobe_idx") && _is_dict_like(specimen["node_to_lobe_idx"])
         lock(Lobe.LOBE_LOCK) do
             for (nid, lid) in specimen["node_to_lobe_idx"]
                 Lobe.NODE_TO_LOBE_IDX[String(nid)] = String(lid)
@@ -7497,7 +8298,7 @@ function load_specimen_from_file!(filepath::String)::String
             try
                 rtext = String(rentry["text"])
                 rprob = Float64(get(rentry, "prob", 1.0))
-                push!(AIML_DROP_TABLE, StochasticRule(rtext, rprob))
+                push!(lock(_DROP_TABLE_LOCK) do; AIML_DROP_TABLE end, StochasticRule(rtext, rprob))
                 n_rules += 1
             catch e
                 error("!!! FATAL: /loadSpecimen failed to restore rule: $e !!!")
@@ -7565,7 +8366,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ── 4.12 AROUSAL ──────────────────────────────────────────────────────
-    if haskey(specimen, "arousal") && isa(specimen["arousal"], Dict)
+    if haskey(specimen, "arousal") && _is_dict_like(specimen["arousal"])
         ar = specimen["arousal"]
         lock(EyeSystem.AROUSAL_LOCK) do
             EyeSystem.AROUSAL_STATE.level      = Float64(get(ar, "level", 0.3))
@@ -7577,7 +8378,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ── 4.13 BRAINSTEM ────────────────────────────────────────────────────
-    if haskey(specimen, "brainstem") && isa(specimen["brainstem"], Dict)
+    if haskey(specimen, "brainstem") && _is_dict_like(specimen["brainstem"])
         bs = specimen["brainstem"]
         lock(BrainStem.BRAINSTEM_LOCK) do
             BrainStem.BRAINSTEM_STATE.dispatch_count = Int(get(bs, "dispatch_count", 0))
@@ -7731,10 +8532,33 @@ function load_specimen_from_file!(filepath::String)::String
                     last_ct  = Float64(get(gentry, "last_chatter_at", 0.0))
                     ccount   = Int(get(gentry, "chatter_count", 0))
                     grave_slot = Bool(get(gentry, "has_grave_slot", false))
+                    # GRUG BUG-010: grave_count — how many vacant grave slots in this group.
+                    # Backward compat: old specimens lack this field, default to 0.
+                    # If has_grave_slot is true but grave_count is 0, infer 1 (at least one grave).
+                    grave_cnt = Int(get(gentry, "grave_count", 0))
+                    if grave_slot && grave_cnt == 0
+                        grave_cnt = 1  # legacy specimen had has_grave_slot=true but no count
+                    end
 
                     max_occ = Int(get(gentry, "max_occupancy", GROUP_MAX_OCCUPANCY))
                     is_tng = Bool(get(gentry, "is_time_node_group", false))
-                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, max_occ, is_tng)
+                    # GRUG v7.39: is_chatter_eligible — backward compat: old specimens lack this field.
+                    # Old specimens with chatter_count == -1 (the sentinel hack) get is_chatter_eligible=false.
+                    # Old specimens with chatter_count >= 0 get is_chatter_eligible=true (default eligible).
+                    # New specimens just read the field directly.
+                    is_chatter_eligible_raw = get(gentry, "is_chatter_eligible", nothing)
+                    if is_chatter_eligible_raw !== nothing
+                        is_chatter_eligible = Bool(is_chatter_eligible_raw)
+                    else
+                        # GRUG: Migration from old sentinel — chatter_count=-1 means NOCHAT
+                        is_chatter_eligible = (ccount >= 0)
+                    end
+                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, grave_cnt, max_occ, is_tng, is_chatter_eligible,
+                                    # GRUG BUG-010b: inhibition_tokens — semantic "don't do" set from alive originals.
+                                    # Old specimens lack this field; default to empty set (will be rebuilt on first refresh).
+                                    Set{String}(String.(get(gentry, "inhibition_tokens", String[]))),
+                                    # GRUG BUG-010b: inhibition_dirty — always true on load (tokens may be stale).
+                                    true)
                     GROUP_MAP[gid] = grp
                     for m in members
                         NODE_TO_GROUP[m] = gid
@@ -7784,11 +8608,11 @@ function load_specimen_from_file!(filepath::String)::String
     # Academic: Backward-compatible — if key is missing (v2.0 specimen),
     # trajectory stays at defaults. No error, no silent corruption.
     n_trajectory = 0
-    if haskey(specimen, "trajectory") && isa(specimen["trajectory"], Dict)
+    if haskey(specimen, "trajectory") && _is_dict_like(specimen["trajectory"])
         traj = specimen["trajectory"]
         lock(ActionTonePredictor._trajectory_lock) do
             # Restore config if present
-            if haskey(traj, "config") && isa(traj["config"], Dict)
+            if haskey(traj, "config") && _is_dict_like(traj["config"])
                 tc = traj["config"]
                 try
                     ActionTonePredictor._trajectory_config[] = ActionTonePredictor.TrajectoryConfig(
@@ -7878,7 +8702,7 @@ function load_specimen_from_file!(filepath::String)::String
     # Academic: Backward-compatible — missing key means no active cooldowns,
     # which is correct for v2.0 specimens that never tracked this.
     n_cooldowns = 0
-    if haskey(specimen, "morph_cooldowns") && isa(specimen["morph_cooldowns"], Dict)
+    if haskey(specimen, "morph_cooldowns") && _is_dict_like(specimen["morph_cooldowns"])
         lock(ChatterMode.MORPH_COOLDOWN_LOCK) do
             for (node_id, ts) in specimen["morph_cooldowns"]
                 try
@@ -7901,7 +8725,7 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # —— 4.18 IMMUNE SYSTEM STATE ——————————————————————————————
-    if haskey(specimen, "immune_system") && isa(specimen["immune_system"], Dict)
+    if haskey(specimen, "immune_system") && _is_dict_like(specimen["immune_system"])
         ImmuneSystem.deserialize_immune_state!(specimen["immune_system"])
         n_immune_sigs = lock(ImmuneSystem.IMMUNE_HOPFIELD_LOCK) do
             length(ImmuneSystem.IMMUNE_HOPFIELD)
@@ -7917,7 +8741,7 @@ function load_specimen_from_file!(filepath::String)::String
     # ─── 4.19 AIML NODE SYSTEM STATE ─────────────────────────────────────────────────
     # GRUG: Restore AIML registry + population caps + cycle counter.
     # Academic: Without this, all AIML executive nodes are lost on reload.
-    if haskey(specimen, "aiml_system") && isa(specimen["aiml_system"], Dict)
+    if haskey(specimen, "aiml_system") && _is_dict_like(specimen["aiml_system"])
         AIMLNodeSystem.deserialize_aiml_state!(specimen["aiml_system"])
         n_aiml_lobes = length(AIMLNodeSystem.get_registered_lobes())
         registered_lobes = AIMLNodeSystem.get_registered_lobes()
@@ -8010,7 +8834,7 @@ function load_specimen_from_file!(filepath::String)::String
     # GRUG v7.27: Restore the phase accumulator (time crystal) from specimen.
     # The crystal holds ATP distribution snapshots. Without this restore,
     # the hippocampus starts with zero learned phase — every reload is amnesia.
-    if haskey(specimen, "phase_accumulator") && isa(specimen["phase_accumulator"], Dict)
+    if haskey(specimen, "phase_accumulator") && _is_dict_like(specimen["phase_accumulator"])
         try
             EphemeralAutomaton.phase_accumulator_from_dict!(specimen["phase_accumulator"])
             _pa_status = EphemeralAutomaton.phase_pull_status()
@@ -8074,7 +8898,7 @@ function load_specimen_from_file!(filepath::String)::String
     # consistency even if group member lists were somehow incomplete.
     # We only fill in entries that are missing (chatter_groups restore may
     # have already set some).
-    if haskey(specimen, "node_to_group_idx") && isa(specimen["node_to_group_idx"], Dict)
+    if haskey(specimen, "node_to_group_idx") && _is_dict_like(specimen["node_to_group_idx"])
         lock(GROUP_LOCK) do
             for (nid, gid) in specimen["node_to_group_idx"]
                 n = String(nid)
@@ -8088,15 +8912,16 @@ function load_specimen_from_file!(filepath::String)::String
     # ── 4.24 TONAL JUDGE TUNABLES ──────────────────────────────────────────
     # GRUG: Restore the TonalJudge runtime knobs if present. Backward-compat:
     # pre-v2.5 specimens lack this key — knobs stay at defaults.
-    if haskey(specimen, "tonal_judge_knobs") && isa(specimen["tonal_judge_knobs"], Dict)
+    if haskey(specimen, "tonal_judge_knobs") && _is_dict_like(specimen["tonal_judge_knobs"])
         tk = specimen["tonal_judge_knobs"]
-        if haskey(tk, "frame_lift_multiplier")
-            TonalJudge._FRAME_LIFT_MULTIPLIER[] = Float64(tk["frame_lift_multiplier"])
-        end
-        if haskey(tk, "frame_inhibit_multiplier")
-            TonalJudge._FRAME_INHIBIT_MULTIPLIER[] = Float64(tk["frame_inhibit_multiplier"])
-        end
-        println("  🎭 TonalJudge knobs restored (lift=$(TonalJudge._FRAME_LIFT_MULTIPLIER[]), inhibit=$(TonalJudge._FRAME_INHIBIT_MULTIPLIER[]))")
+        _tj_lift_val = get(tk, "frame_lift_multiplier", nothing)
+        _tj_inhibit_val = get(tk, "frame_inhibit_multiplier", nothing)
+        TonalJudge.set_frame_match_weights!(;
+            lift     = _tj_lift_val !== nothing ? Float64(_tj_lift_val) : nothing,
+            inhibit  = _tj_inhibit_val !== nothing ? Float64(_tj_inhibit_val) : nothing
+        )
+        _tj_l, _tj_i = TonalJudge.get_frame_match_weights()
+        println("  🎭 TonalJudge knobs restored (lift=$(_tj_l), inhibit=$(_tj_i))")
     end
 
 
@@ -8104,7 +8929,7 @@ function load_specimen_from_file!(filepath::String)::String
     # The brain's learned weights, rules, and correlations survive across
     # save/load. If the key is missing (old specimen), MLP keeps its default
     # initial state — no error, just a fresh brain.
-    if haskey(specimen, "ephemeral_mlp") && isa(specimen["ephemeral_mlp"], Dict)
+    if haskey(specimen, "ephemeral_mlp") && _is_dict_like(specimen["ephemeral_mlp"])
         try
             EphemeralMLP.from_specimen_dict!(specimen["ephemeral_mlp"])
             mlp_status = EphemeralMLP.get_mlp_status()
@@ -8123,7 +8948,7 @@ function load_specimen_from_file!(filepath::String)::String
     # The actual observer store starts fresh (micrologs are ephemeral by design).
     # But the MLP's selfobserver_observations counter was restored from the
     # specimen, so the gate works correctly even though the store is empty.
-    if haskey(specimen, "mlp_observer_store") && isa(specimen["mlp_observer_store"], Dict)
+    if haskey(specimen, "mlp_observer_store") && _is_dict_like(specimen["mlp_observer_store"])
         obs_data = specimen["mlp_observer_store"]
         obs_entries = get(obs_data, "total_entries", 0)
         obs_keys = get(obs_data, "key_count", 0)
@@ -8135,7 +8960,7 @@ function load_specimen_from_file!(filepath::String)::String
     # (current - 0.0) instead of (current - last_known), producing a
     # bogus coherence "spike" on the first observation. Old specimens
     # without this key simply keep the default 0.0 — no harm done.
-    if haskey(specimen, "mlp_cached_phi") && isa(specimen["mlp_cached_phi"], Dict)
+    if haskey(specimen, "mlp_cached_phi") && _is_dict_like(specimen["mlp_cached_phi"])
         _saved_phi = Float64(get(specimen["mlp_cached_phi"], "last_phi", 0.0))
         _MLP_CACHED_PHI[:last_phi] = _saved_phi
         println("  🧠 MLP cached Phi restored (last_phi=$_saved_phi)")
@@ -8200,7 +9025,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "injector_stats")
             _istats = specimen["injector_stats"]
-            if isa(_istats, Dict)
+            if _is_dict_like(_istats)
                 lock(EphemeralAutomaton._INJECTOR_LOCK) do
                     for (k, v) in _istats
                         if haskey(EphemeralAutomaton._INJECTOR_STATS, k)
@@ -8221,7 +9046,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "relational_jitter_config")
             _rjcfg = specimen["relational_jitter_config"]
-            if isa(_rjcfg, Dict)
+            if _is_dict_like(_rjcfg)
                 if haskey(_rjcfg, "jitter_ratio")
                     RelationalJitter._JITTER_RATIO[] = Float64(_rjcfg["jitter_ratio"])
                 end
@@ -8452,6 +9277,72 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  Chatter residuals: FAILED to load (starting fresh)")
     end
 
+    # GRUG: Restore AutoGrowth evidence accumulator + co-occurrence map.
+    # Old specimens that predate AutoGrowth won't have these keys —
+    # that's fine, evidence starts empty and accumulates naturally.
+    try
+        if haskey(specimen, "autogrowth_evidence")
+            AutoGrowth.load_evidence_snapshot!(specimen["autogrowth_evidence"])
+            println("  🌱  AutoGrowth evidence loaded ($(length(specimen["autogrowth_evidence"])) records)")
+        end
+        if haskey(specimen, "autogrowth_co_occur")
+            AutoGrowth.load_co_occur_snapshot!(specimen["autogrowth_co_occur"])
+            println("  🌱  AutoGrowth co-occurrence loaded ($(length(specimen["autogrowth_co_occur"])) pairs)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore autogrowth evidence: $e"
+        println("  ⚠️  AutoGrowth evidence: FAILED to load (starting fresh)")
+    end
+
+    # GRUG: Restore AutoLinker link evidence so the bridge builder picks up
+    # where it left off. Link evidence accumulates slowly from co-firing and
+    # co-occurrence — losing it means the auto-linker starts from zero.
+    try
+        if haskey(specimen, "autolink_evidence")
+            AutoLinker.load_link_evidence_snapshot!(specimen["autolink_evidence"])
+            println("  🔗  AutoLinker evidence loaded ($(length(specimen["autolink_evidence"])) records)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore autolink evidence: $e"
+        println("  ⚠️  AutoLinker evidence: FAILED to load (starting fresh)")
+    end
+
+    # ── GRUG v10: FLASHCARD RESTORE ──────────────────────────────────
+    # GRUG: Restore flashcards from all lobes. Math facts like "3+5=8"
+    # should survive reload — they were learned via PettyLearner fast-path.
+    try
+        if haskey(specimen, "flashcards")
+            _fc_data = specimen["flashcards"]
+            # BUGFIX (specimen-build-v3): deserialize_flashcards!(data) takes the
+            # WHOLE Dict (lobe_id => [cards]) and iterates internally. The old code
+            # called it per-lobe with (lobe_id, cards) — a 2-arg call that has no
+            # matching method, so it MethodError'd and ZERO flashcards restored.
+            _fc_count = 0
+            for (_lobe_id, _cards) in _fc_data
+                _fc_count += length(_cards)
+            end
+            LobeTable.deserialize_flashcards!(_fc_data)
+            println("  📇  Flashcards loaded ($_fc_count cards)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore flashcards: $e"
+        println("  ⚠️  Flashcards: FAILED to load (starting fresh)")
+    end
+
+    # ── GRUG v10: CURIOSITY ACCUMULATOR RESTORE ──────────────────────
+    # GRUG: Restore curiosity intensity so the system remembers what it
+    # was curious about. Curiosity overflow drives autonomous questions.
+    try
+        if haskey(specimen, "curiosity")
+            AutoGrowth.deserialize_curiosity!(specimen["curiosity"])
+            _cur_int = get(specimen["curiosity"], "intensity", 0.0)
+            println("  🔥  Curiosity accumulator loaded (intensity=$_cur_int)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore curiosity: $e"
+        println("  ⚠️  Curiosity: FAILED to load (starting fresh)")
+    end
+
 
     # ── 4.40 FAN-OUT CONFIG ──────────────────────────────────────────────────────
     # GRUG: Restore fan-out settings. If missing (old specimen), defaults apply.
@@ -8459,7 +9350,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "fanout_config")
             _focfg = specimen["fanout_config"]
-            if isa(_focfg, Dict)
+            if _is_dict_like(_focfg)
                 if haskey(_focfg, "enabled")
                     _FANOUT_ENABLED[] = Bool(_focfg["enabled"])
                 end
@@ -8486,7 +9377,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "hippocampal_pending_ask")
             _hpa = specimen["hippocampal_pending_ask"]
-            if isa(_hpa, Dict) && haskey(_hpa, "pending_text")
+            if _is_dict_like(_hpa) && haskey(_hpa, "pending_text")
                 lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
                     _HIPPOCAMPAL_PENDING_ASK[] = String(_hpa["pending_text"])
                 end
@@ -8510,7 +9401,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "admin_session")
             _as = specimen["admin_session"]
-            if isa(_as, Dict) && get(_as, "is_logged_in", false)
+            if _is_dict_like(_as) && get(_as, "is_logged_in", false)
                 ADMIN_SESSION[] = AdminSession(false, 0.0, 0.0)
                 println("  🔐  Admin session: SAVED while logged in — session reset for safety (use /login)")
             else
@@ -8528,11 +9419,11 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "lobe_orch_last")
             _lol = specimen["lobe_orch_last"]
-            if isa(_lol, Dict)
+            if _is_dict_like(_lol)
                 if haskey(_lol, "scores") && isa(_lol["scores"], AbstractVector)
                     _restored_scores = Tuple{String, Float64, Float64, Float64, Int}[]
                     for s in _lol["scores"]
-                        if isa(s, Dict)
+                        if _is_dict_like(s)
                             push!(_restored_scores, (
                                 String(get(s, "lobe_id", "")),
                                 Float64(get(s, "base_avg", 0.0)),
@@ -8542,15 +9433,12 @@ function load_specimen_from_file!(filepath::String)::String
                             ))
                         end
                     end
-                    LobeOrchestrator.LAST_LOBE_SCORES[] = _restored_scores
+                    LobeOrchestrator.set_last_state!(_restored_scores,
+                        haskey(_lol, "winner") ? String(_lol["winner"]) : "",
+                        (haskey(_lol, "passthrough") && isa(_lol["passthrough"], AbstractVector)) ? [String(p) for p in _lol["passthrough"]] : String[])
                 end
-                if haskey(_lol, "winner")
-                    LobeOrchestrator.LAST_WINNER[] = String(_lol["winner"])
-                end
-                if haskey(_lol, "passthrough") && isa(_lol["passthrough"], AbstractVector)
-                    LobeOrchestrator.LAST_PASSTHROUGH[] = [String(p) for p in _lol["passthrough"]]
-                end
-                println("  🎭  Lobe orchestrator last state loaded (winner=$(LobeOrchestrator.LAST_WINNER[]), scores=$(length(LobeOrchestrator.LAST_LOBE_SCORES[])))")
+                _r_scores2, _r_winner2, _ = LobeOrchestrator.get_last_state()
+                println("  \U0001f3ad  Lobe orchestrator last state loaded (winner=$(_r_winner2), scores=$(length(_r_scores2)))")
             end
         end
     catch e
@@ -8564,7 +9452,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "chatter_cursor")
             _cc = specimen["chatter_cursor"]
-            if isa(_cc, Dict) && haskey(_cc, "cursor")
+            if _is_dict_like(_cc) && haskey(_cc, "cursor")
                 ChatterMode.CHATTER_CURSOR[] = Int(_cc["cursor"])
                 println("  🔖  Chatter cursor loaded (pos=$(ChatterMode.CHATTER_CURSOR[]))")
             end
@@ -8580,25 +9468,25 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "answer_mode_config")
             _amc = specimen["answer_mode_config"]
-            if isa(_amc, Dict)
+            if _is_dict_like(_amc)
                 for (mode_name, mode_cfg) in _amc
                     if haskey(_ANSWER_MODE_CONFIG, mode_name)
                         # Merge: saved values override code defaults
                         _existing = _ANSWER_MODE_CONFIG[mode_name]
-                        if isa(mode_cfg, Dict) && isa(_existing, Dict)
+                        if _is_dict_like(mode_cfg) && _is_dict_like(_existing)
                             for (k, v) in mode_cfg
                                 _existing[k] = v
                             end
                         elseif isempty(_existing) && !isempty(mode_cfg)
                             # Code default is empty (handled specially), but saved
                             # had data — restore it
-                            if isa(mode_cfg, Dict)
+                            if _is_dict_like(mode_cfg)
                                 _ANSWER_MODE_CONFIG[mode_name] = Dict{String,Any}(mode_cfg)
                             end
                         end
                     else
                         # New mode that doesn't exist in code defaults — add it
-                        if isa(mode_cfg, Dict)
+                        if _is_dict_like(mode_cfg)
                             _ANSWER_MODE_CONFIG[mode_name] = Dict{String,Any}(mode_cfg)
                         end
                     end
@@ -8634,7 +9522,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "time_orientation_config")
             _toc = specimen["time_orientation_config"]
-            if isa(_toc, Dict)
+            if _is_dict_like(_toc)
                 # Restore global time orientation state
                 _g_orient = String(get(_toc, "global_orientation", "none"))
                 _g_meta = get(_toc, "global_meta", Dict{String,Any}())
@@ -8652,10 +9540,10 @@ function load_specimen_from_file!(filepath::String)::String
                 # the time_orientation and time_sigil fields should already be there.
                 # This is a verification pass + logging.
                 _tni = get(_toc, "time_node_index", Dict{String,Any}())
-                if isa(_tni, Dict) && !isempty(_tni)
+                if _is_dict_like(_tni) && !isempty(_tni)
                     _verified = 0
                     for (nid, info) in _tni
-                        if isa(info, Dict)
+                        if _is_dict_like(info)
                             _orient = get(info, "orientation", "")
                             _sigil  = get(info, "sigil", "")
                             # Verify the node exists and has the orientation
@@ -8687,7 +9575,7 @@ function load_specimen_from_file!(filepath::String)::String
     try
         if haskey(specimen, "coherence_config")
             _cc = specimen["coherence_config"]
-            if isa(_cc, Dict)
+            if _is_dict_like(_cc)
                 CoherenceField.coherence_config_from_dict!(_cc)
                 _w = get(_cc, "weight", 0.0)
                 println("  🔗  CoherenceField config loaded (weight=$_w)")
@@ -8922,7 +9810,7 @@ function maybe_run_idle()
             create_node_fn        = create_node,
             add_to_group_fn       = add_to_group!,
             group_latch_fn        = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
-                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
             link_to_group_member_fn = link_to_group_member,
             immune_gate_fn        = (pattern, data) -> begin
                 json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
@@ -8944,6 +9832,235 @@ function maybe_run_idle()
     catch e
         println("[IDLE:GROWTH] !!! ERROR during growth automaton cycle: $e !!!")
     end
+
+    # ── AUTOGROWTH: IDLE-TIME EVIDENCE-BASED GROWTH SUPPLEMENT ──────────
+    # GRUG: TemporalGrowth runs on fresh MESSAGE_HISTORY data. But the
+    # evidence accumulator may have PENDING evidence from live conversation
+    # that hasn't reached the coinflip threshold yet. Here in idle time,
+    # we give it another chance to fire. Also discover thesaurus pairs
+    # from accumulated co-occurrence data.
+    try
+        _ag_idle_result = AutoGrowth.maybe_grow_from_evidence!(
+            node_map                   = NODE_MAP,
+            node_lock                  = NODE_LOCK,
+            create_node_fn             = create_node,
+            add_to_group_fn            = add_to_group!,
+            register_group_fn          = register_group!,
+            group_map                  = GROUP_MAP,
+            group_lock                 = GROUP_LOCK,
+            lobe_registry              = Lobe.LOBE_REGISTRY,
+            immune_gate_fn             = (pattern, data) -> begin
+                json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                immune_gate("/autogrowth_idle", json_text; is_critical=false)
+            end,
+            thesaurus_gate_filter      = Thesaurus.synonym_lookup,
+            thesaurus_word_similarity  = Thesaurus.word_similarity,
+            add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+            register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
+            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+            stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
+                AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+            group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
+                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
+            link_to_group_member_fn    = link_to_group_member,
+            group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
+                grp = get(GROUP_MAP, gid, nothing)
+                grp === nothing && return 0.0
+                isempty(grp.node_ids) && return 0.0
+                total = 0.0; count = 0
+                for nid in grp.node_ids
+                    n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                    if n !== nothing && !n.is_grave; total += n.strength; count += 1 end
+                end
+                count > 0 ? total / count : 0.0
+            end,
+            group_for_fn               = (nid) -> lock(GROUP_LOCK) do
+                for (gid, grp) in GROUP_MAP
+                    if nid in grp.node_ids; return gid end
+                end
+                nothing
+            end,
+            sigil_promote_fn           = (text) -> SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, text),
+            extract_triples_fn         = (pat) -> extract_relational_triples(pat),
+            evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
+            words_to_signal_fn         = (words) -> PatternScanner.words_to_signal(words),
+            scan_latch_candidates_fn   = (pattern, action_packet; kwargs...) -> _scan_latch_candidates(pattern, action_packet; kwargs...),
+            # GRUG v7.58: verb→sigil reverse mapping + user text for relational pattern promotion
+            verb_class_of_fn           = (verb) -> SemanticVerbs.verb_class_of(verb),
+            user_text                  = try MESSAGE_HISTORY[end].text catch _ "" end,
+            sigil_table                = _ENGINE_SIGIL_TABLE,
+            mlp_rule_hints             = try EphemeralMLP.get_active_rule_hints() catch _ Dict{String, Any}[] end,
+        )
+        if _ag_idle_result !== nothing && _ag_idle_result.won_coinflip
+            println("[IDLE:AUTOGROWTH] 🌱  Grew $(_ag_idle_result.growth_type) for '$(_ag_idle_result.pattern)' in $(_ag_idle_result.lobe_hint)")
+        end
+
+        # GRUG: Also try discovering thesaurus pairs from co-occurrence data.
+        _ag_pairs = AutoGrowth.discover_thesaurus_pairs!(
+            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+            thesaurus_word_similarity  = Thesaurus.word_similarity,
+        )
+        if !isempty(_ag_pairs)
+            println("[IDLE:AUTOGROWTH] 📖  Discovered thesaurus pairs: $(_ag_pairs)")
+        end
+    catch e
+        println("[IDLE:AUTOGROWTH] !!! ERROR during idle autogrowth: $e !!!")
+    end
+
+    # ── AUTOLINKER: IDLE-TIME EVIDENCE-BASED BRIDGE GROWTH ──────────────
+    # GRUG: During idle time, give the link accumulator another chance to
+    # fire. Evidence that accumulated during active conversation may have
+    # reached the coinflip threshold by now. Cross-lobe bridges especially.
+    try
+        # GRUG: Snapshot bridge map for cap checks + neighbor evidence.
+        _al_idle_bridge_snap = lock(BRIDGE_LOCK) do
+            snap = Dict{String, Vector{Tuple{String,String}}}()
+            for (nid, bridges) in BRIDGE_MAP
+                snap[nid] = [(br.partner_id, join(br.seam_tokens, " ")) for br in bridges]
+            end
+            snap
+        end
+
+        # GRUG: Snapshot node patterns for synonym bridge evidence.
+        _al_idle_nid_pat = lock(NODE_LOCK) do
+            [(n.id, n.pattern) for n in values(NODE_MAP) if !n.is_grave && !n.is_image_node]
+        end
+
+        _al_idle_lobe_of = (nid) -> Lobe.find_lobe_for_node(nid)
+        _al_idle_co_occur_raw = AutoGrowth.get_co_occur_snapshot()
+        _al_idle_co_occur = Dict{Tuple{String,String}, Int}()
+        for entry in _al_idle_co_occur_raw
+            a = get(entry, "a", ""); b = get(entry, "b", ""); c = get(entry, "count", 0)
+            if !isempty(a) && !isempty(b) && c > 0
+                key = a < b ? (a, b) : (b, a)
+                _al_idle_co_occur[key] = c
+            end
+        end
+
+        # GRUG: Accumulate link evidence from idle-time data.
+        # Mine RelationalGovernance CO_ACC for high-intensity pairs. Unlike
+        # co_fired_ids (which generates ALL pairs from a set), we pass explicit
+        # (id_a, id_b, intensity) triples to avoid cross-pair contamination.
+        _al_idle_co_act_pairs = Tuple{String,String,Float64}[]
+        try
+            _al_idle_co_acc_data = RelationalGovernance.serialize_co_activation()
+            _al_idle_pairs_dict = get(_al_idle_co_acc_data, "co_activation_pairs", Dict{String,Any}())
+            for (pair_key_str, intensity) in _al_idle_pairs_dict
+                if Float64(intensity) >= 5.0  # GRUG: Only use strong co-activation pairs
+                    parts = split(String(pair_key_str), "|")
+                    if length(parts) == 2
+                        push!(_al_idle_co_act_pairs, (String(parts[1]), String(parts[2]), Float64(intensity)))
+                    end
+                end
+            end
+        catch; end
+
+
+        # GRUG v10: Compute strain_nodes from nodes currently under strain for idle path.
+        # Same logic as active path — nodes with strength < 0.3 are under strain.
+        _al_idle_strain_nodes = try
+            _idle_strain_ids = String[]
+            for (nid, node) in NODE_MAP
+                if !node.is_grave && node.strength < 0.3
+                    push!(_idle_strain_ids, nid)
+                end
+            end
+            _idle_strain_ids
+        catch _
+            String[]
+        end
+
+        # GRUG v10: Get EphemeralMLP signal values for idle AutoLinker.
+        # Use the last MLP transform results — they persist between cycles.
+        _al_idle_mlp_disambig = try
+            Float64(get(EphemeralMLP.get_last_result(), "disambiguation", 0.5))
+        catch _
+            0.5
+        end
+        _al_idle_mlp_relevance = try
+            Float64(get(EphemeralMLP.get_last_result(), "relevance_score", 0.5))
+        catch _
+            0.5
+        end
+
+        # GRUG v10: Get ChatterResiduals co-occurrence pairs for idle path.
+        # Unlike active path (which is empty), idle path has time to mine
+        # the chatter log for word co-occurrence pairs.
+        _al_idle_chatter_pairs = try
+            _cr_idle_status = ChatterResiduals.get_chatter_residuals_status()
+            # GRUG: Parse co-occurrence pairs from chatter residuals status.
+            # The status dict may contain "co_occur_pairs" with (word_a, word_b, intensity) data.
+            _cr_pairs = get(_cr_idle_status, "co_occur_pairs", [])
+            _cr_result = Tuple{String,String,Float64}[]
+            if isa(_cr_pairs, AbstractVector)
+                for pair_entry in _cr_pairs
+                    a = get(pair_entry, "a", "")
+                    b = get(pair_entry, "b", "")
+                    intensity = Float64(get(pair_entry, "intensity", 0.0))
+                    if !isempty(a) && !isempty(b) && intensity >= 3.0
+                        push!(_cr_result, (a, b, intensity))
+                    end
+                end
+            end
+            _cr_result
+        catch _
+            Tuple{String,String,Float64}[]
+        end
+
+        AutoLinker.accumulate_link_evidence!(
+            co_fired_ids              = String[],  # GRUG: No direct co-fire data in idle
+            input_touched_ids         = String[],
+            node_ids_patterns         = _al_idle_nid_pat,
+            bridge_map_snapshot       = _al_idle_bridge_snap,
+            thesaurus_gate_filter     = Thesaurus.synonym_lookup,
+            thesaurus_word_similarity = Thesaurus.word_similarity,
+            lobe_of_fn                = _al_idle_lobe_of,
+            strain_nodes              = _al_idle_strain_nodes,  # GRUG v10: was String[], now computed from NODE_MAP
+            co_occur_map              = _al_idle_co_occur,
+            co_activation_pairs       = _al_idle_co_act_pairs,
+            # GRUG v10: New EphemeralMLP signal evidence sources for idle path
+            mlp_disambiguation        = _al_idle_mlp_disambig,
+            mlp_relevance_score       = _al_idle_mlp_relevance,
+            chatter_co_occur_pairs    = _al_idle_chatter_pairs,
+            mlp_novelty_score          = try EphemeralMLP.get_novelty_score() catch _ 0.5 end,
+        )
+
+        _al_idle_result = AutoLinker.maybe_auto_link!(
+            node_map              = NODE_MAP,
+            node_lock             = NODE_LOCK,
+            bridge_fn             = (id_a, id_b; seam_tokens=String[]) ->
+                bridge_nodes!(id_a, id_b; seam_tokens=seam_tokens),
+            bridge_map_ref        = BRIDGE_MAP,
+            bridge_lock_ref       = BRIDGE_LOCK,
+            lobe_of_fn            = _al_idle_lobe_of,
+            immune_gate_fn        = (pattern, data) -> begin
+                json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
+                immune_gate("/autolinker_idle", json_text; is_critical=false)
+            end,
+            is_already_bridged_fn = (id_a, id_b) -> begin
+                bridges_a = lock(() -> get(BRIDGE_MAP, id_a, CascadeBridge[]), BRIDGE_LOCK)
+                for br in bridges_a
+                    if br.partner_id == id_b
+                        return true
+                    end
+                end
+                return false
+            end,
+            node_alive_fn         = (nid) -> begin
+                n = lock(() -> get(NODE_MAP, nid, nothing), NODE_LOCK)
+                return !isnothing(n) && !n.is_grave
+            end,
+            thesaurus_gate_filter = Thesaurus.synonym_lookup,
+        )
+
+        if _al_idle_result !== nothing && _al_idle_result.won_coinflip
+            cross_tag = _al_idle_result.is_cross_lobe ? "CROSS-LOBE" : "same-lobe"
+            println("[IDLE:AUTOLINKER] 🔗  Bridged $(_al_idle_result.node_a) ↔ $(_al_idle_result.node_b) [$cross_tag]")
+        end
+    catch e
+        println("[IDLE:AUTOLINKER] !!! ERROR during idle autolink: $e !!!")
+    end
+
     # ── CHATTER/PHAGY PATH — only for mature specimens (>= 1000 nodes) ────
     if alive_count < ChatterMode._effective_min_population()
         # GRUG: Population too small for chatter/phagy. But mitosis above may have fired.
@@ -8973,6 +10090,17 @@ function maybe_run_idle()
             )
             ChatterMode.apply_chatter_diffs!(session, NODE_MAP, NODE_LOCK;
                                              stamp_fn = stamp_chatter!)
+            # GRUG BUG-010b: Chatter swapped patterns+action_packets, so inhibition
+            # tokens are now stale (remixed content should NOT contribute to inhibition).
+            # Mark all chattered groups dirty so next is_inhibited check refreshes.
+            for clone in session.clones
+                if clone.accepted_swap
+                    grp = group_for(clone.source_id)
+                    if !isnothing(grp)
+                        grp.inhibition_dirty = true
+                    end
+                end
+            end
             try
                 ChatterMode.persist_chatter_log!()
             catch e
@@ -9147,6 +10275,34 @@ GRUG: Main REPL loop. Prints boot message, then loops forever reading input.
 Dispatches commands (/ prefix) or runs mission scan. Triggers idle chatter/phagy
 between inputs via maybe_run_idle(). This is the top-level entry point.
 """
+# GRUG v7.58: Save-on-exit prompt. When the user quits, ask if they want
+# to save the current specimen (autogrowth may have mutated state).
+function _maybe_save_specimen_on_exit()
+    last_path = lock(_LAST_SPECIMEN_PATH_LOCK) do
+        _LAST_SPECIMEN_PATH[]
+    end
+    if isempty(last_path)
+        # No specimen was ever loaded — skip prompt
+        return
+    end
+    try
+        print("
+[GRUG] 💾 Would you like to save the current specimen? (y/n): ")
+        answer = lowercase(strip(readline()))
+        if startswith(answer, "y")
+            # Save to the same path it was loaded from
+            println("[GRUG] Saving specimen to: $last_path")
+            result = save_specimen_to_file!(last_path)
+            println("[GRUG] $result")
+        else
+            println("[GRUG] Specimen not saved. Goodbye.")
+        end
+    catch
+        # readline may fail if stdin is already closed (scripted exit)
+        # Just skip silently
+    end
+end
+
 function run_cli()
     print(BOOT_MSG)
 
@@ -9218,6 +10374,8 @@ function run_cli()
         # terminated on its own, not via a /quit command.
         if eof(stdin)
             println("\n[GRUG] ☁ stdin closed (EOF). Cave goes quiet. Shutting down CLI loop.")
+            # GRUG v7.58: Try to save specimen before EOF exit (may fail if stdin is closed).
+            _maybe_save_specimen_on_exit()
             break
         end
 
@@ -9251,6 +10409,8 @@ function run_cli()
             catch
                 # GRUG: Best-effort. Thread might already be stopped.
             end
+            # GRUG v7.58: Ask if user wants to save specimen before exit.
+            _maybe_save_specimen_on_exit()
             break
         end
 
@@ -9314,6 +10474,8 @@ function run_cli()
             m_mlpobserver = match(r"^/mlpObserver\s*$", line)
             m_mitosisstatus = match(r"^/mitosisStatus\s*$", line)
             m_growthstatus  = match(r"^/growthStatus\s*$", line)
+            m_autogrowstatus = match(r"^/autoGrowStatus\s*$", line)
+            m_autolinkstatus = match(r"^/autoLinkStatus\s*$", line)
             m_explicit    = match(r"^/explicit\s+([a-zA-Z0-9_]+)\s+\[(.+?)\]\s+(.+)", line)
             m_grow        = match(r"^/grow\s+(\S+)\s+(.+)"s,      line)
             m_rule        = match(r"^/addRule\s+(.+)"s,   line)
@@ -9376,6 +10538,20 @@ function run_cli()
             m_decomp_remconjg  = match(r"^/decomposer\s+removeConjugation\s+(\S+)\s*$",            line)
             m_decomp_setctx    = match(r"^/decomposer\s+setContext\s+(\S+)\s*$",                   line)
             m_decomp_reset     = match(r"^/decomposer\s+reset\s*$",                               line)
+            # GRUG v10: Flashcard CLI commands
+            # /flashcard                        — show flashcard status (count per lobe)
+            # /flashcard query <lobe_id> <expr>  — look up a flashcard
+            # /flashcard evict <lobe_id> <expr>  — remove a flashcard
+            # /flashcard count                   — show total card count
+            m_flashcard_status = match(r"^/flashcard\s*$", line)
+            m_flashcard_query  = match(r"^/flashcard\s+query\s+(\S+)\s+(.+)$", line)
+            m_flashcard_evict  = match(r"^/flashcard\s+evict\s+(\S+)\s+(.+)$", line)
+            m_flashcard_count  = match(r"^/flashcard\s+count\s*$", line)
+            # GRUG v10: Curiosity CLI commands
+            # /curiosity           — show curiosity accumulator status
+            # /curiosity quench    — manually quench curiosity (reset intensity)
+            m_curiosity_status = match(r"^/curiosity\s*$", line)
+            m_curiosity_quench = match(r"^/curiosity\s+quench\s*$", line)
             # GRUG v7.27: Phase accumulator (time crystal) CLI commands
             # /automaton phase                         — show phase accumulator status
             # /automaton phase threshold <float>       — set pull threshold (0.1-0.9)
@@ -9491,18 +10667,23 @@ function run_cli()
                 end
 
             elseif !isnothing(m_wrong)
-                # GRUG: /wrong - user says last response was wrong.
-                # CRITICAL: Only nodes that actually contributed (fired) get penalized, not all voters.
-                # Nodes that hit 0 become grave (negative reinforcement markers).
+                # GRUG BUG-011: /wrong - user says last response was wrong.
+                # Only lock-in votes can change strength, and even those are coinflip-gated.
+                # Non-lock/unsure contributors never change strength.
                 contributor_ids = lock(LAST_VOTER_LOCK) do
                     copy(LAST_CONTRIBUTOR_IDS)
+                end
+                locked_ids = lock(LAST_VOTER_LOCK) do
+                    copy(LAST_LOCKED_NODE_IDS)
                 end
 
                 if isempty(contributor_ids)
                     println("⚠  /wrong: No previous contributors to penalize. Did you run /mission first?")
+                elseif isempty(locked_ids)
+                    println("⚠  /wrong: Previous response had no lock-in votes, so no node strength changed.")
                 else
-                    apply_wrong_feedback!(contributor_ids)
-                    println("❌  /wrong applied. $(length(contributor_ids)) contributor(s) penalized via coinflip.")
+                    result = apply_wrong_feedback!(contributor_ids, locked_ids)
+                    println("❌  /wrong applied lock-in-only. $(length(contributor_ids)) contributor(s), $(length(locked_ids)) locked: $(length(result["penalized"])) penalized, $(length(result["nonlocked_skipped"])) nonlocked skipped, $(length(result["coinflip_missed"])) missed coinflip.")
                 end
 
                 # GRUG v7.12: Context-intensity feedback.
@@ -9531,10 +10712,9 @@ function run_cli()
                 end
 
 elseif !isnothing(m_right)
-                # GRUG v7.23: /right - user says last response was good.
-                # TIERED REWARD: Locked-in votes (sure_votes) get guaranteed reward.
-                # Unsure votes get a confidence-biased coinflip. Both tiers skip
-                # nodes that already gained strength this cycle (no double reward).
+                # GRUG BUG-011: /right - user says last response was good.
+                # Lock-in-only reward: only locked votes can change strength,
+                # and even those still go through stochastic bump_strength!.
                 contributor_votes = lock(LAST_VOTER_LOCK) do
                     copy(LAST_CONTRIBUTOR_VOTES)
                 end
@@ -9548,7 +10728,7 @@ elseif !isnothing(m_right)
                     result = apply_right_feedback!(contributor_votes, locked_ids)
                     n_locked = count(v -> v.node_id in locked_ids, contributor_votes)
                     n_unsure = length(contributor_votes) - n_locked
-                    println("✅ /right applied. $(length(contributor_votes)) contributor(s) [$n_locked locked, $n_unsure unsure]: $(length(result["rewarded"])) rewarded, $(length(result["skipped_double_reward"])) skipped (already gained), $(length(result["coinflip_missed"])) missed coinflip.")
+                    println("✅ /right applied lock-in-only. $(length(contributor_votes)) contributor(s) [$n_locked locked, $n_unsure nonlocked]: $(length(result["rewarded"])) rewarded, $(length(result["nonlocked_skipped"])) nonlocked skipped, $(length(result["coinflip_missed"])) missed coinflip.")
                 end
 
                 # GRUG v7.12: Context-intensity feedback (positive).
@@ -9575,27 +10755,26 @@ elseif !isnothing(m_right)
                 end
 
             elseif !isnothing(m_aimlright)
-                # GRUG: /aimlRight - user says AIML executive layer did good this cycle.
-                # Rewards AIML nodes that contributed (fired), BUT skips any that already gained
-                # strength from use in the same cycle (no double snack rule).
+                # GRUG BUG-011: /aimlRight - user says AIML executive layer did good this cycle.
+                # Rewards only AIML nodes with explicit orchestration contribution this cycle.
+                # Mere voting/firing is ignored; eligible contributors still need the coinflip.
                 result = AIMLNodeSystem.apply_aiml_right!()
                 if result["total_contributors"] == 0
-                    println("⚠  /aimlRight: No AIML nodes voted this cycle. Did you run /mission first?")
+                    println("⚠  /aimlRight: No AIML orchestration contributors this cycle. Did output orchestration mark contributors?")
                 else
-                    println("✅  /aimlRight applied. $(length(result["rewarded"])) rewarded, $(length(result["skipped_double_reward"])) skipped (already gained this cycle).")
+                    println("✅  /aimlRight applied lock-in-only. $(length(result["rewarded"])) rewarded, $(length(result["coinflip_missed"])) missed coinflip, $(length(result["grave_skipped"])) grave skipped.")
                 end
 
             elseif !isnothing(m_aimlwrong)
-                # GRUG: /aimlWrong - user says AIML executive layer did bad this cycle.
-                # Penalizes AIML nodes that contributed (fired) via 50/50 coinflip. Nodes that already gained
-                # strength this cycle get EXTRA penalty so they end up net-negative — not
-                # just back at baseline. Fake punishment is not punishment. Grug rules.
+                # GRUG BUG-011: /aimlWrong - user says AIML executive layer did bad this cycle.
+                # Penalizes only AIML nodes with explicit orchestration contribution this cycle.
+                # No use-gain overcompensation exists because fire/use no longer changes strength.
                 result = AIMLNodeSystem.apply_aiml_wrong!()
                 if result["total_contributors"] == 0
-                    println("⚠  /aimlWrong: No AIML nodes voted this cycle. Did you run /mission first?")
+                    println("⚠  /aimlWrong: No AIML orchestration contributors this cycle. Did output orchestration mark contributors?")
                 else
                     newly_graved = length(result["newly_graved"])
-                    println("❌  /aimlWrong applied. $(length(result["penalized"])) penalized, $(length(result["spared"])) spared by coinflip, $newly_graved newly graved.")
+                    println("❌  /aimlWrong applied lock-in-only. $(length(result["penalized"])) penalized, $(length(result["spared"])) spared by coinflip, $newly_graved newly graved, $(length(result["grave_skipped"])) grave skipped.")
                 end
 
             elseif !isnothing(m_aimlstatus)
@@ -9677,10 +10856,10 @@ elseif !isnothing(m_right)
                 println("  Current Cycle    : $cycle")
                 println("  ─────────────────────────────────────────────────────────────")
                 println("  Cycle Mechanics:")
-                println("  • /aimlRight rewards nodes that voted this cycle")
-                println("  • /aimlWrong penalizes nodes that voted this cycle")
-                println("  • Nodes that gained strength are skipped from double reward")
-                println("  • Nodes that gained get EXTRA penalty on /aimlWrong")
+                println("  • /aimlRight rewards explicit orchestration contributors only")
+                println("  • /aimlWrong penalizes explicit orchestration contributors only")
+                println("  • Mere AIML voting/firing never changes strength")
+                println("  • Eligible contributors still change strength only by coinflip")
                 println("  • Cycle counter increments with /mission calls")
                 println("╚══════════════════════════════════════════════════════════════╝")
 
@@ -9874,6 +11053,16 @@ elseif !isnothing(m_right)
                 # GRUG: /growthStatus — show growth automaton status and recent spawn events.
                 println(TemporalGrowth.get_growth_status_summary())
 
+            elseif !isnothing(m_autogrowstatus)
+                # GRUG: /autoGrowStatus — show live conversation auto-learning status.
+                # Evidence accumulator counts, recent growth log, co-occurrence map size.
+                println(AutoGrowth.get_autogrowth_status_summary())
+
+            elseif !isnothing(m_autolinkstatus)
+                # GRUG: /autoLinkStatus — show evidence-based cross-lobe bridge status.
+                # Link evidence accumulator counts, top candidates, recent link history.
+                println(AutoLinker.get_autolink_status_summary())
+
             elseif !isnothing(m_explicit)
                 cmd, id, mission_text = m_explicit.captures
                 add_message_to_history!("User", String(mission_text), false)
@@ -9932,7 +11121,42 @@ elseif !isnothing(m_right)
                         end
 
                         try
-                            new_ids = grow_nodes_from_packet(json_text; target_lobe=target_lobe)
+                            # GRUG FIX (v7.42): When the grow packet pattern is image binary,
+                            # we must tell grow_nodes_from_packet to flag it is_image_node=true,
+                            # otherwise the base64 string is stored as a plain TEXT pattern with a
+                            # 1-element signal (the SDF signal we just computed gets discarded).
+                            # We inject is_image_node into the packet JSON, then after creation we
+                            # overwrite the empty placeholder signal with the real SDF signal.
+                            _grow_json_text = json_text
+                            if is_img
+                                _gp = try JSON.parse(json_text) catch; nothing end
+                                if _gp !== nothing
+                                    if haskey(_gp, "nodes") && isa(_gp["nodes"], AbstractVector)
+                                        for _nd in _gp["nodes"]
+                                            _is_dict_like(_nd) && (_nd["is_image_node"] = true)
+                                        end
+                                    elseif haskey(_gp, "pattern")
+                                        _gp["is_image_node"] = true
+                                    end
+                                    _grow_json_text = JSON.json(_gp)
+                                end
+                            end
+
+                            new_ids = grow_nodes_from_packet(_grow_json_text; target_lobe=target_lobe)
+
+                            # GRUG FIX (v7.42): Apply the real SDF signal to freshly-created image
+                            # nodes (create_node leaves an empty placeholder for image nodes).
+                            if is_img && !isempty(img_sig)
+                                lock(NODE_LOCK) do
+                                    for nid in new_ids
+                                        n = get(NODE_MAP, nid, nothing)
+                                        if !isnothing(n) && n.is_image_node && isempty(n.signal)
+                                            append!(n.signal, img_sig)
+                                        end
+                                    end
+                                end
+                            end
+
                             success_msg = "🌱 Tribe expanded! Grug planted $(length(new_ids)) new nodes into lobe '$(isnothing(target_lobe) ? "-" : target_lobe)': [$(join(new_ids, ", "))]"
                             println(success_msg)
                             add_message_to_history!("System", success_msg, false)
@@ -11539,6 +12763,73 @@ elseif !isnothing(m_right)
                     @warn "[CLI] /decomposer reset error: $e"
                 end
 
+            # GRUG v10: /flashcard commands — inspect and manage flashcard lookup table
+            elseif !isnothing(m_flashcard_status)
+                begin
+                    _fc_total = 0
+                    for (lobe_id, lrec) in Lobe.LOBE_REGISTRY
+                        _fc_count = LobeTable.flashcard_count(lobe_id)
+                        if _fc_count > 0
+                            println("  📇  $lobe_id ($(lrec.subject)): $_fc_count cards")
+                        end
+                        _fc_total += _fc_count
+                    end
+                    if _fc_total == 0
+                        println("📇  No flashcards stored. Math facts will be learned on first encounter.")
+                    else
+                        println("📇  Total: $_fc_total flashcard(s)")
+                    end
+                end
+            elseif !isnothing(m_flashcard_query)
+                begin
+                    _fc_lobe = String(m_flashcard_query.captures[1])
+                    _fc_expr = String(m_flashcard_query.captures[2])
+                    _fc_result = LobeTable.flashcard_get(_fc_lobe, _fc_expr)
+                    if _fc_result !== nothing
+                        println("📇  $_fc_expr = $(_fc_result) (lobe=$_fc_lobe)")
+                    else
+                        println("📇  No flashcard found for '$_fc_expr' in lobe '$_fc_lobe'")
+                    end
+                end
+            elseif !isnothing(m_flashcard_evict)
+                begin
+                    _fc_lobe = String(m_flashcard_evict.captures[1])
+                    _fc_expr = String(m_flashcard_evict.captures[2])
+                    LobeTable.flashcard_evict!(_fc_lobe, _fc_expr)
+                    println("📇  Evicted flashcard '$_fc_expr' from lobe '$_fc_lobe'")
+                end
+            elseif !isnothing(m_flashcard_count)
+                _fc_total = 0
+                for (lobe_id, lrec) in Lobe.LOBE_REGISTRY
+                    _fc_total += LobeTable.flashcard_count(lobe_id)
+                end
+                println("📇  Total flashcards: $_fc_total")
+            # GRUG v10: /curiosity commands — inspect and manage curiosity accumulator
+            elseif !isnothing(m_curiosity_status)
+                begin
+                    _cur_st = AutoGrowth.get_curiosity_status()
+                    _cur_int = get(_cur_st, "intensity", 0.0)
+                    _cur_buf = get(_cur_st, "buffer", String[])
+                    _cur_quenched = get(_cur_st, "quenched_at", 0.0)
+                    _cur_overflows = get(_cur_st, "overflow_count", 0)
+                    println("🔥  Curiosity accumulator:")
+                    println("     intensity:       $(round(_cur_int, digits=3)) / $(AutoGrowth.CURIOSITY_OVERFLOW_THRESHOLD)")
+                    println("     buffer entries:  $(length(_cur_buf))")
+                    println("     overflow count:  $(string(_cur_overflows))")
+                    if _cur_quenched > 0.0
+                        _cur_cool_remaining = max(0.0, AutoGrowth.CURIOSITY_COOLDOWN - (time() - _cur_quenched))
+                        println("     quench cooldown: $(round(_cur_cool_remaining, digits=1))s remaining")
+                    else
+                        println("     quench cooldown: none (ready to overflow)")
+                    end
+                    if !isempty(_cur_buf)
+                        println("     pending patterns: $(join(_cur_buf[1:min(5, length(_cur_buf))], ", "))$(length(_cur_buf) > 5 ? " (+$(length(_cur_buf)-5) more)" : "")")
+                    end
+                end
+            elseif !isnothing(m_curiosity_quench)
+                AutoGrowth.quench_curiosity!()
+                println("🔥  Curiosity quenched. Intensity reset to 0.0. Cooldown started.")
+
             elseif !isnothing(m_phase_status)
                 # /automaton phase OR /automaton phase status — show phase accumulator status
                 try
@@ -11823,7 +13114,7 @@ elseif !isnothing(m_right)
                 # /coherence — show current field value Φ + summary
                 lock(NODE_LOCK) do
                     phi = CoherenceField.compute_field(NODE_MAP; force=true)
-                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    cfg = CoherenceField.coherence_config_snapshot()
                     if cfg.weight ≈ 0.0
                         println("Φ = $(round(phi; digits=4))  [routing OFF — weight=0.0]")
                         println("  Use /coherenceConfig weight 0.05 to enable gradient routing")
@@ -11842,7 +13133,7 @@ elseif !isnothing(m_right)
                     else
                         delta = CoherenceField.compute_delta(target_id, NODE_MAP, BRIDGE_MAP; force=true)
                         direction = delta > 0 ? "↑ COHERENT (positive contribution)" : delta < 0 ? "↓ DECOHERENT (negative contribution)" : "— NEUTRAL"
-                        cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                        cfg = CoherenceField.coherence_config_snapshot()
                         println("ΔΦ($target_id) = $(round(delta; digits=6))  $direction")
                         if cfg.weight ≈ 0.0
                             println("  [routing OFF — this gradient has NO effect on voting]")
@@ -11863,7 +13154,7 @@ elseif !isnothing(m_right)
                     n_coherent = status["n_coherent"]
                     top5 = status["top_contributors"]
                     bot5 = status["bottom_contributors"]
-                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    cfg = CoherenceField.coherence_config_snapshot()
 
                     println("╔══════════════════════════════════════╗")
                     println("║     COHERENCE FIELD STATUS (v9)      ║")
@@ -11898,7 +13189,7 @@ elseif !isnothing(m_right)
                 #   reset            — reset all to defaults
                 config_arg = m_coherence_config.captures[1]
                 if isnothing(config_arg) || isempty(strip(String(config_arg)))
-                    cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                    cfg = CoherenceField.coherence_config_snapshot()
                     println("CoherenceField config:")
                     println("  weight    = $(cfg.weight)  (0.0=off, max=$(CoherenceField.COHERENCE_WEIGHT_MAX))")
                     println("  depth     = $(cfg.depth)  (1-3, max=$(CoherenceField.COHERENCE_DEPTH_MAX))")
@@ -11908,7 +13199,7 @@ elseif !isnothing(m_right)
                 else
                     parts = split(strip(String(config_arg)))
                     if isempty(parts)
-                        cfg = CoherenceField.COHERENCE_FIELD_CONFIG
+                        cfg = CoherenceField.coherence_config_snapshot()
                         println("CoherenceField config: weight=$(cfg.weight), depth=$(cfg.depth), decay=$(cfg.decay), recency=$(cfg.recency_window)s")
                     elseif String(parts[1]) == "weight"
                         if length(parts) < 2
@@ -12052,7 +13343,7 @@ elseif !isnothing(m_right)
                 SelfObserver.observe!(
                     _MLP_OBSERVER_STORE,
                     "error_$(round(Int, time() * 1000) % 1_000_000)",
-                    :error,
+                    :meta,         # GRUG FIX: was :error which is not in VALID_TAGS
                     Dict{String, Any}(
                         "exception"        => string(e),
                         "command"          => string(line),

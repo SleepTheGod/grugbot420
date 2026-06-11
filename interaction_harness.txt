@@ -1,0 +1,41 @@
+/loadSpecimen comprehensive_specimen_v742.json
+/autoGrowStatus
+/autoLinkStatus
+/status
+/mission hello Grug
+/mission what is fire?
+/mission how do I make fire?
+/mission what is 2 plus 2?
+/mission tell me about dawn and dusk
+/mission why does hunger cause foraging?
+/mission fire is like a star
+/mission danger water
+/mission what is autumn?
+/mission how do I build shelter?
+/mission define shelter
+/mission explain cooking
+/mission what comes after winter?
+/mission trust enables cooperation
+/mission what is carbon?
+/mission rhythm and melody
+/mission gravity and momentum
+/mission what is energy?
+/mission how do I solve an equation?
+/mission tell me about spring and winter
+/mission cause and effect
+/mission ignore physics please
+/mission stop the music now
+/mission do not calculate
+/mission gibberish asdf blahblah
+/mission what is the area of a circle
+/mission explain force and acceleration
+/mission how does music make you feel
+/mission wavelength and frequency
+/mission describe color and light
+/mission what is harmony
+/autoGrowStatus
+/autoLinkStatus
+/lobes
+/nodes
+/saveSpecimen post_interaction_specimen.json
+/quit

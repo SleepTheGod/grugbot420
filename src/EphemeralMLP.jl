@@ -90,7 +90,8 @@ export to_specimen_dict, from_specimen_dict!
 export register_right_feedback!, register_wrong_feedback!
 export get_activation_mode, get_novelty_score
 export set_observation_threshold!, get_observation_threshold
-export get_strain_energy, is_hippocampal_warrant_active, dampen_strain!
+export get_strain_energy, is_hippocampal_warrant_active, dampen_strain!, get_last_result
+export get_novelty_tracker_stats, get_input_correlation_stats, get_active_rule_hints
 export STRAIN_NOVELTY_WEIGHT, STRAIN_QUALITY_WEIGHT, STRAIN_THRESHOLD, STRAIN_FLOOR, STRAIN_CEILING
 export MLP_TRANSFORM_FUZZY, MLP_TRANSFORM_SOLID
 export phase_mix_hidden!
@@ -1607,6 +1608,17 @@ function mlp_forward(features::Vector{Float64}, weights::MLPWeights,
              "mlp_forward")
     end
 
+    # GRUG FIX: Defensive weight size check. If specimen had old dimensions,
+    # the weight arrays may be too small for current HIDDEN_DIM. Return neutral
+    # output instead of crashing with BoundsError.
+    if length(weights.b_hidden) < HIDDEN_DIM ||
+       length(weights.w_input_hidden) < VOTE_FEATURE_DIM * HIDDEN_DIM ||
+       length(weights.w_output_heads) < NUM_OUTPUT_HEADS ||
+       (length(weights.b_output_heads) < NUM_OUTPUT_HEADS)
+        @error "[EphemeralMLP] mlp_forward: weight array sizes don't match current architecture (HIDDEN_DIM=$HIDDEN_DIM, VOTE_FEATURE_DIM=$VOTE_FEATURE_DIM). Returning neutral output."
+        return fill(0.5, NUM_OUTPUT_HEADS)
+    end
+
     # ── Input → Hidden ──────────────────────────────────────────────────
     hidden = zeros(HIDDEN_DIM)
     for j in 1:HIDDEN_DIM
@@ -2359,6 +2371,11 @@ function get_mlp_status()::Dict{String, Any}
             "observation_threshold"  => st.observation_threshold,
             "adjustments_enabled"   => st.adjustments_enabled,
             "input_correlations"    => st.input_correlations.total_correlations,
+            "input_correlation_hashes" => length(st.input_correlations.input_quality_ema),
+            "input_correlation_mean_quality" => isempty(st.input_correlations.input_quality_ema) ? 0.5 :
+                round(sum(values(st.input_correlations.input_quality_ema)) / length(st.input_correlations.input_quality_ema); digits=4),
+            "novelty_history_mean"   => isempty(st.novelty_tracker.history) ? 0.5 :
+                round(sum(st.novelty_tracker.history) / length(st.novelty_tracker.history); digits=4),
             "last_user_input"       => st.last_user_input,
             "strain_energy"         => round(st.strain_energy; digits=4),
             "hippocampal_warrant"   => st.hippocampal_warrant_active,
@@ -2457,6 +2474,132 @@ function dampen_strain!(factor::Float64=0.5)
         # Re-evaluate warrant: if strain dropped below threshold, warrant deactivates.
         st.hippocampal_warrant_active = st.strain_energy >= STRAIN_THRESHOLD && st.adjustments_enabled
         return (old=old_strain, new=st.strain_energy)
+    end
+end
+
+"""
+    get_last_result()::Dict{String, Float64}
+
+Return the last MLP output head values (semantic_score, relevance_score,
+disambiguation) from the most recent transform. Used by idle-cycle
+AutoLinker and AutoGrowth to get MLP signal without a full status call.
+
+GRUG: Lightweight getter for the three "extra" heads. The active path
+      computes these from the mlp_result dict already, but the idle
+      path doesn't have a fresh transform — it uses the LAST values.
+"""
+function get_last_result()::Dict{String, Float64}
+    st = _state()
+    lock(st.lock) do
+        return Dict{String, Float64}(
+            "semantic_score"   => st.last_semantic_score,
+            "relevance_score"  => st.last_relevance_score,
+            "disambiguation"   => st.last_disambiguation,
+        )
+    end
+end
+
+
+
+# ==============================================================================
+# DEEP MLP GETTERS — for AutoGrowth/AutoLinker deeper integration
+# ==============================================================================
+
+"""
+    get_novelty_tracker_stats()::Dict{String, Any}
+
+Return statistics from the novelty tracker for deeper AutoGrowth integration.
+Provides: total_observations, unique_hashes_tracked, history_mean (recent
+novelty average), history_variance (recent novelty variance).
+
+GRUG: The novelty tracker knows how familiar the brain is with recent inputs.
+      High history_mean = mostly novel inputs recently = brain is exploring
+      new territory = stronger growth signal. Low variance = stuck in a rut.
+      AutoGrowth can use this to modulate evidence intensity.
+"""
+function get_novelty_tracker_stats()::Dict{String, Any}
+    st = _state()
+    lock(st.lock) do
+        tracker = st.novelty_tracker
+        h_mean = isempty(tracker.history) ? 0.5 :
+                 sum(tracker.history) / length(tracker.history)
+        h_var = if length(tracker.history) >= 2
+            mean_h = h_mean
+            sum((x - mean_h)^2 for x in tracker.history) / length(tracker.history)
+        else
+            0.0
+        end
+        return Dict{String, Any}(
+            "total_observations"   => tracker.total_observations,
+            "unique_hashes"        => length(tracker.hash_counts),
+            "history_mean"         => round(h_mean; digits=4),
+            "history_variance"     => round(h_var; digits=4),
+            "history_length"       => length(tracker.history),
+        )
+    end
+end
+
+"""
+    get_input_correlation_stats()::Dict{String, Any}
+
+Return statistics from the input correlation tracker for deeper AutoGrowth
+integration. Provides: total_correlations, num_input_hashes (distinct inputs
+seen), mean_quality_ema (average EMA quality across all known inputs).
+
+GRUG: Input correlations tell us which inputs the brain has LEARNED to handle
+      well. When mean_quality_ema is high, the brain's existing knowledge is
+      well-established — gaps in that knowledge are MORE meaningful because
+      they represent REAL unknowns, not just noise. AutoGrowth should boost
+      evidence for gaps when correlation quality is high.
+"""
+function get_input_correlation_stats()::Dict{String, Any}
+    st = _state()
+    lock(st.lock) do
+        ic = st.input_correlations
+        n_hashes = length(ic.input_quality_ema)
+        mean_q_ema = if n_hashes > 0
+            sum(values(ic.input_quality_ema)) / n_hashes
+        else
+            0.5  # neutral default
+        end
+        return Dict{String, Any}(
+            "total_correlations"   => ic.total_correlations,
+            "num_input_hashes"     => n_hashes,
+            "mean_quality_ema"     => round(mean_q_ema; digits=4),
+        )
+    end
+end
+
+"""
+    get_active_rule_hints()::Vector{Dict{String, Any}}
+
+Return hints from recently-active MLP rules that can inform growth type
+selection. Each hint has: rule_id, transform_type (:fuzzy or :solid),
+payload (arbitrary data the rule carries), fire_count, and last_fire_time.
+
+GRUG: Rules are the MLP's way of saying "I've seen this pattern before and
+      here's what I know about it." If a rule fires frequently with :fuzzy
+      type, the pattern is still uncertain = growth should favor :match type.
+      If a rule fires with :solid type, the pattern is well-established but
+      incomplete = growth should favor :thesaurus or :sigil type. The payload
+      can carry arbitrary hints from user-defined rules.
+"""
+function get_active_rule_hints()::Vector{Dict{String, Any}}
+    st = _state()
+    lock(st.lock) do
+        hints = Dict{String, Any}[]
+        for (rid, rule) in st.rules.rules
+            if rule.enabled && rule.fire_count > 0
+                push!(hints, Dict{String, Any}(
+                    "rule_id"        => rid,
+                    "transform_type" => String(rule.transform_type),
+                    "payload"        => copy(rule.payload),
+                    "fire_count"     => rule.fire_count,
+                    "last_fire_time" => rule.last_fire_time,
+                ))
+            end
+        end
+        return hints
     end
 end
 
@@ -2665,14 +2808,14 @@ function to_specimen_dict()::Dict{String, Any}
 end
 
 """
-    from_specimen_dict!(data::Dict{String, Any})
+    from_specimen_dict!(data)
 
 Restore the EphemeralMLP state from a specimen dict. This is a DESTRUCTIVE
 operation — current state is replaced. Validates all inputs before modifying
 any state. NO silent failures — if anything is wrong, this throws and NO
 CHANGES ARE MADE.
 """
-function from_specimen_dict!(data::Dict{String, Any})
+function from_specimen_dict!(data)
     if isempty(data)
         _err("from_specimen_dict! got empty dict", "from_specimen_dict!")
     end
@@ -2686,7 +2829,7 @@ function from_specimen_dict!(data::Dict{String, Any})
     function parse_weights(ws_list::AbstractVector)::Vector{MLPWeight}
         weights = MLPWeight[]
         for w_data in ws_list
-            if !isa(w_data, Dict)
+            if !isa(w_data, AbstractDict)
                 _err("from_specimen_dict! weight entry is not a dict", "parse_weights")
             end
             val = Float64(get(w_data, "value", 0.0))
@@ -2699,23 +2842,53 @@ function from_specimen_dict!(data::Dict{String, Any})
     wd = data["weights"]
     new_weights = MLPWeights()
     try
+        # GRUG FIX: Validate weight array sizes before replacing defaults.
+        # Old specimens may have weights sized for LEGACY_VOTE_FEATURE_DIM=12
+        # and old HIDDEN_DIM=16, but current code expects VOTE_FEATURE_DIM=24
+        # and HIDDEN_DIM=64. Loading undersized arrays causes BoundsError
+        # during mlp_forward. Only replace if sizes match.
+        _expected_ih = VOTE_FEATURE_DIM * HIDDEN_DIM
+        _expected_bh = HIDDEN_DIM
+        _expected_ho = HIDDEN_DIM
+        _expected_at = HIDDEN_DIM * ATTENTION_HEADS
+
         if haskey(wd, "w_input_hidden") && isa(wd["w_input_hidden"], AbstractVector)
-            new_weights.w_input_hidden = parse_weights(wd["w_input_hidden"])
+            parsed = parse_weights(wd["w_input_hidden"])
+            if length(parsed) == _expected_ih
+                new_weights.w_input_hidden = parsed
+            else
+                @warn "[EphemeralMLP] w_input_hidden size mismatch (got $(length(parsed)), expected $_expected_ih), using defaults"
+            end
         end
         if haskey(wd, "b_hidden") && isa(wd["b_hidden"], AbstractVector)
-            new_weights.b_hidden = parse_weights(wd["b_hidden"])
+            parsed = parse_weights(wd["b_hidden"])
+            if length(parsed) == _expected_bh
+                new_weights.b_hidden = parsed
+            else
+                @warn "[EphemeralMLP] b_hidden size mismatch (got $(length(parsed)), expected $_expected_bh), using defaults"
+            end
         end
         if haskey(wd, "w_hidden_output") && isa(wd["w_hidden_output"], AbstractVector)
-            new_weights.w_hidden_output = parse_weights(wd["w_hidden_output"])
+            parsed = parse_weights(wd["w_hidden_output"])
+            if length(parsed) == _expected_ho
+                new_weights.w_hidden_output = parsed
+            else
+                @warn "[EphemeralMLP] w_hidden_output size mismatch (got $(length(parsed)), expected $_expected_ho), using defaults"
+            end
         end
-        if haskey(wd, "b_output") && isa(wd["b_output"], Dict)
+        if haskey(wd, "b_output") && isa(wd["b_output"], AbstractDict)
             b_out = wd["b_output"]
             val = Float64(get(b_out, "value", 0.0))
             jitter = Bool(get(b_out, "jitter_eligible", false))
             new_weights.b_output = MLPWeight(clamp(val, WEIGHT_FLOOR, WEIGHT_CEILING); jitter_eligible = jitter)
         end
         if haskey(wd, "w_attention") && isa(wd["w_attention"], AbstractVector)
-            new_weights.w_attention = parse_weights(wd["w_attention"])
+            parsed = parse_weights(wd["w_attention"])
+            if length(parsed) == _expected_at
+                new_weights.w_attention = parsed
+            else
+                @warn "[EphemeralMLP] w_attention size mismatch (got $(length(parsed)), expected $_expected_at), using defaults"
+            end
         end
 
         # GRUG v9: Parse transformer block weights. Old specimens won't have
@@ -2737,60 +2910,110 @@ function from_specimen_dict!(data::Dict{String, Any})
         end
 
         # ── v9: QK projections (per transformer block) ──
+        _expected_qk = 2 * HIDDEN_DIM * HIDDEN_DIM
         if haskey(wd, "w_qk") && isa(wd["w_qk"], AbstractVector)
             parsed_qk = parse_weight_blocks(wd["w_qk"])
-            if length(parsed_qk) == NUM_TRANSFORMER_BLOCKS
+            if length(parsed_qk) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_qk, parsed_qk)
                 new_weights.w_qk = parsed_qk
             else
-                @warn "[EphemeralMLP] w_qk block count mismatch (got $(length(parsed_qk)), expected $NUM_TRANSFORMER_BLOCKS), using defaults"
+                @warn "[EphemeralMLP] w_qk block count/size mismatch (got $(length(parsed_qk)) blocks, sizes=$(map(length, parsed_qk)), expected $NUM_TRANSFORMER_BLOCKS blocks of $_expected_qk), using defaults"
             end
         end
 
         # ── v9: Value projections (per transformer block) ──
+        _expected_v = HIDDEN_DIM * HIDDEN_DIM
         if haskey(wd, "w_v") && isa(wd["w_v"], AbstractVector)
             parsed_v = parse_weight_blocks(wd["w_v"])
-            if length(parsed_v) == NUM_TRANSFORMER_BLOCKS
+            if length(parsed_v) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_v, parsed_v)
                 new_weights.w_v = parsed_v
             else
-                @warn "[EphemeralMLP] w_v block count mismatch, using defaults"
+                @warn "[EphemeralMLP] w_v block count/size mismatch, using defaults"
             end
         end
 
         # ── v9: FFN expansion-contraction weights (per block) ──
+        _expected_ffn1 = HIDDEN_DIM * FFN_DIM
+        _expected_bffn1 = FFN_DIM
+        _expected_ffn2 = FFN_DIM * HIDDEN_DIM
+        _expected_bffn2 = HIDDEN_DIM
         if haskey(wd, "w_ffn1") && isa(wd["w_ffn1"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ffn1"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.w_ffn1 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_ffn1, parsed)
+                new_weights.w_ffn1 = parsed
+            else
+                @warn "[EphemeralMLP] w_ffn1 size mismatch, using defaults"
+            end
         end
         if haskey(wd, "b_ffn1") && isa(wd["b_ffn1"], AbstractVector)
             parsed = parse_weight_blocks(wd["b_ffn1"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.b_ffn1 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_bffn1, parsed)
+                new_weights.b_ffn1 = parsed
+            else
+                @warn "[EphemeralMLP] b_ffn1 size mismatch, using defaults"
+            end
         end
         if haskey(wd, "w_ffn2") && isa(wd["w_ffn2"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ffn2"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.w_ffn2 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_ffn2, parsed)
+                new_weights.w_ffn2 = parsed
+            else
+                @warn "[EphemeralMLP] w_ffn2 size mismatch, using defaults"
+            end
         end
         if haskey(wd, "b_ffn2") && isa(wd["b_ffn2"], AbstractVector)
             parsed = parse_weight_blocks(wd["b_ffn2"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS; new_weights.b_ffn2 = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS &&
+               all(b -> length(b) == _expected_bffn2, parsed)
+                new_weights.b_ffn2 = parsed
+            else
+                @warn "[EphemeralMLP] b_ffn2 size mismatch, using defaults"
+            end
         end
 
         # ── v9: Layer norm scale/bias (2 per block: pre-attention, pre-FFN) ──
+        _expected_ln = HIDDEN_DIM
         if haskey(wd, "w_ln_scale") && isa(wd["w_ln_scale"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ln_scale"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2; new_weights.w_ln_scale = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2 &&
+               all(b -> length(b) == _expected_ln, parsed)
+                new_weights.w_ln_scale = parsed
+            else
+                @warn "[EphemeralMLP] w_ln_scale size mismatch, using defaults"
+            end
         end
         if haskey(wd, "w_ln_bias") && isa(wd["w_ln_bias"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_ln_bias"])
-            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2; new_weights.w_ln_bias = parsed; end
+            if length(parsed) == NUM_TRANSFORMER_BLOCKS * 2 &&
+               all(b -> length(b) == _expected_ln, parsed)
+                new_weights.w_ln_bias = parsed
+            else
+                @warn "[EphemeralMLP] w_ln_bias size mismatch, using defaults"
+            end
         end
 
         # ── v9: Multi-output heads ──
+        _expected_head = HIDDEN_DIM
         if haskey(wd, "w_output_heads") && isa(wd["w_output_heads"], AbstractVector)
             parsed = parse_weight_blocks(wd["w_output_heads"])
-            if length(parsed) == NUM_OUTPUT_HEADS; new_weights.w_output_heads = parsed; end
+            if length(parsed) == NUM_OUTPUT_HEADS &&
+               all(b -> length(b) == _expected_head, parsed)
+                new_weights.w_output_heads = parsed
+            else
+                @warn "[EphemeralMLP] w_output_heads size mismatch, using defaults"
+            end
         end
         if haskey(wd, "b_output_heads") && isa(wd["b_output_heads"], AbstractVector)
-            new_weights.b_output_heads = parse_weights(wd["b_output_heads"])
+            parsed = parse_weights(wd["b_output_heads"])
+            if length(parsed) == NUM_OUTPUT_HEADS
+                new_weights.b_output_heads = parsed
+            else
+                @warn "[EphemeralMLP] b_output_heads size mismatch (got $(length(parsed)), expected $NUM_OUTPUT_HEADS), using defaults"
+            end
         end
     catch e
         _err("from_specimen_dict! failed to parse weights: $e", "from_specimen_dict!")
@@ -2801,7 +3024,7 @@ function from_specimen_dict!(data::Dict{String, Any})
     if haskey(data, "rules") && isa(data["rules"], AbstractVector)
         for r_data in data["rules"]
             try
-                if !isa(r_data, Dict)
+                if !isa(r_data, AbstractDict)
                     @warn "[EphemeralMLP] Skipping non-dict rule entry"
                     continue
                 end
@@ -2862,7 +3085,7 @@ function from_specimen_dict!(data::Dict{String, Any})
 
     # ── Parse novelty tracker ───────────────────────────────────────────
     new_novelty = NoveltyTracker()
-    if haskey(data, "novelty_tracker") && isa(data["novelty_tracker"], Dict)
+    if haskey(data, "novelty_tracker") && isa(data["novelty_tracker"], AbstractDict)
         nt = data["novelty_tracker"]
         if haskey(nt, "history") && isa(nt["history"], AbstractVector)
             new_novelty.history = Float64[clamp(Float64(v), NOVELTY_FLOOR, NOVELTY_CEILING)
@@ -2890,12 +3113,12 @@ function from_specimen_dict!(data::Dict{String, Any})
     # GRUG: Reload the brain's memory of which questions led to which answers.
     # If the key is missing (old specimen), start with a blank tracker.
     new_input_corr = InputCorrelationTracker()
-    if haskey(data, "input_correlations") && isa(data["input_correlations"], Dict)
+    if haskey(data, "input_correlations") && isa(data["input_correlations"], AbstractDict)
         ic = data["input_correlations"]
         if haskey(ic, "entries") && isa(ic["entries"], AbstractVector)
             for entry_data in ic["entries"]
                 try
-                    if !isa(entry_data, Dict)
+                    if !isa(entry_data, AbstractDict)
                         continue
                     end
                     ih = parse(UInt64, String(get(entry_data, "input_hash", "0")))
@@ -2915,7 +3138,7 @@ function from_specimen_dict!(data::Dict{String, Any})
         if haskey(ic, "input_quality_ema") && isa(ic["input_quality_ema"], AbstractVector)
             for ema_data in ic["input_quality_ema"]
                 try
-                    if !isa(ema_data, Dict)
+                    if !isa(ema_data, AbstractDict)
                         continue
                     end
                     h = parse(UInt64, String(get(ema_data, "hash", "0")))

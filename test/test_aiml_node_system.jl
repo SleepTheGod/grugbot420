@@ -2,10 +2,9 @@
 # ==============================================================================
 # GRUG AIML NODE SYSTEM COMPREHENSIVE TESTS
 # Tests every hard rule from the spec:
-#   - Use-based strength gain (coinflip)
-#   - /aimlRight exclusion after same-cycle use gain (no double snack)
-#   - /aimlWrong compensating net loss after same-cycle use gain (real punishment)
-#   - Standard reward/punishment when no prior same-cycle gain
+#   - Fire/use marks cycle participation but never changes strength
+#   - Explicit orchestration contribution gates AIML /right and /wrong eligibility
+#   - Standard stochastic reward/punishment for orchestration contributors
 #   - AIML_GRAVE transition at zero strength
 #   - Population cap enforcement at 1/3 parent lobe size (no silent overflow)
 #   - Lobe isolation (feedback only touches relevant lobe voters)
@@ -291,6 +290,7 @@ node_c.voted_this_cycle           = true
 node_c.fired_this_cycle           = true
 node_c.gained_this_cycle          = true
 node_c.strength_delta_this_cycle  = 3.0
+node_c.orchestration_contribution_this_cycle = 2.0
 
 cycle_before = AIMLNodeSystem.current_cycle()
 AIMLNodeSystem.begin_cycle!()
@@ -300,67 +300,41 @@ AIMLNodeSystem.begin_cycle!()
 @test !node_c.fired_this_cycle
 @test !node_c.gained_this_cycle
 @test node_c.strength_delta_this_cycle == 0.0
+@test node_c.orchestration_contribution_this_cycle == 0.0
 println("  ✓ begin_cycle! increments counter and resets all per-cycle flags")
 
 # ==============================================================================
-# [7] STRENGTH DYNAMICS — USE-BASED GAIN
+# [7] STRENGTH DYNAMICS — FIRE IS MARKER-ONLY
 # ==============================================================================
-println("\n[7] STRENGTH DYNAMICS — USE-BASED GAIN")
+println("\n[7] STRENGTH DYNAMICS — FIRE IS MARKER-ONLY")
 fresh_slate!()
 
 AIMLNodeSystem.register_lobe!("str_lobe", 30)
 AIMLNodeSystem.add_aiml_node!("str_lobe", "sn1", "tmpl"; initial_strength=5.0)
 sn1 = AIMLNodeSystem.get_aiml_node("str_lobe", "sn1")
-
 AIMLNodeSystem.begin_cycle!()
+strength_before_fire = sn1.strength
+AIMLNodeSystem.record_fire!(sn1)
+@test sn1.fired_this_cycle
+@test !sn1.gained_this_cycle
+@test sn1.strength == strength_before_fire
+@test sn1.strength_delta_this_cycle == 0.0
+println("  ✓ record_fire! marks fired_this_cycle but never changes strength")
 
-# GRUG: record_fire! has a 50/50 coinflip. Run many trials to verify statistical gain.
-# We check that over 200 fires, the node gains strength at least once (not just zeroes).
-# Strict: We also verify gained_this_cycle is set correctly when strength grows.
-#
-# Strategy: force a known-gain scenario by running until we get a gain,
-# resetting between attempts. Maximum 200 single-fire trials should hit at least one gain.
-# GRUG: Wrap in let block to avoid Julia top-level soft-scope warning.
-let
-    gained_at_least_once = false
-    for trial in 1:200
-        fresh_slate!()
-        AIMLNodeSystem.register_lobe!("str_lobe", 30)
-        AIMLNodeSystem.add_aiml_node!("str_lobe", "sn_trial", "tmpl"; initial_strength=5.0)
-        node_trial = AIMLNodeSystem.get_aiml_node("str_lobe", "sn_trial")
-        AIMLNodeSystem.begin_cycle!()
-        AIMLNodeSystem.record_fire!(node_trial)
-        if node_trial.gained_this_cycle
-            @test node_trial.strength > 5.0
-            @test node_trial.strength_delta_this_cycle > 0.0
-            @test node_trial.fired_this_cycle
-            gained_at_least_once = true
-            break
-        end
-    end
-    @test gained_at_least_once
-end
-println("  ✓ record_fire! can gain strength on coinflip (verified over ≤200 trials)")
+AIMLNodeSystem.record_orchestration_contribution!(sn1)
+@test sn1.orchestration_contribution_this_cycle == 1.0
+@test sn1.fired_this_cycle
+println("  ✓ record_orchestration_contribution! marks explicit feedback eligibility")
 
-# GRUG: record_fire! also sets fired_this_cycle even if no strength gain (coinflip miss).
-fresh_slate!()
-AIMLNodeSystem.register_lobe!("str_lobe", 30)
-AIMLNodeSystem.add_aiml_node!("str_lobe", "sn2", "tmpl"; initial_strength=5.0)
-sn2 = AIMLNodeSystem.get_aiml_node("str_lobe", "sn2")
-AIMLNodeSystem.begin_cycle!()
-# Force at least one fire call and check fired_this_cycle is always set.
-AIMLNodeSystem.record_fire!(sn2)
-@test sn2.fired_this_cycle
-println("  ✓ record_fire! always sets fired_this_cycle regardless of coinflip outcome")
-
-# GRUG: Strength is capped at AIML_STRENGTH_CAP. Cannot exceed the ceiling.
+# GRUG: Strength cap still enforced through feedback deltas.
 fresh_slate!()
 AIMLNodeSystem.register_lobe!("str_lobe", 30)
 AIMLNodeSystem.add_aiml_node!("str_lobe", "cap_node", "tmpl"; initial_strength=10.0)
 cap_node = AIMLNodeSystem.get_aiml_node("str_lobe", "cap_node")
 AIMLNodeSystem.begin_cycle!()
+AIMLNodeSystem.record_orchestration_contribution!(cap_node)
 for _ in 1:20
-    AIMLNodeSystem.record_fire!(cap_node)
+    AIMLNodeSystem.apply_aiml_right!()
 end
 @test cap_node.strength <= AIMLNodeSystem.AIML_STRENGTH_CAP
 println("  ✓ Strength cannot exceed AIML_STRENGTH_CAP")
@@ -370,46 +344,38 @@ fresh_slate!()
 AIMLNodeSystem.register_lobe!("str_lobe", 30)
 AIMLNodeSystem.add_aiml_node!("str_lobe", "grave_fire", "tmpl"; initial_strength=5.0)
 gf_node = AIMLNodeSystem.get_aiml_node("str_lobe", "grave_fire")
-gf_node.is_grave = true  # Force grave
+gf_node.is_grave = true
 AIMLNodeSystem.begin_cycle!()
 strength_before_fire = gf_node.strength
 for _ in 1:20
     AIMLNodeSystem.record_fire!(gf_node)
 end
-@test gf_node.strength == strength_before_fire  # Grave nodes do not gain
+@test gf_node.strength == strength_before_fire
 println("  ✓ Grave nodes do not gain strength from record_fire!")
 
 # ==============================================================================
-# [8] /aimlRight — REWARD EXCLUSION AFTER SAME-CYCLE GAIN
+# [8] /aimlRight — ORCHESTRATION CONTRIBUTORS ONLY
 # ==============================================================================
-println("\n[8] /aimlRight — REWARD EXCLUSION AFTER SAME-CYCLE GAIN")
+println("\n[8] /aimlRight — ORCHESTRATION CONTRIBUTORS ONLY")
 fresh_slate!()
 
 AIMLNodeSystem.register_lobe!("right_lobe", 30)
 
-# GRUG: Scenario A — node already gained strength this cycle from use.
-# /aimlRight must SKIP it (no double snack rule).
+# GRUG: Scenario A — fired/voted node without orchestration contribution is ignored.
 AIMLNodeSystem.add_aiml_node!("right_lobe", "pre_gained", "tmpl"; initial_strength=5.0)
 pg_node = AIMLNodeSystem.get_aiml_node("right_lobe", "pre_gained")
 AIMLNodeSystem.begin_cycle!()
-# Manually simulate that the node already gained this cycle (bypass coinflip)
-# CRITICAL: Must set fired_this_cycle for node to be considered a contributor
 pg_node.voted_this_cycle  = true
-pg_node.fired_this_cycle  = true  # Node contributed to output
-pg_node.gained_this_cycle = true
-pg_node.strength_delta_this_cycle = 1.0
-pg_node.strength = 6.0  # Simulate strength after use-gain
+pg_node.fired_this_cycle  = true
 
 strength_before_right = pg_node.strength
 result_a = AIMLNodeSystem.apply_aiml_right!()
-# GRUG: Node must appear in skipped_double_reward, NOT in rewarded.
-@test pg_node.id in result_a["skipped_double_reward"]
+@test result_a["total_contributors"] == 0
 @test !(pg_node.id in result_a["rewarded"])
-@test pg_node.strength == strength_before_right  # Strength unchanged
-println("  ✓ /aimlRight skips node that already gained this cycle (no double snack)")
+@test pg_node.strength == strength_before_right
+println("  ✓ /aimlRight ignores fired/voted AIML nodes without orchestration contribution")
 
-# GRUG: Scenario B — node voted but did NOT gain this cycle.
-# /aimlRight may reward it via coinflip. Run 200 trials to get at least one reward.
+# GRUG: Scenario B — explicit orchestration contributor may be rewarded via coinflip.
 let
     got_rewarded = false
     for trial in 1:200
@@ -418,9 +384,8 @@ let
         AIMLNodeSystem.add_aiml_node!("right_lobe", "no_gain", "tmpl"; initial_strength=5.0)
         ng_node = AIMLNodeSystem.get_aiml_node("right_lobe", "no_gain")
         AIMLNodeSystem.begin_cycle!()
-        ng_node.voted_this_cycle  = true
-        ng_node.fired_this_cycle  = true  # Node contributed to output
-        ng_node.gained_this_cycle = false
+        AIMLNodeSystem.record_vote!(ng_node)
+        AIMLNodeSystem.record_orchestration_contribution!(ng_node)
         result_b = AIMLNodeSystem.apply_aiml_right!()
         if ng_node.id in result_b["rewarded"]
             @test ng_node.strength == 6.0  # 5.0 + 1.0
@@ -430,7 +395,7 @@ let
     end
     @test got_rewarded
 end
-println("  ✓ /aimlRight can reward node that did NOT already gain this cycle")
+println("  ✓ /aimlRight can reward explicit orchestration contributor")
 
 # GRUG: /aimlRight with no voters returns zero-voter result.
 fresh_slate!()
@@ -441,49 +406,28 @@ result_no_voters = AIMLNodeSystem.apply_aiml_right!()
 println("  ✓ /aimlRight with no contributors reports total_contributors=0")
 
 # ==============================================================================
-# [9] /aimlWrong — COMPENSATING NET LOSS
+# [9] /aimlWrong — ORCHESTRATION CONTRIBUTORS ONLY
 # ==============================================================================
-println("\n[9] /aimlWrong — COMPENSATING NET LOSS")
+println("\n[9] /aimlWrong — ORCHESTRATION CONTRIBUTORS ONLY")
 fresh_slate!()
 
 AIMLNodeSystem.register_lobe!("wrong_lobe", 30)
 
-# GRUG: Scenario A — node gained strength this cycle from use, THEN /aimlWrong fires.
-# Penalty must be large enough to produce a REAL net loss (strength_delta_this_cycle + 1.0).
-# We simulate coinflip=penalize by running many trials and checking that whenever
-# a penalized node had prior_gain, it always ends strictly below its cycle-start strength.
+# GRUG: Scenario A — fired/voted node without orchestration contribution is ignored.
+fresh_slate!()
+AIMLNodeSystem.register_lobe!("wrong_lobe", 30)
+AIMLNodeSystem.add_aiml_node!("wrong_lobe", "not_contrib", "tmpl"; initial_strength=5.0)
+nc_node = AIMLNodeSystem.get_aiml_node("wrong_lobe", "not_contrib")
+AIMLNodeSystem.begin_cycle!()
+AIMLNodeSystem.record_vote!(nc_node)
+AIMLNodeSystem.record_fire!(nc_node)
+strength_before_wrong = nc_node.strength
+result_a = AIMLNodeSystem.apply_aiml_wrong!()
+@test result_a["total_contributors"] == 0
+@test nc_node.strength == strength_before_wrong
+println("  ✓ /aimlWrong ignores fired/voted AIML nodes without orchestration contribution")
 
-let
-    penalized_with_prior_gain_tested = false
-    for trial in 1:500
-        fresh_slate!()
-        AIMLNodeSystem.register_lobe!("wrong_lobe", 30)
-        AIMLNodeSystem.add_aiml_node!("wrong_lobe", "gained_before", "tmpl"; initial_strength=5.0)
-        gb_node = AIMLNodeSystem.get_aiml_node("wrong_lobe", "gained_before")
-        AIMLNodeSystem.begin_cycle!()
-
-        # GRUG: Simulate use-gain: strength 5.0 -> 6.0, delta=1.0
-        gb_node.voted_this_cycle           = true
-        gb_node.fired_this_cycle           = true  # Node contributed to output
-        gb_node.gained_this_cycle          = true
-        gb_node.strength_delta_this_cycle  = 1.0
-        gb_node.strength                   = 6.0
-        cycle_start_strength               = 5.0  # What it was before use-gain
-
-        result_a = AIMLNodeSystem.apply_aiml_wrong!()
-        if gb_node.id in result_a["penalized"]
-            # GRUG: Node must be strictly BELOW cycle-start strength. Not just back
-            # to baseline. Real punishment, not fake punishment.
-            @test gb_node.strength < cycle_start_strength
-            penalized_with_prior_gain_tested = true
-            break
-        end
-    end
-    @test penalized_with_prior_gain_tested
-end
-println("  ✓ /aimlWrong with prior same-cycle gain: penalty overshoots to real net loss")
-
-# GRUG: Scenario B — node voted, did NOT gain this cycle. Standard penalty = 1.0 drop.
+# GRUG: Scenario B — explicit contributor. Standard penalty = 1.0 drop on coinflip.
 let
     standard_penalized = false
     for trial in 1:500
@@ -492,10 +436,8 @@ let
         AIMLNodeSystem.add_aiml_node!("wrong_lobe", "no_prior_gain", "tmpl"; initial_strength=5.0)
         np_node = AIMLNodeSystem.get_aiml_node("wrong_lobe", "no_prior_gain")
         AIMLNodeSystem.begin_cycle!()
-        np_node.voted_this_cycle           = true
-        np_node.fired_this_cycle           = true  # Node contributed to output
-        np_node.gained_this_cycle          = false
-        np_node.strength_delta_this_cycle  = 0.0
+        AIMLNodeSystem.record_vote!(np_node)
+        AIMLNodeSystem.record_orchestration_contribution!(np_node)
 
         result_b = AIMLNodeSystem.apply_aiml_wrong!()
         if np_node.id in result_b["penalized"]
@@ -506,7 +448,7 @@ let
     end
     @test standard_penalized
 end
-println("  ✓ /aimlWrong without prior gain: standard penalty drops strength by 1.0")
+println("  ✓ /aimlWrong contributor penalty drops strength by 1.0")
 
 # GRUG: Scenario C — 50/50 coinflip. Over 1000 trials, some nodes must be spared.
 let
@@ -518,8 +460,8 @@ let
         AIMLNodeSystem.add_aiml_node!("wrong_lobe", "flip_node", "tmpl"; initial_strength=8.0)
         fn = AIMLNodeSystem.get_aiml_node("wrong_lobe", "flip_node")
         AIMLNodeSystem.begin_cycle!()
-        fn.voted_this_cycle = true
-        fn.fired_this_cycle = true  # Node contributed to output
+        AIMLNodeSystem.record_vote!(fn)
+        AIMLNodeSystem.record_orchestration_contribution!(fn)
         result_c = AIMLNodeSystem.apply_aiml_wrong!()
         if fn.id in result_c["spared"]     spared_seen     = true end
         if fn.id in result_c["penalized"]  penalized_seen  = true end
@@ -557,10 +499,8 @@ let
         AIMLNodeSystem.add_aiml_node!("grave_lobe", "dying_node", "tmpl"; initial_strength=1.0)
         dn = AIMLNodeSystem.get_aiml_node("grave_lobe", "dying_node")
         AIMLNodeSystem.begin_cycle!()
-        dn.voted_this_cycle           = true
-        dn.fired_this_cycle           = true  # Node contributed to output
-        dn.gained_this_cycle          = false
-        dn.strength_delta_this_cycle  = 0.0
+        AIMLNodeSystem.record_vote!(dn)
+        AIMLNodeSystem.record_orchestration_contribution!(dn)
 
         result = AIMLNodeSystem.apply_aiml_wrong!()
         if dn.id in result["penalized"]
@@ -593,16 +533,16 @@ println("  ✓ AIML_GRAVE node remains in tribe (negative reinforcement memory, 
 # GRUG: Grave node is skipped by /aimlRight.
 # CRITICAL: Must mark as fired to be collected as contributor, then should be skipped
 AIMLNodeSystem.begin_cycle!()
-gp_node.voted_this_cycle = true
-gp_node.fired_this_cycle = true  # Node fired, but is grave - should be skipped
+AIMLNodeSystem.record_vote!(gp_node)
+AIMLNodeSystem.record_orchestration_contribution!(gp_node)
 result_right_grave = AIMLNodeSystem.apply_aiml_right!()
 @test gp_node.id in result_right_grave["grave_skipped"]
 println("  ✓ /aimlRight skips grave nodes even if they fired")
 
 # GRUG: Grave node is skipped by /aimlWrong.
 AIMLNodeSystem.begin_cycle!()
-gp_node.voted_this_cycle = true
-gp_node.fired_this_cycle = true  # Node fired, but is grave - should be skipped
+AIMLNodeSystem.record_vote!(gp_node)
+AIMLNodeSystem.record_orchestration_contribution!(gp_node)
 result_wrong_grave = AIMLNodeSystem.apply_aiml_wrong!()
 @test gp_node.id in result_wrong_grave["grave_skipped"]
 println("  ✓ /aimlWrong skips grave nodes even if they fired")
@@ -733,29 +673,29 @@ phil_2 = AIMLNodeSystem.get_aiml_node("philosophy", "philosophy_node_2")
 cmd_1  = AIMLNodeSystem.get_aiml_node("command",    "command_node_1")
 
 AIMLNodeSystem.record_vote!(sci_1)
-AIMLNodeSystem.record_fire!(sci_1)  # Node actually contributed to output
+AIMLNodeSystem.record_orchestration_contribution!(sci_1)
 AIMLNodeSystem.record_vote!(phil_2)
-AIMLNodeSystem.record_fire!(phil_2)  # Node actually contributed to output
+AIMLNodeSystem.record_orchestration_contribution!(phil_2)
 # GRUG: Do NOT vote cmd_1 — verify it is untouched by /aimlRight.
 
 strength_cmd_before = cmd_1.strength
 result_right_multi = AIMLNodeSystem.apply_aiml_right!()
 @test result_right_multi["total_contributors"] == 2
 @test cmd_1.strength == strength_cmd_before  # Command lobe untouched
-println("  ✓ Multi-lobe /aimlRight: only 2 voted nodes eligible, command lobe untouched")
+println("  ✓ Multi-lobe /aimlRight: only 2 orchestration contributors eligible, command lobe untouched")
 
 # GRUG: Now /aimlWrong with fresh cycle.
 AIMLNodeSystem.begin_cycle!()
 AIMLNodeSystem.record_vote!(sci_1)
-AIMLNodeSystem.record_fire!(sci_1)  # Node actually contributed to output
+AIMLNodeSystem.record_orchestration_contribution!(sci_1)
 AIMLNodeSystem.record_vote!(phil_2)
-AIMLNodeSystem.record_fire!(phil_2)  # Node actually contributed to output
+AIMLNodeSystem.record_orchestration_contribution!(phil_2)
 strength_cmd_before2 = cmd_1.strength
 
 result_wrong_multi = AIMLNodeSystem.apply_aiml_wrong!()
 @test result_wrong_multi["total_contributors"] == 2
 @test cmd_1.strength == strength_cmd_before2
-println("  ✓ Multi-lobe /aimlWrong: only 2 voted nodes eligible, command lobe untouched")
+println("  ✓ Multi-lobe /aimlWrong: only 2 orchestration contributors eligible, command lobe untouched")
 
 # ==============================================================================
 # DONE
@@ -763,7 +703,7 @@ println("  ✓ Multi-lobe /aimlWrong: only 2 voted nodes eligible, command lobe 
 println("\n" * "="^60)
 println("ALL AIML NODE SYSTEM TESTS PASSED! 15 test groups complete.")
 println("Features verified: lobe registration, node lifecycle, population cap,")
-println("lobe isolation, cycle management, use-based strength gain,")
-println("/aimlRight double-snack exclusion, /aimlWrong net-loss guarantee,")
+println("lobe isolation, cycle management, fire marker without use-gain,")
+println("/aimlRight orchestration-only reward, /aimlWrong orchestration-only penalty,")
 println("AIML_GRAVE transition, phagy sweep compatibility, diagnostics, reset.")
 println("="^60)

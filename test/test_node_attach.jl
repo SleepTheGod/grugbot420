@@ -56,16 +56,16 @@ end
     n1 = make_node!("attached node beta")
 
     result = attach_node!(target, n1, "relay pattern gamma")
-    @test occursin("Attached", result)
+    @test occursin("Bridged", result)
     @test occursin(n1, result)
     @test occursin(target, result)
 
     # Verify attachment exists
     atts = get_attachments_for_target(target)
     @test length(atts) == 1
-    @test atts[1].node_id == n1
-    @test atts[1].pattern == "relay pattern gamma"
-    @test length(atts[1].signal) > 0  # Signal pre-baked
+    @test atts[1].partner_id == n1
+    @test join(atts[1].seam_tokens, " ") == "relay pattern gamma"
+    @test length(atts[1].seam_tokens) > 0  # Seam tokens pre-baked
     @test atts[1].base_confidence >= 0.0  # JIT-baked confidence stored
     @test atts[1].base_confidence <= 2.0  # Sane upper bound (similarity + strength bonus)
 
@@ -92,7 +92,7 @@ end
     atts = get_attachments_for_target(target)
     @test length(atts) == 4
 
-    ids = Set([a.node_id for a in atts])
+    ids = Set([a.partner_id for a in atts])
     @test n1 in ids
     @test n2 in ids
     @test n3 in ids
@@ -229,11 +229,11 @@ end
     @test length(get_attachments_for_target(target)) == 2
 
     result = detach_node!(target, n1)
-    @test occursin("Detached", result)
+    @test occursin("Unbridged", result)
 
     atts = get_attachments_for_target(target)
     @test length(atts) == 1
-    @test atts[1].node_id == n2
+    @test atts[1].partner_id == n2
 
     # Detach last one — entry should be cleaned up
     detach_node!(target, n2)
@@ -439,7 +439,7 @@ end
     attach_node!(target, n1, "pat")
     atts = get_attachments_for_target(target)
     @test length(atts) == 1
-    @test atts[1].node_id == n1
+    @test atts[1].partner_id == n1
 
     println("  ✓ [17] get_attachments_for_target: correct for empty, populated, and nonexistent")
 end
@@ -518,17 +518,16 @@ end
     atts = get_attachments_for_target(target)
     @test length(atts) == 1
 
-    # GRUG: Expected base_confidence calculation:
-    #   Jaccard similarity of {"alpha","beta","gamma","delta","epsilon"} vs {"alpha","beta","unique","words","here"}
-    #   intersection = {"alpha","beta"} = 2
-    #   union = {"alpha","beta","gamma","delta","epsilon","unique","words","here"} = 8
-    #   similarity = 2/8 = 0.25
-    #   strength_bonus = (5.0/10.0) * 0.5 = 0.25
-    #   base_confidence = 0.25 + 0.25 = 0.5
-    @test atts[1].base_confidence >= 0.45   # Allow small float tolerance
-    @test atts[1].base_confidence <= 0.55
+    # GRUG: Expected base_confidence calculation (bridge API):
+    #   overlap = _token_overlap_similarity(target.pattern, n1.pattern)
+    #     target = "hub node central", n1 = "alpha beta unique words here"
+    #     NO token overlap, so overlap = 0.0
+    #   strength_bonus = (n1.strength / STRENGTH_CAP) * 0.5 = (5.0/10.0)*0.5 = 0.25
+    #   base_confidence = 0.0 + 0.25 = 0.25
+    @test atts[1].base_confidence >= 0.20   # Allow small float tolerance
+    @test atts[1].base_confidence <= 0.30
 
-    println("  ✓ [20] JIT confidence: pre-baked at attach time (base_conf=$(round(atts[1].base_confidence, digits=3)), expected ~0.5)")
+    println("  ✓ [20] JIT confidence: pre-baked at bridge time (base_conf=$(round(atts[1].base_confidence, digits=3)), expected ~0.25)")
 end
 
 # ==============================================================================
@@ -628,8 +627,9 @@ end
             nid, "SDF:image:4x4", sig, "image_action",
             Dict{String, Any}(), String[], 1.0,
             RelationalTriple[], String[], Dict{String, Float64}(),
-            5.0, true, String[], false, 12, false, "",
-            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0
+            5.0, true, false, String[], false, 12, false, "",
+            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0,
+            "SDF:image:4x4", "image_action"  # BUG-010b: original_pattern, original_action_packet
         )
         NODE_MAP[nid] = node
         return nid
@@ -640,15 +640,15 @@ end
                      128, 64, 192, 255, 0, 100, 200, 50]
     result = attach_image_node!(target, img_id, img_data, 4, 4)
 
-    @test occursin("Attached image", result)
+    @test occursin("Bridged image", result)
     @test occursin(img_id, result)
     @test occursin("SDF", result)
 
     atts = get_attachments_for_target(target)
     @test length(atts) == 1
-    @test atts[1].node_id == img_id
-    @test startswith(atts[1].pattern, "SDF:")            # SDF metadata pattern
-    @test length(atts[1].signal) > 0                     # SDF signal pre-baked
+    @test atts[1].partner_id == img_id
+    @test startswith(NODE_MAP[atts[1].partner_id].pattern, "SDF:")  # SDF metadata pattern
+    @test length(NODE_MAP[atts[1].partner_id].signal) > 0  # SDF signal pre-baked
     @test atts[1].base_confidence >= 0.0                 # Confidence baked
     @test atts[1].base_confidence <= 2.0                 # Sane upper bound
 
@@ -711,8 +711,9 @@ end
             nid, "SDF:image:4x4", sig, "image_action",
             Dict{String, Any}(), String[], 1.0,
             RelationalTriple[], String[], Dict{String, Float64}(),
-            5.0, true, String[], false, 12, false, "",
-            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0
+            5.0, true, false, String[], false, 12, false, "",
+            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0,
+            "SDF:image:4x4", "image_action"  # BUG-010b: original_pattern, original_action_packet
         )
         NODE_MAP[nid] = node
         return nid

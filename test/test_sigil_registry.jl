@@ -572,8 +572,9 @@ using .SigilRegistry
         t = default_registry()
         @test t.label == "engine-default"
         # Stage 1.5 added &op; v7.56 added 5 relation sigils (temporal, causal,
-        # spatial, possessive, similarity); default registry now ships 10 entries.
-        @test length(t.entries) == 10
+        # spatial, possessive, similarity); v7.23 added &now, &before, &next
+        # (time-orientation sigils). Default registry now ships 13 entries.
+        @test length(t.entries) == 13
 
         e_n = lookup_sigil(t, "n")
         @test e_n.class === :lambda

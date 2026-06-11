@@ -9,6 +9,10 @@ Manifest.toml
 .DS_Store
 Thumbs.db
 
+# Test runtime artifacts (post-run specimen saves are large + regenerable)
+specimens/kitchensink_postlive.json
+specimens/*_postlive.json
+
 # Editor artifacts
 *.swp
 *.swo
@@ -121,7 +125,6 @@ specimens/v7*_decoherence_*.md
 test_interaction_v*.jl
 test_idle_systems_*.jl
 test_mitosis*.jl
-test_mlp_*.jl
 test_smoke_relational.jl
 test_v727_session.jl
 test_verify.jl
@@ -136,9 +139,3 @@ full_specimen_conversation.jl
 # ── WORKING NOTES (not for distribution) ──
 todo.md
 v734_test/
-
-# ── LARGE SESSION ARTIFACTS ──
-grug_rich_specimen.json
-test_output.json
-comprehensive_specimen_v758.json
-src/EphemeralMLP.jl.bak

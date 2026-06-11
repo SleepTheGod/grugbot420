@@ -1,0 +1,14 @@
+/loadSpecimen comprehensive_specimen_v81.json
+/newLobe physics energy force motion gravity matter quantum
+/nameLobe physics PhysicsBrain
+/grow physics {"pattern":"energy","action_packet":"explain[be precise]^4 | reason^2","data":{"voice_register":"explanatory","answer_mode":"explain"}}
+/addRelationClass spatial
+/addVerb above spatial
+/addSynonym swift fast
+/negativeThesaurus add gibberish --reason noise token
+/sigil add tempo macro tokenize lexicon=fast,slow promote=false
+/addAntiMatch ignore physics please
+/answer @time :time dawn | dusk
+/aimlAdd physics phys_aiml_1 Grug think about topic. Energy never destroyed.
+/lobes
+/saveSpecimen smoke_test.json

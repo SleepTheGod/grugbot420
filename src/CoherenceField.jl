@@ -38,11 +38,12 @@
 module CoherenceField
 
 using JSON
+using Base.Threads: ReentrantLock
 
 # ── Exports ──────────────────────────────────────────────────────────────────
 export compute_field, compute_delta, coherence_field_status
 export CoherenceFieldConfig, COHERENCE_FIELD_CONFIG
-export set_coherence_config!, reset_coherence_config!
+export set_coherence_config!, reset_coherence_config!, coherence_config_snapshot
 export CoherenceFieldError
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -51,6 +52,31 @@ const COHERENCE_DEPTH_MAX    = 3     # Max graph-walk depth for gradient
 const COHERENCE_DECAY_MAX    = 0.1   # Max activation decay rate
 const COHERENCE_RECENCY_MIN  = 10.0  # Min recency window (seconds)
 const COHERENCE_RECENCY_MAX  = 3600.0 # Max recency window (1 hour)
+
+# ── Safe node field accessor ──────────────────────────────────────────────────
+# GRUG FIX: get(node, :is_grave, false) throws MethodError when node is a
+# Node struct (not a Dict).  This helper works with both Node structs and
+# Dicts by trying getproperty first, then falling back to get().
+function _node_get(node, sym::Symbol, default)
+    try
+        val = getproperty(node, sym)
+        return val
+    catch
+        # Not a struct field — try Dict-style get, then json_data, then default
+        if isa(node, AbstractDict)
+            return get(node, sym, default)
+        end
+        # Last resort: check json_data if it exists
+        try
+            jd = getproperty(node, :json_data)
+            if isa(jd, AbstractDict) && haskey(jd, String(sym))
+                return jd[String(sym)]
+            end
+        catch
+        end
+        return default
+    end
+end
 
 # ── Error type ───────────────────────────────────────────────────────────────
 struct CoherenceFieldError <: Exception
@@ -78,6 +104,7 @@ const COHERENCE_FIELD_CONFIG = CoherenceFieldConfig(
     0.0,    # cache_timestamp: never computed
     2.0,    # cache_ttl: 2 seconds
 )
+const _CONFIG_LOCK = ReentrantLock()
 
 # ── Config mutation ──────────────────────────────────────────────────────────
 
@@ -88,41 +115,43 @@ Set a single configuration parameter. Throws CoherenceFieldError on invalid valu
 Valid fields: :weight, :depth, :decay, :recency_window, :cache_ttl
 """
 function set_coherence_config!(field::Symbol, value)
-    if field === :weight
-        if value < 0.0 || value > COHERENCE_WEIGHT_MAX
-            throw(CoherenceFieldError(
-                "weight must be in [0.0, $(COHERENCE_WEIGHT_MAX)], got $value"))
+    lock(_CONFIG_LOCK) do
+        if field === :weight
+            if value < 0.0 || value > COHERENCE_WEIGHT_MAX
+                throw(CoherenceFieldError(
+                    "weight must be in [0.0, $(COHERENCE_WEIGHT_MAX)], got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.weight = Float64(value)
+        elseif field === :depth
+            iv = Int(value)
+            if iv < 1 || iv > COHERENCE_DEPTH_MAX
+                throw(CoherenceFieldError(
+                    "depth must be in [1, $(COHERENCE_DEPTH_MAX)], got $iv"))
+            end
+            COHERENCE_FIELD_CONFIG.depth = iv
+        elseif field === :decay
+            if value < 0.0 || value > COHERENCE_DECAY_MAX
+                throw(CoherenceFieldError(
+                    "decay must be in [0.0, $(COHERENCE_DECAY_MAX)], got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.decay = Float64(value)
+        elseif field === :recency_window
+            if value < COHERENCE_RECENCY_MIN || value > COHERENCE_RECENCY_MAX
+                throw(CoherenceFieldError(
+                    "recency_window must be in [$(COHERENCE_RECENCY_MIN), $(COHERENCE_RECENCY_MAX)], got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.recency_window = Float64(value)
+        elseif field === :cache_ttl
+            if value < 0.0
+                throw(CoherenceFieldError("cache_ttl must be >= 0.0, got $value"))
+            end
+            COHERENCE_FIELD_CONFIG.cache_ttl = Float64(value)
+        else
+            throw(CoherenceFieldError("unknown config field: $field"))
         end
-        COHERENCE_FIELD_CONFIG.weight = Float64(value)
-    elseif field === :depth
-        iv = Int(value)
-        if iv < 1 || iv > COHERENCE_DEPTH_MAX
-            throw(CoherenceFieldError(
-                "depth must be in [1, $(COHERENCE_DEPTH_MAX)], got $iv"))
-        end
-        COHERENCE_FIELD_CONFIG.depth = iv
-    elseif field === :decay
-        if value < 0.0 || value > COHERENCE_DECAY_MAX
-            throw(CoherenceFieldError(
-                "decay must be in [0.0, $(COHERENCE_DECAY_MAX)], got $value"))
-        end
-        COHERENCE_FIELD_CONFIG.decay = Float64(value)
-    elseif field === :recency_window
-        if value < COHERENCE_RECENCY_MIN || value > COHERENCE_RECENCY_MAX
-            throw(CoherenceFieldError(
-                "recency_window must be in [$(COHERENCE_RECENCY_MIN), $(COHERENCE_RECENCY_MAX)], got $value"))
-        end
-        COHERENCE_FIELD_CONFIG.recency_window = Float64(value)
-    elseif field === :cache_ttl
-        if value < 0.0
-            throw(CoherenceFieldError("cache_ttl must be >= 0.0, got $value"))
-        end
-        COHERENCE_FIELD_CONFIG.cache_ttl = Float64(value)
-    else
-        throw(CoherenceFieldError("unknown config field: $field"))
+        # Invalidate cache on any config change
+        COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
     end
-    # Invalidate cache on any config change
-    COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
     return nothing
 end
 
@@ -132,14 +161,37 @@ end
 Reset all configuration to defaults. Weight goes back to 0.0 (off).
 """
 function reset_coherence_config!()
-    COHERENCE_FIELD_CONFIG.weight          = 0.0
-    COHERENCE_FIELD_CONFIG.depth           = 2
-    COHERENCE_FIELD_CONFIG.decay           = 0.01
-    COHERENCE_FIELD_CONFIG.recency_window  = 300.0
-    COHERENCE_FIELD_CONFIG.cache_ttl       = 2.0
-    COHERENCE_FIELD_CONFIG.cached_phi      = 0.0
-    COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
+    lock(_CONFIG_LOCK) do
+        COHERENCE_FIELD_CONFIG.weight          = 0.0
+        COHERENCE_FIELD_CONFIG.depth           = 2
+        COHERENCE_FIELD_CONFIG.decay           = 0.01
+        COHERENCE_FIELD_CONFIG.recency_window  = 300.0
+        COHERENCE_FIELD_CONFIG.cache_ttl       = 2.0
+        COHERENCE_FIELD_CONFIG.cached_phi      = 0.0
+        COHERENCE_FIELD_CONFIG.cache_timestamp = 0.0
+    end
     return nothing
+end
+
+"""
+    coherence_config_snapshot() -> CoherenceFieldConfig
+
+Thread-safe snapshot of COHERENCE_FIELD_CONFIG under _CONFIG_LOCK.
+Returns a deep copy so callers can read fields without holding the lock.
+"""
+function coherence_config_snapshot()
+    lock(_CONFIG_LOCK) do
+        # Build a new struct from the current field values
+        CoherenceFieldConfig(
+            COHERENCE_FIELD_CONFIG.weight,
+            COHERENCE_FIELD_CONFIG.depth,
+            COHERENCE_FIELD_CONFIG.decay,
+            COHERENCE_FIELD_CONFIG.recency_window,
+            COHERENCE_FIELD_CONFIG.cache_ttl,
+            COHERENCE_FIELD_CONFIG.cached_phi,
+            COHERENCE_FIELD_CONFIG.cache_timestamp
+        )
+    end
 end
 
 # ── Internal: Activation function ────────────────────────────────────────────
@@ -157,15 +209,15 @@ Formula: a(t) = e^(-3 × (now - last_fire) / recency_window)
   - Beyond window: ≈ 0 (contribution negligible)
 """
 function _activation(node; now::Float64=time())
-    window = COHERENCE_FIELD_CONFIG.recency_window
+    window = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.recency_window end
     if window <= 0.0
         return 0.0
     end
-    last_fire = get(node, :last_fire_time, nothing)
+    last_fire = _node_get(node, :last_fire_time, nothing)
     if last_fire === nothing
         # Try json_data path for fire time
-        jd = get(node, :json_data, nothing)
-        if jd !== nothing && isa(jd, Dict)
+        jd = _node_get(node, :json_data, nothing)
+        if jd !== nothing && isa(jd, AbstractDict)
             lft = get(jd, "last_fire_time", nothing)
             if lft === nothing
                 return 0.0
@@ -208,15 +260,15 @@ function _node_coherence(node)
     best = 0.0
 
     # Source 1: scan_coherence (PatternScanner bidirectional)
-    sc = get(node, :scan_coherence, nothing)
+    sc = _node_get(node, :scan_coherence, nothing)
     if sc !== nothing && isa(sc, Number) && isfinite(Float64(sc))
         best = max(best, Float64(sc))
     end
 
     # Source 2: strength proxy
-    str = get(node, :strength, nothing)
+    str = _node_get(node, :strength, nothing)
     if str !== nothing && isa(str, Number) && Float64(str) > 0.0
-        cap = get(node, :strength_cap, nothing)
+        cap = _node_get(node, :strength_cap, nothing)
         if cap !== nothing && isa(cap, Number) && Float64(cap) > 0.0
             ratio = Float64(str) / Float64(cap)
             best = max(best, clamp(ratio, 0.0, 1.0))
@@ -224,7 +276,7 @@ function _node_coherence(node)
     end
 
     # Source 3: coherence_score (ImageSDF temporal coherence)
-    cs = get(node, :coherence_score, nothing)
+    cs = _node_get(node, :coherence_score, nothing)
     if cs !== nothing && isa(cs, Number) && isfinite(Float64(cs))
         best = max(best, clamp(Float64(cs), 0.0, 1.0))
     end
@@ -251,17 +303,26 @@ Returns 0.0 on empty input. Never throws.
 function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
                        force::Bool=false)
     now = time()
-    cfg = COHERENCE_FIELD_CONFIG
+
+    # Snapshot config under lock for the duration of this computation
+    weight = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.weight end
+    decay  = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.decay end
 
     # Cache check
-    if !force && cfg.cache_timestamp > 0.0 && (now - cfg.cache_timestamp) < cfg.cache_ttl
-        return cfg.cached_phi
+    if !force
+        cache_hit = lock(_CONFIG_LOCK) do
+            cfg = COHERENCE_FIELD_CONFIG
+            cfg.cache_timestamp > 0.0 && (now - cfg.cache_timestamp) < cfg.cache_ttl && cfg.cached_phi
+        end
+        if cache_hit !== false
+            return Float64(cache_hit)
+        end
     end
 
     phi = 0.0
     for (nid, node) in nodes_dict
         # Skip grave nodes — they don't contribute to the field
-        is_grave = get(node, :is_grave, false)
+        is_grave = _node_get(node, :is_grave, false)
         if is_grave === true || is_grave == 1
             continue
         end
@@ -270,8 +331,8 @@ function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
         activation = _activation(node; now=now)
 
         # Apply decay: reduce activation for very old nodes further
-        if cfg.decay > 0.0 && activation > 0.0
-            activation *= exp(-cfg.decay * (1.0 - activation))
+        if decay > 0.0 && activation > 0.0
+            activation *= exp(-decay * (1.0 - activation))
         end
 
         contribution = coherence * activation
@@ -283,8 +344,10 @@ function compute_field(nodes_dict::Dict{<:AbstractString,<:Any};
     end
 
     # Update cache
-    cfg.cached_phi = phi
-    cfg.cache_timestamp = now
+    lock(_CONFIG_LOCK) do
+        COHERENCE_FIELD_CONFIG.cached_phi = phi
+        COHERENCE_FIELD_CONFIG.cache_timestamp = now
+    end
 
     return phi
 end
@@ -320,7 +383,7 @@ function _secondary_delta(candidate_id::AbstractString,
                 partner_id = nothing
                 if isa(partner_entry, AbstractString)
                     partner_id = partner_entry
-                elseif isa(partner_entry, Dict)
+                elseif isa(partner_entry, AbstractDict)
                     partner_id = get(partner_entry, "target_id",
                               get(partner_entry, :target_id, nothing))
                 end
@@ -337,7 +400,7 @@ function _secondary_delta(candidate_id::AbstractString,
     end
 
     # Neighbors from node's neighbor_ids: 5% coupling
-    neighbor_ids = get(candidate, :neighbor_ids, nothing)
+    neighbor_ids = _node_get(candidate, :neighbor_ids, nothing)
     if neighbor_ids !== nothing && isa(neighbor_ids, AbstractVector)
         for neighbor_id in neighbor_ids
             nid_str = String(neighbor_id)
@@ -375,7 +438,7 @@ function _tertiary_delta(candidate_id::AbstractString,
                 partner_id = nothing
                 if isa(partner_entry, AbstractString)
                     partner_id = partner_entry
-                elseif isa(partner_entry, Dict)
+                elseif isa(partner_entry, AbstractDict)
                     partner_id = get(partner_entry, "target_id",
                               get(partner_entry, :target_id, nothing))
                 end
@@ -387,7 +450,7 @@ function _tertiary_delta(candidate_id::AbstractString,
                             sub_id = nothing
                             if isa(sub_entry, AbstractString)
                                 sub_id = sub_entry
-                            elseif isa(sub_entry, Dict)
+                            elseif isa(sub_entry, AbstractDict)
                                 sub_id = get(sub_entry, "target_id",
                                       get(sub_entry, :target_id, nothing))
                             end
@@ -422,8 +485,8 @@ Only applies when candidate strength > 0.5 (relative to cap).
 The negative contribution is proportional to the strength excess.
 """
 function _inhibition_delta(candidate, nodes_dict)::Float64
-    str = get(candidate, :strength, 0.0)
-    cap = get(candidate, :strength_cap, 1.0)
+    str = _node_get(candidate, :strength, 0.0)
+    cap = _node_get(candidate, :strength_cap, 1.0)
     if !isa(str, Number) || !isa(cap, Number) || Float64(cap) <= 0.0
         return 0.0
     end
@@ -433,7 +496,7 @@ function _inhibition_delta(candidate, nodes_dict)::Float64
     end
 
     # Count weaker neighbors
-    neighbor_ids = get(candidate, :neighbor_ids, nothing)
+    neighbor_ids = _node_get(candidate, :neighbor_ids, nothing)
     if neighbor_ids === nothing || !isa(neighbor_ids, AbstractVector) || isempty(neighbor_ids)
         return 0.0
     end
@@ -443,8 +506,8 @@ function _inhibition_delta(candidate, nodes_dict)::Float64
         nstr = nothing
         neighbor = get(nodes_dict, String(nid), nothing)
         if neighbor !== nothing
-            ns = get(neighbor, :strength, 0.0)
-            nc = get(neighbor, :strength_cap, 1.0)
+            ns = _node_get(neighbor, :strength, 0.0)
+            nc = _node_get(neighbor, :strength_cap, 1.0)
             if isa(ns, Number) && isa(nc, Number) && Float64(nc) > 0.0
                 nrel = Float64(ns) / Float64(nc)
                 if nrel < rel_str
@@ -495,7 +558,7 @@ function compute_delta(candidate_id::AbstractString,
     end
 
     # Skip grave nodes — they can't contribute
-    is_grave = get(candidate, :is_grave, false)
+    is_grave = _node_get(candidate, :is_grave, false)
     if is_grave === true || is_grave == 1
         return 0.0
     end
@@ -511,12 +574,13 @@ function compute_delta(candidate_id::AbstractString,
     delta = activated_contribution - current_contribution
 
     # Secondary: depth-2 walk (bridge partners + neighbors)
-    if COHERENCE_FIELD_CONFIG.depth >= 2
+    depth = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.depth end
+    if depth >= 2
         delta += _secondary_delta(candidate_id, nodes_dict, bridge_map)
     end
 
     # Tertiary: depth-3 walk (only if depth >= 3)
-    if COHERENCE_FIELD_CONFIG.depth >= 3
+    if depth >= 3
         delta += _tertiary_delta(candidate_id, nodes_dict, bridge_map)
     end
 
@@ -556,7 +620,7 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
     contributions = Vector{Dict{String,Any}}()
 
     for (nid, node) in nodes_dict
-        is_grave = get(node, :is_grave, false)
+        is_grave = _node_get(node, :is_grave, false)
         if is_grave === true || is_grave == 1
             continue
         end
@@ -564,8 +628,9 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
         coherence = _node_coherence(node)
         activation = _activation(node; now=now)
 
-        if COHERENCE_FIELD_CONFIG.decay > 0.0 && activation > 0.0
-            activation *= exp(-COHERENCE_FIELD_CONFIG.decay * (1.0 - activation))
+        decay = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG.decay end
+        if decay > 0.0 && activation > 0.0
+            activation *= exp(-decay * (1.0 - activation))
         end
 
         if activation > 0.01
@@ -593,7 +658,13 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
     sort!(bot_candidates; by=c -> c["contribution"])
     bot5 = length(bot_candidates) >= 5 ? bot_candidates[1:5] : bot_candidates
 
-    cfg = COHERENCE_FIELD_CONFIG
+    cfg_snap = lock(_CONFIG_LOCK) do
+        (weight=COHERENCE_FIELD_CONFIG.weight,
+         depth=COHERENCE_FIELD_CONFIG.depth,
+         decay=COHERENCE_FIELD_CONFIG.decay,
+         recency_window=COHERENCE_FIELD_CONFIG.recency_window,
+         cache_ttl=COHERENCE_FIELD_CONFIG.cache_ttl)
+    end
 
     return Dict{String,Any}(
         "phi"              => phi,
@@ -603,11 +674,11 @@ function coherence_field_status(nodes_dict::Dict{<:AbstractString,<:Any};
         "top_contributors" => top5,
         "bottom_contributors" => bot5,
         "config" => Dict{String,Any}(
-            "weight"          => cfg.weight,
-            "depth"           => cfg.depth,
-            "decay"           => cfg.decay,
-            "recency_window"  => cfg.recency_window,
-            "cache_ttl"       => cfg.cache_ttl,
+            "weight"          => cfg_snap.weight,
+            "depth"           => cfg_snap.depth,
+            "decay"           => cfg_snap.decay,
+            "recency_window"  => cfg_snap.recency_window,
+            "cache_ttl"       => cfg_snap.cache_ttl,
         ),
     )
 end
@@ -621,7 +692,7 @@ Serialize the current CoherenceField config to a dictionary suitable for
 specimen save. Only serializes non-default values to keep specimens clean.
 """
 function coherence_config_to_dict()
-    cfg = COHERENCE_FIELD_CONFIG
+    cfg = lock(_CONFIG_LOCK) do; COHERENCE_FIELD_CONFIG end
     d = Dict{String,Any}()
     # Always save weight (most important lever)
     d["weight"] = cfg.weight
@@ -646,7 +717,7 @@ end
 Restore CoherenceField config from a dictionary (specimen load).
 Only sets values that are present in the dict; defaults are preserved.
 """
-function coherence_config_from_dict!(d::Dict)
+function coherence_config_from_dict!(d)
     if haskey(d, "weight")
         set_coherence_config!(:weight, Float64(d["weight"]))
     end

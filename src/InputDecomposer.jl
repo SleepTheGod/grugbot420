@@ -59,6 +59,8 @@
 
 module InputDecomposer
 
+using Base.Threads: ReentrantLock
+
 export DecomposedSubSubject, decompose_input, is_compound
 export InputChunk, chunk_boundaries
 export DecomposerConfig, build_config, DEFAULT_CONFIG
@@ -71,6 +73,9 @@ export add_command_marker!, remove_command_marker!
 export add_conjugation_rule!, remove_conjugation_rule!
 export set_context_conjunction!, reset_config!
 export config_status_string
+# GRUG v10: MLP-assisted decomposition exports
+export decompose_input_mlp
+export MLP_COMPOUND_THRESHOLD, MLP_NOVELTY_COMPOUND_THRESHOLD, MLP_COMPOUND_MAX_PARTS
 
 # ==============================================================================
 # STRUCTS
@@ -162,24 +167,44 @@ const _DEFAULT_SPLIT_CONJUNCTIONS = Set([
     "but", "however", "yet", "nevertheless", "nonetheless",
     "alternatively", "instead",
     "or",   # "what is X or what is Y" — split
-    "then"  # "calculate X and then describe Y" — split at "then"
+    "then", # "calculate X and then describe Y" — split at "then"
+    # ── GRUG v10: expanded conjunctions ──
+    "while", "whilst",     # "what is X while what is Y"
+    "since",               # "describe X since Y is also relevant"
+    "unless",              # "explain X unless you prefer Y"
+    "except",              # "calculate X except compute Y instead"
+    "plus",                # "what is X plus what is Y"
+    "independently",       # "analyze X independently evaluate Y"
+    "separately",          # "describe X separately summarize Y"
 ])
 
 const _DEFAULT_COMPOUND_PAIRS = Dict{String,Set{String}}(
-    "and" => Set(["then", "also", "additionally", "furthermore", "moreover"])
+    "and" => Set(["then", "also", "additionally", "furthermore", "moreover"]),
+    # ── GRUG v10: expanded compound pairs ──
+    "or"  => Set(["else"]),              # "or else" is compound
+    "but" => Set(["rather", "instead"]), # "but rather", "but instead"
+    "then"=> Set(["additionally"]),      # "then additionally"
 )
 
 const _DEFAULT_CONTEXT_CONJUNCTION = "and"
 
 const _DEFAULT_QUESTION_MARKERS = Set([
     "what", "who", "where", "when", "why", "how",
-    "which", "whose", "whom"
+    "which", "whose", "whom",
+    # ── GRUG v10: expanded question markers (auxiliary verbs) ──
+    "can", "could", "would", "shall", "will",
+    "do", "does", "did",
+    "is", "are", "was", "were", "am"
 ])
 
 const _DEFAULT_COMMAND_MARKERS = Set([
     "tell", "show", "give", "explain", "describe",
     "calculate", "compute", "solve", "define",
-    "list", "name", "find", "count"
+    "list", "name", "find", "count",
+    # ── GRUG v10: expanded command markers ──
+    "compare", "contrast", "analyze", "evaluate",
+    "summarize", "determine", "identify",
+    "convert", "translate", "search", "lookup"
 ])
 
 const _DEFAULT_CONJUGATION_RULES = Dict{String,Vector{String}}(
@@ -196,6 +221,18 @@ const _DEFAULT_CONJUGATION_RULES = Dict{String,Vector{String}}(
     "name"      => ["names", "named", "naming"],
     "find"      => ["finds", "found", "finding"],
     "count"     => ["counts", "counted", "counting"],
+    # ── GRUG v10: conjugation rules for new command markers ──
+    "compare"   => ["compares", "compared", "comparing"],
+    "contrast"  => ["contrasts", "contrasted", "contrasting"],
+    "analyze"   => ["analyzes", "analyzed", "analyzing"],
+    "evaluate"  => ["evaluates", "evaluated", "evaluating"],
+    "summarize" => ["summarizes", "summarized", "summarizing"],
+    "determine" => ["determines", "determined", "determining"],
+    "identify"  => ["identifies", "identified", "identifying"],
+    "convert"   => ["converts", "converted", "converting"],
+    "translate" => ["translates", "translated", "translating"],
+    "search"    => ["searches", "searched", "searching"],
+    "lookup"    => ["lookups", "lookedup"],     # irregular but common
 )
 
 """
@@ -232,6 +269,7 @@ end
 # If no specimen has been loaded, it falls back to DEFAULT_CONFIG.
 
 const _RUNTIME_CONFIG = Ref{DecomposerConfig}(DEFAULT_CONFIG)
+const _CONFIG_LOCK = ReentrantLock()
 
 """
     set_config!(specimen_dict) -> DecomposerConfig
@@ -240,9 +278,9 @@ Build a DecomposerConfig from the specimen's decomposer_config and store it
 as the runtime config. Called by Main.jl after loading a specimen. Returns
 the new config for inspection/logging.
 """
-function set_config!(specimen_dict::Dict)::DecomposerConfig
+function set_config!(specimen_dict)::DecomposerConfig
     cfg = build_config(specimen_dict)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return cfg
 end
 
@@ -252,7 +290,7 @@ end
 Get the current runtime decomposer config. Useful for diagnostics.
 """
 function get_config()::DecomposerConfig
-    return _RUNTIME_CONFIG[]
+    return lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
 end
 
 # ==============================================================================
@@ -280,7 +318,7 @@ conjunction? Put it in decomposer_config.split_conjunctions. You want
 "investigated", "investigating"? Put it in decomposer_config. No source
 code edit needed. The specimen is the brain, not the compiler.
 """
-function build_config(specimen_dict::Dict)::DecomposerConfig
+function build_config(specimen_dict)::DecomposerConfig
     dc = get(specimen_dict, "decomposer_config", nothing)
     if dc === nothing
         return DEFAULT_CONFIG
@@ -373,7 +411,8 @@ const punctuation_chars = [',', '.', ';', ':', '!', '?', '-', '—']
     use chunk_boundaries(input_text, config).
 =#
 function chunk_boundaries(input_text::String)::Vector{InputChunk}
-    return chunk_boundaries(input_text, _RUNTIME_CONFIG[])
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
+    return chunk_boundaries(input_text, cfg)
 end
 
 function chunk_boundaries(input_text::String, config::DecomposerConfig)::Vector{InputChunk}
@@ -461,7 +500,8 @@ Analyze the input for compound structure using the runtime config
 uses DEFAULT_CONFIG. For explicit config, use decompose_input(input_text, config).
 """
 function decompose_input(input_text::String)::Vector{DecomposedSubSubject}
-    return decompose_input(input_text, _RUNTIME_CONFIG[])
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
+    return decompose_input(input_text, cfg)
 end
 
 """
@@ -498,6 +538,16 @@ function decompose_input(input_text::String, config::DecomposerConfig)::Vector{D
     # "what is X, what is Y, what is Z" — commas between independent questions.
     if length(clauses) <= 1
         clauses = _split_on_comma_clauses(input_text, config)
+    end
+
+    # GRUG: Step 2c — sigil-boundary splitting. When the input contains
+    # arithmetic expressions (2+3), special sigils (|pipe|), or other
+    # sigil-class boundaries, split there. "what is 2+3 and what is fire"
+    # already splits at "and", but "describe gravity 2+3 what is fire"
+    # needs the arithmetic boundary to split. The arithmetic expression
+    # and the natural-language question are fundamentally different subjects.
+    if length(clauses) <= 1
+        clauses = _split_on_sigil_boundaries(input_text, config)
     end
 
     # GRUG: Step 3 — still just one clause? Singleton. Old path.
@@ -780,8 +830,10 @@ function _split_on_comma_clauses(input_text::String, config::DecomposerConfig)::
         if endswith(tok, ",")
             # Check if the NEXT token starts a question/command clause.
             if tok_idx < length(tokens)
-                next_tok = lower_tokens[tok_idx + 1]
-                if next_tok in config.question_markers || next_tok in config.expanded_command_markers
+                # GRUG v10: Use enhanced lookahead that checks past conjunction
+                # connectors like "and", "or", "but" after the comma.
+                # "what is X, and what is Y" now correctly splits.
+                if _comma_lookahead_clause_check(lower_tokens, tok_idx + 1, config)
                     push!(splits, tok_idx + 1)
                 end
             end
@@ -813,6 +865,369 @@ function _split_on_comma_clauses(input_text::String, config::DecomposerConfig)::
 end
 
 # ==============================================================================
+# INTERNAL: SIGIL-BOUNDARY SPLITTING (Strategy 4)
+# ==============================================================================
+
+#=
+    _split_on_sigil_boundaries(input_text, config) -> Vector{String}
+
+    GRUG: When input mixes arithmetic expressions with natural-language
+    questions, the two are fundamentally different subjects. The arithmetic
+    expression belongs to the ArithmeticEngine, the question belongs to
+    the general scan. They should be split.
+
+    Detection heuristic:
+      - Find spans of the input that contain arithmetic operators (+, -, *, /, =)
+        between digits. These are arithmetic zones.
+      - Find spans that contain sigil markers (|, @, #, $, %) followed by
+        alphanumeric tokens. These are sigil zones.
+      - If both an arithmetic/sigil zone AND a natural-language zone exist,
+        split between them.
+
+    Example splits:
+      "describe gravity 2+3 what is fire" → ["describe gravity", "2+3", "what is fire"]
+      "what is 5*7 and also explain black holes" → ["5*7", "what is and also explain black holes"]
+      Actually: conjunctions should catch the "and also" above. The sigil
+      split is for cases where there's NO conjunction — the arithmetic just
+      sits next to a question with no explicit boundary word.
+      "compute 3*4+1 explain photosynthesis" → ["3*4+1", "explain photosynthesis"]
+
+    We also split at "explain", "describe" etc. if they follow an arithmetic
+    zone — the command marker starts a new clause.
+=#
+
+# GRUG: Regex pattern for detecting arithmetic expressions.
+# Matches sequences like: 2+3, 5*7, 12/4, 3-1, 2+3*4, x=5
+const _ARITH_PATTERN = r"\d+[+\-*/]\d+([+\-*/]\d+)*"
+
+# GRUG: Regex pattern for sigil-class tokens.
+# Matches: |word|, @word, #word, $word, %word%
+const _SIGIL_PATTERN = r"[|@#$%][\w]+[|%]?|\|[\w]+\|"
+
+"""
+    _split_on_sigil_boundaries(input_text, config) -> Vector{String}
+
+Split at boundaries between arithmetic/sigil zones and natural-language zones.
+Only splits when BOTH zones are present. If the input is purely arithmetic
+or purely natural-language, returns [input_text].
+"""
+function _split_on_sigil_boundaries(input_text::String, config::DecomposerConfig)::Vector{String}
+    tokens = split(input_text)
+    length(tokens) < 3 && return [input_text]  # GRUG: need at least 3 tokens to have 2 zones
+
+    lower_tokens = [lowercase(replace(t, r"[,;.!?:]"=> "")) for t in tokens]
+
+    # GRUG: Classify each token as arithmetic, sigil, or natural-language.
+    # A token is arithmetic if it matches the arithmetic pattern.
+    # A token is sigil if it matches the sigil pattern.
+    # Everything else is natural-language.
+    token_zones = Symbol[]  # :arith, :sigil, :lang for each token
+    for tok in tokens
+        if occursin(_ARITH_PATTERN, tok)
+            push!(token_zones, :arith)
+        elseif occursin(_SIGIL_PATTERN, tok)
+            push!(token_zones, :sigil)
+        else
+            push!(token_zones, :lang)
+        end
+    end
+
+    # GRUG: Find contiguous zones. A zone is a maximal run of same-type tokens.
+    # We treat :arith and :sigil as the same type (:special) for splitting.
+    # Build a list of (zone_type, start_idx, end_idx).
+    zones = Tuple{Symbol, Int, Int}[]
+    if isempty(token_zones)
+        return [input_text]
+    end
+
+    current_type = token_zones[1] in (:arith, :sigil) ? :special : :lang
+    zone_start = 1
+    for i in 2:length(token_zones)
+        tok_type = token_zones[i] in (:arith, :sigil) ? :special : :lang
+        if tok_type != current_type
+            push!(zones, (current_type, zone_start, i - 1))
+            current_type = tok_type
+            zone_start = i
+        end
+    end
+    push!(zones, (current_type, zone_start, length(token_zones)))  # last zone
+
+    # GRUG: We need at least one :special zone and one :lang zone to split.
+    has_special = any(z -> z[1] == :special, zones)
+    has_lang = any(z -> z[1] == :lang, zones)
+    if !has_special || !has_lang
+        return [input_text]  # all one type, no sigil boundary
+    end
+
+    # GRUG: We also check that the :lang zone has clause structure.
+    # "compute 2+3 compute 4*5" should split at the second "compute".
+    # But "2+3 and 4*5" might be all arithmetic (no lang clause structure).
+    # We split at zone boundaries AND at command/question markers within lang zones.
+    clauses = String[]
+    for (zone_type, start_idx, end_idx) in zones
+        zone_text = strip(join(tokens[start_idx:end_idx], " "))
+        if isempty(zone_text)
+            continue
+        end
+
+        # GRUG: For lang zones, check if they contain multiple command/question
+        # markers that should be split further. Example:
+        # "explain X describe Y" → split at "describe" because it's a command marker.
+        if zone_type == :lang && end_idx - start_idx >= 2
+            # Check for multiple command/question markers in this lang zone
+            marker_positions = Int[]
+            for ti in start_idx:end_idx
+                if lower_tokens[ti] in config.expanded_command_markers || lower_tokens[ti] in config.question_markers
+                    push!(marker_positions, ti)
+                end
+            end
+            if length(marker_positions) >= 2
+                # Multiple markers in the lang zone — split at each marker.
+                prev = start_idx
+                for mp in marker_positions
+                    if mp > prev
+                        sub_clause = strip(join(tokens[prev:mp-1], " "))
+                        !isempty(sub_clause) && push!(clauses, sub_clause)
+                    end
+                    prev = mp
+                end
+                # Last part
+                if prev <= end_idx
+                    sub_clause = strip(join(tokens[prev:end_idx], " "))
+                    !isempty(sub_clause) && push!(clauses, sub_clause)
+                end
+                continue
+            end
+        end
+
+        push!(clauses, zone_text)
+    end
+
+    return isempty(clauses) ? [input_text] : clauses
+end
+
+
+# ==============================================================================
+# MLP-ASSISTED DECOMPOSITION (Strategy 5 — optional, called from Main.jl)
+# ==============================================================================
+
+#=
+    decompose_input_mlp(input_text, config; mlp_directive_quality, mlp_novelty) -> Vector{DecomposedSubSubject}
+
+    GRUG: The EphemeralMLP knows things. Its directive_quality head tells us
+    how confident the MLP is that the input has a single clear directive. When
+    directive_quality is LOW, the MLP is confused — the input probably has
+    multiple directives that should be split. When novelty is HIGH, the input
+    contains unfamiliar patterns that might mask compound structure.
+
+    This function is called by Main.jl AFTER the standard decompose_input()
+    returns a singleton. If the MLP signals suggest compound structure that
+    the heuristics missed, we do a more aggressive re-decomposition.
+
+    MLP signals used:
+      - directive_quality: 0-1 score. Below MLP_COMPOUND_THRESHOLD → try harder.
+      - novelty: 0-1 score. Above MLP_NOVELTY_COMPOUND_THRESHOLD → novelty
+        may be hiding compound structure.
+
+    When MLP suggests compound but heuristics found nothing, we use a
+    fallback strategy: split at EVERY conjunction-like word (broader than
+    split_conjunctions) and at every punctuation boundary. This is aggressive
+    and may over-split, but over-splitting is better than under-splitting
+    when the MLP is confident the input is compound.
+
+    CANCER PREVENTION:
+      - MLP_COMPOUND_THRESHOLD is high (0.35) — only triggers when MLP is
+        genuinely unsure about the directive.
+      - MLP_NOVELTY_COMPOUND_THRESHOLD is high (0.70) — only triggers when
+        novelty is very high.
+      - Both thresholds must be met (AND, not OR) for the aggressive split.
+      - The aggressive split still requires clause structure on both sides.
+      - Max 4 sub-subjects from MLP-assisted decomposition.
+=#
+
+const MLP_COMPOUND_THRESHOLD = 0.35
+const MLP_NOVELTY_COMPOUND_THRESHOLD = 0.70
+const MLP_COMPOUND_MAX_PARTS = 4
+
+# GRUG: Broader set of conjunction-like words for aggressive MLP-assisted splitting.
+# Includes all split_conjunctions plus softer connectors.
+const _MLP_AGGRESSIVE_CONJUNCTIONS = Set([
+    "and", "or", "but", "also", "then", "plus", "while", "whilst",
+    "additionally", "furthermore", "moreover", "besides", "likewise",
+    "however", "yet", "nevertheless", "nonetheless", "alternatively",
+    "instead", "since", "unless", "except", "independently", "separately",
+    # Softer connectors not in split_conjunctions:
+    "with", "without", "along", "including", "aside", "besides"
+])
+
+"""
+    decompose_input_mlp(input_text; kwargs...) -> Vector{DecomposedSubSubject}
+
+MLP-assisted decomposition. Called by Main.jl when the standard decompose_input()
+returns a singleton but the MLP signals suggest the input is compound.
+
+Kwargs:
+  - mlp_directive_quality: Float64 — EphemeralMLP head 1 score (0-1)
+  - mlp_novelty: Float64 — EphemeralMLP novelty score (0-1)
+  - config: DecomposerConfig — decomposer config (defaults to runtime config)
+
+Returns decomposed sub-subjects. If MLP signals don't suggest compound,
+returns the standard singleton result.
+"""
+function decompose_input_mlp(input_text::String;
+                             mlp_directive_quality::Float64 = 1.0,
+                             mlp_novelty::Float64 = 0.0,
+                             config::DecomposerConfig = get_config())::Vector{DecomposedSubSubject}
+    # GRUG: First check — do MLP signals even suggest compound?
+    if mlp_directive_quality >= MLP_COMPOUND_THRESHOLD
+        # MLP is confident about the directive. Not compound. Trust it.
+        return [DecomposedSubSubject(strip(input_text), "", :singleton, 1)]
+    end
+    if mlp_novelty < MLP_NOVELTY_COMPOUND_THRESHOLD
+        # Novelty is not high enough to warrant aggressive splitting.
+        return [DecomposedSubSubject(strip(input_text), "", :singleton, 1)]
+    end
+
+    # GRUG: MLP says "I'm confused AND this is novel." That's a strong signal
+    # that the input is compound. Try aggressive decomposition.
+
+    # Strategy: split at EVERY conjunction-like word in the broader set,
+    # requiring only that the right side has clause structure (not both sides).
+    tokens = split(input_text)
+    length(tokens) < 4 && return [DecomposedSubSubject(strip(input_text), "", :singleton, 1)]
+
+    lower_tokens = [lowercase(replace(t, r"[,;.!?:]"=> "")) for t in tokens]
+
+    splits = Tuple{Int,Int}[]  # (left_end, right_start)
+    for i in 2:(length(tokens) - 1)
+        tok = lower_tokens[i]
+        if tok in _MLP_AGGRESSIVE_CONJUNCTIONS
+            # Aggressive: only check right side for clause structure
+            right_has_structure = _has_clause_structure(lower_tokens, i + 1, length(tokens), config)
+            if right_has_structure
+                push!(splits, (i - 1, i + 1))
+            end
+        end
+    end
+
+    # Also try splitting at comma boundaries with clause structure on right
+    comma_positions = findall(c -> c == ',', input_text)
+    if !isempty(comma_positions)
+        for (tok_idx, tok) in enumerate(tokens)
+            if endswith(tok, ",") && tok_idx < length(tokens)
+                next_tok = lower_tokens[tok_idx + 1]
+                if next_tok in config.question_markers || next_tok in config.expanded_command_markers
+                    push!(splits, (tok_idx, tok_idx + 1))
+                end
+            end
+        end
+    end
+
+    isempty(splits) && return [DecomposedSubSubject(strip(input_text), "", :singleton, 1)]
+
+    # Build clauses from splits
+    unique_sorted = sort(unique(splits), by = s -> s[1])
+    clauses = String[]
+    prev = 1
+    for (left_end, right_start) in unique_sorted
+        if left_end >= prev
+            clause = strip(join(tokens[prev:left_end], " "))
+            !isempty(clause) && push!(clauses, clause)
+        end
+        prev = right_start
+    end
+    if prev <= length(tokens)
+        clause = strip(join(tokens[prev:end], " "))
+        !isempty(clause) && push!(clauses, clause)
+    end
+
+    # GRUG: Cap at MLP_COMPOUND_MAX_PARTS to prevent over-splitting.
+    if length(clauses) > MLP_COMPOUND_MAX_PARTS
+        # Merge the last few clauses
+        merged_ending = join(clauses[MLP_COMPOUND_MAX_PARTS:end], " ")
+        clauses = vcat(clauses[1:MLP_COMPOUND_MAX_PARTS-1], [strip(merged_ending)])
+    end
+
+    # If only one non-empty clause, it's still a singleton
+    non_empty = filter(c -> !isempty(strip(c)), clauses)
+    if length(non_empty) <= 1
+        return [DecomposedSubSubject(strip(input_text), "", :singleton, 1)]
+    end
+
+    # Build DecomposedSubSubject array
+    result = DecomposedSubSubject[]
+    for (i, clause) in enumerate(non_empty)
+        clause_text = strip(clause)
+        isempty(clause_text) && continue
+        group_id = "mp_$i"
+        role = i == 1 ? :primary : :support
+        push!(result, DecomposedSubSubject(clause_text, group_id, role, i))
+    end
+
+    return isempty(result) ? [DecomposedSubSubject(strip(input_text), "", :singleton, 1)] : result
+end
+
+
+# ==============================================================================
+# ENHANCED COMMA-CLAUSE SPLITTING (v10 improvement)
+# ==============================================================================
+
+# GRUG: The existing _split_on_comma_clauses only checks the token IMMEDIATELY
+# after the comma. But "what is X, and also what is Y" has "and" after the comma,
+# not a question marker. The enhanced version looks ahead past "and"/"or"/"but"
+# after the comma to find the actual clause-starting marker.
+
+# This is a helper that _split_on_comma_clauses now uses.
+# We patch the existing function rather than rewriting it.
+
+"""
+    _comma_lookahead_clause_check(lower_tokens, after_comma_idx, config) -> Bool
+
+Check if the token after a comma starts a new independent clause,
+with lookahead past conjunction connectors. "what is X, and what is Y"
+→ the comma's next token is "and", but the token AFTER "and" is "what"
+(question marker). This should split.
+
+Looks ahead up to 2 tokens past a conjunction connector.
+"""
+function _comma_lookahead_clause_check(lower_tokens::Vector{String},
+                                       after_comma_idx::Int,
+                                       config::DecomposerConfig)::Bool
+    n = length(lower_tokens)
+    if after_comma_idx > n
+        return false
+    end
+
+    first_tok = lower_tokens[after_comma_idx]
+
+    # Direct check: the token right after the comma is a marker
+    if first_tok in config.question_markers || first_tok in config.expanded_command_markers
+        return true
+    end
+
+    # Lookahead: the token after comma is a conjunction, check the next token
+    conjunction_connectors = ["and", "or", "but", "also", "then", "plus"]
+    if first_tok in conjunction_connectors && after_comma_idx + 1 <= n
+        next_tok = lower_tokens[after_comma_idx + 1]
+        if next_tok in config.question_markers || next_tok in config.expanded_command_markers
+            return true
+        end
+    end
+
+    # Lookahead 2: "and also what" — conjunction + conjunction + marker
+    if first_tok in conjunction_connectors && after_comma_idx + 2 <= n
+        second_tok = lower_tokens[after_comma_idx + 1]
+        third_tok = lower_tokens[after_comma_idx + 2]
+        if second_tok in conjunction_connectors &&
+           (third_tok in config.question_markers || third_tok in config.expanded_command_markers)
+            return true
+        end
+    end
+
+    return false
+end
+
+# ==============================================================================
 # CONFIG MUTATION — runtime editing via /decomposer CLI
 # ==============================================================================
 #
@@ -838,13 +1253,15 @@ Returns a status message. Throws ArgumentError on empty input.
 function add_split_conjunction!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot add empty string as split conjunction"))
-    cfg = _RUNTIME_CONFIG[]
-    if word in cfg.split_conjunctions
-        return "⚠  '$word' already in split_conjunctions (no change)"
+    lock(_CONFIG_LOCK) do
+        cfg = _RUNTIME_CONFIG[]
+        if word in cfg.split_conjunctions
+            return "⚠  '$word' already in split_conjunctions (no change)"
+        end
+        push!(cfg.split_conjunctions, word)
+        _RUNTIME_CONFIG[] = cfg  # re-store (Set mutation may not trigger Ref update)
+        return "✅ Added '$word' to split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
     end
-    push!(cfg.split_conjunctions, word)
-    _RUNTIME_CONFIG[] = cfg  # re-store (Set mutation may not trigger Ref update)
-    return "✅ Added '$word' to split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
 end
 
 """
@@ -856,13 +1273,15 @@ Returns a status message. Throws ArgumentError if word not present.
 function remove_split_conjunction!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot remove empty string from split conjunctions"))
-    cfg = _RUNTIME_CONFIG[]
-    if !(word in cfg.split_conjunctions)
-        throw(ArgumentError("'$word' not in split_conjunctions — cannot remove what isn't there"))
+    lock(_CONFIG_LOCK) do
+        cfg = _RUNTIME_CONFIG[]
+        if !(word in cfg.split_conjunctions)
+            throw(ArgumentError("'$word' not in split_conjunctions — cannot remove what isn't there"))
+        end
+        delete!(cfg.split_conjunctions, word)
+        _RUNTIME_CONFIG[] = cfg
+        return "✅ Removed '$word' from split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
     end
-    delete!(cfg.split_conjunctions, word)
-    _RUNTIME_CONFIG[] = cfg
-    return "✅ Removed '$word' from split_conjunctions (now $(length(cfg.split_conjunctions)) total)"
 end
 
 """
@@ -878,17 +1297,17 @@ function add_compound_pair!(leader::String, follower::String)::String
     follower = strip(lowercase(follower))
     isempty(leader) && throw(ArgumentError("Compound pair leader cannot be empty"))
     isempty(follower) && throw(ArgumentError("Compound pair follower cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !haskey(cfg.compound_pairs, leader)
         cfg.compound_pairs[leader] = Set{String}([follower])
-        _RUNTIME_CONFIG[] = cfg
+        lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
         return "✅ Created compound pair '$leader' → {'$follower'} (new leader)"
     end
     if follower in cfg.compound_pairs[leader]
         return "⚠  '$leader' → '$follower' already in compound_pairs (no change)"
     end
     push!(cfg.compound_pairs[leader], follower)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Added '$follower' to compound pair '$leader' (now $(length(cfg.compound_pairs[leader])) followers)"
 end
 
@@ -904,7 +1323,7 @@ function remove_compound_pair!(leader::String, follower::String)::String
     follower = strip(lowercase(follower))
     isempty(leader) && throw(ArgumentError("Compound pair leader cannot be empty"))
     isempty(follower) && throw(ArgumentError("Compound pair follower cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !haskey(cfg.compound_pairs, leader)
         throw(ArgumentError("'$leader' not in compound_pairs — no such leader"))
     end
@@ -914,10 +1333,10 @@ function remove_compound_pair!(leader::String, follower::String)::String
     delete!(cfg.compound_pairs[leader], follower)
     if isempty(cfg.compound_pairs[leader])
         delete!(cfg.compound_pairs, leader)
-        _RUNTIME_CONFIG[] = cfg
+        lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
         return "✅ Removed '$follower' from '$leader'; leader had no followers left, removed '$leader' entry entirely"
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed '$follower' from compound pair '$leader' (now $(length(cfg.compound_pairs[leader])) followers)"
 end
 
@@ -930,12 +1349,12 @@ Returns a status message. Throws ArgumentError on empty input.
 function add_question_marker!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot add empty string as question marker"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if word in cfg.question_markers
         return "⚠  '$word' already in question_markers (no change)"
     end
     push!(cfg.question_markers, word)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Added '$word' to question_markers (now $(length(cfg.question_markers)) total)"
 end
 
@@ -948,12 +1367,12 @@ Throws ArgumentError if word not present.
 function remove_question_marker!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Cannot remove empty string from question markers"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !(word in cfg.question_markers)
         throw(ArgumentError("'$word' not in question_markers — cannot remove what isn't there"))
     end
     delete!(cfg.question_markers, word)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed '$word' from question_markers (now $(length(cfg.question_markers)) total)"
 end
 
@@ -968,7 +1387,7 @@ Returns a status message. Throws ArgumentError on empty stem.
 function add_command_marker!(stem::String, conjugated_forms::Vector{String}=String[])::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Cannot add empty string as command marker"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     was_new = !(stem in cfg.command_markers)
     push!(cfg.command_markers, stem)
     push!(cfg.expanded_command_markers, stem)  # stem itself is always in expanded
@@ -980,7 +1399,7 @@ function add_command_marker!(stem::String, conjugated_forms::Vector{String}=Stri
             push!(cfg.expanded_command_markers, f)
         end
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     n_expanded = length(cfg.expanded_command_markers)
     if was_new
         if isempty(conjugated_forms)
@@ -1008,7 +1427,7 @@ Throws ArgumentError if stem not present.
 function remove_command_marker!(stem::String)::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Cannot remove empty string from command markers"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !(stem in cfg.command_markers)
         throw(ArgumentError("'$stem' not in command_markers — cannot remove what isn't there"))
     end
@@ -1021,7 +1440,7 @@ function remove_command_marker!(stem::String)::String
         end
         delete!(cfg.conjugation_rules, stem)
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed command marker '$stem' and its conjugated forms (now $(length(cfg.expanded_command_markers)) expanded markers)"
 end
 
@@ -1037,7 +1456,7 @@ function add_conjugation_rule!(stem::String, forms::Vector{String})::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Conjugation rule stem cannot be empty"))
     isempty(forms) && throw(ArgumentError("Conjugation rule must have at least one form"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !(stem in cfg.command_markers)
         throw(ArgumentError("'$stem' not in command_markers — add it with /decomposer addCommand first"))
     end
@@ -1054,7 +1473,7 @@ function add_conjugation_rule!(stem::String, forms::Vector{String})::String
     for f in clean_forms
         push!(cfg.expanded_command_markers, f)
     end
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Set conjugation rule '$stem' → $clean_forms (now $(length(cfg.expanded_command_markers)) expanded markers)"
 end
 
@@ -1069,7 +1488,7 @@ Throws ArgumentError if no rule exists for this stem.
 function remove_conjugation_rule!(stem::String)::String
     stem = strip(lowercase(stem))
     isempty(stem) && throw(ArgumentError("Conjugation rule stem cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     if !haskey(cfg.conjugation_rules, stem)
         throw(ArgumentError("No conjugation rule for '$stem' — cannot remove what isn't there"))
     end
@@ -1077,7 +1496,7 @@ function remove_conjugation_rule!(stem::String)::String
         delete!(cfg.expanded_command_markers, f)
     end
     delete!(cfg.conjugation_rules, stem)
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Removed conjugation rule for '$stem' (stem still in command_markers; now $(length(cfg.expanded_command_markers)) expanded markers)"
 end
 
@@ -1091,7 +1510,7 @@ Throws ArgumentError on empty input.
 function set_context_conjunction!(word::String)::String
     word = strip(lowercase(word))
     isempty(word) && throw(ArgumentError("Context conjunction cannot be empty"))
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     old = cfg.context_conjunction
     cfg = DecomposerConfig(  # Reconstruct — context_conjunction is immutable in struct
         cfg.split_conjunctions,
@@ -1102,7 +1521,7 @@ function set_context_conjunction!(word::String)::String
         cfg.expanded_command_markers,
         cfg.conjugation_rules
     )
-    _RUNTIME_CONFIG[] = cfg
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = cfg end
     return "✅ Context conjunction changed: '$old' → '$word'"
 end
 
@@ -1113,8 +1532,8 @@ Reset the runtime config to built-in defaults. NO SILENT SURPRISE:
 this is a hard reset, and the operator is told exactly what they lost.
 """
 function reset_config!()::String
-    old_n = length(_RUNTIME_CONFIG[].split_conjunctions)
-    _RUNTIME_CONFIG[] = DEFAULT_CONFIG
+    old_n = lock(_CONFIG_LOCK) do; length(_RUNTIME_CONFIG[].split_conjunctions) end
+    lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] = DEFAULT_CONFIG end
     new_n = length(DEFAULT_CONFIG.split_conjunctions)
     return "✅ Decomposer config reset to built-in defaults (was $old_n split_conjunctions, now $new_n)"
 end
@@ -1144,7 +1563,7 @@ Used by /decomposer status command. NO SILENT ANYTHING — every field
 is shown, even if empty.
 """
 function config_status_string()::String
-    cfg = _RUNTIME_CONFIG[]
+    cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     lines = String[]
 
     push!(lines, "╔══════════════════════════════════════════════════════════╗")

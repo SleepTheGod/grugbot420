@@ -374,6 +374,27 @@ end
     println("  ✓ [18] Stress: 10 pipe-delimited actions, all weights correct")
 end
 
+# =============================================================================
+# 19. LITERAL PIPE MACRO — Use {PIPE}/{{PIPE}} inside action names
+# =============================================================================
+@testset "Parser - Literal Pipe Macro In Action Names" begin
+    packet = "alpha{PIPE}beta^3 | gamma{{PIPE}}delta[avoid confusion]^2 | normal^1"
+    pos, neg, items = parse_action_packet(packet)
+
+    @test length(items) == 3
+    @test items[1][1] == "alpha|beta"
+    @test items[1][2] ≈ 3.0
+    @test items[2][1] == "gamma|delta"
+    @test items[2][2] ≈ 2.0
+    @test items[2][3] == ["avoid confusion"]
+    @test items[3][1] == "normal"
+    @test ("alpha|beta", 3.0) in pos
+    @test ("gamma|delta", 2.0) in pos
+    @test "avoid confusion" in neg
+
+    println("  ✓ [19] Literal pipe macro: {PIPE}/{{PIPE}} decodes inside action names without changing delimiters")
+end
+
 # ==============================================================================
 # DONE
 # ==============================================================================

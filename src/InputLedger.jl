@@ -472,11 +472,11 @@ function serialize_input_ledger()::Dict{String, Any}
 end
 
 """
-    deserialize_input_ledger!(data::Dict{String, Any})
+    deserialize_input_ledger!(data)
 
 GRUG: Restore the ledger from specimen data. Merges with existing ledger.
 """
-function deserialize_input_ledger!(data::Dict{String, Any})
+function deserialize_input_ledger!(data)
     hash_list = get(data, "ledger_hashes", [])
 
     lock(_LEDGER_LOCK) do

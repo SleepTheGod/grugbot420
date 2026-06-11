@@ -1,6 +1,12 @@
 # ==============================================================================
 # SigilPromoter.jl — GRUG Sigil Front-Door Input Promoter (Stage 1.5a)
 # ==============================================================================
+# !!! GRUG REMINDER — RELATIONAL TRIPLES CAN USE SIGILS !!!
+# Promotion/canonicalization here can feed sigil tokens into BOTH flat patterns
+# AND relational triples. A RelationalTriple's subject / relation / object may
+# carry sigil holes (&n, &word, &noun, specimen macros). Anything downstream
+# consuming promoted triples must NOT assume the fields are literal words.
+# ==============================================================================
 # GRUG say: user say "two plus two", user say "2 + 2", user say "2 plus two".
 #           All same thing. All should land in same place. So before pattern
 #           bind even sees input, we rewrite to canonical form.

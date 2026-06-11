@@ -54,6 +54,7 @@ function make_test_node!(node_id::String, pattern::String, system_prompt::String
         Dict{String,Float64}(),         # relation_weights
         5.0,                            # strength
         false,                          # is_image_node
+        false,                          # is_antimatch_node
         String[],                       # neighbor_ids
         false,                          # is_unlinkable
         12,                             # max_neighbors
@@ -66,6 +67,8 @@ function make_test_node!(node_id::String, pattern::String, system_prompt::String
         false,                          # voted_this_cycle
         false,                          # gained_this_cycle
         0.0,                            # strength_delta_this_cycle
+        pattern,                        # original_pattern (BUG-010b: frozen at birth)
+        action_packet,                  # original_action_packet (BUG-010b: frozen at birth)
     )
     lock(NODE_LOCK) do
         NODE_MAP[node_id] = node

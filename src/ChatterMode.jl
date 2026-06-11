@@ -69,6 +69,16 @@ export CHATTER_GROUP_SAMPLE_MIN, CHATTER_GROUP_SAMPLE_MAX
 export CHATTER_LOG, CHATTER_CURSOR
 export ChatterError
 
+# BUG-011: Bridge functions to the permanent chatter mutation registry in
+# engine.jl. ChatterMode is its own module and cannot directly see Main-scoped
+# identifiers. These thin wrappers resolve to the parent module at call time.
+function _is_chatter_mutated(node_id::String)::Bool
+    return getfield(parentmodule(@__MODULE__), :is_chatter_mutated)(node_id)
+end
+function _mark_chatter_mutated!(node_id::String)
+    getfield(parentmodule(@__MODULE__), :mark_chatter_mutated!)(node_id)
+end
+
 # ==============================================================================
 # CONSTANTS (v8.0)
 # ==============================================================================
@@ -115,6 +125,12 @@ const WEIGHT_BLEND_RECEIVER_SHARE = 0.60  # receiver weight dominance in the ble
 # even if the node has the NONJITTER tag set.
 const STRONG_LOW_CONF_OVERRIDE = 0.35
 
+# GRUG (legacy v7.19): Semantic compatibility intensity is still exercised by
+# the chatter unit tests even though v8 dispatch uses group membership as the
+# primary gate. Keep the cap and helper API available as a no-side-effect
+# compatibility layer for tests and older callers.
+const CHATTER_SEMANTIC_INTENSITY_CAP = 0.85
+
 # GRUG (v8.0): Disk persistence path for the chatter log. Compressed JSON.
 const CHATTER_LOG_PATH_DEFAULT = "chatter_log.json.gz"
 const MAX_CHATTER_LOG          = 200   # in-memory ring — disk is unbounded.
@@ -132,7 +148,8 @@ const _TEST_GROUP_SAMPLE_MAX = Ref{Int}(CHATTER_GROUP_SAMPLE_MAX)
 
 function _override_test_gates!(; min_population=nothing, weak_floor=nothing,
                                   strong_floor=nothing, grave_floor=nothing,
-                                  group_sample_min=nothing, group_sample_max=nothing)
+                                  group_sample_min=nothing, group_sample_max=nothing,
+                                  window_min=nothing, window_max=nothing)
     prev = (
         min_population     = _TEST_MIN_POPULATION[],
         weak_floor         = _TEST_WEAK_FLOOR[],
@@ -140,6 +157,8 @@ function _override_test_gates!(; min_population=nothing, weak_floor=nothing,
         grave_floor        = _TEST_GRAVE_FLOOR[],
         group_sample_min   = _TEST_GROUP_SAMPLE_MIN[],
         group_sample_max   = _TEST_GROUP_SAMPLE_MAX[],
+        window_min         = _TEST_GROUP_SAMPLE_MIN[],
+        window_max         = _TEST_GROUP_SAMPLE_MAX[],
     )
     isnothing(min_population)     || (_TEST_MIN_POPULATION[]     = Int(min_population))
     isnothing(weak_floor)         || (_TEST_WEAK_FLOOR[]         = Float64(weak_floor))
@@ -147,6 +166,8 @@ function _override_test_gates!(; min_population=nothing, weak_floor=nothing,
     isnothing(grave_floor)        || (_TEST_GRAVE_FLOOR[]        = Float64(grave_floor))
     isnothing(group_sample_min)   || (_TEST_GROUP_SAMPLE_MIN[]   = Int(group_sample_min))
     isnothing(group_sample_max)   || (_TEST_GROUP_SAMPLE_MAX[]   = Int(group_sample_max))
+    isnothing(window_min)         || (_TEST_GROUP_SAMPLE_MIN[]   = Int(window_min))
+    isnothing(window_max)         || (_TEST_GROUP_SAMPLE_MAX[]   = Int(window_max))
     return prev
 end
 
@@ -245,8 +266,24 @@ mutable struct ChatterSession
     swaps_blocked_coinflip::Int
 end
 
+# GRUG (legacy v7.19): Older tests/readers ask for cursor/window fields that
+# were replaced by group-sampling counters in v8. Expose read-only aliases.
+function Base.getproperty(s::ChatterSession, name::Symbol)
+    if name === :window_size
+        return getfield(s, :groups_sampled)
+    elseif name === :cursor_start
+        return get(_LEGACY_SESSION_CURSOR_START, getfield(s, :session_id), CHATTER_CURSOR[])
+    elseif name === :cursor_end
+        return get(_LEGACY_SESSION_CURSOR_END, getfield(s, :session_id), CHATTER_CURSOR[])
+    else
+        return getfield(s, name)
+    end
+end
+
 # GRUG (v8.0): Kept for cursor compat but no longer used for dispatch.
 const CHATTER_CURSOR = Ref{Int}(0)
+const _LEGACY_SESSION_CURSOR_START = Dict{String, Int}()
+const _LEGACY_SESSION_CURSOR_END = Dict{String, Int}()
 
 # GRUG: In-memory ring buffer of completed sessions for /status. Disk has
 # the long history.
@@ -340,6 +377,10 @@ struct ActionItem
     has_weight::Bool
 end
 
+# GRUG BUG-011: Keep pipe-delimited packets, but allow literal pipes in
+# action names via {PIPE}/{{PIPE}} macro decoded after slot splitting.
+_expand_action_macro_string(s::AbstractString)::String = replace(replace(String(s), "{{PIPE}}" => "|"), "{PIPE}" => "|")
+
 function _parse_action_items(packet::String)::Vector{ActionItem}
     if strip(packet) == ""
         throw(ChatterError("!!! FATAL: _parse_action_items got empty packet! !!!"))
@@ -367,15 +408,15 @@ function _parse_action_items(packet::String)::Vector{ActionItem}
                 weight = w
                 has_weight = true
             end
-            push!(items, ActionItem(String(action_name), negs, weight, has_weight))
+            push!(items, ActionItem(_expand_action_macro_string(action_name), negs, weight, has_weight))
         elseif contains(p, '^')
             parts = split(p, '^'; limit=2)
             action_name = strip(parts[1])
             w = tryparse(Float64, strip(parts[2]))
             isnothing(w) && throw(ChatterError("bad weight '$(parts[2])' in '$packet'"))
-            push!(items, ActionItem(String(action_name), String[], w, true))
+            push!(items, ActionItem(_expand_action_macro_string(action_name), String[], w, true))
         else
-            push!(items, ActionItem(String(p), String[], 1.0, false))
+            push!(items, ActionItem(_expand_action_macro_string(p), String[], 1.0, false))
         end
     end
     isempty(items) && throw(ChatterError("no actions in packet '$packet'"))
@@ -389,6 +430,67 @@ function _serialize_action_items(items::Vector{ActionItem})::String
         push!(parts, it.has_weight ? "$(body)^$(round(it.weight, digits=3))" : body)
     end
     return join(parts, " | ")
+end
+
+# GRUG (legacy v7.19): lightweight action-family compatibility for older
+# chatter vote-swap tests/callers. This is intentionally local and conservative:
+# it only decides whether a donor ActionItem may enter a receiver packet and
+# computes a bounded text-overlap intensity. It does not mutate packets/nodes.
+const _CHATTER_ACTION_FAMILIES = Dict{String,String}(
+    "warn" => "ESCALATE", "alert" => "ESCALATE", "flee" => "ESCALATE",
+    "danger" => "ESCALATE", "acknowledge" => "ESCALATE", "smile" => "ESCALATE",
+    "ponder" => "QUERY", "query" => "QUERY", "ask" => "QUERY", "question" => "QUERY", "why" => "QUERY",
+    "answer" => "ASSERT", "assert" => "ASSERT", "say" => "ASSERT", "tell" => "ASSERT",
+    "observe" => "ASSERT", "validate" => "ASSERT", "greet" => "ASSERT",
+)
+
+function _chatter_action_family(action::String)::String
+    toks = _tokenize_action(action)
+    for t in toks
+        if haskey(_CHATTER_ACTION_FAMILIES, t)
+            return _CHATTER_ACTION_FAMILIES[t]
+        end
+    end
+    low = lowercase(strip(action))
+    for (needle, fam) in _CHATTER_ACTION_FAMILIES
+        occursin(needle, low) && return fam
+    end
+    return "ASSERT"
+end
+
+function _text_overlap_intensity(a::String, b::String)::Float64
+    toks_a = Set([m.match for m in eachmatch(r"[a-z0-9]+", lowercase(a))])
+    toks_b = Set([m.match for m in eachmatch(r"[a-z0-9]+", lowercase(b))])
+    if isempty(toks_a) && isempty(toks_b)
+        return 0.0
+    end
+    inter = length(intersect(toks_a, toks_b))
+    uni = length(union(toks_a, toks_b))
+    uni == 0 && return 0.0
+    return min(CHATTER_SEMANTIC_INTENSITY_CAP, inter / uni)
+end
+
+function _semantic_compat(donor::ActionItem,
+                          receiver::Vector{ActionItem},
+                          receiver_pattern::String,
+                          donor_pattern::String)::Tuple{Bool, Float64}
+    donor_action = lowercase(strip(donor.action))
+    isempty(donor_action) && return (false, 0.0)
+
+    for it in receiver
+        recv_action = lowercase(strip(it.action))
+        recv_action == donor_action && return (false, 0.0)
+        for neg in it.negatives
+            lowercase(strip(neg)) == donor_action && return (false, 0.0)
+        end
+    end
+
+    donor_family = _chatter_action_family(donor.action)
+    receiver_families = Set(_chatter_action_family(it.action) for it in receiver)
+    (donor_family in receiver_families) || return (false, 0.0)
+
+    intensity = _text_overlap_intensity(receiver_pattern, donor_pattern)
+    return (true, intensity)
 end
 
 # ==============================================================================
@@ -806,11 +908,25 @@ function start_chatter_session!(
         swaps_blocked_coinflip = 0
         pairs_formed = 0
 
+        # GRUG BUG-011: Permanent mutation guard + session-scoped donor set.
+        # A node that has EVER been chatter-mutated (receiver OR donor whose
+        # vote was stolen) may NEVER participate again. The permanent registry
+        # lives in engine.jl (CHATTER_MUTATED_SET). Additionally, a donor
+        # can only be used once per session to avoid repeat steals.
+        session_used = Set{String}()
+
         for gid in sampled_ids
             group = lock(group_lock) do
                 get(group_map, gid, nothing)
             end
             isnothing(group) && continue
+
+            # GRUG v7.39: NOCHAT enforcement. Groups with is_chatter_eligible=false
+            # are invisible to ChatterMode. These are singleton/under-populated groups
+            # that haven't yet graduated. Skipping them prevents whacky remixes.
+            if hasproperty(group, :is_chatter_eligible) && !group.is_chatter_eligible
+                continue
+            end
 
             # GRUG: Categorize members into strong / weak / grave-tier
             strong_ids = String[]
@@ -818,10 +934,13 @@ function start_chatter_session!(
 
             lock(node_lock) do
                 for mid in group.members
+                    _is_chatter_mutated(mid) && continue   # BUG-011: permanently excluded
+                    (mid in session_used) && continue     # BUG-011: already used this session
                     !haskey(node_map, mid) && continue
                     node = node_map[mid]
                     node.is_grave && continue
                     node.is_image_node && continue
+                    node.is_antimatch_node && continue  # GRUG v7.39: antimatch nodes drain confidence, don't participate in steal+remix
 
                     # GRUG: Cooldown check — skip nodes still on cooldown
                     if cooldown_query(mid) > 0.0
@@ -847,6 +966,10 @@ function start_chatter_session!(
             shuffle!(weak_ids)
             strong_id = strong_ids[1]
             weak_id = weak_ids[1]
+
+            # BUG-011: double-check permanent + session guards after shuffle pick
+            (_is_chatter_mutated(strong_id) || _is_chatter_mutated(weak_id) ||
+             strong_id in session_used || weak_id in session_used) && continue
 
             swaps_attempted += 1
 
@@ -920,6 +1043,8 @@ function start_chatter_session!(
             push!(clones, clone)
             swaps_accepted += 1
             pairs_formed += 1
+            push!(session_used, weak_id)    # BUG-011: mark used this session
+            push!(session_used, strong_id)  # BUG-011: mark used this session
 
             # GRUG: Stamp cooldown on both participants
             try stamp_fn(weak_id) catch e
@@ -963,6 +1088,113 @@ function start_chatter_session!(
         end
         println("[CHATTER] 🔓  Chatter lock released. Main loop can resume.")
     end
+end
+
+# GRUG (legacy v7.19): Snapshot-vector runner retained for old chatter tests.
+# Snapshot rows are (id, pattern, action_packet, strength). This overload stages
+# clones only; apply_chatter_diffs! still performs live writes against NODE_MAP.
+function start_chatter_session!(snapshot::Vector{Tuple{String,String,String,Float64}};
+                                cooldown_query::Function = (id) -> 0.0,
+                                stamp_fn::Function = (id) -> nothing,
+                                grave_fn::Function = (id, reason) -> nothing,
+                                nonjitter_query::Function = (id) -> false,
+                                confidence_query::Function = (id) -> 1.0)::ChatterSession
+    session_id = "chatter_$(round(Int, time() * 1000))"
+    session_start = time()
+    n = length(snapshot)
+    win_min = _effective_group_sample_min()
+    win_max = _effective_group_sample_max()
+    window_size = n == 0 ? 0 : min(rand(win_min:win_max), n)
+    cursor_start = n == 0 ? 0 : CHATTER_CURSOR[]
+
+    window = Tuple{String,String,String,Float64}[]
+    if n > 0 && window_size > 0
+        for k in 0:(window_size - 1)
+            push!(window, snapshot[mod1(cursor_start + k + 1, n)])
+        end
+        CHATTER_CURSOR[] = mod(cursor_start + window_size, n)
+    end
+    cursor_end = CHATTER_CURSOR[]
+
+    clones = ChatterNodeClone[]
+    swaps_attempted = 0
+    swaps_accepted = 0
+    swaps_blocked_cooldown = 0
+    swaps_graved = 0
+    swaps_blocked_semantic = 0
+    swaps_blocked_coinflip = 0
+
+    strong = [row for row in window if row[4] >= _effective_strong_floor() && !_is_chatter_mutated(row[1])]
+    weak = [row for row in window if row[4] <= _effective_weak_floor() && !_is_chatter_mutated(row[1])]
+
+    # BUG-011: Session-scoped set so a donor can only be used once per session.
+    # The permanent CHATTER_MUTATED_SET (checked above) handles the lifetime ban.
+    session_used = Set{String}()
+
+    for w in weak
+        wid, wpat, wpacket, wstrength = w
+        (wid in session_used) && continue             # BUG-011: already used this session
+        if cooldown_query(wid) > 0.0
+            swaps_blocked_cooldown += 1
+            continue
+        end
+        if wstrength <= _effective_grave_floor()
+            try grave_fn(wid, "CHATTER_GRAVE") catch; end
+            swaps_graved += 1
+            continue
+        end
+        isempty(strong) && continue
+        # BUG-011: pick a donor not already used this session and not permanently mutated
+        available_donors = [d for d in strong if !(d[1] in session_used) && !_is_chatter_mutated(d[1])]
+        isempty(available_donors) && continue
+        donor = rand(available_donors)
+        did, dpat, dpacket, _ = donor
+        cooldown_query(did) > 0.0 && continue
+        swaps_attempted += 1
+
+        try
+            donor_items = _parse_action_items(dpacket)
+            recv_items = _parse_action_items(wpacket)
+            donor_item = rand(donor_items)
+            compat, _ = _semantic_compat(donor_item, recv_items, wpat, dpat)
+            if !compat
+                swaps_blocked_semantic += 1
+                continue
+            end
+            if nonjitter_query(wid) && confidence_query(did) >= STRONG_LOW_CONF_OVERRIDE
+                swaps_blocked_coinflip += 1
+                continue
+            end
+            new_packet = _remix_vote(donor_item.action, wpacket, dpacket)
+            _parse_action_items(new_packet)
+
+            clone = ChatterNodeClone(wid, wpat, wpacket, wstrength)
+            clone.proposed_pattern = dpat
+            clone.proposed_action_packet = new_packet
+            clone.accepted_swap = true
+            clone.donor_id = did
+            clone.donor_action_name = donor_item.action
+            push!(clones, clone)
+            swaps_accepted += 1
+            push!(session_used, wid)    # BUG-011: mark used this session
+            push!(session_used, did)    # BUG-011: mark used this session
+            try stamp_fn(wid) catch; end
+            try stamp_fn(did) catch; end
+        catch
+            swaps_blocked_semantic += 1
+            continue
+        end
+    end
+
+    session = ChatterSession(session_id, session_start, time(), window_size,
+                             length(clones), clones, false, String[],
+                             swaps_attempted, swaps_accepted,
+                             swaps_blocked_cooldown, swaps_graved,
+                             swaps_blocked_semantic, swaps_blocked_coinflip)
+    _LEGACY_SESSION_CURSOR_START[session_id] = cursor_start
+    _LEGACY_SESSION_CURSOR_END[session_id] = cursor_end
+    _store_session!(session)
+    return session
 end
 
 function _store_session!(session::ChatterSession)
@@ -1031,7 +1263,19 @@ function apply_chatter_diffs!(
                 changed = true
             end
 
-            changed && (updates_applied += 1)
+            if changed
+                updates_applied += 1
+                # BUG-011: Mark both receiver and donor as permanently mutated.
+                # Once a node has been chatter-mutated, it can NEVER participate
+                # in chatter again — not in this session, not ever.
+                _mark_chatter_mutated!(clone.source_id)
+                if !isempty(clone.donor_id)
+                    _mark_chatter_mutated!(clone.donor_id)
+                end
+                try stamp_fn(clone.source_id) catch e
+                    @warn "[CHATTER] stamp_fn failed for $(clone.source_id): $e"
+                end
+            end
         end
     end
 

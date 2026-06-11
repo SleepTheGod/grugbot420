@@ -1,0 +1,6 @@
+/loadSpecimen comprehensive_specimen_v742.json
+/status
+/autoGrowStatus
+/autoLinkStatus
+/saveSpecimen test_reload.json
+/quit

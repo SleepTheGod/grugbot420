@@ -219,12 +219,14 @@ function lobe_grow!(lobe_id::String, node_ids::Vector{String})::Int
         rec = LOBE_REGISTRY[lobe_id]
 
         # GRUG: Pre-check: would adding ALL these nodes exceed cap?
-        # Count only nodes not already in this lobe (skip duplicates).
+        # GRUG BUG-010: Graved nodes don't eat cap space. Only alive nodes count.
+        # Vacant spots from graves allow new growth without exceeding real capacity.
+        alive_now = _count_alive_in_rec(rec)
         new_nodes = filter(nid -> !(nid in rec.node_ids), node_ids)
-        would_be_count = length(rec.node_ids) + length(new_nodes)
-        if would_be_count > rec.node_cap
+        would_be_alive = alive_now + length(new_nodes)
+        if would_be_alive > rec.node_cap
             throw_lobe_error(
-                "lobe_grow! would exceed cap for '$lobe_id': current=$(length(rec.node_ids)), adding=$(length(new_nodes)), cap=$(rec.node_cap).",
+                "lobe_grow! would exceed cap for '$lobe_id': alive=$alive_now, adding=$(length(new_nodes)), cap=$(rec.node_cap).",
                 "lobe_grow!"
             )
         end
@@ -265,6 +267,28 @@ function find_lobe_for_node(node_id::String)::Union{String, Nothing}
 end
 
 # ============================================================================
+# COUNT ALIVE IN REC - Internal helper: alive (non-grave) nodes in a LobeRecord
+# ============================================================================
+
+function _count_alive_in_rec(rec::LobeRecord)::Int
+    # GRUG BUG-010: Graved nodes don't count towards population.
+    # They're memory, not bloat. This helper walks node_ids and checks
+    # NODE_MAP for is_grave status. Requires isdefined(@__MODULE__, :NODE_MAP).
+    if !isdefined(@__MODULE__, :NODE_MAP)
+        return length(rec.node_ids)  # fallback: no grave info available
+    end
+    alive = 0
+    for nid in rec.node_ids
+        node = get(NODE_MAP, nid, nothing)
+        if isnothing(node) || node.is_grave
+            continue  # missing or graved → vacant spot
+        end
+        alive += 1
+    end
+    return alive
+end
+
+# ============================================================================
 # LOBE IS FULL - Check if cave bucket is at cap
 # ============================================================================
 
@@ -277,7 +301,10 @@ function lobe_is_full(lobe_id::String)::Bool
             throw_lobe_error("Lobe '$lobe_id' not found.", "lobe_is_full")
         end
         rec = LOBE_REGISTRY[lobe_id]
-        return length(rec.node_ids) >= rec.node_cap
+        # GRUG BUG-010: Graves don't eat cap space. Dead nodes are memory, not bloat.
+        # Only ALIVE nodes count towards cap. Graved nodes create vacant spots.
+        alive = _count_alive_in_rec(rec)
+        return alive >= rec.node_cap
     end
 end
 
@@ -294,6 +321,30 @@ function get_lobe_node_count(lobe_id::String)::Int
             throw_lobe_error("Lobe '$lobe_id' not found.", "get_lobe_node_count")
         end
         return length(LOBE_REGISTRY[lobe_id].node_ids)
+    end
+end
+
+# ============================================================================
+# GET LOBE ALIVE COUNT - How many living rocks in cave bucket
+# ============================================================================
+
+"""
+    get_lobe_alive_count(lobe_id::String)::Int
+
+GRUG: Count only ALIVE (non-grave) nodes in a lobe. Graved nodes are
+memory of failure, not bloat — they don't consume cap space. Use this
+for cap enforcement and growth decisions. Use get_lobe_node_count()
+for display / diagnostics where you want the total including graves.
+"""
+function get_lobe_alive_count(lobe_id::String)::Int
+    if isempty(strip(lobe_id))
+        throw_lobe_error("Lobe id cannot be empty", "get_lobe_alive_count")
+    end
+    lock(LOBE_LOCK) do
+        if !haskey(LOBE_REGISTRY, lobe_id)
+            throw_lobe_error("Lobe '$lobe_id' not found.", "get_lobe_alive_count")
+        end
+        return _count_alive_in_rec(LOBE_REGISTRY[lobe_id])
     end
 end
 

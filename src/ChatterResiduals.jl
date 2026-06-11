@@ -272,6 +272,10 @@ struct _ResidualActionItem
     has_weight::Bool
 end
 
+# GRUG BUG-011: Keep pipe-delimited packets, but allow literal pipes in
+# action names via {PIPE}/{{PIPE}} macro decoded after slot splitting.
+_residual_expand_action_macro_string(s::AbstractString)::String = replace(replace(String(s), "{{PIPE}}" => "|"), "{PIPE}" => "|")
+
 function _residual_parse_items(packet::String)::Vector{_ResidualActionItem}
     strip(packet) == "" && return _ResidualActionItem[]
     items = _ResidualActionItem[]
@@ -293,14 +297,14 @@ function _residual_parse_items(packet::String)::Vector{_ResidualActionItem}
                 w = tryparse(Float64, strip(wstr))
                 !isnothing(w) && (weight = w; has_weight = true)
             end
-            push!(items, _ResidualActionItem(String(action_name), negs, weight, has_weight))
+            push!(items, _ResidualActionItem(_residual_expand_action_macro_string(action_name), negs, weight, has_weight))
         elseif contains(p, '^')
             parts = split(p, '^'; limit=2)
             action_name = strip(parts[1])
             w = tryparse(Float64, strip(parts[2]))
-            !isnothing(w) && push!(items, _ResidualActionItem(String(action_name), String[], w, true))
+            !isnothing(w) && push!(items, _ResidualActionItem(_residual_expand_action_macro_string(action_name), String[], w, true))
         else
-            push!(items, _ResidualActionItem(String(p), String[], 1.0, false))
+            push!(items, _ResidualActionItem(_residual_expand_action_macro_string(p), String[], 1.0, false))
         end
     end
     return items
@@ -1079,11 +1083,11 @@ function serialize_chatter_residuals()::Dict{String, Any}
 end
 
 """
-    deserialize_chatter_residuals!(data::Dict{String, Any})
+    deserialize_chatter_residuals!(data)
 
 GRUG: Restore the ledger from specimen data. Merges with existing ledger.
 """
-function deserialize_chatter_residuals!(data::Dict{String, Any})
+function deserialize_chatter_residuals!(data)
     hash_list = get(data, "ledger_hashes", [])
 
     lock(_RESIDUAL_LEDGER_LOCK) do

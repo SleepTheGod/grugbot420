@@ -1,0 +1,1800 @@
+  Activating project at `/workspace/grugbot420`
+WARNING: using MitosisMode.LATCH_SCAN_CONFIDENCE_FLOOR in module Main conflicts with an existing identifier.
+WARNING: using MitosisMode.THES_LATCH_WEIGHT in module Main conflicts with an existing identifier.
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + 3 boot seeds registered into `default` lobe
+=== ENGINE LOADED ===
+
+╔══════════════════════════════════════════════════════════════╗
+║         LOADING COMPREHENSIVE SPECIMEN v9                  ║
+╚══════════════════════════════════════════════════════════════╝
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=153, msg=6)
+  🗳  Last voters restored (2 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (3 classes, 26 verbs, 7 synonyms)
+  🔤 Thesaurus restored (17 words)
+  🧠 Lobes restored (11)
+  📋 Lobe tables restored (11)
+  🌱 Nodes restored (52)
+  ⚡ Hopfield cache restored (3 entries)
+  ⚙️  Rules restored (4)
+  🚫 Inhibitions restored (3)
+  💬 Messages restored (4 total, 0 pinned)
+  👁  Arousal restored (level=0.3)
+  🧬 BrainStem state restored
+  🌉 Bridges restored (5)
+  🗣  Chatter groups restored (9)
+  🔮 Trajectory restored (1 entries)
+  🕐 Temporal coherence restored (2 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 1 ledger entries)
+  🤖 AIML system restored (3 nodes across 3 lobes)
+  🪄 Sigils restored (7 specimen-specific)
+  ⚙️  Automaton rules restored (3)
+  ⚠️  Phase accumulator: EMPTY (no crystal data) — HARD WARN
+  🗳  Contributor votes restored (2)
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.8)
+  🧠 EphemeralMLP restored (transforms=0, rules=2)
+  👁  MLP Observer Store: 0 entries, 0 distinct keys (store starts fresh; MLP gate counter restored)
+  🧠 MLP cached Phi restored (last_phi=0.0)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 8 | Compound pairs: 4 leaders | Context: 'but'
+      Question markers: 7 | Command stems: 8 → 29 expanded | Conjugation rules: 6
+  👁  Vigilance config loaded (cap=6, enabled=true)
+  📊  Injector stats loaded
+  🎲  Relational jitter config loaded (ratio=0.1, coin=0.3, enabled=true)
+  🧠  BrainStem config: matches code defaults
+  ⚙️  Engine config: 4 drift(s) from code defaults (saved for future override)
+  🏛️  Lobe orchestrator knobs: 2 drift(s) from code defaults
+  🗳️  Vote orchestrator knobs: 2 drift(s) from code defaults
+  🧬  Mitosis config: 2 drift(s) from code defaults (strain warrant knobs changed)
+  🌱  Growth automaton config: loaded (baseline reference)
+  🦠  Phagy config: loaded (baseline reference)
+  💬  Chatter config: loaded (baseline reference)
+  🛡️  Immune config: loaded (baseline reference)
+┌ Warning: [MAIN] scanner_config: max_active_nodes drift (code=1000, saved=100)
+└ @ Main /workspace/grugbot420/src/Main.jl:8670
+┌ Warning: [MAIN] scanner_config: confident_threshold drift (code=0.75, saved=0.7)
+└ @ Main /workspace/grugbot420/src/Main.jl:8673
+  🔭  Scanner config: loaded (baseline reference)
+┌ Warning: [MAIN] action_tone_knobs: low_signal_threshold drift (code=0.5, saved=0.2)
+└ @ Main /workspace/grugbot420/src/Main.jl:8696
+┌ Warning: [MAIN] action_tone_knobs: fallback_damp_threshold drift (code=0.4, saved=0.3)
+└ @ Main /workspace/grugbot420/src/Main.jl:8699
+┌ Warning: [MAIN] action_tone_knobs: curve_jitter_envelope drift (code=0.03, saved=0.1)
+└ @ Main /workspace/grugbot420/src/Main.jl:8702
+┌ Warning: [MAIN] action_tone_knobs: escalation_confidence_floor drift (code=0.6, saved=0.5)
+└ @ Main /workspace/grugbot420/src/Main.jl:8705
+  🎯  ActionTone knobs: loaded (baseline reference)
+  🔗  Co-activation accumulator loaded (0 pairs)
+  📝  Input ledger loaded (0 consumed hashes)
+  🔮  Chatter residuals loaded (0 consumed hashes)
+  🌱  AutoGrowth evidence loaded (3 records)
+  🌱  AutoGrowth co-occurrence loaded (3 pairs)
+  🔗  AutoLinker evidence loaded (3 records)
+  🪭  Fan-out config loaded (enabled=true, max=3, modes=2)
+  🧠  Hippocampal pending ask: empty (no pending question)
+  🔐  Admin session: not logged in (clean)
+  🎭  Lobe orchestrator last state loaded (winner=lobe_physics, scores=3)
+  🔖  Chatter cursor loaded (pos=0)
+  📋  Answer mode config loaded (11 modes)
+  🦠  Phagy rules ref loaded (0 rules)
+  ⏳  Time orientation config loaded (global=now)
+  ⏳  Time node orientation index: 4/4 nodes verified
+  🔗  CoherenceField config loaded (weight=0.15)
+
+━━━ PRE-INTERACTION STATE ━━━
+Nodes: 52
+Lobes: 11
+Bridges: 9
+Sigil entries: 17
+
+── Initial AutoGrowth Evidence ──
+Evidence entries: 0
+
+── Initial AutoLinker Evidence ──
+Link evidence entries: 0
+
+╔══════════════════════════════════════════════════════════════╗
+║         BEGINNING INTERACTION SESSION                       ║
+║         Total missions: 80                               ║
+╚══════════════════════════════════════════════════════════════╝
+
+══════════════════════════════════════════════════════════════════════
+MISSION #1 [reason] → lobe_physics (target: n101)
+  INPUT: "what is gravity"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#0' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3df8c90)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3df8c90)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #2 [reason] → lobe_biology (target: n102)
+  INPUT: "what is evolution"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#1' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fc33a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fc33a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #3 [reason] → lobe_math (target: n103)
+  INPUT: "what is a derivative"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#2' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fc3850)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fc3850)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #4 [reason] → lobe_climate (target: n104)
+  INPUT: "what is climate change"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#3' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd0010)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd0010)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #5 [reason] → lobe_philosophy (target: n138)
+  INPUT: "what is the meaning of life"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#4' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd04c0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd04c0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #6 [reason] → lobe_philosophy (target: n139)
+  INPUT: "what is consciousness"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#5' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd0970)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd0970)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #7 [reason] → lobe_chemistry (target: n140)
+  INPUT: "what is a chemical bond"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#6' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd0fb0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd0fb0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #8 [reason] → lobe_ecology (target: n141)
+  INPUT: "what is biodiversity"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#7' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd1460)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd1460)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #9 [reason] → lobe_general (target: n136)
+  INPUT: "hello grug"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#8' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd1c30)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd1c30)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #10 [reason] → lobe_general (target: n137)
+  INPUT: "hi there greetings hey"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.697, tone_gini=0.184
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#9' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd20e0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd20e0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #11 [explain] → lobe_biology (target: n105)
+  INPUT: "explain photosynthesis"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#10' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd2590)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd2590)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #12 [explain] → lobe_physics (target: n106)
+  INPUT: "explain newtons laws"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#11' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd2a40)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd2a40)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #13 [explain] → lobe_tech (target: n107)
+  INPUT: "explain how computers work"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "explain how computers work"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "explain how computers work"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#12' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd2ef0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd2ef0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #14 [explain] → lobe_physics (target: n142)
+  INPUT: "explain relativity"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#13' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd33a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd33a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #15 [explain] → lobe_climate (target: n143)
+  INPUT: "explain the water cycle"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#14' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf2fd3b70)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf2fd3b70)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #16 [define] → lobe_physics (target: n108)
+  INPUT: "define entropy"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#15' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302c1a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302c1a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #17 [define] → lobe_tech (target: n109)
+  INPUT: "define algorithm"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#16' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302c650)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302c650)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #18 [define] → lobe_biology (target: n110)
+  INPUT: "define species"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#17' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302cb00)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302cb00)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #19 [define] → lobe_ecology (target: n144)
+  INPUT: "define ecosystem"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#18' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302cfb0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302cfb0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #20 [define] → lobe_philosophy (target: n145)
+  INPUT: "define justice"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#19' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302d460)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302d460)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #21 [alert] → lobe_physics (target: n111)
+  INPUT: "danger radiation"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.682, tone_gini=0.197
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#20' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302d910)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302d910)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #22 [alert] → lobe_chemistry (target: n112)
+  INPUT: "danger toxin chemical"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#21' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302ddc0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302ddc0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #23 [alert] → lobe_ecology (target: n151)
+  INPUT: "danger extinction"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#22' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302e270)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302e270)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #24 [comfort] → lobe_emotion (target: n113)
+  INPUT: "i am sad"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#23' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302e720)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302e720)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #25 [comfort] → lobe_emotion (target: n114)
+  INPUT: "i am scared afraid"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.714, tone_gini=0.19
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#24' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302eef0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302eef0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #26 [comfort] → lobe_emotion (target: n146)
+  INPUT: "i feel lost confused"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#25' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302f3a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302f3a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #27 [math] → lobe_math (target: n115)
+  INPUT: "calculate integral"
+──────────────────────────────────────────────────────────────────────
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#26' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302f850)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302f850)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #28 [math] → lobe_math (target: n116)
+  INPUT: "calculate fibonacci"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#27' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf302fd00)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf302fd00)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #29 [math] → lobe_math (target: n117)
+  INPUT: "calculate pi digits"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.664, tone_gini=0.192
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#28' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3050330)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3050330)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #30 [math] → lobe_math (target: n147)
+  INPUT: "calculate euler number"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#29' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30507e0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30507e0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #31 [relate] → lobe_physics (target: n118)
+  INPUT: "sun causes warmth"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#30' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3050c90)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3050c90)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #32 [relate] → lobe_ecology (target: n119)
+  INPUT: "predator eats prey"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.702, tone_gini=0.194
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#31' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3051140)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3051140)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #33 [relate] → lobe_philosophy (target: n120)
+  INPUT: "learning requires practice"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.663, tone_gini=0.19
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#32' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30515f0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30515f0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #34 [relate] → lobe_physics (target: n148)
+  INPUT: "fire causes heat"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.71, tone_gini=0.185
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#33' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3051aa0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3051aa0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #35 [relate] → lobe_philosophy (target: n149)
+  INPUT: "education enables progress"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.786, tone_gini=0.192
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#34' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3051f50)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3051f50)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #36 [time] → lobe_ecology (target: n121)
+  INPUT: "what happens in spring"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#35' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3052400)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3052400)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #37 [time] → lobe_physics (target: n122)
+  INPUT: "what happened before big bang"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#36' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30528b0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30528b0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #38 [time] → lobe_tech (target: n123)
+  INPUT: "next technological revolution"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.766, tone_gini=0.185
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#37' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3052ef0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3052ef0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #39 [time] → lobe_climate (target: n150)
+  INPUT: "winter seasonal cold"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#38' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30533a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30533a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #40 [proc] → lobe_math (target: n124)
+  INPUT: "how to solve quadratic equation"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#39' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3053850)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3053850)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #41 [proc] → lobe_general (target: n125)
+  INPUT: "how to do scientific experiment"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#40' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3053d00)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3053d00)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #42 [proc] → lobe_general (target: n152)
+  INPUT: "how to build a fire"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#41' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30904c0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30904c0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #43 [json] → lobe_chemistry (target: n126)
+  INPUT: "periodic table data"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#42' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3090c90)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3090c90)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #44 [json] → lobe_general (target: n127)
+  INPUT: "population statistics"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.683, tone_gini=0.194
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#43' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3091140)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3091140)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #45 [multi] → lobe_biology (target: n128)
+  INPUT: "compare dna and rna"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.75, tone_gini=0.191
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#44' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30915f0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30915f0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #46 [multi] → lobe_physics (target: n129)
+  INPUT: "compare heat and temperature"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.822, tone_gini=0.189
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#45' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3091aa0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3091aa0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #47 [antimatch] → lobe_tech (target: n130)
+  INPUT: "not a bug"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#46' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30920e0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30920e0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #48 [antimatch] → lobe_general (target: n131)
+  INPUT: "not dangerous safe"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#47' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3092590)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3092590)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #49 [image] → lobe_math (target: n132)
+  INPUT: "circle_sdf"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#48' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3092a40)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3092a40)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #50 [image] → lobe_math (target: n133)
+  INPUT: "rectangle_sdf"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.656, tone_gini=0.193
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#49' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3092ef0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3092ef0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #51 [grave] → lobe_chemistry (target: n134)
+  INPUT: "obsolete theory phlogiston"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.742, tone_gini=0.192
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#50' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf30936c0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf30936c0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #52 [grave] → lobe_general (target: n135)
+  INPUT: "deprecated flat earth"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.815, tone_gini=0.187
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#51' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3093b70)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3093b70)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #53 [reason] → lobe_physics (target: n101)
+  INPUT: "what is gravity"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#52' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fc1a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fc1a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #54 [reason] → lobe_physics (target: n101)
+  INPUT: "what is gravity and force"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 7 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#53' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fc650)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fc650)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #55 [reason] → lobe_physics (target: n101)
+  INPUT: "tell me about gravity again"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 8 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#54' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fcb00)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fcb00)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #56 [explain] → lobe_biology (target: n105)
+  INPUT: "explain photosynthesis again"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#55' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fd140)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fd140)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #57 [explain] → lobe_biology (target: n105)
+  INPUT: "explain photosynthesis process"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#56' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fd5f0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fd5f0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #58 [reason] → lobe_biology (target: n102)
+  INPUT: "what is evolution and species"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 8 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#57' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fdaa0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fdaa0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #59 [reason] → lobe_biology (target: n102)
+  INPUT: "evolution and natural selection"
+──────────────────────────────────────────────────────────────────────
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#58' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fdf50)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fdf50)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #60 [comfort] → lobe_emotion (target: n113)
+  INPUT: "i am sad and lonely"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.679, tone_gini=0.19
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#59' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fe400)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fe400)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #61 [cross] → cross_physics_climate (target: n101+n104)
+  INPUT: "gravity and climate are related"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.829, tone_gini=0.194
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 11 (+6 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#60' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fe8b0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fe8b0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #62 [cross] → cross_biology_ecology (target: n102+n141)
+  INPUT: "evolution and biodiversity connect"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.762, tone_gini=0.185
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#61' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39fed60)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39fed60)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #63 [cross] → cross_math_physics (target: n103+n101)
+  INPUT: "math and physics overlap"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.787, tone_gini=0.193
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#62' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39ff210)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39ff210)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #64 [cross] → cross_chem_bio (target: n140+n105)
+  INPUT: "chemistry and biology share molecules"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.786, tone_gini=0.194
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#63' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39ff6c0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39ff6c0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #65 [cross] → cross_phil_logic (target: n138+n117)
+  INPUT: "philosophy and logic are intertwined"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.711, tone_gini=0.188
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 8 (+3 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#64' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf39ffb70)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf39ffb70)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #66 [novel] → lobe_tech (target: none)
+  INPUT: "what is quantum computing"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#65' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a181a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a181a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #67 [novel] → lobe_tech (target: none)
+  INPUT: "what is quantum computing"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#66' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a18650)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a18650)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #68 [novel] → lobe_tech (target: none)
+  INPUT: "what is quantum computing"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#67' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a18b00)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a18b00)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #69 [novel] → lobe_tech (target: none)
+  INPUT: "explain machine learning"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#68' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a18fb0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a18fb0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #70 [novel] → lobe_tech (target: none)
+  INPUT: "explain machine learning"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#69' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a19460)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a19460)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #71 [novel] → lobe_tech (target: none)
+  INPUT: "explain machine learning"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#70' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a19c30)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a19c30)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #72 [novel] → lobe_physics (target: none)
+  INPUT: "what is dark matter"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#71' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a1a0e0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a1a0e0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #73 [novel] → lobe_physics (target: none)
+  INPUT: "what is dark matter"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#72' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a1a590)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a1a590)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #74 [novel] → lobe_physics (target: none)
+  INPUT: "what is dark matter"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#73' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a1aa40)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a1aa40)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #75 [novel] → lobe_biology (target: none)
+  INPUT: "what is synthetic biology"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#74' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a1aef0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a1aef0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #76 [novel] → lobe_biology (target: none)
+  INPUT: "what is synthetic biology"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#75' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a1b3a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a1b3a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #77 [novel] → lobe_biology (target: none)
+  INPUT: "what is synthetic biology"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#76' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3a1bb70)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3a1bb70)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #78 [reason] → lobe_general (target: n136)
+  INPUT: "hello"
+──────────────────────────────────────────────────────────────────────
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#77' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3aac1a0)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3aac1a0)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #79 [reason] → lobe_general (target: n137)
+  INPUT: "greetings friend"
+──────────────────────────────────────────────────────────────────────
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.774, tone_gini=0.192
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#78' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3aac650)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3aac650)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+MISSION #80 [reason] → lobe_philosophy (target: n138)
+  INPUT: "what do you think about life grug"
+──────────────────────────────────────────────────────────────────────
+--> Scanning specimens & looking for dialectical relations...
+┌ Error: [VoteOrchestrator] Task 'scan_cycle#79' (context=run_mission.scan) threw: PromoterConfigError("sigil &adj has promote_at_tokenize=true but unknown sigil_type :lambda; promoter has no shape predicate for it", "sigil_type")
+└ @ Main.VoteOrchestrator /workspace/grugbot420/src/VoteOrchestrator.jl:217
+┌ Error: [MAIN] Scan sub-process FAILED: TaskFailedException(Task (failed) @0x00007fbdf3aacb00)
+└ @ Main /workspace/grugbot420/src/Main.jl:5119
+  ERROR: TaskFailedException(Task (failed) @0x00007fbdf3aacb00)
+    [1] wait at task.jl:349 [inlined]
+    [2] fetch at task.jl:369 [inlined]
+    [3] fetch_with_timeout(name::String, t::Task; timeout_s::Nothing) at VoteOrchestrator.jl:288
+    [4] fetch_with_timeout at VoteOrchestrator.jl:253 [inlined]
+    [5] process_mission(mission_text::String) at Main.jl:5114
+    [6] top-level scope at interaction_harness_v9.jl:177
+
+══════════════════════════════════════════════════════════════════════
+POST-INTERACTION STATE
+══════════════════════════════════════════════════════════════════════
+Nodes: 52 (was 52)
+Lobes: 11 (was 11)
+Bridges: 9 (was 9)
+
+──────────────────────────────────────────────────────────────────────
+AUTOGROWTH STATUS
+──────────────────────────────────────────────────────────────────────
+=== AUTOGROWTH STATUS ===
+  evidence_floor=2.0, frequency_floor=3
+  evidence_scale=8.0, coinflip_cap=0.25
+  decay_halflife=3600.0s, decay_interval=60.0s
+  evidence_cap=500, population_cap=10000
+  pending_evidence=0 entries
+  co_occurrence_pairs=0
+  (no autogrowth events yet)
+
+──────────────────────────────────────────────────────────────────────
+AUTOLINKER STATUS
+──────────────────────────────────────────────────────────────────────
+╔══════════════════════════════════════════════════╗
+║          AUTOLINKER — Evidence Status            ║
+╠══════════════════════════════════════════════════╣
+║  evidence_records=0
+║  cross_lobe_pairs=0
+║  above_floor=0 (eligible for coinflip)
+║  total_auto_links=0
+║
+║  CONSTANTS:
+║    evidence_floor=3.0 (cross-lobe)
+║    same_lobe_floor=5.0
+║    frequency_floor=4
+║    coinflip_cap=20.0%
+║    cross_lobe_bonus=1.5x
+║    same_lobe_penalty=0.5x
+║    decay_half_life=7200.0s
+║
+╚══════════════════════════════════════════════════╝
+
+──────────────────────────────────────────────────────────────────────
+AIML STATUS
+──────────────────────────────────────────────────────────────────────
+=== AIML NODE TRIBES (cycle=80) ===
+  Stochastic growth: ceiling=0.333 (~1/3), data-driven (warrant modulates probability)
+  lobe_biology | pop=1/50 | live=1 | grave=0 | auto=0
+  lobe_math | pop=1/50 | live=1 | grave=0 | auto=0
+  lobe_physics | pop=1/50 | live=1 | grave=0 | auto=0
+
+──────────────────────────────────────────────────────────────────────
+LOBE STATUS
+──────────────────────────────────────────────────────────────────────
+Error: KeyError("nodes")
+
+──────────────────────────────────────────────────────────────────────
+MITOSIS STATUS
+──────────────────────────────────────────────────────────────────────
+Mitosis: no events yet. Cave has not grown on its own.
+
+──────────────────────────────────────────────────────────────────────
+TEMPORAL GROWTH STATUS
+──────────────────────────────────────────────────────────────────────
+=== GROWTH AUTOMATON ===
+  batch_size=3, prob_ceiling=0.15
+  group_strength_floor=0.5, min_fresh=5
+  relevance_thesaurus_floor=0.15, action_sample=8
+  strain_energy=N/A, hippocampal_warrant=N/A
+  (no spawns yet)
+
+──────────────────────────────────────────────────────────────────────
+RELATIONAL GOVERNANCE STATUS
+──────────────────────────────────────────────────────────────────────
+═══ RELATIONAL GOVERNANCE ═══
+  Accumulator: 0/5000 pairs tracked
+  Above threshold (10.0): 0 pairs
+  Auto-attach probability: 0.1 (10.0% per idle cycle)
+  Decay rate: 0.05 (5.0% per decay cycle)
+
+──────────────────────────────────────────────────────────────────────
+AUTOGROWTH EVIDENCE CHANGES
+──────────────────────────────────────────────────────────────────────
+Initial evidence entries: 0
+Final evidence entries: 0
+New entries: 0
+
+──────────────────────────────────────────────────────────────────────
+AUTOLINKER EVIDENCE CHANGES
+──────────────────────────────────────────────────────────────────────
+Initial link evidence entries: 0
+Final link evidence entries: 0
+New link entries: 0
+
+──────────────────────────────────────────────────────────────────────
+AUTOGROWTH LOG (nodes created)
+──────────────────────────────────────────────────────────────────────
+Growth events: 0
+
+──────────────────────────────────────────────────────────────────────
+AUTOLINKER LOG (bridges created)
+──────────────────────────────────────────────────────────────────────
+Link events: 0
+
+══════════════════════════════════════════════════════════════════════
+SAVING POST-LEARNING SPECIMEN
+══════════════════════════════════════════════════════════════════════
+  💎 Phase accumulator saved: 0 snapshots in crystal
+  ✂️  Decomposer config saved: 22 total entries across 6 fields
+  👁  Vigilance config saved (cap=6)
+  📊  Injector stats saved
+  🎲  Relational jitter config saved (ratio=0.1, coin=0.3, enabled=true)
+  🧠  BrainStem config saved
+  ⚙️  Engine config saved
+  🏛️  Lobe orchestrator knobs saved
+  🗳️  Vote orchestrator knobs saved
+  🧬  Mitosis config saved
+  🌱  Growth automaton config saved
+  🦠  Phagy config saved
+  💬  Chatter config saved
+  🛡️  Immune config saved
+  🔭  Scanner config saved
+  🎯  ActionTone knobs saved
+  🔗  Co-activation accumulator saved
+  📝  Input ledger saved
+  🔮  Chatter residuals saved
+  🌱  AutoGrowth evidence saved (evidence=0, co-occur=0)
+  🔗  AutoLinker evidence saved (link_evidence=0)
+  🪭  Fan-out config saved (enabled=true, max=3, modes=2)
+  🧠  Hippocampal pending ask saved
+  🔐  Admin session saved
+  🎭  Lobe orchestrator last state saved (winner=lobe_physics)
+  🔖  Chatter cursor saved (pos=0)
+  📋  Answer mode config saved (11 modes)
+  🦠  Phagy rules ref saved (0 rules)
+  ⏳  Time orientation config saved (global=now, 4 oriented time nodes)
+  🔗  CoherenceField config saved (weight=0.15)
+Post-learning specimen saved to comprehensive_specimen_v9_postlearn.json
+
+╔══════════════════════════════════════════════════════════════╗
+║         INTERACTION SESSION COMPLETE                        ║
+╚══════════════════════════════════════════════════════════════╝

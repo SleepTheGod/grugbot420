@@ -1,0 +1,29 @@
+/loadSpecimen comprehensive_specimen_v742.json
+hello grug how are you today
+tell me about emotions and feelings
+what is the meaning of life and consciousness
+explain the concept of gravity and physics
+calculate 42 plus 17 for me please
+why do we feel sad sometimes
+describe the process of photosynthesis
+what is love and why does it matter
+how do birds navigate during migration
+define the word epistemology
+alert there is a predator nearby
+comfort me I am feeling lonely
+reason about why the sky is blue
+explain quantum mechanics simply
+what happens before and after an earthquake
+I need help with survival skills
+tell me about friendship and trust
+why does music make us feel emotions
+describe how volcanoes erupt
+what is the difference between knowledge and belief
+how does memory work in the brain
+tell me about the ocean tides
+what are the laws of thermodynamics
+why should we care about philosophy
+how do computers process information
+/autoGrowthStatus
+/autoLinkStatus
+/saveSpecimen comprehensive_specimen_v742_postlearn.json

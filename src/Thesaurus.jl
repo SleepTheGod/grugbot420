@@ -159,6 +159,133 @@ const _SEED_SYNONYMS_RAW = [
     ("abstract",    ["theoretical", "conceptual", "intangible", "hypothetical", "notional"]),
     ("argue",       ["debate", "reason", "contend", "assert", "claim", "posit"]),
     ("question",    ["query", "inquiry", "challenge", "doubt", "interrogate", "probe"]),
+
+    # ========================================================================
+    # GRUG v7.38: DOMAIN EXPANSION — math, survival, emotion, creativity,
+    # philosophy, cognition. These are the words that appear in specimen
+    # system_prompts but had NO thesaurus entries, making every run produce
+    # identical output. Each entry gives the swap engine rich alternatives.
+    # ========================================================================
+
+    # Math / calculus / science domain
+    ("compute",         ["calculate", "reckon", "derive", "determine", "figure", "tally"]),
+    ("derivative",      ["gradient", "rate of change", "slope", "differential", "marginal", "instantaneous change"]),
+    ("integral",        ["antiderivative", "accumulation", "summation", "aggregate", "total"]),
+    ("theorem",         ["proposition", "formula", "principle", "law", "result", "corollary"]),
+    ("calculus",        ["analysis", "differential calculus", "mathematical reasoning"]),
+    ("function",        ["mapping", "transformation", "relation", "curve", "formula"]),
+    ("slope",           ["gradient", "incline", "steepness", "pitch", "tilt"]),
+    ("area",            ["region", "zone", "expanse", "surface", "territory"]),
+    ("equation",        ["formula", "expression", "equality", "identity", "relation"]),
+    ("solve",           ["resolve", "work out", "figure out", "crack", "untangle"]),
+    ("number",          ["figure", "digit", "value", "quantity", "amount"]),
+    ("triangle",        ["three-sided figure", "trigon", "three-angle"]),
+    ("geometry",        ["spatial reasoning", "shape theory", "topology"]),
+    ("mathematics",     ["math", "calc", "numbers", "quantitative reasoning"]),
+
+    # Survival / danger / combat domain
+    ("survive",         ["endure", "persist", "outlast", "weather", "withstand"]),
+    ("survival",        ["endurance", "persistence", "preservation", "staying alive"]),
+    ("danger",          ["peril", "hazard", "threat", "jeopardy", "menace", "risk"]),
+    ("flee",            ["escape", "retreat", "withdraw", "bolt", "run", "scram"]),
+    ("hide",            ["conceal", "secrete", "camouflage", "cover", "shroud", "vanish"]),
+    ("concealment",     ["hiding", "stealth", "cover", "camouflage", "secrecy", "disguise"]),
+    ("stealth",         ["secrecy", "quietness", "cover", "concealment", "cunning"]),
+    ("fight",           ["combat", "battle", "struggle", "clash", "confront", "resist"]),
+    ("courage",         ["bravery", "valor", "gallantry", "nerve", "fortitude", "daring"]),
+    ("defend",          ["protect", "guard", "shield", "safeguard", "secure"]),
+    ("alert",           ["warn", "caution", "flag", "notify", "signal"]),
+    ("warning",         ["caution", "alert", "advisory", "notice", "heads-up"]),
+    ("caution",         ["care", "wariness", "prudence", "vigilance", "heed"]),
+    ("watch",           ["observe", "monitor", "guard", "keep eyes on", "track"]),
+
+    # Emotion / empathy / mental state domain
+    ("sadness",         ["sorrow", "grief", "melancholy", "anguish", "despair", "heartbreak"]),
+    ("anxiety",         ["worry", "unease", "apprehension", "nervousness", "dread", "tension"]),
+    ("grief",           ["sorrow", "mourning", "anguish", "heartache", "bereavement"]),
+    ("comfort",         ["solace", "reassurance", "consolation", "relief", "support"]),
+    ("validate",        ["affirm", "confirm", "acknowledge", "endorse", "recognize"]),
+    ("feelings",        ["emotions", "sentiments", "reactions", "inner states", "sensations"]),
+    ("pain",            ["suffering", "hurt", "agony", "distress", "ache", "torment"]),
+    ("worry",           ["anxiety", "concern", "unease", "apprehension", "fret"]),
+    ("breathe",         ["inhale", "exhale", "respire", "pause", "settle"]),
+    ("safe",            ["secure", "protected", "sheltered", "unharmed", "out of danger"]),
+    ("alone",           ["isolated", "lonely", "by oneself", "unaccompanied", "solo"]),
+
+    # Creativity / imagination / expression domain
+    ("imagine",         ["envision", "conceive", "fantasize", "dream", "picture", "visualize"]),
+    ("imagination",     ["creativity", "inventiveness", "vision", "fancy", "originality"]),
+    ("create",          ["craft", "forge", "spawn", "birth", "conjure", "compose"]),
+    ("poetry",          ["verse", "rhyme", "lyricism", "poetics", "meter"]),
+    ("story",           ["tale", "narrative", "account", "chronicle", "yarn"]),
+    ("weave",           ["intertwine", "braid", "spin", "fabricate", "thread", "compose"]),
+    ("beauty",          ["elegance", "grace", "splendor", "magnificence", "wonder"]),
+    ("beautiful",       ["lovely", "gorgeous", "stunning", "exquisite", "radiant"]),
+    ("explore",         ["investigate", "probe", "discover", "delve", "chart"]),
+    ("wonder",          ["marvel", "awe", "curiosity", "amazement", "fascination"]),
+    ("write",           ["compose", "pen", "draft", "inscribe", "author", "scribe"]),
+
+    # Philosophy / cognition / abstract domain
+    ("contemplate",     ["ponder", "reflect", "meditate", "muse", "deliberate", "consider"]),
+    ("consciousness",   ["awareness", "sentience", "perception", "mindfulness", "cognition"]),
+    ("meaning",         ["significance", "purpose", "import", "essence", "value"]),
+    ("existence",       ["being", "life", "reality", "presence", "subsistence"]),
+    ("sacred",          ["hallowed", "revered", "sanctified", "divine", "inviolable", "blessed"]),
+    ("permanent",       ["enduring", "everlasting", "eternal", "lasting", "perpetual", "immutable"]),
+    ("truth",           ["fact", "certainty", "verity", "reality", "axiom"]),
+    ("will",            ["volition", "determination", "resolve", "agency", "choice"]),
+    ("determinism",     ["fatalism", "predestination", "inevitability", "necessity"]),
+    ("choose",          ["select", "decide", "opt", "pick", "determine"]),
+    ("choice",          ["decision", "option", "selection", "alternative", "preference"]),
+    ("agency",          ["autonomy", "self-determination", "volition", "sovereignty"]),
+    ("aware",           ["conscious", "mindful", "alert", "perceptive", "attentive"]),
+    ("awareness",       ["consciousness", "perception", "mindfulness", "cognition", "realization"]),
+    ("feel",            ["experience", "perceive", "sense", "undergo", "emote"]),
+    ("real",            ["genuine", "actual", "authentic", "true", "concrete"]),
+    ("valid",           ["legitimate", "sound", "justified", "warranted", "reasonable"]),
+
+    # Time / memory domain
+    ("time",            ["moment", "instant", "era", "epoch", "interval"]),
+    ("past",            ["history", "before", "yesterday", "bygone", "antiquity"]),
+    ("memory",          ["recollection", "remembrance", "retention", "recall"]),
+    ("now",             ["presently", "currently", "this moment", "right away"]),
+    ("recall",          ["remember", "recollect", "retrieve", "summon"]),
+
+    # Perception / description domain
+    ("see",             ["perceive", "observe", "witness", "behold", "discern"]),
+    ("sunset",          ["dusk", "twilight", "day's end", "evening glow", "sundown"]),
+    ("horizon",         ["skyline", "vista", "distance", "edge of the world"]),
+    ("orange",          ["amber", "tangerine", "copper", "flame-colored"]),
+    ("purple",          ["violet", "indigo", "lavender", "plum"]),
+    ("stretch",         ["extend", "span", "reach", "spread", "span"]),
+    ("beauty",          ["elegance", "splendor", "magnificence", "wonder", "grace"]),
+    ("describe",        ["depict", "portray", "characterize", "outline", "render"]),
+    ("capture",         ["seize", "grasp", "encapsulate", "immortalize", "trap"]),
+
+    # Misc common specimen vocabulary
+    ("acknowledge",     ["recognize", "affirm", "admit", "concede", "validate"]),
+    ("preserve",        ["conserve", "protect", "maintain", "safeguard", "keep"]),
+    ("engage",          ["involve", "commit", "confront", "tackle", "enter"]),
+    ("perhaps",         ["maybe", "possibly", "perhaps", "conceivably", "potentially"]),
+    ("must",            ["shall", "have to", "need to", "are obliged to"]),
+    ("wisdom",          ["insight", "sagacity", "prudence", "judgment", "discernment"]),
+    ("chaos",           ["disorder", "turmoil", "confusion", "entropy", "muddle"]),
+    ("language",        ["tongue", "speech", "expression", "communication", "voice"]),
+    ("soul",            ["spirit", "essence", "heart", "core", "inner self"]),
+    ("capacity",        ["ability", "capability", "potential", "power", "faculty"]),
+    ("absence",         ["lack", "void", "dearth", "omission", "missing"]),
+    ("despite",         ["notwithstanding", "in spite of", "regardless of", "even with"]),
+    ("quality",         ["property", "attribute", "characteristic", "trait", "nature"]),
+    ("inverse",         ["reverse", "opposite", "contrary", "reciprocal", "antithesis"]),
+    ("accumulate",      ["gather", "collect", "amass", "build up", "compile"]),
+    ("rate",            ["pace", "speed", "frequency", "velocity", "tempo"]),
+    ("change",          ["shift", "transformation", "alteration", "transition", "mutation"]),
+    ("measure",         ["gauge", "quantify", "assess", "evaluate", "benchmark"]),
+    ("fact",            ["truth", "certainty", "datum", "reality", "verity"]),
+    ("careful",         ["cautious", "wary", "attentive", "prudent", "mindful"]),
+    ("justified",       ["warranted", "validated", "excused", "defensible", "reasonable"]),
+    ("weakness",        ["frailty", "vulnerability", "deficiency", "flaw", "shortcoming"]),
+    ("information",     ["data", "intelligence", "knowledge", "insight", "signal"]),
 ]
 
 # GRUG: Build bidirectional flat lookup at module load time.

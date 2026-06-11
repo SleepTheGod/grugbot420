@@ -1,0 +1,1803 @@
+WARNING: using MitosisMode.THES_LATCH_WEIGHT in module Main conflicts with an existing identifier.
+WARNING: using MitosisMode.LATCH_SCAN_CONFIDENCE_FLOOR in module Main conflicts with an existing identifier.
+  Activating project at `/workspace/grugbot420`
+┌ Warning: [MAIN] scanner_config: max_active_nodes drift (code=1000, saved=100)
+└ @ Main /workspace/grugbot420/src/Main.jl:8670
+┌ Warning: [MAIN] scanner_config: confident_threshold drift (code=0.75, saved=0.7)
+└ @ Main /workspace/grugbot420/src/Main.jl:8673
+┌ Warning: [MAIN] action_tone_knobs: low_signal_threshold drift (code=0.5, saved=0.2)
+└ @ Main /workspace/grugbot420/src/Main.jl:8696
+┌ Warning: [MAIN] action_tone_knobs: fallback_damp_threshold drift (code=0.4, saved=0.3)
+└ @ Main /workspace/grugbot420/src/Main.jl:8699
+┌ Warning: [MAIN] action_tone_knobs: curve_jitter_envelope drift (code=0.03, saved=0.1)
+└ @ Main /workspace/grugbot420/src/Main.jl:8702
+┌ Warning: [MAIN] action_tone_knobs: escalation_confidence_floor drift (code=0.6, saved=0.5)
+└ @ Main /workspace/grugbot420/src/Main.jl:8705
+Running mission #1 [reason]: what is gravity
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.9 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (6 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n101"
+│   pattern = "what is gravity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #2 [reason]: what is evolution
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.9 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (6 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n104"
+│   pattern = "what is climate change"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (6 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n102"
+│   pattern = "what is evolution"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #3 [reason]: what is a derivative
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #4 [reason]: what is climate change
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.92 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (7 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n104"
+│   pattern = "what is climate change"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #5 [reason]: what is the meaning of life
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (6 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n138"
+│   pattern = "what is the meaning of life"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #6 [reason]: what is consciousness
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.93 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n139"
+│   pattern = "what is consciousness"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #7 [reason]: what is a chemical bond
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.88 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n140"
+│   pattern = "what is a chemical bond"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n112"
+│   pattern = "danger toxin chemical"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #8 [reason]: what is biodiversity
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.9 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n141"
+│   pattern = "what is biodiversity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #9 [explain]: explain photosynthesis
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #10 [explain]: explain newtons laws
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #11 [explain]: explain how computers work
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "explain how computers work"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "explain how computers work"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=1.0 | ArousalNudge=0.0 | Weight=1.6 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #12 [explain]: explain relativity
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #13 [explain]: explain the water cycle
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.9 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #14 [define]: define entropy
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n110"
+│   pattern = "define species"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n109"
+│   pattern = "define algorithm"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n144"
+│   pattern = "define ecosystem"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n108"
+│   pattern = "define entropy"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n145"
+│   pattern = "define justice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #15 [define]: define algorithm
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.92 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n108"
+│   pattern = "define entropy"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n144"
+│   pattern = "define ecosystem"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n110"
+│   pattern = "define species"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n109"
+│   pattern = "define algorithm"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n145"
+│   pattern = "define justice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #16 [define]: define species
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.9 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n145"
+│   pattern = "define justice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n144"
+│   pattern = "define ecosystem"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n109"
+│   pattern = "define algorithm"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n108"
+│   pattern = "define entropy"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n110"
+│   pattern = "define species"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (3 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "node_153"
+│   pattern = "species adaptation diversity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #17 [define]: define ecosystem
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n144"
+│   pattern = "define ecosystem"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n110"
+│   pattern = "define species"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n145"
+│   pattern = "define justice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n108"
+│   pattern = "define entropy"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n109"
+│   pattern = "define algorithm"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #18 [define]: define justice
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n109"
+│   pattern = "define algorithm"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n145"
+│   pattern = "define justice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n108"
+│   pattern = "define entropy"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n110"
+│   pattern = "define species"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n144"
+│   pattern = "define ecosystem"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #19 [alert]: danger radiation
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.685, tone_gini=0.192
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.686, tone_gini=0.184
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.75 | ArousalNudge=0.0 | Weight=1.38 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n111"
+│   pattern = "danger radiation"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n151"
+│   pattern = "danger extinction"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n112"
+│   pattern = "danger toxin chemical"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #20 [alert]: danger toxin chemical
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.31 | ArousalNudge=0.0 | Weight=1.06 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n111"
+│   pattern = "danger radiation"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n151"
+│   pattern = "danger extinction"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n140"
+│   pattern = "what is a chemical bond"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n112"
+│   pattern = "danger toxin chemical"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #21 [alert]: danger extinction
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.3 [FALLBACK] [FRAME=terse/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n111"
+│   pattern = "danger radiation"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n151"
+│   pattern = "danger extinction"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n112"
+│   pattern = "danger toxin chemical"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #22 [comfort]: i am sad
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.86 | ArousalNudge=0.0 | Weight=1.43 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n113"
+│   pattern = "i am sad"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #23 [comfort]: i am scared afraid
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.711, tone_gini=0.185
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.713, tone_gini=0.193
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n114"
+│   pattern = "i am scared afraid"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #24 [comfort]: i feel lost confused
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.38 | ArousalNudge=0.0 | Weight=1.19 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n146"
+│   pattern = "i feel lost confused"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #25 [math]: calculate integral
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 2 tokens → 5 (+3 synonyms)
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.808, tone_gini=0.199
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (7 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n115"
+│   pattern = "calculate integral"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ORCHESTRATOR] ⚠ No votes passed AIML_CONFIDENCE_THRESHOLD=0.35. Falling back to highest-confidence vote.
+└ @ Main /workspace/grugbot420/src/Main.jl:1555
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #26 [math]: calculate fibonacci
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.12 | ArousalNudge=0.0 | Weight=1.06 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n116"
+│   pattern = "calculate fibonacci"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #27 [math]: calculate pi digits
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.66, tone_gini=0.193
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.97 | ArousalNudge=0.0 | Weight=1.19 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n117"
+│   pattern = "calculate pi digits"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #28 [math]: calculate euler number
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n147"
+│   pattern = "calculate euler number"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #29 [relate]: sun causes warmth
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.64 | ArousalNudge=0.0 | Weight=1.32 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n148"
+│   pattern = "fire causes heat"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n118"
+│   pattern = "sun causes warmth"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #30 [relate]: predator eats prey
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.703, tone_gini=0.182
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.703, tone_gini=0.186
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n119"
+│   pattern = "predator eats prey"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+Running mission #31 [relate]: learning requires practice
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.663, tone_gini=0.189
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.665, tone_gini=0.195
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.98 | ArousalNudge=0.0 | Weight=1.49 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n120"
+│   pattern = "learning requires practice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #32 [relate]: fire causes heat
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.712, tone_gini=0.184
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.707, tone_gini=0.188
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n152"
+│   pattern = "how to build a fire"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n118"
+│   pattern = "sun causes warmth"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n129"
+│   pattern = "compare heat and temperature"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n148"
+│   pattern = "fire causes heat"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #33 [relate]: education enables progress
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.789, tone_gini=0.187
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.788, tone_gini=0.187
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n149"
+│   pattern = "education enables progress"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #34 [time]: what happens in spring
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.88 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n121"
+│   pattern = "what happens in spring"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #35 [time]: what happened before big bang
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE v8.1] Time orientation detected: past (sigil=before, surface='before')
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.93 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n122"
+│   pattern = "what happened before big bang"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+[ Info: [MAIN v8.1] Time orientation in payload: past, directive=' Temporal reasoning active (past orientation via &before): reflect on what has already happened.'
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #36 [time]: next technological revolution
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.764, tone_gini=0.19
+[ Info: [ENGINE v8.1] Time orientation detected: future (sigil=next, surface='next')
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.683, tone_gini=0.186
+[ Info: [ENGINE] 🔮 Action=ACTION_NEGATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.3 [LORENZ-DAMPED] [FALLBACK] [FRAME=terse/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n123"
+│   pattern = "next technological revolution"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+[ Info: [MAIN v8.1] Time orientation in payload: future, directive=' Temporal reasoning active (future orientation via &next): project forward about what may come next.'
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #37 [time]: winter seasonal cold
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=0.71 | ArousalNudge=0.0 | Weight=1.36 [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n150"
+│   pattern = "winter seasonal cold"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #38 [proc]: how to solve quadratic equation
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n124"
+│   pattern = "how to solve quadratic equation"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #39 [proc]: how to do scientific experiment
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.88 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n125"
+│   pattern = "how to do scientific experiment"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #40 [proc]: how to build a fire
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.53 | ArousalNudge=0.0 | Weight=1.32 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n152"
+│   pattern = "how to build a fire"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (5 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n148"
+│   pattern = "fire causes heat"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #41 [json]: periodic table data
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.32 | ArousalNudge=0.0 | Weight=1.06 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n126"
+│   pattern = "periodic table data"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #42 [json]: population statistics
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.683, tone_gini=0.195
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.685, tone_gini=0.186
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.43 | ArousalNudge=0.0 | Weight=1.09 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (2 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n127"
+│   pattern = "population statistics"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #43 [multi]: compare dna and rna
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.75, tone_gini=0.188
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 4 tokens → 7 (+3 synonyms)
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.83, tone_gini=0.193
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #44 [multi]: compare heat and temperature
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.822, tone_gini=0.188
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.822, tone_gini=0.196
+[ Info: [ENGINE] 🔮 Action=ACTION_COMMAND | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.5 [LORENZ-DAMPED] [FALLBACK] [FRAME=imperative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n148"
+│   pattern = "fire causes heat"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n129"
+│   pattern = "compare heat and temperature"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n128"
+│   pattern = "compare dna and rna"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #45 [greeting]: hello
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=0.6 | ArousalNudge=0.0 | Weight=1.12 [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (1 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n136"
+│   pattern = "hello"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #46 [greeting]: hi there greetings hey
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.692, tone_gini=0.191
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :lookup in step 'gather_evidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [PREDICTOR] 🌀 Per-query Gini damping active — action_gini=0.699, tone_gini=0.186
+[ Info: [ENGINE] 🔮 Action=ACTION_SPECULATE | Tone=TONE_NEUTRAL | Conf=1.0 | ArousalNudge=0.0 | Weight=1.2 [LORENZ-DAMPED] [FALLBACK] [FRAME=contemplative/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (4 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n137"
+│   pattern = "hi greetings hey"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_physics': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #47 [reason]: what is gravity
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (6 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n101"
+│   pattern = "what is gravity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_climate': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_biology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_tech': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #48 [reason]: tell me about gravity again
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 8 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.93 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+Running mission #49 [explain]: explain photosynthesis again
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 6 (+3 synonyms)
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.92 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("explain" => []), "explain"), 0x0000000000008f03)
+└ @ Main /workspace/grugbot420/src/Main.jl:5893
+Running mission #50 [novel]: what is quantum computing
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.92 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+Running mission #51 [novel]: what is quantum computing
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+Running mission #52 [novel]: what is quantum computing
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+┌ Warning: ⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
+│ Input: "what is quantum computing"
+│ Found 2 question/command markers but no split was made.
+│ The system will pick ONE action and ignore the rest — that's a coherence failure.
+│ FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
+│ YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO.
+└ @ Main.InputDecomposer /workspace/grugbot420/src/InputDecomposer.jl:511
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.93 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+Running mission #53 [novel]: explain machine learning
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n120"
+│   pattern = "learning requires practice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("explain" => []), "explain"), 0x0000000000008f03)
+└ @ Main /workspace/grugbot420/src/Main.jl:5893
+Running mission #54 [novel]: explain machine learning
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n120"
+│   pattern = "learning requires practice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("explain" => []), "explain"), 0x0000000000008f03)
+└ @ Main /workspace/grugbot420/src/Main.jl:5893
+Running mission #55 [novel]: explain machine learning
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.54 [FRAME=exploratory/basic]
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n120"
+│   pattern = "learning requires practice"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n143"
+│   pattern = "explain the water cycle"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n105"
+│   pattern = "explain photosynthesis"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n106"
+│   pattern = "explain newtons laws"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n142"
+│   pattern = "explain relativity"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] BUG-004: pattern (8 tokens) longer than input (3 tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns.
+│   node_id = "n107"
+│   pattern = "explain how computers work"
+└ @ Main /workspace/grugbot420/src/engine.jl:4344
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_philosophy': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_ecology': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_emotion': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_chemistry': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_logic': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_general': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [ENGINE] ⚠ Failed to get node IDs from lobe 'lobe_math': KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/engine.jl:4796
+┌ Warning: [MAIN] ⚠ Failed to extract lobe-aware context (non-fatal): KeyError("nodes")
+└ @ Main /workspace/grugbot420/src/Main.jl:816
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("explain" => []), "explain"), 0x0000000000008f03)
+└ @ Main /workspace/grugbot420/src/Main.jl:5893
+Running mission #56 [novel]: what is dark matter
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.91 | ArousalNudge=0.0 | Weight=1.55 [FRAME=exploratory/basic]
+Running mission #57 [novel]: what is dark matter
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.89 | ArousalNudge=0.0 | Weight=1.53 [FRAME=exploratory/basic]
+Running mission #58 [novel]: what is dark matter
+┌ Warning: [ATP-ESCALATE] Automaton dispatch failed (non-fatal): AutomatonError("unknown automaton op :threshold_check in step 'assess_confidence'", "_eval_step")
+└ @ Main.ActionTonePredictor /workspace/grugbot420/src/ActionTonePredictor.jl:1671
+[ Info: [ENGINE] 🔮 Action=ACTION_QUERY | Tone=TONE_CURIOUS | Conf=0.94 | ArousalNudge=0.0 | Weight=1.56 [FRAME=exploratory/basic]
+┌ Warning: Assignment to `ag_status` in soft scope is ambiguous because a global variable by the same name exists: `ag_status` will be treated as a new local. Disambiguate by using `local ag_status` to suppress this warning or `global ag_status` to assign to the existing global variable.
+└ @ /workspace/grugbot420/interaction_harness_v10.jl:189
+┌ Warning: Assignment to `ag_status` in soft scope is ambiguous because a global variable by the same name exists: `ag_status` will be treated as a new local. Disambiguate by using `local ag_status` to suppress this warning or `global ag_status` to assign to the existing global variable.
+└ @ /workspace/grugbot420/interaction_harness_v10.jl:189
+┌ Warning: Assignment to `al_status` in soft scope is ambiguous because a global variable by the same name exists: `al_status` will be treated as a new local. Disambiguate by using `local al_status` to suppress this warning or `global al_status` to assign to the existing global variable.
+└ @ /workspace/grugbot420/interaction_harness_v10.jl:190
+┌ Warning: Assignment to `al_status` in soft scope is ambiguous because a global variable by the same name exists: `al_status` will be treated as a new local. Disambiguate by using `local al_status` to suppress this warning or `global al_status` to assign to the existing global variable.
+└ @ /workspace/grugbot420/interaction_harness_v10.jl:190
+┌ Warning: Assignment to `growth_log` in soft scope is ambiguous because a global variable by the same name exists: `growth_log` will be treated as a new local. Disambiguate by using `local growth_log` to suppress this warning or `global growth_log` to assign to the existing global variable.
+└ @ /workspace/grugbot420/interaction_harness_v10.jl:191
+┌ Warning: Assignment to `link_log` in soft scope is ambiguous because a global variable by the same name exists: `link_log` will be treated as a new local. Disambiguate by using `local link_log` to suppress this warning or `global link_log` to assign to the existing global variable.
+└ @ /workspace/grugbot420/interaction_harness_v10.jl:192
+Wrote interaction_log_v10.md
+Saved comprehensive_specimen_v10_postlearn.json
+POST: nodes=54 bridges=9 ag=7 al=6
+=== INTERACTION SESSION COMPLETE ===
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + 3 boot seeds registered into `default` lobe
+=== ENGINE LOADED ===
+
+>>> LOADING COMPREHENSIVE SPECIMEN v10 <<<
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=153, msg=4)
+  🗳  Last voters restored (2 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (3 classes, 26 verbs, 7 synonyms)
+  🔤 Thesaurus restored (17 words)
+  🧠 Lobes restored (11)
+  📋 Lobe tables restored (11)
+  🌱 Nodes restored (52)
+  ⚡ Hopfield cache restored (3 entries)
+  ⚙️  Rules restored (4)
+  🚫 Inhibitions restored (3)
+  💬 Messages restored (2 total, 0 pinned)
+  👁  Arousal restored (level=0.3)
+  🧬 BrainStem state restored
+  🌉 Bridges restored (5)
+  🗣  Chatter groups restored (9)
+  🔮 Trajectory restored (1 entries)
+  🕐 Temporal coherence restored (2 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 1 ledger entries)
+  🤖 AIML system restored (3 nodes across 3 lobes)
+  🪄 Sigils restored (7 specimen-specific)
+  ⚙️  Automaton rules restored (3)
+  ⚠️  Phase accumulator: EMPTY (no crystal data) — HARD WARN
+  🗳  Contributor votes restored (2)
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.8)
+  🧠 EphemeralMLP restored (transforms=0, rules=2)
+  👁  MLP Observer Store: 0 entries, 0 distinct keys (store starts fresh; MLP gate counter restored)
+  🧠 MLP cached Phi restored (last_phi=0.0)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 8 | Compound pairs: 4 leaders | Context: 'but'
+      Question markers: 7 | Command stems: 8 → 29 expanded | Conjugation rules: 6
+  👁  Vigilance config loaded (cap=6, enabled=true)
+  📊  Injector stats loaded
+  🎲  Relational jitter config loaded (ratio=0.1, coin=0.3, enabled=true)
+  🧠  BrainStem config: matches code defaults
+  ⚙️  Engine config: 4 drift(s) from code defaults (saved for future override)
+  🏛️  Lobe orchestrator knobs: 2 drift(s) from code defaults
+  🗳️  Vote orchestrator knobs: 2 drift(s) from code defaults
+  🧬  Mitosis config: 2 drift(s) from code defaults (strain warrant knobs changed)
+  🌱  Growth automaton config: loaded (baseline reference)
+  🦠  Phagy config: loaded (baseline reference)
+  💬  Chatter config: loaded (baseline reference)
+  🛡️  Immune config: loaded (baseline reference)
+  🔭  Scanner config: loaded (baseline reference)
+  🎯  ActionTone knobs: loaded (baseline reference)
+  🔗  Co-activation accumulator loaded (0 pairs)
+  📝  Input ledger loaded (0 consumed hashes)
+  🔮  Chatter residuals loaded (0 consumed hashes)
+  🌱  AutoGrowth evidence loaded (3 records)
+  🌱  AutoGrowth co-occurrence loaded (3 pairs)
+  🔗  AutoLinker evidence loaded (3 records)
+  🪭  Fan-out config loaded (enabled=true, max=3, modes=2)
+  🧠  Hippocampal pending ask: empty (no pending question)
+  🔐  Admin session: not logged in (clean)
+  🎭  Lobe orchestrator last state loaded (winner=lobe_physics, scores=3)
+  🔖  Chatter cursor loaded (pos=0)
+  📋  Answer mode config loaded (11 modes)
+  🦠  Phagy rules ref loaded (0 rules)
+  ⏳  Time orientation config loaded (global=now)
+  ⏳  Time node orientation index: 4/4 nodes verified
+  🔗  CoherenceField config loaded (weight=0.15)
+PRE: nodes=52 lobes=11 bridges=9 sigils=17
+PRE: autogrowth_evidence=0 autolink_evidence=0
+  💎 Phase accumulator saved: 0 snapshots in crystal
+  ✂️  Decomposer config saved: 22 total entries across 6 fields
+  👁  Vigilance config saved (cap=6)
+  📊  Injector stats saved
+  🎲  Relational jitter config saved (ratio=0.1, coin=0.3, enabled=true)
+  🧠  BrainStem config saved
+  ⚙️  Engine config saved
+  🏛️  Lobe orchestrator knobs saved
+  🗳️  Vote orchestrator knobs saved
+  🧬  Mitosis config saved
+  🌱  Growth automaton config saved
+  🦠  Phagy config saved
+  💬  Chatter config saved
+  🛡️  Immune config saved
+  🔭  Scanner config saved
+  🎯  ActionTone knobs saved
+  🔗  Co-activation accumulator saved
+  📝  Input ledger saved
+  🔮  Chatter residuals saved
+  🌱  AutoGrowth evidence saved (evidence=7, co-occur=4)
+  🔗  AutoLinker evidence saved (link_evidence=6)
+  🪭  Fan-out config saved (enabled=true, max=3, modes=2)
+  🧠  Hippocampal pending ask saved
+  🔐  Admin session saved
+  🎭  Lobe orchestrator last state saved (winner=lobe_chemistry)
+  🔖  Chatter cursor saved (pos=0)
+  📋  Answer mode config saved (11 modes)
+  🦠  Phagy rules ref saved (0 rules)
+  ⏳  Time orientation config saved (global=none, 4 oriented time nodes)
+  🔗  CoherenceField config saved (weight=0.15)

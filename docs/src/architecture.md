@@ -221,8 +221,8 @@ This distinction separates:
 - **Contributors:** Nodes that fired and generated actual output content
 
 **Reinforcement behavior:**
-- `/aimlRight` (secondary reinforcement): Only contributors get a 50% coinflip chance to gain additional strength, minus those who already gained from initial coinflip (no double reward)
-- `/aimlWrong` (penalty): Only contributors are penalized on a 50% coinflip, with over-compensation penalty if they gained strength during the cycle
+- `/aimlRight` (lock-in-equivalent reinforcement): Only explicit orchestration contributors get a stochastic coinflip chance to gain strength; voting/firing alone is ignored.
+- `/aimlWrong` (penalty): Only explicit orchestration contributors are penalized on a stochastic coinflip; there is no same-cycle use-gain over-compensation path.
 
 This ensures that only nodes that meaningfully contributed to outputs are eligible for strength modification.
 

@@ -1,5 +1,7 @@
 module LobeOrchestrator
 
+using Base.Threads: ReentrantLock
+
 # ==============================================================================
 # LobeOrchestrator — averages-curve lobe selection (replaces hard mute gate)
 # ==============================================================================
@@ -52,6 +54,24 @@ const MIN_PASS_THROUGH_SCORE        = 0.10
 const MIN_WINNING_VOTES_PER_LOBE    = 2
 const TOP_K_FRACTION                = 0.5
 const HARD_SELECTION_CONF_THRESHOLD = 0.5
+# v10-coherence-fix: PEAK-VOTE LOBE GUARD.
+# The averages curve (sqrt(base_avg) * top_avg^2) can crown a lobe that does
+# NOT contain the single highest-confidence vote in the whole pool. When the
+# downstream composite_vote_score then applies VOTE_W_LOBE_ALIGNMENT (+0.40)
+# to every node in the crowned lobe, the TRUE content winner (a decisive vote
+# sitting in a different lobe) gets out-ranked by a weaker sibling of the
+# crowned lobe. Observed decoherence: "what is gravity" (n101, physics) lost
+# to n103 (math) because the math lobe's curve edged out physics even though
+# n101 was the single highest-confidence vote.
+#
+# Guard: if one lobe owns the GLOBAL peak vote AND that peak clears
+# PEAK_GUARD_MIN_CONF AND it leads the next-best lobe's peak by
+# PEAK_GUARD_MARGIN, that lobe is promoted to winner. This only fires when a
+# single node is a clear, decisive content match — genuinely ambiguous
+# multi-lobe inputs (close peaks) still go through the normal curve.
+const PEAK_GUARD_ENABLED            = true
+const PEAK_GUARD_MIN_CONF           = 0.45   # peak vote must be at least this confident
+const PEAK_GUARD_MARGIN             = 0.05   # peak must lead 2nd lobe's peak by this much
 # v7.24-coherence-fix BUG #2: when ANY named lobe has hard_votes >= 1, the
 # `default` lobe score is multiplied by this factor. The `default` lobe
 # carries the inline boot seeds (boot fallback). Without this demotion, the
@@ -86,6 +106,7 @@ struct LobeFireOrder
 end
 
 # --- Telemetry refs ----------------------------------------------------------
+const _TELEMETRY_LOCK = ReentrantLock()
 const LAST_LOBE_SCORES = Ref{Vector{Tuple{String, Float64, Float64, Float64, Int}}}(
     Tuple{String, Float64, Float64, Float64, Int}[]
 )
@@ -99,9 +120,38 @@ GRUG: Clear all telemetry refs. Called at the top of score_lobes so repeated
 calls don't accumulate.
 """
 function reset_telemetry!()
-    LAST_LOBE_SCORES[] = Tuple{String, Float64, Float64, Float64, Int}[]
-    LAST_WINNER[]      = ""
-    LAST_PASSTHROUGH[] = String[]
+    lock(_TELEMETRY_LOCK) do
+        LAST_LOBE_SCORES[] = Tuple{String, Float64, Float64, Float64, Int}[]
+        LAST_WINNER[]      = ""
+        LAST_PASSTHROUGH[] = String[]
+    end
+    return nothing
+end
+
+"""
+    get_last_state() -> (scores, winner, passthrough)
+
+Thread-safe snapshot of all three telemetry refs under a single lock.
+Returns (copy(LAST_LOBE_SCORES[]), LAST_WINNER[], copy(LAST_PASSTHROUGH[])).
+"""
+function get_last_state()
+    lock(_TELEMETRY_LOCK) do
+        (copy(LAST_LOBE_SCORES[]), LAST_WINNER[], copy(LAST_PASSTHROUGH[]))
+    end
+end
+
+"""
+    set_last_state!(scores, winner, passthrough)
+
+Thread-safe write of all three telemetry refs under a single lock.
+Used by specimen restore to replay saved lobe orchestrator state.
+"""
+function set_last_state!(scores, winner, passthrough)
+    lock(_TELEMETRY_LOCK) do
+        LAST_LOBE_SCORES[] = scores
+        LAST_WINNER[]      = winner
+        LAST_PASSTHROUGH[] = passthrough
+    end
     return nothing
 end
 
@@ -237,7 +287,9 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
         # winning. If two lobes pass the threshold, they fire async (highest
         # first), and cross-talk is hard-capped to 1k active at a time.
         push!(scored, (lobe_id, base_avg, top_avg, score, hard_count, lobe_entries))
-        push!(LAST_LOBE_SCORES[], (lobe_id, base_avg, top_avg, score, hard_count))
+        lock(_TELEMETRY_LOCK) do
+            push!(LAST_LOBE_SCORES[], (lobe_id, base_avg, top_avg, score, hard_count))
+        end
     end
 
     # v7.24-coherence-fix BUG #2: `default` lobe demotion.
@@ -257,25 +309,39 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
     # no named lobe even showed up."
     let
         any_named_present = any(
-            t -> t[1] != "default" && t[2] > 0.0,
+            t -> t[1] != "default" && t[1] != "-" && t[2] > 0.0,
             scored
         )
         if any_named_present
-            for k in eachindex(scored)
-                if scored[k][1] == "default"
-                    (lid, ba, ta, sc, hc, le) = scored[k]
-                    new_score = sc * DEFAULT_LOBE_DEMOTION_FACTOR
-                    scored[k] = (lid, ba, ta, new_score, hc, le)
-                    # Update telemetry too so the scaffold prints the
-                    # demoted score, not the raw one.
-                    for ti in eachindex(LAST_LOBE_SCORES[])
-                        if LAST_LOBE_SCORES[][ti][1] == "default"
-                            (tlid, tba, tta, _, thc) = LAST_LOBE_SCORES[][ti]
-                            LAST_LOBE_SCORES[][ti] = (tlid, tba, tta, new_score, thc)
-                            break
+            # v10-coherence-fix: demote BOTH the boot "default" lobe AND the
+            # synthetic orphan "-" bucket when any real named lobe matched. The
+            # orphan bucket holds freshly AutoGrowth-created nodes (strength ~1,
+            # generic "wall of knowing" prompts) and lobeless seeds. These must
+            # not out-rank an established named-lobe content match — otherwise a
+            # weak learned node steals the answer from the canonical strong node
+            # (observed: post-learn "what is gravity" routed to orphan node_154
+            # "force math field" instead of the n101 gravity node). Demotion lets
+            # learned nodes still WIN when no named lobe matched at all (genuine
+            # novel input → the learned node is the best the cave has).
+            for demote_lid in ("default", "-")
+                for k in eachindex(scored)
+                    if scored[k][1] == demote_lid
+                        (lid, ba, ta, sc, hc, le) = scored[k]
+                        new_score = sc * DEFAULT_LOBE_DEMOTION_FACTOR
+                        scored[k] = (lid, ba, ta, new_score, hc, le)
+                        # Update telemetry too so the scaffold prints the
+                        # demoted score, not the raw one.
+                        lock(_TELEMETRY_LOCK) do
+                            for ti in eachindex(LAST_LOBE_SCORES[])
+                                if LAST_LOBE_SCORES[][ti][1] == demote_lid
+                                    (tlid, tba, tta, _, thc) = LAST_LOBE_SCORES[][ti]
+                                    LAST_LOBE_SCORES[][ti] = (tlid, tba, tta, new_score, thc)
+                                    break
+                                end
+                            end
                         end
+                        break
                     end
-                    break
                 end
             end
         end
@@ -310,6 +376,71 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
         i = j + 1
     end
 
+    # v10-coherence-fix: PEAK-VOTE LOBE GUARD.
+    # After the curve sort, check whether a *different* lobe owns the global
+    # peak vote by a decisive margin. If so, promote that lobe to winner. This
+    # prevents the averages curve from handing the +VOTE_W_LOBE_ALIGNMENT bonus
+    # to a lobe that does NOT contain the single best content match, which was
+    # the root cause of "what is gravity" routing to a math node instead of the
+    # physics node. We only override when the peak is decisive (>= MIN_CONF and
+    # leads the runner-lobe peak by >= MARGIN); ambiguous inputs keep the curve.
+    if PEAK_GUARD_ENABLED && length(scored) > 1
+        # Compute each lobe's peak (max) confidence from its entries.
+        # entries are tuples; confidence is field 2 (id, conf, ...).
+        _peak_of(lobe_entries) = begin
+            mx = -Inf
+            for e in lobe_entries
+                c = e[2]
+                if c > mx
+                    mx = c
+                end
+            end
+            mx
+        end
+        # Build (idx, lobe_id, peak) for all scored lobes (skip the synthetic
+        # orphan bucket "-" and the demoted "default" — they should never win
+        # the content-peak guard with their weak/generic learned nodes).
+        peaks = Tuple{Int,String,Float64}[]
+        for (idx, t) in enumerate(scored)
+            lid = t[1]
+            if lid == "-" || lid == "default"
+                continue
+            end
+            push!(peaks, (idx, lid, _peak_of(t[6])))
+        end
+        if length(peaks) >= 1
+            sort!(peaks; by = x -> -x[3])
+            top_idx, top_lid, top_peak = peaks[1]
+            second_peak = length(peaks) >= 2 ? peaks[2][3] : 0.0
+            current_winner_lid = scored[1][1]
+            if get(ENV, "GRUG_DEBUG_PEAK", "") != ""
+                @info "[PEAKGUARD] winner_curve=$current_winner_lid top_peak_lobe=$top_lid peak=$(round(top_peak,digits=3)) second=$(round(second_peak,digits=3))"
+            end
+            # Decisive-peak promotion: a named lobe owning a clear global peak
+            # is promoted over the curve winner.
+            decisive = top_lid != current_winner_lid &&
+                       top_peak >= PEAK_GUARD_MIN_CONF &&
+                       (top_peak - second_peak) >= PEAK_GUARD_MARGIN
+            # v10-coherence-fix: ORPHAN/DEFAULT OVERRIDE. If the curve crowned the
+            # synthetic orphan bucket "-" or the boot "default" lobe, but a real
+            # NAMED lobe owns the global content peak, promote the named lobe even
+            # at a modest peak. Lobeless AutoGrowth nodes (generic "wall of
+            # knowing" patterns) must not answer a query that a named-lobe node
+            # matched on content — the named node is the real answer; the orphan
+            # only won because its curve edged out after the bridge/relay shuffle.
+            orphan_override = (current_winner_lid == "-" || current_winner_lid == "default") &&
+                              top_lid != current_winner_lid &&
+                              top_peak > 0.0 &&
+                              top_peak >= second_peak
+            if decisive || orphan_override
+                # Promote the peak-owning lobe to the front.
+                promoted = scored[top_idx]
+                deleteat!(scored, top_idx)
+                pushfirst!(scored, promoted)
+            end
+        end
+    end
+
     # Apply pass-through threshold:
     #   - winner is always included regardless of threshold
     #     (otherwise we'd have systemic silence on very weak input,
@@ -336,8 +467,10 @@ function score_lobes(entries::AbstractVector, lobe_lookup; input_tokens::Abstrac
 
     # Update top-level telemetry
     if !isempty(out)
-        LAST_WINNER[] = out[1].lobe_id
-        LAST_PASSTHROUGH[] = [o.lobe_id for o in out if o.is_passthrough]
+        lock(_TELEMETRY_LOCK) do
+            LAST_WINNER[] = out[1].lobe_id
+            LAST_PASSTHROUGH[] = [o.lobe_id for o in out if o.is_passthrough]
+        end
     end
 
     return out
@@ -389,16 +522,19 @@ scaffold debug block. Replaces the old "Muted Lobes:" / "Bridged Nodes:"
 lines.
 """
 function last_summary()::String
-    if isempty(LAST_LOBE_SCORES[])
+    scores, winner, passthrough = lock(_TELEMETRY_LOCK) do
+        (copy(LAST_LOBE_SCORES[]), LAST_WINNER[], copy(LAST_PASSTHROUGH[]))
+    end
+    if isempty(scores)
         return "Lobe Curve: (no lobes scored)"
     end
     lines = String["Lobe Curve (√base × top² = score):"]
     # Sort scores desc for the readout
-    sorted = sort(LAST_LOBE_SCORES[]; by = x -> -x[4])
+    sorted = sort(scores; by = x -> -x[4])
     for (lobe_id, base_avg, top_avg, score, hard_count) in sorted
-        marker = if lobe_id == LAST_WINNER[]
+        marker = if lobe_id == winner
             "👑"
-        elseif lobe_id in LAST_PASSTHROUGH[]
+        elseif lobe_id in passthrough
             "↗"
         else
             "·"
@@ -414,7 +550,7 @@ end
 # --- Exports -----------------------------------------------------------------
 export LobeFireOrder
 export score_lobes, flatten_in_fire_order, compute_fire_batches
-export reset_telemetry!, last_summary
+export reset_telemetry!, last_summary, get_last_state, set_last_state!
 export LAST_LOBE_SCORES, LAST_WINNER, LAST_PASSTHROUGH
 export HARD_FIRE_BATCH_CAP, MIN_PASS_THROUGH_SCORE,
        MIN_WINNING_VOTES_PER_LOBE, TOP_K_FRACTION,

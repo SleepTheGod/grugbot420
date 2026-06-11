@@ -777,13 +777,13 @@ function phase_accumulator_to_dict()::Dict{String, Any}
 end
 
 """
-    phase_accumulator_from_dict!(data::Dict{String, Any})
+    phase_accumulator_from_dict!(data)
 
 Restore the phase accumulator from a specimen dict. Clears existing state
 and replaces with loaded data. NO SILENT FAILURES — bad entries are skipped
 with @warn, never silently dropped.
 """
-function phase_accumulator_from_dict!(data::Dict{String, Any})
+function phase_accumulator_from_dict!(data)
     acc = _phase_accumulator()
     lock(acc.lock) do
         empty!(acc.entries)
@@ -1816,11 +1816,11 @@ function serialize_vigilance_config()::Dict{String, Any}
 end
 
 """
-    deserialize_vigilance_config!(data::Dict{String, Any})
+    deserialize_vigilance_config!(data)
 
 Restore vigilance config from specimen dict. NO SILENT FAILURES.
 """
-function deserialize_vigilance_config!(data::Dict{String, Any})
+function deserialize_vigilance_config!(data)
     config = _vigilance_config()
     lock(config.lock) do
         config.enabled                     = Bool(get(data, "enabled", true))

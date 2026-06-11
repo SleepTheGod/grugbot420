@@ -1,5 +1,11 @@
 # RelationalGovernance.jl
 # ==============================================================================
+# !!! GRUG REMINDER — RELATIONAL TRIPLES CAN USE SIGILS !!!
+# A RelationalTriple's subject / relation / object may contain sigil tokens
+# (&n, &word, &noun, specimen macros). Co-firing / auto-attach logic that reads
+# or compares triples must NOT assume the fields are always literal words —
+# sigil holes are valid. Resolve via SigilRegistry where appropriate.
+# ==============================================================================
 # RELATIONAL GOVERNANCE — AUTO-ATTACH FROM ACCUMULATED CO-ACTIVATION INTENSITY
 # ==============================================================================
 # GRUG say: nodes that fire together should wire together. But SLOW. LAZY.
@@ -656,12 +662,12 @@ function serialize_co_activation()::Dict{String, Any}
 end
 
 """
-    deserialize_co_activation!(data::Dict{String, Any})
+    deserialize_co_activation!(data)
 
 GRUG: Restore the co-activation accumulator from specimen data.
 Merges with existing accumulator (doesn't clear it first).
 """
-function deserialize_co_activation!(data::Dict{String, Any})
+function deserialize_co_activation!(data)
     pairs_raw = get(data, "co_activation_pairs", Dict{String, Any}())
 
     lock(CO_ACC_LOCK) do

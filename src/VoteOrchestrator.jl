@@ -139,6 +139,30 @@ const VOTE_SCORE_FLOOR = 0.0
 # conf=0.07 which was the correct primary match).
 const RELAY_CONFIDENCE_DISCOUNT = 0.5
 
+# ---- v7.60: Grave shadow inhibition ------------------------------------
+# GRUG BUG-010: Dead knowledge casts shadows on living neighbors.
+# When a group has graved members, surviving nodes get a multiplicative
+# penalty — the more graves, the deeper the shadow. This models the real
+# dynamic where clusters that have lost knowledge are weaker responders.
+#
+# Formula: shadow = 1.0 - (grave_ratio * (1.0 - GRAVE_SHADOW_FLOOR))
+#   grave_ratio = grave_count / max(grave_count + alive_members, 1)
+#   At 0 graves: shadow = 1.0 (no penalty)
+#   At 50% graves: shadow = 1.0 - 0.5 * (1 - 0.70) = 1.0 - 0.15 = 0.85
+#   At 100% graves: shadow = GRAVE_SHADOW_FLOOR (0.70)
+#
+# Antimatch nodes ALWAYS get 1.0 — suppressors don't die, don't cast shadows.
+# AIML nodes use GLOBAL grave ratio (entire tribe), regular nodes use GROUP-scoped.
+#
+# GRAVE_SHADOW_FLOOR: Minimum multiplier. Even a ghost-town group still
+# gets 70% of its score. Prevents total shutdown from mass graves.
+const GRAVE_SHADOW_FLOOR = 0.70
+
+# GRAVE_SHADOW_MIN_GRAVES: Don't apply shadow unless at least this many
+# graves exist in the scope. Avoids flickering penalty from a single grave
+# in a large group. 1 means any grave activates the shadow.
+const GRAVE_SHADOW_MIN_GRAVES = 1
+
 # GRUG: Default timeout for DONE signal (seconds). If orchestrator waits this
 # long without hearing DONE from all lobes, scream loud with timeout error.
 const DONE_SIGNAL_TIMEOUT_S = 30.0
@@ -635,6 +659,13 @@ struct VoteCandidate
     # composite_vote_score applies RELAY_CONFIDENCE_DISCOUNT to is_relay=true
     # candidates so primary-match nodes win over relay-inflated ones.
     is_relay::Bool
+    # ---- v7.60: grave shadow inhibition (group-scoped for regular, global for AIML) --
+    # GRUG BUG-010: Multiplicative penalty from dead knowledge in the candidate's
+    # group. 1.0 = no graves nearby (full strength). Scales down towards
+    # GRAVE_SHADOW_FLOOR as grave ratio rises. Computed upstream via
+    # compute_grave_shadow() so VoteOrchestrator stays decoupled from engine.
+    # Antimatch nodes always get 1.0 — suppressors don't die, they don't cast shadows.
+    grave_shadow_multiplier::Float64
 end
 
 function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
@@ -646,7 +677,8 @@ function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
                        anti_match_score::Float64  = NaN,
                        peak_dominance::Float64    = NaN,
                        frame_match_multiplier::Float64 = 1.0,
-                       is_relay::Bool = false)
+                       is_relay::Bool = false,
+                       grave_shadow_multiplier::Float64 = 1.0)
     if isempty(strip(node_id))
         throw_vo_error("VoteCandidate node_id cannot be empty", "VoteCandidate")
     end
@@ -656,10 +688,13 @@ function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
     if !isfinite(frame_match_multiplier) || frame_match_multiplier <= 0
         throw_vo_error("VoteCandidate frame_match_multiplier must be finite > 0, got $frame_match_multiplier", "VoteCandidate")
     end
+    if !isfinite(grave_shadow_multiplier) || grave_shadow_multiplier <= 0
+        throw_vo_error("VoteCandidate grave_shadow_multiplier must be finite > 0, got $grave_shadow_multiplier", "VoteCandidate")
+    end
     return VoteCandidate(node_id, confidence, strength, strength_cap,
                          lobe_alignment, relational_match, recency_bonus,
                          action_tone_align, anti_match_score, peak_dominance,
-                         frame_match_multiplier, is_relay)
+                         frame_match_multiplier, is_relay, grave_shadow_multiplier)
 end
 
 """
@@ -727,6 +762,13 @@ function composite_vote_score(vc::VoteCandidate)::Float64
     # additive bonuses + penalty so it composes cleanly: anti-match still
     # demotes; the field still tilts.
     score *= vc.frame_match_multiplier
+
+    # GRUG BUG-010: Grave shadow inhibition — dead knowledge casts shadows.
+    # Multiplicative penalty that scales with grave ratio in the candidate's
+    # scope (group for regular nodes, tribe for AIML). Applied AFTER frame
+    # match so it composes cleanly with all other signals. Antimatch nodes
+    # always have 1.0 (suppressors don't die, don't cast shadows).
+    score *= vc.grave_shadow_multiplier
 
     return max(VOTE_SCORE_FLOOR, score)
 end
