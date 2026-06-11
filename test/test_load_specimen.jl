@@ -263,6 +263,7 @@ let
         Dict{String, Float64}(string(k) => Float64(v) for (k,v) in get(parsed, "relation_weights", Dict())),
         Float64(parsed["strength"]),
         Bool(parsed["is_image_node"]),
+        Bool(get(parsed, "is_antimatch_node", false)),
         String.(parsed["neighbor_ids"]),
         Bool(parsed["is_unlinkable"]),
         Bool(parsed["is_grave"]),
@@ -273,7 +274,9 @@ let
         Bool(get(parsed, "fired_this_cycle", false)),
         Bool(get(parsed, "voted_this_cycle", false)),
         Bool(get(parsed, "gained_this_cycle", false)),
-        Float64(get(parsed, "strength_delta_this_cycle", 0.0))
+        Float64(get(parsed, "strength_delta_this_cycle", 0.0)),
+        String(get(parsed, "original_pattern", String(parsed["pattern"]))),
+        String(get(parsed, "original_action_packet", String(parsed["action_packet"])))
     )
     
     test("Restored node id matches", restored_node.id == node.id)

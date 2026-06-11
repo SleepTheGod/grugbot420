@@ -51,6 +51,7 @@ function make_test_node!(node_id::String, pattern::String, json_data::Dict{Strin
         0.0, relational_patterns, required_relations,
         Dict{String,Float64}(), 5.0, false, false, String[], false, 12, false,
         "", Float64[], time(), UInt64(0), false, false, false, 0.0,
+        pattern, action_packet,  # BUG-010b: original_pattern, original_action_packet
     )
     lock(NODE_LOCK) do
         NODE_MAP[node_id] = node

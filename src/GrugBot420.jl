@@ -110,12 +110,27 @@ using .InputLedger
 include("ChatterResiduals.jl")
 using .ChatterResiduals
 
+# GRUG: SigilRegistry — Stage 1 sigil registry kernel. Single source of truth
+# for typed symbolic handles (&n, &word, &rest, &noun, ...) used in pattern
+# matching and (in later stages) cross-subsystem semantic propagation. Stage 1
+# activates classes :lambda, :macro, :tag and phases :bind, :match. Reserved
+# classes (:glue, :functor, :procedure) and reserved phases are accepted on
+# registration but rejected at pattern-resolution time. NO SILENT FAILURES:
+# unknown sigils, bad classes, malformed names all THROW. Patterns with no
+# `&` token take a fast path that allocates nothing — old specimens are
+# bit-identical to pre-sigil behaviour. See plans/sigil_architecture/STAGE1.md
+# for the locked-in scope and the reserved-stage roadmap.
+# GRUG BUG-010b: Moved BEFORE AutoGrowth — AutoGrowth uses `using ..SigilRegistry`
+# so SigilRegistry must be loaded first.
+include("SigilRegistry.jl")
+using .SigilRegistry
+
 # GRUG: AutoGrowth — live conversation evidence accumulation + lazy coinflip
 # growth. Every user message carries evidence of gaps. The system accumulates
 # lazily and grows when enough evidence piles up. All node types + sigils +
 # thesaurus + lobe whitelists. Must load AFTER MitosisMode/RelationalGovernance/
-# InputLedger/ChatterResiduals (same function-injection pattern) and BEFORE
-# ImmuneSystem (growth calls immune_gate_fn on every new node).
+# InputLedger/ChatterResiduals/SigilRegistry (same function-injection pattern)
+# and BEFORE ImmuneSystem (growth calls immune_gate_fn on every new node).
 include("AutoGrowth.jl")
 using .AutoGrowth
 
@@ -169,18 +184,7 @@ using .VoteOrchestrator
 include("SelfObserver.jl")
 using .SelfObserver
 
-# GRUG: SigilRegistry — Stage 1 sigil registry kernel. Single source of truth
-# for typed symbolic handles (&n, &word, &rest, &noun, ...) used in pattern
-# matching and (in later stages) cross-subsystem semantic propagation. Stage 1
-# activates classes :lambda, :macro, :tag and phases :bind, :match. Reserved
-# classes (:glue, :functor, :procedure) and reserved phases are accepted on
-# registration but rejected at pattern-resolution time. NO SILENT FAILURES:
-# unknown sigils, bad classes, malformed names all THROW. Patterns with no
-# `&` token take a fast path that allocates nothing — old specimens are
-# bit-identical to pre-sigil behaviour. See plans/sigil_architecture/STAGE1.md
-# for the locked-in scope and the reserved-stage roadmap.
-include("SigilRegistry.jl")
-using .SigilRegistry
+# GRUG: SigilRegistry already loaded above (before AutoGrowth, which needs it).
 
 # GRUG: SigilPromoter — Stage 1.5a front-door input promoter. Two-pass:
 # Layer 1 canonicalizes tokens via closed number-word and op-word maps
@@ -375,7 +379,7 @@ export run_mitosis!, MitosisStats, MitosisError, get_mitosis_log
 export get_mitosis_status_summary
 export MITOSIS_PROBABILITY, MIN_POPULATION_GATE, MAX_POPULATION_CAP
 export MITOSIS_COOLDOWN_CYCLES, MIN_WARRANT_THRESHOLD
-export GroupLatchCandidate, LatchCandidate, group_avg_strength, find_group_latch_candidates, _scan_latch_candidates
+export GroupLatchCandidate, LatchCandidate, group_avg_strength, find_group_latch_candidates, _scan_latch_candidates, refresh_inhibition_tokens!, is_inhibited
 export MITOSIS_PATTERN_SIM_FLOOR, MITOSIS_VOTE_SIM_FLOOR
 export LATCH_SCAN_CONFIDENCE_FLOOR, THES_LATCH_WEIGHT, LATCH_CANDIDATE_TOP_N
 

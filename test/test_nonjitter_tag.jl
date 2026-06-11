@@ -66,6 +66,8 @@ function make_bare_node(id::String = "test_node_$(rand(1:10_000_000))")
         false,                       # voted_this_cycle
         false,                       # gained_this_cycle
         0.0,                         # strength_delta_this_cycle
+        "test pattern",              # original_pattern (BUG-010b: frozen at birth)
+        "noop",                      # original_action_packet (BUG-010b: frozen at birth)
     )
 end
 

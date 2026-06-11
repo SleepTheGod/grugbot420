@@ -53,6 +53,8 @@ function make_bare_node(strength::Float64 = 1.0, id::String = "solidify_$(rand(1
         false,
         false,
         0.0,
+        "test pattern",    # BUG-010b: original_pattern
+        "noop",            # BUG-010b: original_action_packet
     )
 end
 

@@ -628,7 +628,8 @@ end
             Dict{String, Any}(), String[], 1.0,
             RelationalTriple[], String[], Dict{String, Float64}(),
             5.0, true, false, String[], false, 12, false, "",
-            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0
+            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0,
+            "SDF:image:4x4", "image_action"  # BUG-010b: original_pattern, original_action_packet
         )
         NODE_MAP[nid] = node
         return nid
@@ -711,7 +712,8 @@ end
             Dict{String, Any}(), String[], 1.0,
             RelationalTriple[], String[], Dict{String, Float64}(),
             5.0, true, false, String[], false, 12, false, "",
-            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0
+            Float64[], time(), hash("SDF:image:4x4"), false, false, false, 0.0,
+            "SDF:image:4x4", "image_action"  # BUG-010b: original_pattern, original_action_packet
         )
         NODE_MAP[nid] = node
         return nid

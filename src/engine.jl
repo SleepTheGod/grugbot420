@@ -736,6 +736,15 @@ mutable struct Node
     voted_this_cycle::Bool           # GRUG: True if node voted (may or may not have contributed)
     gained_this_cycle::Bool          # GRUG: True if node gained strength this cycle
     strength_delta_this_cycle::Float64  # GRUG: Strength change this cycle (for over-compensation penalty)
+
+    # GRUG BUG-010b: Pre-chatter originals for inhibition rules.
+    # When chatter swaps a node's pattern + action_packet (Markov remix),
+    # the remixed content is borrowed/stolen — it's NOT the node's organic
+    # identity. Inhibition rules (the "don't do" list) must use the
+    # ORIGINAL content, not the post-swap remixed stuff. Originals are
+    # frozen at node creation and never updated by chatter.
+    original_pattern::String             # GRUG: Pattern at birth. Chatter never touches this.
+    original_action_packet::String       # GRUG: Action packet at birth. Chatter never touches this.
 end
 
 struct Vote
@@ -1603,17 +1612,25 @@ mutable struct NodeGroup
                                      #       connected members (checked in add_to_group!). Replaces
                                      #       the old chatter_count=-1 sentinel hack which was fragile
                                      #       and never enforced.
+    inhibition_tokens::Set{String}   # GRUG BUG-010b: Semantic "don't do" set — tokens from alive
+                                     #       members' ORIGINAL pattern + action_packet (pre-chatter),
+                                     #       expanded by thesaurus. Post-swap remixed content does NOT
+                                     #       contribute. Graved nodes excluded. Used by growth/latch
+                                     #       to avoid spawning what's already semantically covered.
+    inhibition_dirty::Bool           # GRUG BUG-010b: True when inhibition_tokens is stale and needs
+                                     #       refresh before use. Set on: member add, grave, chatter swap.
+                                     #       Cleared by refresh_inhibition_tokens!().
 end
 
 # GRUG: Backwards-friendly constructor. Most callers only know id+seed.
-# Calls the default inner constructor (11 positional fields) provided by Julia.
+# Calls the default inner constructor (13 positional fields) provided by Julia.
 NodeGroup(id::String, seed_node_id::String, centroid_pattern::String; is_time_node_group::Bool=false, is_chatter_eligible::Bool=true) =
-    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, 0, GROUP_MAX_OCCUPANCY, is_time_node_group, is_chatter_eligible)
+    NodeGroup(id, [seed_node_id], centroid_pattern, time(), 0.0, 0, false, 0, GROUP_MAX_OCCUPANCY, is_time_node_group, is_chatter_eligible, Set{String}(), true)
 
-# NOTE: No explicit 12-arg outer constructor needed — Julia's default inner
+# NOTE: No explicit 14-arg outer constructor needed — Julia's default inner
 # constructor already provides NodeGroup(id, members, centroid_pattern,
 # created_at, last_chatter_at, chatter_count, has_grave_slot, grave_count, max_occupancy,
-# is_time_node_group, is_chatter_eligible).
+# is_time_node_group, is_chatter_eligible, inhibition_tokens, inhibition_dirty).
 # Defining an outer constructor with the same signature as the inner one
 # replaces it and causes infinite recursion (StackOverflowError).
 
@@ -1743,6 +1760,9 @@ function add_to_group!(group::NodeGroup, node_id::String)::Bool
             end
         end
 
+        # GRUG BUG-010b: Inhibition tokens are now stale (new member added).
+        group.inhibition_dirty = true
+
         return true
     end
 end
@@ -1775,6 +1795,8 @@ function mark_group_grave_slot!(node_id::String)
         # Each grave increments the count; add_to_group! decrements when
         # a replacement fills the slot. Used by grave_shadow_multiplier.
         grp.grave_count += 1
+        # GRUG BUG-010b: Inhibition tokens are stale (member graved).
+        grp.inhibition_dirty = true
     end
 end
 
@@ -1909,6 +1931,129 @@ function compute_grave_shadow(node_id::String;
     return clamp(shadow, floor, 1.0)
 end
 
+# ==============================================================================
+# BUG-010b: INHIBITION TOKENS — "don't do" list from alive members' originals
+# ==============================================================================
+# GRUG: When chatter swaps a node's pattern + action_packet (Markov remix),
+# the remixed content is borrowed/stolen — it's NOT the node's organic identity.
+# Inhibition rules (the "don't do" list) must use the ORIGINAL content
+# (pre-chatter), not the post-swap remixed stuff.
+#
+# The inhibition_tokens set on each NodeGroup is built from:
+#   1. All alive (non-grave) members' original_pattern tokens
+#   2. All alive members' original_action_packet action names
+#   3. Thesaurus expansion of each token (synonyms count as covered too)
+# Antimatch nodes don't contribute (they're stiff suppressors, not knowledge).
+# Graved nodes don't contribute (dead knowledge doesn't inhibit).
+# Post-swap remixed content doesn't contribute (chatter overwrites don't inhibit).
+#
+# When growth/latch considers spawning a new node whose tokens overlap heavily
+# with inhibition_tokens, it should be suppressed — that semantic territory
+# is already covered by the group's original inhabitants.
+
+"""
+    refresh_inhibition_tokens!(group::NodeGroup; node_map, node_lock, thesaurus_fn=nothing)
+
+GRUG BUG-010b: Rebuild the group's inhibition_tokens set from alive members'
+ORIGINAL pattern + action_packet content (pre-chatter), expanded by thesaurus.
+Call this after: group membership changes, chatter swaps, or graving events.
+
+Only alive (non-grave), non-antimatch members contribute. Post-swap remixed
+content is ignored — only originals count.
+"""
+function refresh_inhibition_tokens!(
+    group::NodeGroup;
+    node_map = NODE_MAP,
+    node_lock = NODE_LOCK,
+    thesaurus_fn::Union{Function, Nothing} = nothing,
+)::Nothing
+    tokens = Set{String}()
+
+    lock(node_lock) do
+        for mid in group.members
+            node = get(node_map, mid, nothing)
+            isnothing(node) && continue
+            node.is_grave && continue
+            node.is_antimatch_node && continue
+
+            # GRUG: Original pattern tokens (pre-chatter, frozen at birth)
+            if !isempty(node.original_pattern)
+                for tok in split(lowercase(strip(node.original_pattern)), r"\s+")
+                    isempty(tok) && continue
+                    push!(tokens, tok)
+                    # GRUG: Thesaurus expansion — synonyms count as covered too
+                    if thesaurus_fn !== nothing
+                        try
+                            syns = thesaurus_fn(tok)  # expects Vector{String} or Set{String}
+                            for s in syns
+                                s_str = lowercase(strip(string(s)))
+                                isempty(s_str) || push!(tokens, s_str)
+                            end
+                        catch
+                            # thesaurus lookup failure = skip expansion, token already added
+                        end
+                    end
+                end
+            end
+
+            # GRUG: Original action_packet action names (pre-chatter)
+            if !isempty(node.original_action_packet)
+                action_names = _action_names_from_packet(node.original_action_packet)
+                for aname in action_names
+                    aname_lower = lowercase(strip(aname))
+                    isempty(aname_lower) && continue
+                    push!(tokens, aname_lower)
+                end
+            end
+        end
+    end
+
+    group.inhibition_tokens = tokens
+    group.inhibition_dirty = false
+    return nothing
+end
+
+"""
+    is_inhibited(pattern::String, group::NodeGroup; threshold::Float64=0.5)::Bool
+
+GRUG BUG-010b: Check if a candidate pattern's tokens overlap too much with
+the group's inhibition_tokens. If overlap >= threshold, the pattern is
+"already covered" — growth/latch should not spawn it here.
+
+threshold=0.5 means: if ≥50% of the candidate's tokens are already in the
+inhibition set, it's inhibited (don't duplicate coverage).
+"""
+function is_inhibited(
+    pattern::String,
+    group::NodeGroup;
+    threshold::Float64 = 0.5,
+    node_map = NODE_MAP,
+    node_lock = NODE_LOCK,
+    thesaurus_fn::Union{Function, Nothing} = nothing,
+)::Bool
+    # GRUG BUG-010b: Lazy refresh — if dirty, rebuild before checking.
+    if group.inhibition_dirty
+        try
+            refresh_inhibition_tokens!(group; node_map=node_map, node_lock=node_lock, thesaurus_fn=thesaurus_fn)
+        catch e
+            @warn "[INHIBIT] refresh_inhibition_tokens! failed for group $(group.id): $e"
+        end
+    end
+    if isempty(group.inhibition_tokens) || isempty(pattern)
+        return false
+    end
+
+    candidate_tokens = Set(lowercase(strip(t)) for t in split(pattern, r"\s+") if !isempty(strip(t)))
+    if isempty(candidate_tokens)
+        return false
+    end
+
+    overlap = length(intersect(candidate_tokens, group.inhibition_tokens))
+    ratio = Float64(overlap) / Float64(length(candidate_tokens))
+
+    return ratio >= threshold
+end
+
 """
     GroupLatchCandidate
 
@@ -1942,7 +2087,7 @@ Criteria:
     non-time nodes only see non-time-node groups (requesting_node_is_time gate)
   - Empty vector = no related group found
 """
-function find_group_latch_candidates(pattern::String; node_map, node_lock, requesting_node_is_time::Bool=false)::Vector{GroupLatchCandidate}
+function find_group_latch_candidates(pattern::String; node_map, node_lock, requesting_node_is_time::Bool=false, thesaurus_fn::Union{Function, Nothing}=nothing)::Vector{GroupLatchCandidate}
     candidates = GroupLatchCandidate[]
 
     lock(GROUP_LOCK) do
@@ -1969,6 +2114,12 @@ function find_group_latch_candidates(pattern::String; node_map, node_lock, reque
 
             # GRUG: Don't include totally unrelated groups (sim must be > 0)
             if sim <= 0.0
+                continue
+            end
+
+            # GRUG BUG-010b: If this group's inhibition tokens already cover
+            # the candidate pattern, don't latch — semantic territory occupied.
+            if is_inhibited(pattern, grp; node_map=node_map, node_lock=node_lock, thesaurus_fn=thesaurus_fn)
                 continue
             end
 
@@ -2262,6 +2413,12 @@ function _scan_latch_candidates(
     # GRUG: Step 5 — Score each candidate through the three-gate pipeline.
     for (node, grp) in candidate_nodes
         try
+            # GRUG BUG-010b: If this group's inhibition tokens already cover the
+            # candidate pattern, skip — semantic territory already occupied by
+            # alive members' ORIGINAL content (pre-chatter).
+            if is_inhibited(pattern, grp; node_map=node_map, node_lock=node_lock, thesaurus_fn=thesaurus_fn)
+                continue
+            end
             # ── GATE 1: Pattern scan confidence ────────────────────────────
             scan_conf = 0.0
             if !isempty(new_signal) && words_to_signal_fn !== nothing
@@ -3581,7 +3738,9 @@ function create_node(
         false,              # fired_this_cycle
         false,              # voted_this_cycle
         false,              # gained_this_cycle
-        0.0                 # strength_delta_this_cycle
+        0.0,                # strength_delta_this_cycle
+        pattern,             # original_pattern (BUG-010b: frozen at birth, chatter never touches)
+        action_packet,       # original_action_packet (BUG-010b: frozen at birth, chatter never touches)
     )
 
     lock(NODE_LOCK) do

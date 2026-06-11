@@ -96,6 +96,8 @@ function make_test_node(id::String, strength::Float64 = 5.0)
         false,                        # voted_this_cycle
         false,                        # gained_this_cycle
         0.0,                          # strength_delta_this_cycle
+        "test_$(id)",                 # original_pattern (BUG-010b: frozen at birth)
+        "test_action|test_slot",      # original_action_packet (BUG-010b: frozen at birth)
     )
     lock(NODE_LOCK) do
         NODE_MAP[id] = node

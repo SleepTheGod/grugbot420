@@ -5344,7 +5344,7 @@ function process_mission(mission_text::String)
                     stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
                         AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
                     group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
-                        find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                        find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
                     link_to_group_member_fn    = link_to_group_member,
                     group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
                         grp = get(GROUP_MAP, gid, nothing)
@@ -6081,7 +6081,7 @@ function process_mission(mission_text::String)
                 stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
                     AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
                 group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
-                    find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                    find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
                 link_to_group_member_fn    = link_to_group_member,
                 group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
                     grp = get(GROUP_MAP, gid, nothing)
@@ -6513,7 +6513,10 @@ function save_specimen_to_file!(filepath::String)::String
                 "grave_reason"        => node.grave_reason,
                 "response_times"      => node.response_times,
                 "ledger_last_cleared" => node.ledger_last_cleared,
-                "hopfield_key"        => string(node.hopfield_key)  # UInt64 -> String for JSON safety
+                "hopfield_key"        => string(node.hopfield_key),  # UInt64 -> String for JSON safety
+                # GRUG BUG-010b: Original content frozen at birth. Chatter swaps don't touch these.
+                "original_pattern"        => node.original_pattern,
+                "original_action_packet"  => node.original_action_packet
             )
             push!(node_list, nd)
         end
@@ -6786,6 +6789,8 @@ function save_specimen_to_file!(filepath::String)::String
                 "max_occupancy"    => grp.max_occupancy,
                 "is_time_node_group" => grp.is_time_node_group,
                 "is_chatter_eligible" => grp.is_chatter_eligible,
+                # GRUG BUG-010b: inhibition_tokens — semantic "don't do" set from alive originals + thesaurus.
+                "inhibition_tokens"  => collect(grp.inhibition_tokens),
             ))
         end
     end
@@ -8221,7 +8226,11 @@ function load_specimen_from_file!(filepath::String)::String
                         false,   # fired_this_cycle
                         false,   # voted_this_cycle
                         false,   # gained_this_cycle
-                        0.0      # strength_delta_this_cycle
+                        0.0,     # strength_delta_this_cycle
+                        # GRUG BUG-010b: Original content for inhibition rules.
+                        # If missing from specimen (old format), fall back to current pattern/action_packet.
+                        String(get(nd, "original_pattern", String(nd["pattern"]))),
+                        String(get(nd, "original_action_packet", String(nd["action_packet"])))
                     )
                     NODE_MAP[node.id] = node
                     n_nodes += 1
@@ -8526,7 +8535,12 @@ function load_specimen_from_file!(filepath::String)::String
                         # GRUG: Migration from old sentinel — chatter_count=-1 means NOCHAT
                         is_chatter_eligible = (ccount >= 0)
                     end
-                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, grave_cnt, max_occ, is_tng, is_chatter_eligible)
+                    grp = NodeGroup(gid, members, centroid, created, last_ct, ccount, grave_slot, grave_cnt, max_occ, is_tng, is_chatter_eligible,
+                                    # GRUG BUG-010b: inhibition_tokens — semantic "don't do" set from alive originals.
+                                    # Old specimens lack this field; default to empty set (will be rebuilt on first refresh).
+                                    Set{String}(String.(get(gentry, "inhibition_tokens", String[]))),
+                                    # GRUG BUG-010b: inhibition_dirty — always true on load (tokens may be stale).
+                                    true)
                     GROUP_MAP[gid] = grp
                     for m in members
                         NODE_TO_GROUP[m] = gid
@@ -9778,7 +9792,7 @@ function maybe_run_idle()
             create_node_fn        = create_node,
             add_to_group_fn       = add_to_group!,
             group_latch_fn        = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
-                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
             link_to_group_member_fn = link_to_group_member,
             immune_gate_fn        = (pattern, data) -> begin
                 json_text = JSON.json(Dict("pattern" => pattern, "data" => data))
@@ -9829,7 +9843,7 @@ function maybe_run_idle()
             stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
                 AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
             group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
-                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time),
+                find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
             link_to_group_member_fn    = link_to_group_member,
             group_avg_strength_fn      = (gid) -> lock(GROUP_LOCK) do
                 grp = get(GROUP_MAP, gid, nothing)
@@ -10058,6 +10072,17 @@ function maybe_run_idle()
             )
             ChatterMode.apply_chatter_diffs!(session, NODE_MAP, NODE_LOCK;
                                              stamp_fn = stamp_chatter!)
+            # GRUG BUG-010b: Chatter swapped patterns+action_packets, so inhibition
+            # tokens are now stale (remixed content should NOT contribute to inhibition).
+            # Mark all chattered groups dirty so next is_inhibited check refreshes.
+            for clone in session.clones
+                if clone.accepted_swap
+                    grp = group_for(clone.source_id)
+                    if !isnothing(grp)
+                        grp.inhibition_dirty = true
+                    end
+                end
+            end
             try
                 ChatterMode.persist_chatter_log!()
             catch e
