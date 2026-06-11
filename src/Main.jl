@@ -1411,6 +1411,16 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
     for (lid, base_avg, _, _, _) in _lobe_scores
         lobe_base_map[lid] = base_avg
     end
+    # GRUG v8.1-coherence-fix: Also build per-group lobe_base_map for
+    # multipart votes so peak_dominance uses the correct group's averages.
+    _group_lobe_base_maps = Dict{String, Dict{String, Float64}}()
+    for (grp_id, (grp_scores, grp_winner, grp_passthrough)) in _MULTIPART_GROUP_LOBE_STATE
+        grp_map = Dict{String, Float64}()
+        for (lid, base_avg, _, _, _) in grp_scores
+            grp_map[lid] = base_avg
+        end
+        _group_lobe_base_maps[grp_id] = grp_map
+    end
     # v7.24-restore: bring the ATP and TonalJudge channels back into vote
     # ranking. They cannot CREATE votes (pattern-bind has already happened),
     # but they SHOULD re-rank what survived so the primary winner reflects
@@ -1452,11 +1462,27 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
                 nothing
             end
 
+            # GRUG v8.1-coherence-fix: Use per-group lobe state for multipart
+            # votes. Each sub-subject gets its own winner/passthrough lobes,
+            # so math votes align to MathLobe even if the global winner was
+            # SocialLobe (because emotional sub-subject had more votes).
+            _vote_group = getfield(v, :multipart_group)
+            _grp_winner, _grp_passthrough = if !isempty(_vote_group)
+                grp_state = get_multipart_lobe_state(_vote_group)
+                if !isnothing(grp_state)
+                    (grp_state[2], Set(grp_state[3]))
+                else
+                    (winner_lobe, passthrough_lobes)
+                end
+            else
+                (winner_lobe, passthrough_lobes)
+            end
+
             lobe_align = if isnothing(node_lobe)
                 0.0
-            elseif node_lobe == winner_lobe
+            elseif node_lobe == _grp_winner
                 1.0
-            elseif node_lobe in passthrough_lobes
+            elseif node_lobe in _grp_passthrough
                 0.5
             else
                 0.0
@@ -1501,8 +1527,15 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
 
             anti_score = v.antimatch ? 1.0 : 0.0
 
-            peak_dom = if !isnothing(node_lobe) && haskey(lobe_base_map, node_lobe)
-                base = lobe_base_map[node_lobe]
+            # GRUG v8.1-coherence-fix: Use per-group lobe_base_map for
+            # peak_dominance when the vote has a multipart_group.
+            _peak_base_map = if !isempty(_vote_group) && haskey(_group_lobe_base_maps, _vote_group)
+                _group_lobe_base_maps[_vote_group]
+            else
+                lobe_base_map
+            end
+            peak_dom = if !isnothing(node_lobe) && haskey(_peak_base_map, node_lobe)
+                base = _peak_base_map[node_lobe]
                 # Ratio of this vote's conf to lobe mean — clamped to [0,1].
                 # 1.0 means this vote is at or above its lobe's average,
                 # below means it's weaker than lobe siblings.
@@ -2656,7 +2689,26 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     arithmetic_reply = ""
     _math_bindings_present = false
     try
-        bindings = current_promotion_bindings()
+        # GRUG v8.1-coherence-fix: MULTIPART BINDING LOOKUP.
+        # For multipart inputs, each sub-objective has its own promotion
+        # bindings stashed under its group_id. The global Ref only holds
+        # the LAST sub-scan's bindings, which is wrong for earlier groups.
+        # Look up per-group bindings FIRST; fall back to global Ref for
+        # singleton inputs (no multipart_group).
+        _mp_group = getfield(primary_vote, :multipart_group)
+        # GRUG v8.1-coherence-fix: Per-group binding lookup with global fallback.
+        # Singleton inputs store bindings under group="" in scan_and_expand,
+        # but cast_vote_chunked assigns "mp_N" from chunk_boundaries even for
+        # single-chunk inputs.  When per-group lookup returns empty, fall back
+        # to the global Ref which always holds the most recent scan's bindings.
+        _group_bindings = !isempty(_mp_group) ? get_multipart_bindings(_mp_group) : SigilPromoter.SigilBinding[]
+        bindings = if !isempty(_mp_group) && !isempty(_group_bindings)
+            _group_bindings
+        else
+            # Per-group was empty or group is "" — use global ref (which has
+            # the singleton / most-recent scan bindings).
+            current_promotion_bindings()
+        end
         _math_bindings_present = ArithmeticEngine.has_math_bindings(bindings)
         if _math_bindings_present
             arithmetic_result = ArithmeticEngine.compute_arithmetic(bindings)
@@ -3084,7 +3136,15 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         end
     else
         try
-            bindings = current_promotion_bindings()
+            # GRUG v8.1-coherence-fix: Use per-group bindings for telemetry too.
+            # Same fallback logic as the arithmetic section above.
+            _mp_group = getfield(primary_vote, :multipart_group)
+            _grp_binds = !isempty(_mp_group) ? get_multipart_bindings(_mp_group) : SigilPromoter.SigilBinding[]
+            bindings = if !isempty(_mp_group) && !isempty(_grp_binds)
+                _grp_binds
+            else
+                current_promotion_bindings()
+            end
             if ArithmeticEngine.has_math_bindings(bindings)
                 println(payload_io, "Arithmetic: math bindings present but computation was not run")
             else
@@ -4942,6 +5002,12 @@ function process_mission(mission_text::String)
         error("!!! FATAL: process_mission got empty mission text! !!!")
     end
 
+    # GRUG v8.1-coherence-fix: Clear per-group binding stash at the start
+    # of each mission cycle so stale bindings from previous cycles don't
+    # leak into the current one.
+    clear_multipart_bindings!()
+    clear_multipart_lobe_states!()
+
     # GRUG: Start a new AIML cycle. Resets all per-cycle bookkeeping flags on every
     # AIML node so /aimlRight and /aimlWrong can see only explicit orchestration
     # contributors from THIS cycle. Mere voting/firing is not reinforcement.
@@ -5161,7 +5227,7 @@ function process_mission(mission_text::String)
                 InputDecomposer.InputChunk[]
             end
             sub_task_name, sub_task = VoteOrchestrator.dispatch_task_with_timeout(
-                () -> scan_and_expand(sub.text; chunks=sub_chunks),
+                () -> scan_and_expand(sub.text; chunks=sub_chunks, multipart_group=sub.multipart_group),
                 "scan_$(sub.multipart_group)",
                 30.0;
                 context = "run_mission.scan.$(sub.multipart_group)"
@@ -5468,6 +5534,50 @@ function process_mission(mission_text::String)
     end
 
     println("--> $(length(cast_votes)) valid votes passed gate... compiling JIT superposition...")
+
+    # GRUG v8.1-coherence-fix: CALL score_lobes() so that lobe_alignment is
+    # actually populated before ephemeral_aiml_orchestrator runs.
+    # Without this, get_last_state() always returns empty winner/passthrough,
+    # so lobe_alignment is 0.0 for every vote — meaning emotional/survival
+    # lobes with high raw confidence can outvote math lobe even on math inputs.
+    # Now score_lobes sets LAST_WINNER and LAST_PASSTHROUGH, which the
+    # orchestrator reads to compute lobe_alignment per vote candidate.
+    #
+    # For multipart inputs, we also score lobes PER GROUP so that each
+    # sub-subject gets its own winner lobe. A compound input like
+    # "I feel happy and what is 2+3" should route math votes to MathLobe
+    # and emotional votes to SocialLobe. The global score picks one winner
+    # for the whole input; per-group scoring ensures each sub-subject's
+    # votes get the correct lobe_alignment from their own group's scoring.
+    try
+        # Global score (for singleton inputs and as fallback)
+        lobe_entries = [(v.node_id, v.confidence) for v in cast_votes]
+        lobe_tokens = String[strip(t) for t in split(lowercase(mission_text)) if !isempty(strip(t))]
+        LobeOrchestrator.score_lobes(lobe_entries, Lobe.find_lobe_for_node; input_tokens=lobe_tokens)
+        _ls, _lw, _lp = LobeOrchestrator.get_last_state()
+        println("   [LOBE-ORCH] Global Winner=$_lw  Passthrough=$(join(_lp, ","))  Scored=$(length(_ls)) lobes")
+
+        # Per-group scoring for multipart inputs
+        _mp_groups = unique([v.multipart_group for v in cast_votes if !isempty(v.multipart_group)])
+        if !isempty(_mp_groups)
+            for grp in _mp_groups
+                grp_votes = filter(v -> v.multipart_group == grp, cast_votes)
+                grp_entries = [(v.node_id, v.confidence) for v in grp_votes]
+                # Tokenize the sub-subject text for this group
+                grp_tokens = String[strip(t) for t in split(lowercase(grp)) if !isempty(strip(t))]
+                LobeOrchestrator.score_lobes(grp_entries, Lobe.find_lobe_for_node; input_tokens=grp_tokens)
+                grp_ls, grp_lw, grp_lp = LobeOrchestrator.get_last_state()
+                stash_multipart_lobe_state!(grp, grp_ls, grp_lw, grp_lp)
+                println("   [LOBE-ORCH] Group '$grp' Winner=$grp_lw  Passthrough=$(join(grp_lp, ","))  Scored=$(length(grp_ls)) lobes")
+            end
+            # Restore global state so ephemeral_aiml_orchestrator's initial
+            # get_last_state() call still gets the global picture for the
+            # common case (singleton votes, votes without a group).
+            LobeOrchestrator.set_last_state!(_ls, _lw, _lp)
+        end
+    catch e
+        @warn "[MAIN] score_lobes failed (continuing without lobe alignment): $e"
+    end
 
     # GRUG: ORCHESTRATOR SUB-PROCESS DISPATCH!
     # The AIML orchestrator is itself dispatched to a unique Task with a timeout.

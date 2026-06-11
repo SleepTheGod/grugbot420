@@ -959,6 +959,43 @@ function _split_on_sigil_boundaries(input_text::String, config::DecomposerConfig
         return [input_text]  # all one type, no sigil boundary
     end
 
+    # GRUG v8.1-coherence-fix: MERGE lang+arith zones when the arithmetic
+    # is the OBJECT of a question, not a separate subject.
+    # "what is 2+2" should NOT be split into "what is" + "2+2" — the
+    # arithmetic IS the question's answer target, not an independent subject.
+    # Heuristic: if a :lang zone immediately precedes an :arith zone, and
+    # the lang zone CONTAINS a question marker (what/who/how/is/etc.)
+    # or a command marker (calculate/compute/etc.), the arith zone is
+    # likely the object of that question/command — merge them.
+    # After merging, mark the merged zone as :question_arith so the
+    # multiple-marker splitter knows NOT to break it apart.
+    merged_zones = Tuple{Symbol, Int, Int}[]
+    i = 1
+    while i <= length(zones)
+        zt_curr, s_curr, e_curr = zones[i]
+        if zt_curr == :lang && i < length(zones)
+            zt_next, s_next, e_next = zones[i+1]
+            if zt_next == :special
+                # Check if the lang zone contains any question/command marker
+                has_marker = any(ti -> lower_tokens[ti] in config.question_markers ||
+                                       lower_tokens[ti] in config.expanded_command_markers,
+                                s_curr:e_curr)
+                if has_marker
+                    # Merge: lang zone absorbs the following arith zone.
+                    # Mark as :question_arith so the multiple-marker splitter
+                    # knows to keep this zone intact — "what is 2+2" is ONE
+                    # subject, not two.
+                    push!(merged_zones, (:question_arith, s_curr, e_next))
+                    i += 2  # skip both zones
+                    continue
+                end
+            end
+        end
+        push!(merged_zones, zones[i])
+        i += 1
+    end
+    zones = merged_zones
+
     # GRUG: We also check that the :lang zone has clause structure.
     # "compute 2+3 compute 4*5" should split at the second "compute".
     # But "2+3 and 4*5" might be all arithmetic (no lang clause structure).
@@ -973,6 +1010,13 @@ function _split_on_sigil_boundaries(input_text::String, config::DecomposerConfig
         # GRUG: For lang zones, check if they contain multiple command/question
         # markers that should be split further. Example:
         # "explain X describe Y" → split at "describe" because it's a command marker.
+        # GRUG v8.1-coherence-fix: :question_arith zones (e.g. "what is 2+2")
+        # are NEVER split by markers — the arithmetic is the object of the
+        # question, and splitting "what is" from "2+2" breaks arithmetic binding.
+        if zone_type == :question_arith
+            push!(clauses, zone_text)
+            continue
+        end
         if zone_type == :lang && end_idx - start_idx >= 2
             # Check for multiple command/question markers in this lang zone
             marker_positions = Int[]

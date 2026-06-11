@@ -159,6 +159,146 @@ const _GLOBAL_PROMOTION_REWRITTEN::Base.RefValue{String} = Ref("")
 const _GLOBAL_PROMOTION_RAW::Base.RefValue{String} = Ref("")
 const _GLOBAL_PROMOTION_LOCK::ReentrantLock = ReentrantLock()
 
+# GRUG v8.1-coherence-fix: PER-GROUP BINDING STASH for multipart sub-scans.
+# When a compound input ("what is 2+2 also what is a cat") is decomposed,
+# each sub-subject calls scan_and_expand independently. Each call OVERWRITES
+# _GLOBAL_PROMOTION_BINDINGS, so by the time generate_aiml_payload runs for
+# the math sub-objective, the bindings are from the LAST sub-scan (cat),
+# not the math scan. Result: "Arithmetic: no math bindings this cycle."
+#
+# Fix: stash bindings per multipart_group in this dict. After each sub-scan,
+# the caller stores the bindings under the sub-subject's group_id. Then
+# generate_aiml_payload looks up bindings by the primary_vote's group_id
+# BEFORE falling back to the global Ref. This way each sub-objective gets
+# its own correct bindings.
+const _MULTIPART_GROUP_BINDINGS::Dict{String, Vector{SigilPromoter.SigilBinding}} = Dict{String, Vector{SigilPromoter.SigilBinding}}()
+const _MULTIPART_GROUP_REWRITTEN::Dict{String, String} = Dict{String, String}()
+const _MULTIPART_GROUP_RAW::Dict{String, String} = Dict{String, String}()
+const _MULTIPART_GROUP_LOCK::ReentrantLock = ReentrantLock()
+
+"""
+    stash_multipart_bindings!(group_id, bindings, rewritten, raw)
+
+GRUG v8.1-coherence-fix: Store promotion bindings for a specific multipart
+group. Called after each sub-scan in the multipart pipeline so the bindings
+survive even when subsequent sub-scans overwrite the global Refs.
+"""
+function stash_multipart_bindings!(group_id::String,
+                                    bindings::Vector{SigilPromoter.SigilBinding},
+                                    rewritten::String,
+                                    raw::String)
+    isempty(group_id) && return nothing  # no group, don't stash
+    lock(_MULTIPART_GROUP_LOCK) do
+        _MULTIPART_GROUP_BINDINGS[group_id] = bindings
+        _MULTIPART_GROUP_REWRITTEN[group_id] = rewritten
+        _MULTIPART_GROUP_RAW[group_id] = raw
+    end
+    return nothing
+end
+
+"""
+    clear_multipart_bindings!()
+
+GRUG v8.1-coherence-fix: Clear the per-group binding stash. Called at the
+start of each mission cycle so stale bindings from previous cycles don't
+leak into the current one.
+"""
+function clear_multipart_bindings!()
+    lock(_MULTIPART_GROUP_LOCK) do
+        empty!(_MULTIPART_GROUP_BINDINGS)
+        empty!(_MULTIPART_GROUP_REWRITTEN)
+        empty!(_MULTIPART_GROUP_RAW)
+    end
+    return nothing
+end
+
+"""
+    get_multipart_bindings(group_id) -> Vector{SigilPromoter.SigilBinding}
+
+GRUG v8.1-coherence-fix: Look up promotion bindings for a specific multipart
+group. Returns empty vector if group has no stashed bindings.
+"""
+function get_multipart_bindings(group_id::String)::Vector{SigilPromoter.SigilBinding}
+    isempty(group_id) && return SigilPromoter.SigilBinding[]
+    lock(_MULTIPART_GROUP_LOCK) do
+        get(_MULTIPART_GROUP_BINDINGS, group_id, SigilPromoter.SigilBinding[])
+    end
+end
+
+"""
+    get_multipart_rewritten(group_id) -> Union{String,Nothing}
+"""
+function get_multipart_rewritten(group_id::String)::Union{String,Nothing}
+    isempty(group_id) && return nothing
+    lock(_MULTIPART_GROUP_LOCK) do
+        get(_MULTIPART_GROUP_REWRITTEN, group_id, nothing)
+    end
+end
+
+"""
+    get_multipart_raw(group_id) -> Union{String,Nothing}
+"""
+function get_multipart_raw(group_id::String)::Union{String,Nothing}
+    isempty(group_id) && return nothing
+    lock(_MULTIPART_GROUP_LOCK) do
+        get(_MULTIPART_GROUP_RAW, group_id, nothing)
+    end
+end
+
+# GRUG v8.1-coherence-fix: PER-GROUP LOBE STATE STASH for multipart sub-scans.
+# score_lobes() determines the winner lobe and passthrough lobes, which
+# ephemeral_aiml_orchestrator reads to compute lobe_alignment per vote.
+# For multipart inputs, each sub-subject may belong to a different lobe
+# (math sub-subject → MathLobe, emotional sub-subject → SocialLobe).
+# A single global score_lobes call picks ONE winner for all votes, which
+# means math-lobe votes get lobe_alignment=0.0 if the emotional lobe won
+# globally. This stash lets us compute and store per-group lobe results,
+# so each sub-subject's votes get the correct lobe_alignment from their
+# own group's scoring.
+const _MULTIPART_GROUP_LOBE_STATE::Dict{String, Tuple{Vector, String, Vector{String}}} = Dict{String, Tuple{Vector, String, Vector{String}}}()
+# Already under _MULTIPART_GROUP_LOCK (same critical section).
+
+"""
+    stash_multipart_lobe_state!(group_id, scores, winner, passthrough)
+
+GRUG v8.1-coherence-fix: Store per-group lobe orchestrator state for
+multipart sub-scans. Called by process_mission after score_lobes runs
+per multipart group. Takes separate arguments to avoid tuple-nesting
+ambiguity that caused BoundsError with the old single-Tuple signature.
+"""
+function stash_multipart_lobe_state!(group_id::String, scores, winner::String, passthrough::Vector{String})
+    isempty(group_id) && return nothing
+    lock(_MULTIPART_GROUP_LOCK) do
+        _MULTIPART_GROUP_LOBE_STATE[group_id] = (scores, winner, passthrough)
+    end
+    return nothing
+end
+
+"""
+    clear_multipart_lobe_states!()
+
+Clear all per-group lobe state stashes. Called at the start of process_mission.
+"""
+function clear_multipart_lobe_states!()
+    lock(_MULTIPART_GROUP_LOCK) do
+        empty!(_MULTIPART_GROUP_LOBE_STATE)
+    end
+    return nothing
+end
+
+"""
+    get_multipart_lobe_state(group_id) -> (scores, winner, passthrough) or nothing
+
+GRUG v8.1-coherence-fix: Look up lobe orchestrator state for a specific
+multipart group. Returns nothing if group has no stashed state.
+"""
+function get_multipart_lobe_state(group_id::String)::Union{Nothing, Tuple{Vector, String, Vector{String}}}
+    isempty(group_id) && return nothing
+    lock(_MULTIPART_GROUP_LOCK) do
+        get(_MULTIPART_GROUP_LOBE_STATE, group_id, nothing)
+    end
+end
+
 # GRUG v8.1: Time orientation — same pattern as promotion bindings.
 # scan_and_expand writes; generate_aiml_payload reads across Task boundaries.
 const _TIME_ORIENTATION_KEY::Symbol = :grugbot420_time_orientation
@@ -5014,7 +5154,7 @@ downstream code (ArithmeticEngine, ATP, generate_aiml_payload) can read them
 across Task boundaries. The PROMOTED text is passed to scan_specimens so that
 nodes with &n/&op patterns can match the promoted form.
 """
-function scan_and_expand(input::String; chunks=[])
+function scan_and_expand(input::String; chunks=[], multipart_group::String="")
     # ── STAGE 1.5a — FRONT-DOOR SIGIL PROMOTION ──────────────────────────
     promoted_text, promotion_bindings = SigilPromoter.promote_input(
         _ENGINE_SIGIL_TABLE, input)
@@ -5032,6 +5172,13 @@ function scan_and_expand(input::String; chunks=[])
         _GLOBAL_PROMOTION_REWRITTEN[]  = promoted_text
         _GLOBAL_PROMOTION_BINDINGS[]   = promotion_bindings
     end
+
+    # GRUG v8.1-coherence-fix: ALSO stash per multipart_group if provided.
+    # This is the key fix for multipart decoherence: each sub-scan's
+    # bindings are stored under their group_id so generate_aiml_payload
+    # can look up the correct bindings for each sub-objective.
+    stash_multipart_bindings!(multipart_group, promotion_bindings,
+                              promoted_text, input)
 
     # GRUG v8.1: TIME ORIENTATION — extract temporal orientation from promotion
     # bindings and stash it the same way (task-local + global Ref).

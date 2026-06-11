@@ -416,7 +416,11 @@ export observe_direct_co_occurrence!
 # re-exported here so callers don't have to know which module owns the
 # task-local storage). Stage 1.5a-fix-1 added current_promotion_raw to
 # preserve the user's verbatim input alongside the rewritten string.
+# v8.1-coherence-fix: added per-group binding accessors for multipart.
 export current_promotion_bindings, current_promotion_rewritten, current_promotion_raw
+export stash_multipart_bindings!, clear_multipart_bindings!, get_multipart_bindings
+export get_multipart_rewritten, get_multipart_raw
+export stash_multipart_lobe_state!, clear_multipart_lobe_states!, get_multipart_lobe_state
 
 # GRUG: ArithmeticEngine exports — Stage 2 arithmetic evaluator.
 # `compute_arithmetic(bindings)` is the primary entry point; it returns an
