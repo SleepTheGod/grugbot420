@@ -117,8 +117,9 @@ const AIML_GRAVE_REASON_STRENGTH_ZERO = "AIML_STRENGTH_ZERO"
 # own cycle bookkeeping. Template text is the AIML "payload" the node owns.
 #
 # Cycle fields (voted_this_cycle, fired_this_cycle, gained_this_cycle,
-# strength_delta_this_cycle) are MANDATORY. Without honest cycle memory
-# /aimlWrong cannot deliver a real net loss after a prior same-cycle gain.
+# strength_delta_this_cycle, orchestration_contribution_this_cycle) are MANDATORY.
+# BUG-011: fired/use alone never changes strength; only explicit orchestration
+# contribution can make a node eligible for stochastic /aimlRight or /aimlWrong.
 # These fields are reset by reset_cycle!() at the start of every cycle.
 mutable struct AIMLNode
     id::String
@@ -131,8 +132,9 @@ mutable struct AIMLNode
     # GRUG: Per-cycle bookkeeping. Without this punishment is dishonest.
     voted_this_cycle::Bool           # GRUG: Did this node vote in current cycle?
     fired_this_cycle::Bool           # GRUG: Did this node fire/get used in cycle?
-    gained_this_cycle::Bool          # GRUG: Did strength go UP from use this cycle?
+    gained_this_cycle::Bool          # GRUG: Did strength go UP from feedback this cycle?
     strength_delta_this_cycle::Float64  # GRUG: Net strength change this cycle
+    orchestration_contribution_this_cycle::Float64  # BUG-011: explicit output contribution score
 
     created_at::Float64
 end
@@ -169,7 +171,7 @@ function AIMLNode(id::String, lobe_id::String, template::String;
         id, lobe_id, template,
         jittered_initial,
         false, "",
-        false, false, false, 0.0,
+        false, false, false, 0.0, 0.0,
         time()
     )
 end
@@ -392,9 +394,18 @@ also returns nothing (the lobe may not have an AIML tribe yet).
 Thread-safe: takes AIML_LOCK internally.
 """
 function stochastic_aiml_growth!(lobe_id::String, hint_pattern::String="";
-                                 data_warrant::Float64=1.0)::Union{AIMLNode, Nothing}
+                                 data_warrant::Float64=1.0,
+                                 thesaurus_fn::Union{Function, Nothing}=nothing)::Union{AIMLNode, Nothing}
     # GRUG: No data = no growth. Period. Growth without data is cancer.
     if data_warrant <= 0.0
+        return nothing
+    end
+
+    # GRUG BUG-011: AIML inhibition is auto-growth-only and orchestration-focused.
+    # If current-cycle orchestration contributors already cover this hint, do not
+    # grow another executive scaffold for the same territory. Fired/voted-only AIML
+    # nodes do not inhibit growth.
+    if is_aiml_growth_inhibited(lobe_id, hint_pattern; thesaurus_fn=thesaurus_fn)
         return nothing
     end
 
@@ -556,6 +567,7 @@ function begin_cycle!()
                 node.fired_this_cycle = false
                 node.gained_this_cycle = false
                 node.strength_delta_this_cycle = 0.0
+                node.orchestration_contribution_this_cycle = 0.0
             end
         end
     end
@@ -570,6 +582,71 @@ function current_cycle()::Int
     lock(AIML_LOCK) do
         return CURRENT_CYCLE[]
     end
+end
+
+# ==============================================================================
+# BUG-011 AIML GROWTH INHIBITION — orchestration-focused, thesaurus-expanded
+# ==============================================================================
+
+function _aiml_inhibition_tokens_from_text(text::String; thesaurus_fn::Union{Function, Nothing}=nothing)::Set{String}
+    tokens = Set{String}()
+    for raw in split(lowercase(strip(text)), r"\s+")
+        tok = strip(String(raw))
+        isempty(tok) && continue
+        push!(tokens, tok)
+        if thesaurus_fn !== nothing
+            try
+                for syn in thesaurus_fn(tok)
+                    syn_tok = lowercase(strip(String(syn)))
+                    isempty(syn_tok) || push!(tokens, syn_tok)
+                end
+            catch
+                # GRUG: thesaurus is advisory. Bad synonym provider must not break growth.
+            end
+        end
+    end
+    return tokens
+end
+
+function _aiml_orchestration_inhibition_tokens(lobe_id::String; thesaurus_fn::Union{Function, Nothing}=nothing)::Set{String}
+    tokens = Set{String}()
+    lock(AIML_LOCK) do
+        tribe = get(AIML_REGISTRY, lobe_id, nothing)
+        tribe === nothing && return tokens
+        for node in values(tribe)
+            node.is_grave && continue
+            if node.orchestration_contribution_this_cycle >= AIML_ORCHESTRATION_CONTRIBUTION_THRESHOLD
+                union!(tokens, _aiml_inhibition_tokens_from_text(node.template; thesaurus_fn=thesaurus_fn))
+            end
+        end
+    end
+    return tokens
+end
+
+"""
+    is_aiml_growth_inhibited(lobe_id::String, hint_pattern::String; threshold=0.5, thesaurus_fn=nothing)::Bool
+
+BUG-011: AIML auto-growth inhibition is based only on AIML nodes that materially
+contributed to orchestration this cycle. Mere voting/firing does not create
+inhibition. Tokens are expanded by the optional thesaurus function. This helper
+is consulted by stochastic AIML growth only; reinforcement feedback does not use
+it.
+"""
+function is_aiml_growth_inhibited(
+    lobe_id::String,
+    hint_pattern::String;
+    threshold::Float64 = 0.5,
+    thesaurus_fn::Union{Function, Nothing} = nothing,
+)::Bool
+    candidate_tokens = _aiml_inhibition_tokens_from_text(hint_pattern; thesaurus_fn=nothing)
+    isempty(candidate_tokens) && return false
+
+    active_tokens = _aiml_orchestration_inhibition_tokens(lobe_id; thesaurus_fn=thesaurus_fn)
+    isempty(active_tokens) && return false
+
+    overlap = length(intersect(candidate_tokens, active_tokens))
+    ratio = Float64(overlap) / Float64(length(candidate_tokens))
+    return ratio >= threshold
 end
 
 # ==============================================================================
@@ -621,7 +698,7 @@ function compute_aiml_grave_shadow(lobe_id::String)::Float64
 end
 
 # ==============================================================================
-# STRENGTH DYNAMICS — use-based gain, feedback-based change
+# STRENGTH DYNAMICS — feedback-based change only
 # ==============================================================================
 
 # GRUG: Internal strength mutator. Clamps, updates cycle delta, and transitions
@@ -670,29 +747,37 @@ end
 """
 record_fire!(node::AIMLNode)
 
-GRUG: Mark that an AIML node fired this cycle. Coinflip for strength gain
-(same spirit as engine.jl bump_strength!). This is the ONLY path that sets
-gained_this_cycle = true via use-reward. /aimlRight must check this flag to
-avoid double-snacking the same node.
+GRUG BUG-011: Mark that an AIML node fired this cycle. Fire/use is NOT
+reinforcement. Strength changes only happen later through explicit feedback
+(/aimlRight or /aimlWrong), only for nodes with recorded orchestration
+contribution, and still only on a stochastic coinflip.
 
-Thread-safe: takes AIML_LOCK for the strength mutation.
+Thread-safe: takes AIML_LOCK for cycle bookkeeping.
 """
 function record_fire!(node::AIMLNode)
     lock(AIML_LOCK) do
         node.fired_this_cycle = true
-        if node.is_grave
-            # GRUG: Grave nodes may still be referenced during generative
-            # phase as anti-pattern anchors, but they DO NOT receive rewards.
-            return
-        end
-        # GRUG: Coin-threshold jitter — the 0.5 reward gate fluctuates in
-        # ~[0.49, 0.51] per activation (default coin-ratio = 0.01). Zero-mean
-        # so long-run fire/skip ratio is still 50/50; any single cycle breaks
-        # lockstep streaks across siblings. Guaranteed to stay in (0, 1) by
-        # the floor/ceiling clamp inside jitter_coin_threshold.
-        if rand() < RelationalJitter.jitter_coin_threshold(0.5)
-            _apply_strength_delta!(node, AIML_STRENGTH_DELTA)
-        end
+    end
+end
+
+"""
+record_orchestration_contribution!(node::AIMLNode; weight::Float64 = 1.0)
+
+GRUG BUG-011: Mark that this AIML node materially contributed to output
+orchestration this cycle. This is the AIML lock-in equivalent used by
+/aimlRight and /aimlWrong. Mere voting or firing is not enough.
+
+weight must be positive. Current callers can use the default 1.0 when a node
+was selected into the final orchestration path; future orchestrators can add
+larger weights for dominant contributors.
+"""
+function record_orchestration_contribution!(node::AIMLNode; weight::Float64 = 1.0)
+    if weight <= 0.0
+        throw_aiml_error("orchestration contribution weight must be positive, got $weight", "record_orchestration_contribution!")
+    end
+    lock(AIML_LOCK) do
+        node.orchestration_contribution_this_cycle += weight
+        node.fired_this_cycle = true
     end
 end
 
@@ -731,18 +816,20 @@ function _collect_voters()::Vector{AIMLNode}
     return voters
 end
 
-# GRUG: Shared helper to collect all FIRED-this-cycle AIML nodes across registered
-# lobes. ONLY nodes that actually contributed to generating output (fired)
-# are eligible for strength modifications from /aimlRight and /aimlWrong.
-# Voters who didn't fire are NOT reinforced or penalized.
+# GRUG BUG-011: Shared helper to collect AIML orchestration contributors across
+# registered lobes. ONLY nodes with explicit orchestration contribution are
+# eligible for strength modifications from /aimlRight and /aimlWrong. Fired,
+# voted, or merely considered nodes are not enough.
 # Caller does NOT hold the lock — this function takes it internally and returns
 # a plain vector for iteration outside.
+const AIML_ORCHESTRATION_CONTRIBUTION_THRESHOLD = 1.0
+
 function _collect_contributors()::Vector{AIMLNode}
     contributors = AIMLNode[]
     lock(AIML_LOCK) do
         for (_lobe_id, tribe) in AIML_REGISTRY
             for (_nid, node) in tribe
-                if node.fired_this_cycle
+                if node.orchestration_contribution_this_cycle >= AIML_ORCHESTRATION_CONTRIBUTION_THRESHOLD
                     push!(contributors, node)
                 end
             end
@@ -754,48 +841,29 @@ end
 """
 apply_aiml_right!()::Dict{String, Any}
 
-GRUG: /aimlRight feedback - SECONDARY REINFORCEMENT FOR CONTRIBUTORS ONLY.
+GRUG BUG-011: /aimlRight feedback — lock-in-equivalent reinforcement for
+AIML orchestration contributors only.
 
-CRITICAL RULE: ONLY nodes that FIRED this cycle (actually contributed to output)
-are eligible for reinforcement. Voters who didn't fire are ignored.
-
-For each contributing AIML node (fired_this_cycle == true):
-  - If node already GAINED strength this cycle from use (coinflip in record_fire!)
-    -> skip (no double snack - secondary reinforcement only).
-  - Else coinflip; on success, node gains strength. This gives contributors who
-    missed the initial coinflip a second chance.
-
-Rationale: Output generation is a hard contribution test. Only nodes that actually
-helped produce output should be reinforced. The secondary /right reinforcement
-rewards contributors who were "worthy but unlucky" in the initial coinflip.
+CRITICAL RULE: ONLY nodes with explicit orchestration contribution this cycle
+are eligible for reinforcement. Voters, fired nodes, and considered nodes that
+were not selected into orchestration are ignored. Eligible nodes still gain
+strength only on a jittered stochastic coinflip.
 
 Returns a diagnostic dict for logging / test assertions.
 """
 function apply_aiml_right!()::Dict{String, Any}
     contributors = _collect_contributors()
     rewarded = String[]
-    skipped_double_reward = String[]
     coinflip_missed = String[]
     grave_skipped = String[]
 
     lock(AIML_LOCK) do
         for node in contributors
             if node.is_grave
-                # GRUG: Grave nodes don't get rewards, even if they fired.
                 push!(grave_skipped, node.id)
                 continue
             end
-            if node.gained_this_cycle
-                # GRUG: Node already snacked this cycle via record_fire! coinflip.
-                # Secondary reinforcement only for contributors who missed.
-                push!(skipped_double_reward, node.id)
-                continue
-            end
-            # GRUG: Coin-threshold jitter on the secondary-reward gate. Same
-            # shape as record_fire! but a fresh draw per contributor so two
-            # sibling contributors don't share a locked-in lucky/unlucky coin.
             if rand() < RelationalJitter.jitter_coin_threshold(0.5)
-                # GRUG: Secondary reinforcement - contributor gets a second chance.
                 _apply_strength_delta!(node, AIML_STRENGTH_DELTA)
                 push!(rewarded, node.id)
             else
@@ -807,40 +875,27 @@ function apply_aiml_right!()::Dict{String, Any}
     result = Dict{String, Any}(
         "total_contributors"   => length(contributors),
         "rewarded"             => rewarded,
-        "skipped_double_reward" => skipped_double_reward,
+        "skipped_double_reward" => String[],  # compatibility: use-reward removed in BUG-011
         "coinflip_missed"      => coinflip_missed,
         "grave_skipped"        => grave_skipped,
     )
-    println("[AIML] ✅ /aimlRight: contributors=$(length(contributors)) rewarded=$(length(rewarded)) double_skip=$(length(skipped_double_reward)) coinflip_miss=$(length(coinflip_missed)) grave_skip=$(length(grave_skipped))")
+    println("[AIML] ✅ /aimlRight lock-in-only: contributors=$(length(contributors)) rewarded=$(length(rewarded)) coinflip_miss=$(length(coinflip_missed)) grave_skip=$(length(grave_skipped))")
     return result
 end
 
 """
 apply_aiml_wrong!()::Dict{String, Any}
 
-GRUG: /aimlWrong feedback - PENALIZE CONTRIBUTORS ONLY.
+GRUG BUG-011: /aimlWrong feedback — penalize AIML orchestration contributors
+only.
 
-CRITICAL RULE: ONLY nodes that FIRED this cycle (actually contributed to output)
-are eligible for penalty. Voters who didn't fire are ignored.
-
-For each contributing AIML node (fired_this_cycle == true):
-  - 50/50 coinflip decides whether this node is penalized at all.
-  - If coinflip says penalize:
-      * If node GAINED strength this cycle from use, penalty must be
-        large enough to (a) cancel that gain AND (b) leave a net loss.
-        Penalty magnitude = strength_delta_this_cycle + AIML_STRENGTH_DELTA.
-      * Otherwise standard penalty = AIML_STRENGTH_DELTA.
+CRITICAL RULE: ONLY nodes with explicit orchestration contribution this cycle
+are eligible for penalty. Eligible nodes still lose strength only on a jittered
+stochastic coinflip. record_fire! no longer creates prior same-cycle gains, so
+there is no use-reward overcompensation path here.
 
 Returns a diagnostic dict. If strength reaches 0.0, the node is transitioned
-to AIML_GRAVE by _apply_strength_delta! — no special casing here.
-
-Rationale: Only nodes that actually contributed to the "wrong" output should
-be penalized. Voters who participated but didn't fire shouldn't be punished
-for output they didn't help produce.
-
-Hard rule: /aimlWrong must produce a REAL net loss for any node penalized.
-If node had already gained in-cycle, we over-compensate. This is the honest
-punishment rule from the spec.
+to AIML_GRAVE by _apply_strength_delta!.
 """
 function apply_aiml_wrong!()::Dict{String, Any}
     contributors = _collect_contributors()
@@ -852,31 +907,12 @@ function apply_aiml_wrong!()::Dict{String, Any}
     lock(AIML_LOCK) do
         for node in contributors
             if node.is_grave
-                # GRUG: Already dead. Cannot penalize the already-dead.
                 push!(grave_skipped, node.id)
                 continue
             end
-            # GRUG: Coin-threshold jitter on the penalty gate. 0.5 ± ~0.01
-            # per activation, zero-mean. Long-run penalize/spare ratio is
-            # still 50/50 — jitter just prevents sibling contributors from
-            # sharing a locked-in coin outcome within a single cycle.
             if rand() < RelationalJitter.jitter_coin_threshold(0.5)
-                # GRUG: Coinflip said penalize. Figure out magnitude.
-                # If node already snacked this cycle, over-compensate to
-                # guarantee strength ends BELOW cycle-start strength.
-                prior_gain = max(node.strength_delta_this_cycle, 0.0)
-                # GRUG: Base penalty magnitude is AIML_STRENGTH_DELTA +
-                # prior_gain. _apply_strength_delta! will jitter the delta
-                # itself internally, so we do NOT double-jitter here.
-                # That preserves the honest-net-loss guarantee: even under
-                # jitter the applied delta stays strictly negative because
-                # (AIML_STRENGTH_DELTA + prior_gain) is strictly > 0 and
-                # the jitter ratio is < 1.
-                penalty_magnitude = AIML_STRENGTH_DELTA + prior_gain
-                # GRUG: Apply as negative delta. _apply_strength_delta! clamps
-                # and handles grave transition.
                 was_grave_before = node.is_grave
-                _apply_strength_delta!(node, -penalty_magnitude)
+                _apply_strength_delta!(node, -AIML_STRENGTH_DELTA)
                 push!(penalized, node.id)
                 if node.is_grave && !was_grave_before
                     push!(graved, node.id)
@@ -894,7 +930,7 @@ function apply_aiml_wrong!()::Dict{String, Any}
         "newly_graved"      => graved,
         "grave_skipped"     => grave_skipped,
     )
-    println("[AIML] ❌ /aimlWrong: contributors=$(length(contributors)) penalized=$(length(penalized)) spared=$(length(spared)) newly_graved=$(length(graved)) grave_skip=$(length(grave_skipped))")
+    println("[AIML] ❌ /aimlWrong lock-in-only: contributors=$(length(contributors)) penalized=$(length(penalized)) spared=$(length(spared)) newly_graved=$(length(graved)) grave_skip=$(length(grave_skipped))")
     return result
 end
 
@@ -1017,6 +1053,7 @@ function serialize_aiml_state()::Dict{String, Any}
                     "fired_this_cycle" => node.fired_this_cycle,
                     "gained_this_cycle" => node.gained_this_cycle,
                     "strength_delta_this_cycle" => node.strength_delta_this_cycle,
+                    "orchestration_contribution_this_cycle" => node.orchestration_contribution_this_cycle,
                     "created_at" => node.created_at
                 ))
             end
@@ -1125,6 +1162,7 @@ function deserialize_aiml_state!(data)
                     node.fired_this_cycle = get(node_data, "fired_this_cycle", false)
                     node.gained_this_cycle = get(node_data, "gained_this_cycle", false)
                     node.strength_delta_this_cycle = get(node_data, "strength_delta_this_cycle", 0.0)
+                    node.orchestration_contribution_this_cycle = get(node_data, "orchestration_contribution_this_cycle", 0.0)
                     node.created_at = get(node_data, "created_at", time())
 
                     AIML_REGISTRY[lobe_id_str][node_id] = node
@@ -1166,9 +1204,9 @@ export register_lobe!, unregister_lobe!, is_lobe_registered
 export get_population_cap, get_population_size, get_alive_population_size
 export add_aiml_node!, get_aiml_node, has_aiml_node, remove_aiml_node!
 export list_aiml_nodes, get_registered_lobes
-export stochastic_aiml_growth!
+export stochastic_aiml_growth!, is_aiml_growth_inhibited
 export begin_cycle!, current_cycle
-export record_fire!, record_vote!
+export record_fire!, record_vote!, record_orchestration_contribution!
 export apply_aiml_right!, apply_aiml_wrong!
 export aiml_phagy_sweep!
 export compute_aiml_grave_shadow

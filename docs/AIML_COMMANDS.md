@@ -12,7 +12,7 @@ The AIML (Artificial Intelligence Markup Language) Node System provides an execu
 - **Grave Nodes**: Nodes with strength = 0.0 are marked as grave (dead)
 - **Cycle Memory**: Each node tracks per-cycle activity for honest feedback
 - **Maturity Threshold**: AIML immune system activates at 1000+ AIML nodes
-- **Contributors vs Voters**: Only nodes that **fired** (actually contributed to output) are eligible for reinforcement/penalty. Voters who didn't fire are ignored.
+- **Orchestration Contributors vs Voters/Fired Nodes**: Only nodes explicitly marked with `record_orchestration_contribution!()` are eligible for reinforcement/penalty. Mere voting or firing is ignored.
 
 ---
 
@@ -20,25 +20,24 @@ The AIML (Artificial Intelligence Markup Language) Node System provides an execu
 
 ### `/aimlRight`
 
-**Purpose**: Apply secondary reinforcement to AIML nodes that actually contributed to output generation.
+**Purpose**: Apply lock-in-equivalent reinforcement to AIML nodes that materially contributed to output orchestration.
 
 **Usage**: `/aimlRight`
 
 **Behavior**:
-- **CRITICAL**: Only processes nodes that **fired** this cycle (contributors), not all voters
-- Increases strength by `AIML_STRENGTH_DELTA` (1.0) for contributing nodes that didn't already gain strength
-- Skips nodes that already gained strength this cycle from initial coinflip (no double reward)
-- Uses 50/50 coinflip for eligible contributors (secondary reinforcement chance)
+- **CRITICAL**: Only processes nodes with explicit orchestration contribution this cycle
+- Mere voting or `record_fire!()` is not enough for eligibility
+- Eligible contributors gain strength only through a stochastic coinflip
 - Clamps strength to `AIML_STRENGTH_CAP` (10.0)
-- Returns summary of rewarded, skipped, and missed contributors
+- Returns summary of rewarded, missed-coinflip, and grave-skipped contributors
 
 **Example**:
 ```
 /aimlRight
-✅  /aimlRight applied. 15 contributors processed, 8 rewarded, 5 double-skip, 2 missed coinflip.
+✅  /aimlRight applied lock-in-only. 8 rewarded, 7 missed coinflip, 0 grave skipped.
 ```
 
-**Key Concept**: Contributors who were "worthy but unlucky" in the initial coinflip get a second chance via secondary reinforcement.
+**Key Concept**: AIML reinforcement is tied to explicit orchestration contribution, not passive use.
 
 **Error Handling**:
 - Warns if no AIML nodes contributed this cycle
@@ -53,12 +52,10 @@ The AIML (Artificial Intelligence Markup Language) Node System provides an execu
 **Usage**: `/aimlWrong`
 
 **Behavior**:
-- **CRITICAL**: Only processes nodes that **fired** this cycle (contributors), not all voters
-- Uses 50/50 coinflip to determine which contributors get penalized
-- Contributors that already gained strength this cycle get EXTRA penalty (net-negative):
-  - Penalty magnitude = strength gained this cycle + AIML_STRENGTH_DELTA
-  - Ensures net loss even if node gained during cycle
-- Contributors that didn't gain strength get standard penalty
+- **CRITICAL**: Only processes nodes with explicit orchestration contribution this cycle
+- Mere voting or `record_fire!()` is not enough for eligibility
+- Uses a stochastic coinflip to determine which eligible contributors get penalized
+- `record_fire!()` no longer creates same-cycle use gains, so there is no over-compensation path
 - Contributors that hit strength = 0.0 become grave
 - Returns summary of penalized, spared, and newly graved contributors
 
@@ -68,7 +65,7 @@ The AIML (Artificial Intelligence Markup Language) Node System provides an execu
 ❌  /aimlWrong applied. 10 contributors processed, 5 penalized, 5 spared by coinflip, 1 newly graved.
 ```
 
-**Key Concept**: Only nodes that actually contributed to the "wrong" output should be penalized. Voters who didn't fire are innocent bystanders.
+**Key Concept**: Only nodes explicitly marked as orchestration contributors should be penalized. Voters and fired-only nodes are ignored.
 
 **Error Handling**:
 - Warns if no AIML nodes contributed this cycle
@@ -322,7 +319,7 @@ Record that a node voted in the current cycle.
 **Behavior**:
 - Sets `voted_this_cycle = true`
 
-**Important**: Voting alone does NOT make a node eligible for feedback. The node must also fire (call `record_fire!()`) to be considered a contributor for `/aimlRight` and `/aimlWrong`.
+**Important**: Voting and firing do NOT make a node eligible for feedback. The node must be marked with `record_orchestration_contribution!()` to be considered a contributor for `/aimlRight` and `/aimlWrong`.
 
 ---
 
@@ -330,20 +327,18 @@ Record that a node voted in the current cycle.
 
 #### `apply_aiml_right!()::Dict{String, Any}`
 
-Apply secondary reinforcement to AIML nodes that contributed to output.
+Apply reinforcement to AIML nodes that explicitly contributed to orchestration.
 
 **Returns**: Dictionary with keys:
-- `"total_contributors"`: Total number of nodes that fired (contributed)
+- `"total_contributors"`: Total number of explicit orchestration contributors
 - `"rewarded"`: List of node IDs that received reward
-- `"skipped_double_reward"`: List of node IDs skipped (already gained this cycle)
+- `"skipped_double_reward"`: Compatibility field; empty under BUG-011
 - `"coinflip_missed"`: List of node IDs that missed the coinflip
 - `"grave_skipped"`: List of grave node IDs skipped
 
 **Behavior**:
-- **Only processes nodes that fired** (fired_this_cycle == true), not all voters
-- Rewards contributing nodes that didn't already gain strength via coinflip
-- Skips contributors that already gained (no double reward - secondary reinforcement only)
-- Uses 50/50 coinflip for eligible contributors
+- **Only processes nodes with orchestration contribution**, not all voters/fired nodes
+- Uses stochastic coinflip for eligible contributors
 - Clamps strength to `AIML_STRENGTH_CAP`
 
 ---
@@ -353,18 +348,15 @@ Apply secondary reinforcement to AIML nodes that contributed to output.
 Apply negative feedback to AIML nodes that contributed to output.
 
 **Returns**: Dictionary with keys:
-- `"total_contributors"`: Total number of nodes that fired (contributed)
+- `"total_contributors"`: Total number of explicit orchestration contributors
 - `"penalized"`: List of node IDs that were penalized
 - `"spared"`: List of node IDs spared by coinflip
 - `"newly_graved"`: List of node IDs that hit strength = 0.0
 - `"grave_skipped"`: List of grave node IDs skipped
 
 **Behavior**:
-- **Only processes nodes that fired** (fired_this_cycle == true), not all voters
-- Uses 50/50 coinflip to determine which contributors get penalized
-- Contributors that already gained strength get EXTRA penalty:
-  - Penalty = strength_delta_this_cycle + AIML_STRENGTH_DELTA
-  - Ensures net loss even if node gained during cycle
+- **Only processes nodes with orchestration contribution**, not all voters/fired nodes
+- Uses stochastic coinflip to determine which contributors get penalized
 - Contributors hitting strength = 0.0 become grave
 
 ---
@@ -553,9 +545,9 @@ AIMLNodeSystem.add_aiml_node!(lobe_id, node_id, template)
 
 1. **Per-Lobe Isolation**: Each lobe's AIML tribe is independent
 2. **Population Control**: AIML nodes capped at 1/3 of parent lobe size
-3. **Contributor-Only Feedback**: Only nodes that actually fired (contributed to output) are reinforced or penalized. Voters who didn't fire are ignored.
-4. **Secondary Reinforcement**: `/aimlRight` gives contributors who missed initial coinflip a second chance
-5. **Honest Feedback**: Cycle memory prevents double rewards and ensures real penalties with over-compensation
+3. **Contributor-Only Feedback**: Only nodes explicitly marked as orchestration contributors are reinforced or penalized. Voters and fired-only nodes are ignored.
+4. **Lock-In-Equivalent Reinforcement**: `/aimlRight` changes strength only for orchestration contributors and only through coinflip
+5. **Honest Feedback**: Cycle memory distinguishes material orchestration contribution from mere activity
 6. **No Silent Failures**: All errors are logged and propagated
 7. **Immune Protection**: AIML immune system activates at 1000+ nodes
 8. **Grave Tracking**: Dead nodes are remembered, not silently deleted

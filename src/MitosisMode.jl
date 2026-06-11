@@ -294,6 +294,8 @@ end
 # ==============================================================================
 # GRUG: Same logic as engine.jl _action_names_from_packet but MitosisMode
 # is self-contained (no `using ..GrugBot420`). Duplicated here for autonomy.
+# Literal pipes in action names use {PIPE}/{{PIPE}} macro decoded after splitting.
+_mitosis_expand_action_macro_string(s::AbstractString)::String = replace(replace(String(s), "{{PIPE}}" => "|"), "{PIPE}" => "|")
 
 function _mitosis_action_names_from_packet(packet::String)::Set{String}
     names = Set{String}()
@@ -304,15 +306,15 @@ function _mitosis_action_names_from_packet(packet::String)::Set{String}
         m = match(r"^(.+?)\[[^\]]*\]", p)
         if !isnothing(m)
             name = strip(m.captures[1])
-            !isempty(name) && push!(names, name)
+            !isempty(name) && push!(names, _mitosis_expand_action_macro_string(name))
         else
             # Strip weight suffix: action_name^weight -> action_name
             m2 = match(r"^(.+?)\^", p)
             if !isnothing(m2)
                 name = strip(m2.captures[1])
-                !isempty(name) && push!(names, name)
+                !isempty(name) && push!(names, _mitosis_expand_action_macro_string(name))
             else
-                !isempty(p) && push!(names, p)
+                !isempty(p) && push!(names, _mitosis_expand_action_macro_string(p))
             end
         end
     end

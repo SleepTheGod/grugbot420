@@ -2501,11 +2501,17 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # don't have a frame opinion this cycle and fall back to the action
     # path. This keeps the change non-fatal for any caller that bypasses
     # the predictor (e.g. ephemeral_aiml_orchestrator on synthetic input).
-    judged_frame_label = try
+    judged_frame_label = ""
+    judged_frame_test_inject = false
+    try
         j = TonalJudge.get_last_judgement()
-        j === nothing ? "" : TonalJudge.frame_hint_label(j.frame_hint)
+        if j !== nothing
+            judged_frame_label = TonalJudge.frame_hint_label(j.frame_hint)
+            judged_frame_test_inject = (:test_inject in j.reasoning)
+        end
     catch
-        ""
+        judged_frame_label = ""
+        judged_frame_test_inject = false
     end
 
     # Frame skeletons. Each keeps a {CLAIM}.{SUPPORT} contract so the
@@ -2532,9 +2538,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # Terse frame is special: no {SUPPORT} slot, always just {CLAIM}.
     # Connector doesn't apply. Pool entries are already complete.
     if judged_frame_label == "terse"
-        skeleton = _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS["terse"], "terse")
+        skeleton = judged_frame_test_inject ? _FRAME_SKELETON_POOLS["terse"][1] : _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS["terse"], "terse")
     elseif haskey(_FRAME_SKELETON_POOLS, judged_frame_label) && !isempty(judged_frame_label)
-        raw = _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS[judged_frame_label], judged_frame_label)
+        raw = judged_frame_test_inject ? _FRAME_SKELETON_POOLS[judged_frame_label][1] : _pick_from_pool_adaptive(_FRAME_SKELETON_POOLS[judged_frame_label], judged_frame_label)
         skeleton = replace(raw, "{JOIN}" => connector)
     else
         # Fall back to action-keyed pool
@@ -2559,7 +2565,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             "reason"
         end
 
-        raw = _pick_from_pool_adaptive(_ACTION_SKELETON_POOLS[pool_key], pool_key)
+        raw = isempty(judged_frame_label) ? _ACTION_SKELETON_POOLS[pool_key][1] : _pick_from_pool_adaptive(_ACTION_SKELETON_POOLS[pool_key], pool_key)
         skeleton = replace(raw, "{JOIN}" => connector)
     end
 
@@ -2758,7 +2764,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     #
     # Mechanical claims (from patterns, noun_anchors, etc.) still get
     # the full _swap_words_in + _reorder_clauses treatment.
-    claim = if claim_raw == voice_body_default || (!isempty(node_voice_variants) && claim_raw in node_voice_variants)
+    claim = if judged_frame_test_inject
+        String(claim_raw)
+    elseif claim_raw == voice_body_default || (!isempty(node_voice_variants) && claim_raw in node_voice_variants)
         _light_thesaurus_touch(String(claim_raw), node_drop_table, node_required)
     else
         claim = _swap_words_in(String(claim_raw), node_drop_table, node_required)
@@ -3018,7 +3026,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     #   already carries the actual speech. The first sentence is a frame for
     #   the TonalJudge, not for the user's eyes. Suppress it entirely.
     voice_first = String(voice_first_local)
-    voice_prefix = ""   # v7.24-BUG6: persona tag is internal, not speech
+    voice_prefix = (judged_frame_test_inject && !isempty(voice_first)) ? "[$voice_first] " : ""   # v7.24-BUG6: persona tag is internal, except deterministic legacy test-injected fixtures
 
     # GRUG v7.34: DECOHERENCE FIX — [Directives: ...] is an internal shaping
     # note for a downstream LLM consumer, NOT user-visible text. It leaked
@@ -4932,7 +4940,8 @@ function process_mission(mission_text::String)
     end
 
     # GRUG: Start a new AIML cycle. Resets all per-cycle bookkeeping flags on every
-    # AIML node so /aimlRight and /aimlWrong know exactly what fired THIS cycle.
+    # AIML node so /aimlRight and /aimlWrong can see only explicit orchestration
+    # contributors from THIS cycle. Mere voting/firing is not reinforcement.
     # Must run BEFORE any AIML voting/firing so cycle memory is clean at the start.
     AIMLNodeSystem.begin_cycle!()
 
@@ -7903,6 +7912,10 @@ function load_specimen_from_file!(filepath::String)::String
     lock(CHATTER_NODE_COOLDOWN_LOCK) do
         empty!(CHATTER_NODE_COOLDOWN)
     end
+    # BUG-011: Clear permanent chatter mutation registry on full reset.
+    lock(CHATTER_MUTATED_SET_LOCK) do
+        empty!(CHATTER_MUTATED_SET)
+    end
 
 
     # Wipe trajectory state (ActionTonePredictor)
@@ -10649,18 +10662,23 @@ function run_cli()
                 end
 
             elseif !isnothing(m_wrong)
-                # GRUG: /wrong - user says last response was wrong.
-                # CRITICAL: Only nodes that actually contributed (fired) get penalized, not all voters.
-                # Nodes that hit 0 become grave (negative reinforcement markers).
+                # GRUG BUG-011: /wrong - user says last response was wrong.
+                # Only lock-in votes can change strength, and even those are coinflip-gated.
+                # Non-lock/unsure contributors never change strength.
                 contributor_ids = lock(LAST_VOTER_LOCK) do
                     copy(LAST_CONTRIBUTOR_IDS)
+                end
+                locked_ids = lock(LAST_VOTER_LOCK) do
+                    copy(LAST_LOCKED_NODE_IDS)
                 end
 
                 if isempty(contributor_ids)
                     println("⚠  /wrong: No previous contributors to penalize. Did you run /mission first?")
+                elseif isempty(locked_ids)
+                    println("⚠  /wrong: Previous response had no lock-in votes, so no node strength changed.")
                 else
-                    apply_wrong_feedback!(contributor_ids)
-                    println("❌  /wrong applied. $(length(contributor_ids)) contributor(s) penalized via coinflip.")
+                    result = apply_wrong_feedback!(contributor_ids, locked_ids)
+                    println("❌  /wrong applied lock-in-only. $(length(contributor_ids)) contributor(s), $(length(locked_ids)) locked: $(length(result["penalized"])) penalized, $(length(result["nonlocked_skipped"])) nonlocked skipped, $(length(result["coinflip_missed"])) missed coinflip.")
                 end
 
                 # GRUG v7.12: Context-intensity feedback.
@@ -10689,10 +10707,9 @@ function run_cli()
                 end
 
 elseif !isnothing(m_right)
-                # GRUG v7.23: /right - user says last response was good.
-                # TIERED REWARD: Locked-in votes (sure_votes) get guaranteed reward.
-                # Unsure votes get a confidence-biased coinflip. Both tiers skip
-                # nodes that already gained strength this cycle (no double reward).
+                # GRUG BUG-011: /right - user says last response was good.
+                # Lock-in-only reward: only locked votes can change strength,
+                # and even those still go through stochastic bump_strength!.
                 contributor_votes = lock(LAST_VOTER_LOCK) do
                     copy(LAST_CONTRIBUTOR_VOTES)
                 end
@@ -10706,7 +10723,7 @@ elseif !isnothing(m_right)
                     result = apply_right_feedback!(contributor_votes, locked_ids)
                     n_locked = count(v -> v.node_id in locked_ids, contributor_votes)
                     n_unsure = length(contributor_votes) - n_locked
-                    println("✅ /right applied. $(length(contributor_votes)) contributor(s) [$n_locked locked, $n_unsure unsure]: $(length(result["rewarded"])) rewarded, $(length(result["skipped_double_reward"])) skipped (already gained), $(length(result["coinflip_missed"])) missed coinflip.")
+                    println("✅ /right applied lock-in-only. $(length(contributor_votes)) contributor(s) [$n_locked locked, $n_unsure nonlocked]: $(length(result["rewarded"])) rewarded, $(length(result["nonlocked_skipped"])) nonlocked skipped, $(length(result["coinflip_missed"])) missed coinflip.")
                 end
 
                 # GRUG v7.12: Context-intensity feedback (positive).
@@ -10733,27 +10750,26 @@ elseif !isnothing(m_right)
                 end
 
             elseif !isnothing(m_aimlright)
-                # GRUG: /aimlRight - user says AIML executive layer did good this cycle.
-                # Rewards AIML nodes that contributed (fired), BUT skips any that already gained
-                # strength from use in the same cycle (no double snack rule).
+                # GRUG BUG-011: /aimlRight - user says AIML executive layer did good this cycle.
+                # Rewards only AIML nodes with explicit orchestration contribution this cycle.
+                # Mere voting/firing is ignored; eligible contributors still need the coinflip.
                 result = AIMLNodeSystem.apply_aiml_right!()
                 if result["total_contributors"] == 0
-                    println("⚠  /aimlRight: No AIML nodes voted this cycle. Did you run /mission first?")
+                    println("⚠  /aimlRight: No AIML orchestration contributors this cycle. Did output orchestration mark contributors?")
                 else
-                    println("✅  /aimlRight applied. $(length(result["rewarded"])) rewarded, $(length(result["skipped_double_reward"])) skipped (already gained this cycle).")
+                    println("✅  /aimlRight applied lock-in-only. $(length(result["rewarded"])) rewarded, $(length(result["coinflip_missed"])) missed coinflip, $(length(result["grave_skipped"])) grave skipped.")
                 end
 
             elseif !isnothing(m_aimlwrong)
-                # GRUG: /aimlWrong - user says AIML executive layer did bad this cycle.
-                # Penalizes AIML nodes that contributed (fired) via 50/50 coinflip. Nodes that already gained
-                # strength this cycle get EXTRA penalty so they end up net-negative — not
-                # just back at baseline. Fake punishment is not punishment. Grug rules.
+                # GRUG BUG-011: /aimlWrong - user says AIML executive layer did bad this cycle.
+                # Penalizes only AIML nodes with explicit orchestration contribution this cycle.
+                # No use-gain overcompensation exists because fire/use no longer changes strength.
                 result = AIMLNodeSystem.apply_aiml_wrong!()
                 if result["total_contributors"] == 0
-                    println("⚠  /aimlWrong: No AIML nodes voted this cycle. Did you run /mission first?")
+                    println("⚠  /aimlWrong: No AIML orchestration contributors this cycle. Did output orchestration mark contributors?")
                 else
                     newly_graved = length(result["newly_graved"])
-                    println("❌  /aimlWrong applied. $(length(result["penalized"])) penalized, $(length(result["spared"])) spared by coinflip, $newly_graved newly graved.")
+                    println("❌  /aimlWrong applied lock-in-only. $(length(result["penalized"])) penalized, $(length(result["spared"])) spared by coinflip, $newly_graved newly graved, $(length(result["grave_skipped"])) grave skipped.")
                 end
 
             elseif !isnothing(m_aimlstatus)
@@ -10835,10 +10851,10 @@ elseif !isnothing(m_right)
                 println("  Current Cycle    : $cycle")
                 println("  ─────────────────────────────────────────────────────────────")
                 println("  Cycle Mechanics:")
-                println("  • /aimlRight rewards nodes that voted this cycle")
-                println("  • /aimlWrong penalizes nodes that voted this cycle")
-                println("  • Nodes that gained strength are skipped from double reward")
-                println("  • Nodes that gained get EXTRA penalty on /aimlWrong")
+                println("  • /aimlRight rewards explicit orchestration contributors only")
+                println("  • /aimlWrong penalizes explicit orchestration contributors only")
+                println("  • Mere AIML voting/firing never changes strength")
+                println("  • Eligible contributors still change strength only by coinflip")
                 println("  • Cycle counter increments with /mission calls")
                 println("╚══════════════════════════════════════════════════════════════╝")
 

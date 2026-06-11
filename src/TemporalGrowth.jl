@@ -472,6 +472,8 @@ GRUG: Parse an action name from a single action_packet part.
 "verify^3" → "verify"
 "explain" → "explain"
 """
+_expand_action_macro_string(s::AbstractString)::String = replace(replace(String(s), "{{PIPE}}" => "|"), "{PIPE}" => "|")
+
 function _parse_action_name(packet_part::String)::String
     p = strip(packet_part)
     isempty(p) && return ""
@@ -479,15 +481,15 @@ function _parse_action_name(packet_part::String)::String
     m = match(r"^(.+?)\[", p)
     if !isnothing(m)
         name = strip(m.captures[1])
-        return isempty(name) ? "" : String(name)
+        return isempty(name) ? "" : _expand_action_macro_string(name)
     end
     # Strip weight suffix: action_name^weight → action_name
     m2 = match(r"^(.+?)\^", p)
     if !isnothing(m2)
         name = strip(m2.captures[1])
-        return isempty(name) ? "" : String(name)
+        return isempty(name) ? "" : _expand_action_macro_string(name)
     end
-    return p
+    return _expand_action_macro_string(p)
 end
 
 """
@@ -504,7 +506,7 @@ function _parse_action_weight(packet_part::String)::Float64
     m = match(r"\^(\d+(?:\.\d+)?)", p)
     if !isnothing(m)
         try
-            return parse(Float64, m.captures[1])
+            return _expand_action_macro_string(p)arse(Float64, m.captures[1])
         catch
             return 1.0
         end

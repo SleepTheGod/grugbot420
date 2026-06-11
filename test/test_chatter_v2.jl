@@ -45,6 +45,10 @@ function reset_world!()
     lock(CHATTER_NODE_COOLDOWN_LOCK) do
         empty!(CHATTER_NODE_COOLDOWN)
     end
+    # BUG-011: Clear permanent mutation registry on test reset
+    lock(CHATTER_MUTATED_SET_LOCK) do
+        empty!(CHATTER_MUTATED_SET)
+    end
     lock(CM.CHATTER_LOG_LOCK) do
         empty!(CM.CHATTER_LOG)
     end

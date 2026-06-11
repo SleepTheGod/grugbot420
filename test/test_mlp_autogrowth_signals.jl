@@ -8,6 +8,10 @@
 using Test
 
 module _MLPAutoGrowthTestParent
+    # BUG-011: AutoGrowth does `using ..SigilRegistry`, so the parent must
+    # provide it before AutoGrowth is included.
+    include(joinpath(@__DIR__, "..", "src", "SigilRegistry.jl"))
+    using .SigilRegistry
     include(joinpath(@__DIR__, "..", "src", "AutoGrowth.jl"))
 end
 

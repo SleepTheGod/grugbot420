@@ -1,5 +1,11 @@
 # RelationalGovernance.jl
 # ==============================================================================
+# !!! GRUG REMINDER — RELATIONAL TRIPLES CAN USE SIGILS !!!
+# A RelationalTriple's subject / relation / object may contain sigil tokens
+# (&n, &word, &noun, specimen macros). Co-firing / auto-attach logic that reads
+# or compares triples must NOT assume the fields are always literal words —
+# sigil holes are valid. Resolve via SigilRegistry where appropriate.
+# ==============================================================================
 # RELATIONAL GOVERNANCE — AUTO-ATTACH FROM ACCUMULATED CO-ACTIVATION INTENSITY
 # ==============================================================================
 # GRUG say: nodes that fire together should wire together. But SLOW. LAZY.

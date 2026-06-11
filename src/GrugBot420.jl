@@ -311,7 +311,7 @@ export get_population_cap, get_population_size
 export add_aiml_node!, get_aiml_node, has_aiml_node, remove_aiml_node!
 export list_aiml_nodes, get_registered_lobes
 export begin_cycle!, current_cycle
-export record_fire!, record_vote!
+export record_fire!, record_vote!, record_orchestration_contribution!
 export apply_aiml_right!, apply_aiml_wrong!
 export aiml_phagy_sweep!, get_aiml_status_summary
 

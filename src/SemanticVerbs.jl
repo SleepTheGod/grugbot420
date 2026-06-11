@@ -1,5 +1,11 @@
 # SemanticVerbs.jl
 # ==============================================================================
+# !!! GRUG REMINDER — RELATIONAL TRIPLES CAN USE SIGILS !!!
+# A RelationalTriple's subject / relation / object may contain sigil tokens
+# (&n, &word, &noun, specimen macros). Verb extraction and relation building
+# here must NOT assume triple fields are always literal words — sigil holes
+# are valid. Resolve via SigilRegistry where appropriate. See SigilRegistry.jl.
+# ==============================================================================
 # GRUG: This is the living verb cave. User can add new verb rocks at runtime!
 # Old static CAUSAL/SPATIAL/TEMPORAL const sets used to be frozen in engine.jl.
 # Now they live here, warm and mutable. User can /addVerb, /addRelationClass,

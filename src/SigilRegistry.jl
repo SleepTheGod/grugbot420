@@ -1,6 +1,13 @@
 # ==============================================================================
 # SigilRegistry.jl — GRUG Sigil Registry Kernel (Stage 1)
 # ==============================================================================
+# !!! GRUG REMINDER — RELATIONAL TRIPLES CAN USE SIGILS !!!
+# Sigils are not only for flat patterns. A RelationalTriple's subject /
+# relation / object fields may ALSO contain sigil tokens (&n, &word, &noun,
+# specimen macros). When resolving / matching relational triples, run the same
+# sigil resolution path you use for patterns. Triple fields are NOT guaranteed
+# to be literal words.
+# ==============================================================================
 # GRUG say: every smart system have many small word-pictures (verbs, thesaurus,
 #           drops, AIML keys, lobe subjects). Each one have its OWN little
 #           dictionary. They drift apart over time. Bug in one, no help to other.

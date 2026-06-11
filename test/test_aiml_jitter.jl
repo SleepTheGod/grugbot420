@@ -12,7 +12,7 @@
 # Target values covered:
 #   [A] AIMLNode constructor `initial_strength`  -> jitter_strength
 #   [B] `_apply_strength_delta!` `delta`         -> jitter_delta
-#   [C] record_fire!   coin gate (rand() < 0.5)  -> jitter_coin_threshold
+#   [C] record_fire! marker-only, no coin/strength change
 #   [D] apply_aiml_right! coin gate              -> jitter_coin_threshold
 #   [E] apply_aiml_wrong! coin gate              -> jitter_coin_threshold
 #   [F] Honest-net-loss contract under jitter    -> integration
@@ -149,21 +149,18 @@ println("  ✓ initial_strength = 0.0 passes through jitter unchanged (eps floor
 
 println("\n[B] Strength delta jitter via _apply_strength_delta!")
 
-# GRUG: Direct behavioural test on the public path that goes through
-# _apply_strength_delta! — we use record_fire! under a deterministic RNG
-# stream where the coin always fires, so every fire applies delta = +1.0.
+# GRUG: Direct behavioural test on the feedback path that goes through
+# _apply_strength_delta! — we mark explicit orchestration contributors and
+# collect rewarded /aimlRight outcomes, each of which applies delta = +1.0.
 # We batch 100 nodes per reset to stay well under the parent/3 cap.
 fresh_slate!()
 
 # GRUG: Turn off coin-threshold jitter so we isolate the delta jitter path.
-# coin_ratio = 0.0 means the 0.5 gate is NOT shifted; combined with a fixed
-# RNG seed we get deterministic "always fire" behaviour for the coin.
+# coin_ratio = 0.0 means the 0.5 gate is NOT shifted.
 RelationalJitter.set_jitter_coin_ratio!(0.0)
 
-# GRUG: With seed chosen so rand() draws fall below 0.5 reliably, we exercise
-# the delta jitter path. Re-seeding between calls gives independent draws.
-# We re-register the lobe in batches to keep population cap usage well below
-# the parent/3 ceiling.
+# GRUG: We only record trials where /aimlRight's coin rewarded the explicit
+# contributor; those rewards exercise the delta jitter path.
 let deltas = Float64[], batch_size = 100, total_trials = 400
     for batch_idx in 1:(total_trials ÷ batch_size)
         AIMLNodeSystem.reset_all!()
@@ -174,8 +171,9 @@ let deltas = Float64[], batch_size = 100, total_trials = 400
             AIMLNodeSystem.begin_cycle!()
             n = AIMLNodeSystem.add_aiml_node!("lobe_B_delta", "n_$i", "<t>"; initial_strength = 5.0)
             start = n.strength
-            AIMLNodeSystem.record_fire!(n)
-            if n.gained_this_cycle
+            AIMLNodeSystem.record_orchestration_contribution!(n)
+            result = AIMLNodeSystem.apply_aiml_right!()
+            if n.id in result["rewarded"]
                 push!(deltas, n.strength - start)
             end
         end
@@ -197,10 +195,10 @@ AIMLNodeSystem.register_lobe!("lobe_B_disabled", 10)
 @test begin
     AIMLNodeSystem.begin_cycle!()
     n = AIMLNodeSystem.add_aiml_node!("lobe_B_disabled", "n1", "<t>"; initial_strength = 5.0)
-    # GRUG: Seed gives rand() < 0.5 for the coin, so we fire and apply +1.0.
     Random.seed!(1)
-    AIMLNodeSystem.record_fire!(n)
-    # Result is either 5.0 (didn't fire) or exactly 6.0 (fired, identity delta).
+    AIMLNodeSystem.record_orchestration_contribution!(n)
+    result = AIMLNodeSystem.apply_aiml_right!()
+    # Result is either 5.0 (missed coin) or exactly 6.0 (rewarded, identity delta).
     n.strength == 5.0 || n.strength == 6.0
 end
 Random.seed!()
@@ -238,28 +236,19 @@ end
 Random.seed!()
 println("  ✓ coin threshold stays in [FLOOR, CEILING] across 500 draws")
 
-# GRUG: Integration — record_fire! under jitter still yields ~50% gain rate.
-# Batch trials so we stay under the AIML population cap each round.
+# GRUG BUG-011: record_fire! is marker-only and has no coin gate.
 fresh_slate!()
-let gains = 0, batch_size = 200, total_trials = 2000
-    for batch_idx in 1:(total_trials ÷ batch_size)
-        AIMLNodeSystem.reset_all!()
-        AIMLNodeSystem.register_lobe!("lobe_C_rate", 900)  # cap = 300
-        for j in 1:batch_size
-            i = (batch_idx - 1) * batch_size + j
-            Random.seed!(i * 31337)
-            AIMLNodeSystem.begin_cycle!()
-            n = AIMLNodeSystem.add_aiml_node!("lobe_C_rate", "n_$i", "<t>"; initial_strength = 5.0)
-            AIMLNodeSystem.record_fire!(n)
-            n.gained_this_cycle && (gains += 1)
-        end
-    end
-    Random.seed!()
-    rate = gains / total_trials
-    # GRUG: Same ±0.04 window as the primitive check above.
-    @test abs(rate - 0.5) < 0.05
+AIMLNodeSystem.register_lobe!("lobe_C_rate", 30)
+AIMLNodeSystem.add_aiml_node!("lobe_C_rate", "n_marker", "<t>"; initial_strength = 5.0)
+let n = AIMLNodeSystem.get_aiml_node("lobe_C_rate", "n_marker")
+    AIMLNodeSystem.begin_cycle!()
+    start = n.strength
+    AIMLNodeSystem.record_fire!(n)
+    @test n.fired_this_cycle
+    @test !n.gained_this_cycle
+    @test n.strength == start
 end
-println("  ✓ record_fire! coin gate under jitter fires ~50% long-run")
+println("  ✓ record_fire! is marker-only under jitter (no strength coin gate)")
 
 # GRUG: apply_aiml_right! coin gate — only non-gainer contributors are eligible,
 # so we pre-fire without gaining by directly setting fired_this_cycle.
@@ -269,13 +258,11 @@ let rewarded_total = 0, eligible_total = 0, trials = 400
     for i in 1:trials
         Random.seed!(i * 49999)
         AIMLNodeSystem.begin_cycle!()
-        # GRUG: Create 5 contributors per trial. Manually flag fired_this_cycle
-        # to bypass the record_fire! gate and isolate /aimlRight's coin.
+        # GRUG: Create 5 explicit orchestration contributors per trial to
+        # isolate /aimlRight's coin.
         for k in 1:5
             n = AIMLNodeSystem.add_aiml_node!("lobe_D_right", "n_$(i)_$(k)", "<t>"; initial_strength = 5.0)
-            n.fired_this_cycle = true
-            # GRUG: explicit non-gain so /aimlRight considers this node eligible.
-            n.gained_this_cycle = false
+            AIMLNodeSystem.record_orchestration_contribution!(n)
         end
         result = AIMLNodeSystem.apply_aiml_right!()
         rewarded_total += length(result["rewarded"])
@@ -287,7 +274,7 @@ let rewarded_total = 0, eligible_total = 0, trials = 400
     rate = rewarded_total / eligible_total
     @test abs(rate - 0.5) < 0.05
 end
-println("  ✓ apply_aiml_right! secondary-reward gate fires ~50% under jitter")
+println("  ✓ apply_aiml_right! contributor reward gate fires ~50% under jitter")
 
 # GRUG: apply_aiml_wrong! coin gate — every fired contributor is eligible.
 fresh_slate!()
@@ -298,7 +285,7 @@ let penalized_total = 0, eligible_total = 0, trials = 400
         AIMLNodeSystem.begin_cycle!()
         for k in 1:5
             n = AIMLNodeSystem.add_aiml_node!("lobe_E_wrong", "n_$(i)_$(k)", "<t>"; initial_strength = 5.0)
-            n.fired_this_cycle = true
+            AIMLNodeSystem.record_orchestration_contribution!(n)
         end
         result = AIMLNodeSystem.apply_aiml_wrong!()
         penalized_total += length(result["penalized"])
@@ -313,48 +300,33 @@ end
 println("  ✓ apply_aiml_wrong! penalty gate fires ~50% under jitter")
 
 # ==============================================================================
-# [F] HONEST-NET-LOSS CONTRACT UNDER JITTER
+# [F] NON-CONTRIBUTORS NEVER CHANGE STRENGTH UNDER FEEDBACK
 # ==============================================================================
 
-println("\n[F] Honest-net-loss under jitter (hard spec rule)")
+println("\n[F] Non-contributors never change strength under feedback")
 
-# GRUG: Spec rule: if a node GAINED strength in-cycle and then /aimlWrong
-# penalizes it, final strength MUST end strictly below cycle-start strength.
-# Under jitter this must still hold. Penalty magnitude = delta + prior_gain,
-# which is strictly > 0, and jitter preserves sign (ratio < 1), so the
-# applied delta is always strictly negative.
 fresh_slate!()
-AIMLNodeSystem.register_lobe!("lobe_F_netloss", 2000)
-let violations = 0, checks = 0, trials = 1000
+AIMLNodeSystem.register_lobe!("lobe_F_noncontrib", 2000)
+let unchanged = true, trials = 200
     for i in 1:trials
         Random.seed!(i * 10007 + 5)
         AIMLNodeSystem.begin_cycle!()
-        n = AIMLNodeSystem.add_aiml_node!("lobe_F_netloss", "n_$i", "<t>"; initial_strength = 5.0)
-        cycle_start = n.strength
-        # GRUG: Force a use-gain via direct delta application (bypass coin
-        # so we guarantee gained_this_cycle = true for this trial).
-        AIMLNodeSystem._apply_strength_delta!(n, AIMLNodeSystem.AIML_STRENGTH_DELTA)
-        gained = n.gained_this_cycle
-        n.fired_this_cycle = true
-        # GRUG: Force a penalty (coin_ratio=0 + fixed seed) by shifting the
-        # coin_ratio to its max-effect and seeding so rand()<0.5 most of
-        # the time. Instead we just call /aimlWrong and only assert on
-        # trials where the node was actually penalized.
-        result = AIMLNodeSystem.apply_aiml_wrong!()
-        if gained && (n.id in result["penalized"])
-            checks += 1
-            if !(n.strength < cycle_start)
-                violations += 1
-            end
-        end
+        n = AIMLNodeSystem.add_aiml_node!("lobe_F_noncontrib", "n_$i", "<t>"; initial_strength = 5.0)
+        start_strength = n.strength
+        AIMLNodeSystem.record_vote!(n)
+        AIMLNodeSystem.record_fire!(n)
+        result_r = AIMLNodeSystem.apply_aiml_right!()
+        result_w = AIMLNodeSystem.apply_aiml_wrong!()
+        unchanged &= (result_r["total_contributors"] == 0)
+        unchanged &= (result_w["total_contributors"] == 0)
+        unchanged &= (n.strength == start_strength)
         AIMLNodeSystem.reset_all!()
-        AIMLNodeSystem.register_lobe!("lobe_F_netloss", 2000)
+        AIMLNodeSystem.register_lobe!("lobe_F_noncontrib", 2000)
     end
     Random.seed!()
-    @test checks > 0  # GRUG: sanity — some trials must have been penalized
-    @test violations == 0
+    @test unchanged
 end
-println("  ✓ every penalized gainer ended strictly below cycle-start strength (0 violations)")
+println("  ✓ fired/voted non-contributors are never reinforced or penalized")
 
 # ==============================================================================
 # [G] JITTER DISABLE TOGGLE — FULL DETERMINISTIC REGRESSION
@@ -423,10 +395,10 @@ println("ALL AIML JITTER TESTS PASSED! 8 test groups complete.")
 println("Values verified under per-activation entropy:")
 println("  - AIMLNode initial_strength (A)")
 println("  - _apply_strength_delta! delta (B)")
-println("  - record_fire! coin gate (C)")
-println("  - apply_aiml_right! coin gate (D)")
+println("  - record_fire! marker-only no-strength rule (C)")
+println("  - apply_aiml_right! contributor coin gate (D)")
 println("  - apply_aiml_wrong! coin gate (E)")
-println("  - honest-net-loss contract under jitter (F)")
+println("  - non-contributor no-strength-change contract (F)")
 println("  - disable_jitter! identity contract (G)")
 println("  - error propagation, no silent failures (H)")
 println("="^60)

@@ -1952,12 +1952,14 @@ function _infer_action_packet_from_lobe(lobe_hint::String, lobe_registry;
     return get(default_packets, lobe_hint, default_packets["default"])
 end
 
+_expand_action_macro_string(s::AbstractString)::String = replace(replace(String(s), "{{PIPE}}" => "|"), "{PIPE}" => "|")
+
 function _parse_action_name(part::AbstractString)::String
     m = match(r"^(.+?)\[", part)
-    m !== nothing && return strip(m.captures[1])
+    m !== nothing && return _expand_action_macro_string(strip(m.captures[1]))
     m2 = match(r"^(.+?)\^", part)
-    m2 !== nothing && return strip(m2.captures[1])
-    return strip(part)
+    m2 !== nothing && return _expand_action_macro_string(strip(m2.captures[1]))
+    return _expand_action_macro_string(strip(part))
 end
 
 function _parse_action_weight(part::AbstractString)::Float64

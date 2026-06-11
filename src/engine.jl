@@ -1,4 +1,15 @@
 # Engine.jl
+# ==============================================================================
+# !!! GRUG REMINDER — RELATIONAL TRIPLES CAN USE SIGILS !!!
+# ------------------------------------------------------------------------------
+# A RelationalTriple's subject / relation / object fields may contain sigil
+# tokens (e.g. "&n", "&word", "&noun", or specimen-defined macros). Relational
+# patterns are NOT plain literal text only — they can carry typed sigil holes
+# just like patterns do. Anything that builds, matches, mutates, inhibits, or
+# serializes RelationalTriples MUST account for sigils (resolve via
+# SigilRegistry where appropriate). Do not assume triple fields are always
+# literal words. See SigilRegistry.jl / SigilPromoter.jl.
+# ==============================================================================
 using Base.Threads: Atomic, atomic_add!, ReentrantLock
 using JSON
 using Random # GRUG: Need random to roll active node limits and scan modes!
@@ -382,6 +393,110 @@ function extract_relational_triples(input::String)::Vector{RelationalTriple}
 end
 
 """
+    screen_input_complexity(signal::Vector{Float64}, triples::Vector{RelationalTriple})::Int
+
+Compute the base selective-scan tier for an input screen from signal length and
+relational structure. This is the input-side tier only; `_effective_scan_mode`
+may still downgrade it per node pattern length.
+"""
+function screen_input_complexity(signal::Vector{Float64}, triples::Vector{RelationalTriple})::Int
+    len = length(signal)
+    len == 0 && error("!!! FATAL: screen_input_complexity got empty signal! Cannot scan empty input! !!!")
+
+    triple_count = length(triples)
+
+    # Cheap: tiny signal with little/no relational structure.
+    if len <= 3 && triple_count == 0
+        return 1
+    end
+
+    # High-res: long signal or dense relation basket.
+    if len > 20 || triple_count >= 4
+        return 3
+    end
+
+    # Medium: everything between cheap and high-res.
+    return 2
+end
+
+"""
+    _bidirectional_cheap_scan(target::Vector{Float64}, pattern::Vector{Float64}; threshold=0.6, nonjitter=false, jitter_floor=JITTER_CONFIDENCE_FLOOR)
+
+Tier-1 scan wrapper for short node patterns. Runs cheap_scan forward and with
+the pattern reversed, fuses the two directional confidences with
+big_number_small_number_coherence, and optionally applies post-fusion jitter.
+If one direction misses, it contributes `threshold - 0.01`; if both miss, the
+forward PatternNotFoundError is rethrown. Empty inputs fail loudly.
+"""
+function _bidirectional_cheap_scan(target::Vector{Float64}, pattern::Vector{Float64};
+                                   threshold::Real=0.6,
+                                   nonjitter::Bool=false,
+                                   jitter_floor::Real=JITTER_CONFIDENCE_FLOOR)::Tuple{Int, Float64}
+    isempty(target) && error("!!! FATAL: _bidirectional_cheap_scan got empty target! !!!")
+    isempty(pattern) && error("!!! FATAL: _bidirectional_cheap_scan got empty pattern! !!!")
+
+    miss_contribution = max(0.0, Float64(threshold) - 0.01)
+
+    fwd_idx = 0
+    fwd_conf = miss_contribution
+    fwd_err = nothing
+    fwd_hit = false
+    try
+        fwd_idx, fwd_conf = cheap_scan(target, pattern; threshold=threshold)
+        fwd_hit = true
+    catch e
+        if e isa PatternNotFoundError
+            fwd_err = e
+        else
+            rethrow(e)
+        end
+    end
+
+    rev_idx = 0
+    rev_conf = miss_contribution
+    rev_err = nothing
+    rev_hit = false
+    try
+        rev_idx, rev_conf = cheap_scan(target, reverse(pattern); threshold=threshold)
+        rev_hit = true
+    catch e
+        if e isa PatternNotFoundError
+            rev_err = e
+        else
+            rethrow(e)
+        end
+    end
+
+    if !fwd_hit && !rev_hit
+        throw(fwd_err === nothing ? rev_err : fwd_err)
+    end
+
+    fused = big_number_small_number_coherence(Float64(fwd_conf), Float64(rev_conf))
+    should_jitter = !nonjitter || fused < Float64(jitter_floor)
+    final_conf = should_jitter ? slight_jitter(fused) : fused
+    best_idx = fwd_hit ? fwd_idx : rev_idx
+    return (best_idx, final_conf)
+end
+
+"""
+    _effective_scan_mode(base_mode::Int, node_signal::Vector{Float64})::Int
+
+Apply per-node pattern-complexity downgrade to a requested scan tier. Empty
+signals keep the requested tier and let the scanner/error path handle them;
+short patterns do not pay for expensive scans.
+"""
+function _effective_scan_mode(base_mode::Int, node_signal::Vector{Float64})::Int
+    if base_mode < 1 || base_mode > 3
+        error("!!! FATAL: _effective_scan_mode got invalid base_mode=$base_mode; expected 1..3 !!!")
+    end
+    len = length(node_signal)
+    len == 0 && return base_mode
+    len <= 3 && return min(base_mode, 1)
+    len <= 8 && return min(base_mode, 2)
+    return base_mode
+end
+
+"""
 extract_dynamic_relational_triples(input::String, scan_mode::Int)::Vector{RelationalTriple}
 
 GRUG: Dynamic relational extraction for complex inputs (high-res scan mode).
@@ -665,6 +780,19 @@ end
 const STRENGTH_CAP   = 10.0
 const STRENGTH_FLOOR = 0.0
 
+"""
+    strength_biased_scan_coinflip(node::Node)::Bool
+
+Stochastic scan-admission gate. Strong nodes are more likely to be scanned,
+weak nodes still have a floor chance. BUG-011: this is not reinforcement and
+never changes node strength.
+"""
+function strength_biased_scan_coinflip(node)::Bool
+    strength_ratio = clamp(node.strength / STRENGTH_CAP, 0.0, 1.0)
+    probability = clamp(0.20 + 0.70 * strength_ratio, 0.0, 1.0)
+    return rand() < probability
+end
+
 # GRUG: Slow-response telemetry threshold. v7.21c-5 side-process isolation:
 # exceeding this threshold logs diagnostics only; it does not grave voters.
 # 24-hour ledger clears daily. Time in seconds.
@@ -697,7 +825,7 @@ mutable struct Node
     id::String
     pattern::String
     signal::Vector{Float64}          # GRUG: Number rocks for Pattern Scanner!
-    action_packet::String 
+    action_packet::String
     json_data::Dict{String, Any}
     drop_table::Vector{String}
     throttle::Float64
@@ -735,7 +863,7 @@ mutable struct Node
     fired_this_cycle::Bool           # GRUG: True if node's vote was used by AIML orchestrator
     voted_this_cycle::Bool           # GRUG: True if node voted (may or may not have contributed)
     gained_this_cycle::Bool          # GRUG: True if node gained strength this cycle
-    strength_delta_this_cycle::Float64  # GRUG: Strength change this cycle (for over-compensation penalty)
+    strength_delta_this_cycle::Float64  # GRUG: Strength change this cycle (feedback diagnostics)
 
     # GRUG BUG-010b: Pre-chatter originals for inhibition rules.
     # When chatter swaps a node's pattern + action_packet (Markov remix),
@@ -1219,8 +1347,9 @@ end
 """
 bump_strength!(node::Node)
 
-GRUG: On a coinflip, node gains strength when used. Capped at STRENGTH_CAP (apoptosis).
-Coinflip means NOT every use rewards strength - only lucky ones!
+GRUG BUG-011: Coinflip-gated strength gain primitive. Capped at STRENGTH_CAP.
+Callers must only invoke this from approved reinforcement paths, e.g. locked
+/right feedback. General use/vote paths must not call it for passive reward.
 """
 function bump_strength!(node::Node)
     # GRUG: 50/50 coinflip. Only winners get stronger.
@@ -1653,6 +1782,37 @@ const CHATTER_NODE_COOLDOWN      = Dict{String, Float64}()
 const CHATTER_NODE_COOLDOWN_LOCK = ReentrantLock()
 const CHATTER_NODE_COOLDOWN_SECONDS = 3600.0   # GRUG: 1 hour, per spec
 
+# BUG-011: Permanent mutation registry. Once a node has been chatter-mutated
+# (pattern swapped or vote remixed), it can NEVER be mutated again. This is
+# stronger than the 1-hour cooldown — it's a lifetime ban. The set persists
+# across sessions and survives reload. Cleared only by full engine reset.
+const CHATTER_MUTATED_SET      = Set{String}()
+const CHATTER_MUTATED_SET_LOCK = ReentrantLock()
+
+"""
+    is_chatter_mutated(node_id) -> Bool
+
+Returns true if this node has ever been chatter-mutated (pattern swap or vote
+remix applied). Mutated nodes are permanently excluded from future chatter.
+"""
+function is_chatter_mutated(node_id::String)::Bool
+    return lock(CHATTER_MUTATED_SET_LOCK) do
+        node_id in CHATTER_MUTATED_SET
+    end
+end
+
+"""
+    mark_chatter_mutated!(node_id)
+
+Record that this node has been chatter-mutated. Permanent — only cleared by
+full engine reset. Checked before staging any swap and enforced at apply time.
+"""
+function mark_chatter_mutated!(node_id::String)
+    lock(CHATTER_MUTATED_SET_LOCK) do
+        push!(CHATTER_MUTATED_SET, node_id)
+    end
+end
+
 """
     next_group_id() -> String
 
@@ -1939,17 +2099,36 @@ end
 # Inhibition rules (the "don't do" list) must use the ORIGINAL content
 # (pre-chatter), not the post-swap remixed stuff.
 #
-# The inhibition_tokens set on each NodeGroup is built from:
-#   1. All alive (non-grave) members' original_pattern tokens
-#   2. All alive members' original_action_packet action names
-#   3. Thesaurus expansion of each token (synonyms count as covered too)
+# GRUG BUG-011: Inhibition is AUTO-GROWTH ONLY, not latch selection.
+# Latch may still attach to coherent existing groups; inhibition suppresses only
+# automatic spawning/linking of redundant new coverage.
+#
+# Active inhibition tokens are stored per node type in GROUP_INHIBITION_BY_TYPE:
+#   :voter => regular voter nodes
+#   :time  => time nodes (same behavior as voter nodes, separate bucket)
 # Antimatch nodes don't contribute (they're stiff suppressors, not knowledge).
 # Graved nodes don't contribute (dead knowledge doesn't inhibit).
 # Post-swap remixed content doesn't contribute (chatter overwrites don't inhibit).
-#
-# When growth/latch considers spawning a new node whose tokens overlap heavily
-# with inhibition_tokens, it should be suppressed — that semantic territory
-# is already covered by the group's original inhabitants.
+# group.inhibition_tokens remains a legacy union/debug view for old specimens.
+
+
+# GRUG BUG-011: Per-node-type inhibition buckets. Kept out of NodeGroup's
+# positional constructor to avoid breaking old specimen load paths. Keyed by
+# group id, then by node type (:voter or :time). AIML has its own registry in
+# AIMLNodeSystem because AIML nodes are not NodeGroup members.
+const GROUP_INHIBITION_BY_TYPE = Dict{String, Dict{Symbol, Set{String}}}()
+
+function _node_inhibition_type(node)::Symbol
+    return is_time_node(node) ? :time : :voter
+end
+
+function _group_inhibition_tokens(group::NodeGroup, node_type::Symbol)::Set{String}
+    typed = get(GROUP_INHIBITION_BY_TYPE, group.id, nothing)
+    if typed === nothing
+        return Set{String}()
+    end
+    return get(typed, node_type, Set{String}())
+end
 
 """
     refresh_inhibition_tokens!(group::NodeGroup; node_map, node_lock, thesaurus_fn=nothing)
@@ -1967,7 +2146,24 @@ function refresh_inhibition_tokens!(
     node_lock = NODE_LOCK,
     thesaurus_fn::Union{Function, Nothing} = nothing,
 )::Nothing
-    tokens = Set{String}()
+    typed_tokens = Dict{Symbol, Set{String}}(:voter => Set{String}(), :time => Set{String}())
+
+    function add_token!(bucket::Set{String}, tok)
+        t = lowercase(strip(string(tok)))
+        isempty(t) && return
+        push!(bucket, t)
+        if thesaurus_fn !== nothing
+            try
+                syns = thesaurus_fn(t)  # expects Vector{String} or Set{String}
+                for s in syns
+                    s_str = lowercase(strip(string(s)))
+                    isempty(s_str) || push!(bucket, s_str)
+                end
+            catch
+                # thesaurus lookup failure = skip expansion, token already added
+            end
+        end
+    end
 
     lock(node_lock) do
         for mid in group.members
@@ -1976,23 +2172,12 @@ function refresh_inhibition_tokens!(
             node.is_grave && continue
             node.is_antimatch_node && continue
 
+            bucket = typed_tokens[_node_inhibition_type(node)]
+
             # GRUG: Original pattern tokens (pre-chatter, frozen at birth)
             if !isempty(node.original_pattern)
                 for tok in split(lowercase(strip(node.original_pattern)), r"\s+")
-                    isempty(tok) && continue
-                    push!(tokens, tok)
-                    # GRUG: Thesaurus expansion — synonyms count as covered too
-                    if thesaurus_fn !== nothing
-                        try
-                            syns = thesaurus_fn(tok)  # expects Vector{String} or Set{String}
-                            for s in syns
-                                s_str = lowercase(strip(string(s)))
-                                isempty(s_str) || push!(tokens, s_str)
-                            end
-                        catch
-                            # thesaurus lookup failure = skip expansion, token already added
-                        end
-                    end
+                    add_token!(bucket, tok)
                 end
             end
 
@@ -2000,25 +2185,25 @@ function refresh_inhibition_tokens!(
             if !isempty(node.original_action_packet)
                 action_names = _action_names_from_packet(node.original_action_packet)
                 for aname in action_names
-                    aname_lower = lowercase(strip(aname))
-                    isempty(aname_lower) && continue
-                    push!(tokens, aname_lower)
+                    add_token!(bucket, aname)
                 end
             end
         end
     end
 
-    group.inhibition_tokens = tokens
+    GROUP_INHIBITION_BY_TYPE[group.id] = typed_tokens
+    group.inhibition_tokens = union(values(typed_tokens)...)
     group.inhibition_dirty = false
     return nothing
 end
 
 """
-    is_inhibited(pattern::String, group::NodeGroup; threshold::Float64=0.5)::Bool
+    is_inhibited(pattern::String, group::NodeGroup; threshold::Float64=0.5, node_type::Symbol=:voter)::Bool
 
-GRUG BUG-010b: Check if a candidate pattern's tokens overlap too much with
-the group's inhibition_tokens. If overlap >= threshold, the pattern is
-"already covered" — growth/latch should not spawn it here.
+GRUG BUG-011: Check if a candidate pattern's tokens overlap too much with
+the group's same-node-type inhibition bucket. If overlap >= threshold, the
+pattern is "already covered" — auto-growth should not spawn/link it here.
+Latch selection does not call this anymore.
 
 threshold=0.5 means: if ≥50% of the candidate's tokens are already in the
 inhibition set, it's inhibited (don't duplicate coverage).
@@ -2027,6 +2212,7 @@ function is_inhibited(
     pattern::String,
     group::NodeGroup;
     threshold::Float64 = 0.5,
+    node_type::Symbol = :voter,
     node_map = NODE_MAP,
     node_lock = NODE_LOCK,
     thesaurus_fn::Union{Function, Nothing} = nothing,
@@ -2039,7 +2225,8 @@ function is_inhibited(
             @warn "[INHIBIT] refresh_inhibition_tokens! failed for group $(group.id): $e"
         end
     end
-    if isempty(group.inhibition_tokens) || isempty(pattern)
+    active_tokens = _group_inhibition_tokens(group, node_type)
+    if isempty(active_tokens) || isempty(pattern)
         return false
     end
 
@@ -2048,7 +2235,7 @@ function is_inhibited(
         return false
     end
 
-    overlap = length(intersect(candidate_tokens, group.inhibition_tokens))
+    overlap = length(intersect(candidate_tokens, active_tokens))
     ratio = Float64(overlap) / Float64(length(candidate_tokens))
 
     return ratio >= threshold
@@ -2117,11 +2304,8 @@ function find_group_latch_candidates(pattern::String; node_map, node_lock, reque
                 continue
             end
 
-            # GRUG BUG-010b: If this group's inhibition tokens already cover
-            # the candidate pattern, don't latch — semantic territory occupied.
-            if is_inhibited(pattern, grp; node_map=node_map, node_lock=node_lock, thesaurus_fn=thesaurus_fn)
-                continue
-            end
+            # GRUG BUG-011: Inhibition is auto-growth-only. Do NOT suppress
+            # latch candidates here; latch attaches to existing structure.
 
             # GRUG: Pre-compute average alive-member strength.
             # Caller filters by floor then picks at random.
@@ -2159,29 +2343,25 @@ const LATCH_SCAN_CONFIDENCE_FLOOR = 0.60  # GRUG: Min high_res_scan confidence f
 const THES_LATCH_WEIGHT           = 0.30  # GRUG: Thesaurus proximity bonus weight in candidate score
 const LATCH_CANDIDATE_TOP_N       = 5     # GRUG: How many top candidates to consider
 
-function _action_names_from_packet(packet::String)::Set{String}
-    names = Set{String}()
-    for part in split(packet, '|')
-        p = strip(part)
-        isempty(p) && continue
-        # Strip inline negatives and weight: action_name[negs]^weight -> action_name
-        m = match(r"^(.+?)\[[^\]]*\]", p)
-        if !isnothing(m)
-            name = strip(m.captures[1])
-            !isempty(name) && push!(names, name)
-        else
-            # Strip weight suffix: action_name^weight -> action_name
-            m2 = match(r"^(.+?)\^", p)
-            if !isnothing(m2)
-                name = strip(m2.captures[1])
-                !isempty(name) && push!(names, name)
-            else
-                !isempty(p) && push!(names, p)
-            end
-        end
+
+# GRUG BUG-011: Action packets are still pipe-delimited strings. If an action
+# name itself needs a literal pipe, encode it as {PIPE} or {{PIPE}} inside the
+# action name. Decode only AFTER splitting packet slots so delimiters stay sane.
+const ACTION_PIPE_MACROS = ("{{PIPE}}", "{PIPE}")
+
+function expand_action_macro_string(s::AbstractString)::String
+    out = String(s)
+    for macro_token in ACTION_PIPE_MACROS
+        out = replace(out, macro_token => "|")
     end
-    return names
+    return out
 end
+
+function _action_names_from_packet(packet::String)::Set{String}
+    _, _, action_items = parse_action_packet(packet)
+    return Set(String(item[1]) for item in action_items if !isempty(strip(String(item[1]))))
+end
+
 
 function link_to_group_member(new_node::Node, group::NodeGroup)::Union{String, Nothing}
     new_pattern = lowercase(strip(new_node.pattern))
@@ -2416,7 +2596,8 @@ function _scan_latch_candidates(
             # GRUG BUG-010b: If this group's inhibition tokens already cover the
             # candidate pattern, skip — semantic territory already occupied by
             # alive members' ORIGINAL content (pre-chatter).
-            if is_inhibited(pattern, grp; node_map=node_map, node_lock=node_lock, thesaurus_fn=thesaurus_fn)
+            inhibit_type = grp.is_time_node_group ? :time : :voter
+            if is_inhibited(pattern, grp; node_type=inhibit_type, node_map=node_map, node_lock=node_lock, thesaurus_fn=thesaurus_fn)
                 continue
             end
             # ── GATE 1: Pattern scan confidence ────────────────────────────
@@ -2904,6 +3085,24 @@ function detach_node!(target_id::String, attach_id::String)::String
 end
 
 """
+    confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
+
+Bridge relay gate used by fire_cascades!. This is not reinforcement and never
+changes node strength. It only decides whether an existing bridge relays this
+cycle, biased by the partner node's current strength and the bridge's baked
+semantic confidence.
+"""
+function confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
+    if !isfinite(bridge_confidence)
+        error("!!! FATAL: bridge_confidence must be finite, got $bridge_confidence !!!")
+    end
+    strength_bias = clamp(node.strength / STRENGTH_CAP, 0.0, 1.0)
+    confidence_bias = clamp(bridge_confidence / VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD, 0.0, 1.0)
+    probability = clamp((strength_bias + confidence_bias) / 2.0, 0.0, 1.0)
+    return rand() < probability
+end
+
+"""
     fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
                   unmatched_tail::Vector{String}=String[])::Vector{Tuple{String, Float64, String}}
 
@@ -3037,8 +3236,7 @@ function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
             push!(fired, (br.partner_id, confidence, seam_text))
             current_active += 1
 
-            # GRUG: Bump strength on the partner node (it got used!)
-            bump_strength!(partner_ref)
+            # GRUG BUG-011: Cascade/use no longer changes strength. Only lock-in feedback can.
 
             println("[ENGINE] ⚡  Cascade handoff: '$(br.partner_id)' fired via bridge from '$source_id' (conf=$(round(confidence, digits=3)), seam=\"$(first(seam_text, 40))\")")
         end
@@ -3887,7 +4085,7 @@ function parse_action_packet(packet::String)
                 1.0
             end
 
-            push!(action_items, (String(action_name), weight, action_negatives))
+            push!(action_items, (expand_action_macro_string(action_name), weight, action_negatives))
 
         else
             # GRUG: No inline negatives. Check for weight suffix: "action_name^weight"
@@ -3910,7 +4108,7 @@ function parse_action_packet(packet::String)
                 p_name, 1.0
             end
 
-            push!(action_items, (String(action_name), weight, String[]))
+            push!(action_items, (expand_action_macro_string(action_name), weight, String[]))
         end
     end
 
@@ -3944,1438 +4142,28 @@ Parses the packet into positives (weighted actions), picks one stochastically
 using CoinFlipHeader bias. Returns the selected action name.
 """
 function select_action(packet::String)
-    positives, negatives, _ = parse_action_packet(packet)
-    total_weight = sum(p[2] for p in positives)
-    
+    _, _, action_items = parse_action_packet(packet)
+    isempty(action_items) && error("!!! FATAL: select_action got empty action packet! !!!")
+
+    total_weight = sum(Float64(item[2]) for item in action_items)
+    total_weight <= 0.0 && error("!!! FATAL: select_action got non-positive total action weight! !!!")
+
     pairs_for_coin = Pair[]
-    for (name, weight) in positives
+    for item in action_items
+        name = String(item[1])
+        weight = Float64(item[2])
         prob = (weight / total_weight) * 100.0
         push!(pairs_for_coin, bias(Symbol(name), prob) => () -> nothing)
     end
-    
+
     winning_sym = @coinflip pairs_for_coin
-    return String(winning_sym), negatives
+    negatives = String[]
+    for item in action_items
+        append!(negatives, String.(item[3]))
+    end
+    return String(winning_sym), unique(negatives)
 end
 
-# ==============================================================================
-# GRUG ROUTING MECHANICS (WITH ACTIVE LIMIT & COMPLEXITY BASED SCANS)
-# ==============================================================================
-
-# ==============================================================================
-# COMPLEXITY PRE-SCREENER
-# ==============================================================================
-
-"""
-# GRUG DOC 2.5: Magic Numbers Explained!
-# Base word token = 0.15 weight. 
-# Relational triple = 1.5 weight (1 triple = ~10 words of complexity!).
-# Thresholds: 
-#   < 1.5  (e.g. less than 10 words, no triples) -> Cheap Eye.
-#   < 4.5  (e.g. 10-30 words, or 1-2 triples) -> Medium Eye.
-#   >= 4.5 (e.g. big paragraph or many gears) -> High-Res Eye.
-"""
-function screen_input_complexity(signal::Vector{Float64}, triples::Vector{RelationalTriple})::Int
-    if isempty(signal)
-        # GRUG: If signal empty, scanner will crash later. Scream now!
-        error("!!! FATAL: Complexity screener found empty signal! No silent failure! !!!")
-    end
-
-    sig_len   = length(signal)
-    rel_count = length(triples)
-    
-    complexity_score = (sig_len * 0.15) + (rel_count * 1.5)
-
-    if complexity_score < 1.5
-        return 1
-    elseif complexity_score < 4.5
-        return 2
-    else
-        return 3
-    end
-end
-
-"""
-_effective_scan_mode(base_mode::Int, node_signal::Vector{Float64})::Int
-
-GRUG: SELECTIVE PATTERN SCAN — downgrade the scan tier based on node pattern
-complexity. The base_mode comes from screen_input_complexity (which looks at
-INPUT complexity). But a simple 2-token node pattern doesn't justify a high-res
-two-pass scan — cheap_scan would give the same answer with less work.
-
-This is per-node downgrade logic: the scan tier can only go DOWN, never UP.
-If the input demands cheap_scan (mode=1), the node can't push it to high_res.
-But if the input demands high_res (mode=3), a tiny node pattern drops it back.
-
-Pattern complexity thresholds:
-  - signal length ≤ 3 tokens  → mode capped at 1 (cheap scan only, BIDIRECTIONAL)
-  - signal length ≤ 8 tokens  → mode capped at 2 (medium scan max)
-  - signal length > 8 tokens  → no cap (full tier from input complexity)
-
-BIDIRECTIONAL AT TIER 1: When effective_mode == 1, scan_and_expand uses
-_bidirectional_cheap_scan() instead of plain cheap_scan(). Forward + reverse
-passes are both run and fused via big_number_small_number_coherence — NOT
-averaged — so that agreement on strong signal is rewarded while agreement
-on weak/noise signal is correctly suppressed. This catches order-reversed
-matches that forward-only scanning would miss — "man bites dog" aligns
-with "dog bites man" when the reverse pass runs.
-
-Why: Short patterns have so few signal values that the sliding window
-variance penalty in high_res_scan is numerically meaningless, and the
-stride optimization in cheap_scan already covers the full signal. Wasting
-O(n²) work on a 2-element pattern is cave fire.
-"""
-function _effective_scan_mode(base_mode::Int, node_signal::Vector{Float64})::Int
-    if isempty(node_signal)
-        # GRUG: Empty signal means this node can't be scanned at all.
-        # Return base_mode and let the scanner throw PatternNotFoundError.
-        return base_mode
-    end
-
-    sig_len = length(node_signal)
-
-    # GRUG: Short patterns → force cheap scan. The pattern is too small
-    # for medium/high-res to add any discriminative value.
-    if sig_len <= 3
-        return min(base_mode, 1)
-    end
-
-    # GRUG: Medium patterns → cap at medium scan. High-res two-pass
-    # variance penalty is meaningless with fewer than 8 signal values.
-    if sig_len <= 8
-        return min(base_mode, 2)
-    end
-
-    # GRUG: Complex patterns → full tier from input complexity. These
-    # patterns have enough signal to benefit from high-res scanning.
-    return base_mode
-end
-
-# ==============================================================================
-# BIDIRECTIONAL CHEAP SCAN
-# ==============================================================================
-
-"""
-_bidirectional_cheap_scan(
-    target::Vector{Float64},
-    pattern::Vector{Float64};
-    threshold::Real = 0.3
-)::Tuple{Int, Float64}
-
-GRUG: Bidirectional confidence smoothing for tier-1 (cheap scan) patterns.
-
-The signal encoding of words_to_signal is ORDER-SENSITIVE: "dog bites man" and
-"man bites dog" produce different signal vectors. A pure forward cheap_scan misses
-cases where token overlap is high but word order is reversed — the sliding window
-never aligns the reversed pattern against the target.
-
-BIDIRECTIONAL FIX:
-  1. Forward scan:  cheap_scan(target, pattern)         — normal left-to-right
-  2. Reverse scan:  cheap_scan(target, reverse(pattern)) — reversed pattern signal
-
-COHERENCE FUSION (v7.19 — replaces averaging):
-  Both succeed  → coherence = big_number_small_number_coherence(forward_conf, reverse_conf)
-                  Two strong confidences that agree -> near 1.0.
-                  Two weak confidences that "agree" -> near 0.0 (correctly distrusted).
-                  Strong on one side, weak on the other -> penalized by magnitude_mean.
-  One succeeds  → coherence = big_number_small_number_coherence(hit_conf, miss_contribution)
-                  miss_contribution is just below threshold so a partial reversal gets
-                  a moderate coherence, not a spike and not zero.
-  Both fail     → rethrow PatternNotFoundError.
-                  No match either way. Consistent with single-direction behavior.
-
-WHY COHERENCE BEATS AVERAGING:
-  Averaging hides asymmetry: forward=0.9/reverse=0.1 and forward=0.5/reverse=0.5
-  both average to 0.5, but one is real disagreement and the other is real agreement.
-  Averaging also suffers catastrophic cancellation on close values. Coherence fuses
-  |forward - reverse| normalized by max magnitude, then scales by mean magnitude —
-  so agreement on strong signal wins, agreement on noise does not.
-
-Called only for effective_mode == 1 (cheap scan tier, simple patterns ≤ 3 signal
-elements). Medium and high-res tiers don't need this — they already scan every
-index exhaustively, so order sensitivity is minimal at longer pattern lengths.
-
-ERRORS: propagates PatternNotFoundError if both directions miss. NO SILENT FAILURES.
-
-v7.20 NONJITTER KWARG:
-  When `nonjitter=true`, the end-confidence snap-back jitter applied to the fused
-  coherence output is skipped. This is the per-node opt-out: the caller in
-  scan_and_expand passes `nonjitter=is_nonjitter(node)` so that anchor / calibration /
-  canonical-form nodes receive bit-stable confidence scores. Per-window jitter
-  inside the underlying cheap_scan calls is unaffected — that is a substrate-level
-  behavior of the scanner and remains in effect for both forward and reverse passes.
-  The NONJITTER tag silences only the post-fusion bounded micro-variance.
-
-v7.20 VOTE-LEVEL OVERRIDE (`jitter_floor`):
-  The NONJITTER tag is a *baseline*, not an absolute. If `nonjitter=true` BUT
-  the fused coherence comes in below `jitter_floor`, jitter still runs on the
-  output. This stops a solidified node from ossifying a low-confidence guess.
-  Default `jitter_floor=0.0` preserves the old behavior (no override). The
-  scan_and_expand caller passes `jitter_floor=JITTER_CONFIDENCE_FLOOR` to
-  activate the override system-wide.
-"""
-function _bidirectional_cheap_scan(
-    target::Vector{Float64},
-    pattern::Vector{Float64};
-    threshold::Real = 0.3,
-    nonjitter::Bool = false,
-    jitter_floor::Float64 = 0.0
-)::Tuple{Int, Float64}
-    if isempty(target)
-        # GRUG: Empty target is a scanner crash waiting to happen. Scream now!
-        error("!!! FATAL: _bidirectional_cheap_scan got empty target signal! !!!")
-    end
-    if isempty(pattern)
-        # GRUG: Empty pattern means there's nothing to match. No silent failure!
-        error("!!! FATAL: _bidirectional_cheap_scan got empty pattern signal! !!!")
-    end
-
-    # GRUG: Threshold floor — just below threshold so a miss contributes a near-zero
-    # but honest value to the average, rather than harshly dragging it down to 0.
-    # This avoids the asymmetry where one direction missing tanks an otherwise good score.
-    miss_contribution = max(0.0, Float64(threshold) - 0.01)
-
-    # GRUG: Forward scan — standard left-to-right window alignment.
-    forward_idx  = 0
-    forward_conf = miss_contribution
-    forward_ok   = false
-    try
-        forward_idx, forward_conf = cheap_scan(target, pattern; threshold=threshold)
-        forward_ok = true
-    catch e
-        if e isa PatternNotFoundError
-            # GRUG: Forward direction missed. Not fatal — reverse may still hit.
-            forward_conf = miss_contribution
-        elseif e isa PatternScanError
-            # GRUG: FATAL scanner logic error. Always rethrow. NO SILENT FAILURE!
-            rethrow(e)
-        else
-            error("!!! FATAL: _bidirectional_cheap_scan forward pass got unknown error: $e !!!")
-        end
-    end
-
-    # GRUG: Reverse scan — reverse the pattern signal so "man bites dog" encoded
-    # in reverse becomes equivalent to "dog bites man" forward.
-    reverse_conf = miss_contribution
-    reverse_ok   = false
-    rev_pattern  = reverse(pattern)  # GRUG: New vector, original untouched
-    try
-        _, reverse_conf = cheap_scan(target, rev_pattern; threshold=threshold)
-        reverse_ok = true
-    catch e
-        if e isa PatternNotFoundError
-            # GRUG: Reverse direction also missed. Will check both-fail case below.
-            reverse_conf = miss_contribution
-        elseif e isa PatternScanError
-            rethrow(e)
-        else
-            error("!!! FATAL: _bidirectional_cheap_scan reverse pass got unknown error: $e !!!")
-        end
-    end
-
-    # GRUG: Both directions missed — pattern truly not found. Propagate forward error
-    # so scan_and_expand gets a PatternNotFoundError and skips this node.
-    if !forward_ok && !reverse_ok
-        throw(PatternNotFoundError(
-            "Bidirectional cheap scan: pattern not found in either direction.",
-            miss_contribution
-        ))
-    end
-
-    # GRUG v7.25: FORWARD-DOMINANT SHORT-CIRCUIT.
-    # When the forward scan finds a high-confidence match and the reverse scan
-    # misses, the node clearly matches in its natural word order. Penalizing a
-    # perfect forward hit because the reversed signal doesn't also match is wrong
-    # — the reverse scan exists to catch word-order inversions ("dog bites man"
-    # ↔ "man bites dog"), not to gate forward matches. When forward is confident
-    # enough, use it directly; the reverse-miss means the word order is correct
-    # (not inverted), which is evidence FOR the match, not against it.
-    FORWARD_PASSTHROUGH_THRESHOLD = 0.7
-    if forward_ok && !reverse_ok && forward_conf >= FORWARD_PASSTHROUGH_THRESHOLD
-        smoothed_conf = forward_conf
-    elseif reverse_ok && !forward_ok && reverse_conf >= FORWARD_PASSTHROUGH_THRESHOLD
-        smoothed_conf = reverse_conf
-    else
-        # GRUG v7.19: Fuse forward and reverse confidences via big-number/small-number
-        # coherence instead of plain averaging. This rewards agreement on strong signal,
-        # suppresses agreement on noise, and is immune to catastrophic cancellation
-        # between close floats. See PatternScanner.big_number_small_number_coherence
-        # for the full formula. If only one direction hit, miss_contribution stands in
-        # for the missing side so a partial reversal gets a moderate score instead of
-        # a spike (pure average) or a zero (hard drop).
-        smoothed_conf = big_number_small_number_coherence(forward_conf, reverse_conf)
-    end
-
-    # GRUG v7.20: END-CONFIDENCE SNAP-BACK JITTER.
-    # The per-window slight_jitter inside cheap_scan fuzzes each window's score
-    # BEFORE fusion. That's substrate-level hardware-variance modelling. Here we
-    # add a second, bounded micro-jitter on the fused coherence — the snap-back
-    # breath at the decision boundary. This prevents rigid lock-in on identical
-    # re-scans and keeps the system biologically plausible.
-    #
-    # NONJITTER opt-out: if the caller passed nonjitter=true (wired from
-    # is_nonjitter(node) at scan_and_expand), we skip this jitter entirely so
-    # the output is bit-stable for that node. Global _JITTER_ENABLED in
-    # RelationalJitter is not consulted here — that switch governs relational
-    # weight jitter, not confidence fusion.
-    #
-    # v7.20 VOTE-LEVEL OVERRIDE: NONJITTER is a *baseline*, not an absolute.
-    # When jitter_floor > 0 and the fused coherence falls below it, jitter
-    # runs even on a NONJITTER node. The semantics: a solidified rock that's
-    # only 30% sure of itself on this firing is *guessing*, and we don't want
-    # to ossify the guess. High-confidence firings (≥ floor) on solidified
-    # rocks remain bit-stable. Default jitter_floor=0.0 disables the override
-    # (old behavior).
-    suppress_jitter = nonjitter && smoothed_conf >= jitter_floor
-    final_conf = suppress_jitter ? smoothed_conf : slight_jitter(smoothed_conf)
-
-    # GRUG: Return best alignment index (forward preferred; reverse is orientation-flipped
-    # so its index doesn't map back to the original signal cleanly).
-    best_idx = forward_ok ? forward_idx : 1
-    return (best_idx, final_conf)
-end
-
-# ==============================================================================
-# DROP TABLE NEIGHBOR ACTIVATION
-# ==============================================================================
-
-"""
-collect_drop_table_neighbors(node::Node)::Vector{String}
-
-GRUG: When a node is selected for voting, also collect its drop_table neighbors
-for co-activation. Drop table entries are node IDs that fire together with this node.
-Returns list of valid (non-grave, existing) neighbor node IDs to co-activate.
-"""
-function collect_drop_table_neighbors(node::Node)::Vector{String}
-    result = String[]
-
-    # GRUG: Try lobe hash table first (O(1) prefix lookup) if LobeTable is loaded
-    # and this node has been registered in a lobe's drop chunk.
-    # Fall back to node.drop_table vector for nodes not yet in lobe storage.
-    # This handles both old-style (vector) and new-style (hash table) drop entries.
-    lobe_drop_ids = String[]
-    if isdefined(@__MODULE__, :LobeTable)
-        # GRUG: Ask reverse index which lobe owns this node, then fetch drop chunk.
-        if isdefined(@__MODULE__, :Lobe)
-            owning_lobe = Lobe.find_lobe_for_node(node.id)
-            if !isnothing(owning_lobe) && LobeTable.table_exists(owning_lobe)
-                lobe_drop_ids = try
-                    LobeTable.get_drop_neighbors(owning_lobe, node.id)
-                catch e
-                    # GRUG: Non-fatal. Fall back to vector if chunk lookup fails.
-                    @warn "[Engine] collect_drop_table_neighbors: lobe table lookup failed for node '$(node.id)': $e"
-                    String[]
-                end
-            end
-        end
-    end
-
-    # GRUG: Merge lobe table results with node.drop_table vector (dedup via Set).
-    # Once all nodes migrate to lobe storage, node.drop_table will be empty and
-    # this merge will just use lobe_drop_ids. Both sources are valid during transition.
-    all_drop_ids = union(Set(lobe_drop_ids), Set(node.drop_table))
-
-    lock(NODE_LOCK) do
-        for drop_id in all_drop_ids
-            if haskey(NODE_MAP, drop_id)
-                neighbor = NODE_MAP[drop_id]
-                # GRUG: Only activate non-grave drop table neighbors
-                if !neighbor.is_grave
-                    push!(result, drop_id)
-                end
-            end
-            # GRUG: If drop entry doesn't exist in NODE_MAP, skip silently.
-            # Nodes can be graved or deleted; drop tables may go stale.
-        end
-    end
-    return result
-end
-
-# ==============================================================================
-# STRENGTH-BIASED SCAN COINFLIP
-# ==============================================================================
-
-"""
-strength_biased_scan_coinflip(node::Node)::Bool
-
-GRUG: Before scanning a node, flip a biased coin.
-Strong nodes are more likely to be scanned and activated.
-Weak nodes can still get scanned, but less often (keeps competition alive).
-
-Probability formula: base_prob + (strength / STRENGTH_CAP) * bonus_prob
-  - Weakest node (strength=0.0): 20% chance of scan
-  - Average node (strength=5.0): 60% chance
-  - Strongest node (strength=10.0): 90% chance
-"""
-function strength_biased_scan_coinflip(node::Node)::Bool
-    base_prob  = 0.20
-    bonus_prob = 0.70
-    scan_prob  = base_prob + (node.strength / STRENGTH_CAP) * bonus_prob
-    return rand() < clamp(scan_prob, 0.0, 1.0)
-end
-
-#=
-    confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
-
-GRUG v8.0: Bridge relay coinflip biased by BOTH strength AND confidence.
-Unlike strength_biased_scan_coinflip (scan-time, strength-only), this is the
-relay-time coinflip for CascadeBridge handoffs. The confidence bias comes from
-the bridge's base_confidence relative to AIML_CONFIDENCE_THRESHOLD.
-
-When bridge_confidence >= AIML_CONFIDENCE_THRESHOLD, the node gets a bonus
-proportional to how far above threshold it is. When below threshold, the base
-strength-only formula applies (no penalty — low-confidence bridges still get
-a fair shake via strength alone).
-
-Probability formula:
-  base_prob  = 0.20   (same floor as scan coinflip)
-  strength_bonus = (node.strength / STRENGTH_CAP) * 0.50
-  conf_bonus     = max(0, (bridge_confidence - AIML_CONFIDENCE_THRESHOLD) / (1.0 - AIML_CONFIDENCE_THRESHOLD)) * 0.30
-  bridge_prob = base_prob + strength_bonus + conf_bonus
-
-Range analysis (AIML_CONFIDENCE_THRESHOLD = 0.35):
-  - Weakest, low-conf (str=0, conf=0.1): 20% + 0% + 0% = 20%
-  - Average, at-threshold (str=5, conf=0.35): 20% + 25% + 0% = 45%
-  - Average, high-conf (str=5, conf=0.8): 20% + 25% + 20.8% = 65.8%
-  - Strongest, high-conf (str=10, conf=1.0): 20% + 50% + 30% = 100%
-=#
-function confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
-    base_prob       = 0.20
-    strength_bonus  = (node.strength / STRENGTH_CAP) * 0.50
-    conf_range      = 1.0 - VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD
-    conf_bonus      = max(0.0, (bridge_confidence - VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD) / conf_range) * 0.30
-    bridge_prob     = base_prob + strength_bonus + conf_bonus
-    return rand() < clamp(bridge_prob, 0.0, 1.0)
-end
-
-# ==============================================================================
-# CHUNK RESOLUTION — map scanner best_idx to InputChunk indices
-# ==============================================================================
-
-#=
-    _match_to_chunks(best_idx, pat_len, chunks) -> Vector{Int}
-
-GRUG v7.23: Given a scanner's best_idx (1-based token position where the
-match starts) and the pattern's signal length (how many tokens the match
-covers), determine which InputChunk(s) the match range overlaps.
-
-The match covers tokens [best_idx, best_idx + pat_len - 1].
-A chunk overlaps if [chunk.first_token, chunk.last_token] intersects
-that range. Returns the chunk_index of each overlapping chunk.
-
-If best_idx is 0 (unknown position) or chunks is empty, returns Int[].
-=#
-function _match_to_chunks(best_idx::Int, pat_len::Int,
-                          chunks::Vector{InputDecomposer.InputChunk})::Vector{Int}
-    if best_idx <= 0 || isempty(chunks) || pat_len <= 0
-        return Int[]
-    end
-
-    match_first = best_idx
-    match_last  = best_idx + pat_len - 1
-    result = Int[]
-
-    for chunk in chunks
-        # Two ranges overlap iff: max(first1, first2) <= min(last1, last2)
-        overlap_first = max(match_first, chunk.first_token)
-        overlap_last  = min(match_last, chunk.last_token)
-        if overlap_first <= overlap_last
-            push!(result, chunk.chunk_index)
-        end
-    end
-
-    return result
-end
-
-# ==============================================================================
-# MAIN SCAN FUNCTION
-# ==============================================================================
-
-"""
-scan_specimens(input_text::String)::Vector{Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Int}}
-
-GRUG: Main scan entry point. Converts input text to signal, extracts relational
-triples, runs ActionTonePredictor, checks Hopfield fast-path, then scans all
-nodes for matches. Returns vector of (id, confidence, antimatch, user_triples,
-node_triples, best_idx) tuples. The best_idx is the 1-based token position in
-the input signal where the scanner found the best match — this is the chunked-
-affinity channel. When a scanner can't report a position (e.g. image nodes,
-or fallback paths), best_idx is 0. Throws on empty input — NO SILENT FAILURES.
-"""
-function scan_specimens(input_text::String)::Vector{Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Int}}
-    if strip(input_text) == ""
-        error("!!! FATAL: Grug cannot scan empty air! Input text is blank! !!!")
-    end
-
-    all_valid_specimens = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Int}[]
-    
-    # GRUG: Convert input to number rocks!
-    target_signal = words_to_signal(input_text)
-
-    # GRUG: LITERAL TOKEN PRE-GATE — input side.
-    # Compute the lowercased, whitespace-split token set of the input ONCE here
-    # so every fire_one call can do a cheap set lookup. The gate exists because
-    # words_to_signal hashes tokens to uniformly-distributed Float64 values in
-    # [0, 1], and the matcher then accepts |a - b| <= 0.1 as a "match." That
-    # gives unrelated word pairs a ~20% false-match rate per token comparison,
-    # which is why nodes from semantically unrelated lobes kept firing on
-    # short inputs. The fix: require at least one literal token of the node's
-    # pattern to appear in the input (or vice-versa for short inputs) BEFORE
-    # the float scanner gets to vote. Float math still runs on the survivors —
-    # it's the fuzzy-refinement step on top of a real lexical hit.
-    #
-    # Thesaurus expansion is intentionally NOT applied here. The thesaurus is
-    # an orchestration / synthesis-time concern, not a matching one — the
-    # scanner's job is to find what literally hit, the synthesizer's job is
-    # to remix the result with synonyms. See Main.jl:1339 for that path.
-    input_token_set = Set(split(lowercase(strip(input_text))))
-    
-    # GRUG: DETERMINISTIC SCAN SELECTION
-    # Grug look at how complex input is to choose scanner eye.
-    scan_mode = screen_input_complexity(target_signal, RelationalTriple[])
-
-    # GRUG: RELATIONAL EXTRACTION COUPLING (per architecture spec)
-    # --------------------------------------------------------------------------
-    # Rule: "complex pattern scan → dynamic relational extraction, keep basic
-    #        relational triples for simple things, dynamic is needed for complex"
-    #
-    # Therefore:
-    #   mode 1 (cheap_scan)   → basic extract_relational_triples
-    #   mode 2 (medium_scan)  → basic extract_relational_triples
-    #   mode 3 (high_res_scan)→ dynamic extract_dynamic_relational_triples
-    #                            NO SILENT FALLBACK. If dynamic fails on a
-    #                            complex input, we scream loud. Falling back to
-    #                            basic on mode-3 input would defeat the purpose
-    #                            of the complexity coupling — the input earned
-    #                            high-res scanning, so it earns dynamic triples.
-    #
-    # Error handling:
-    #   - mode 3 dynamic failure → rethrow (fatal for this scan cycle, caller
-    #                                       receives real error, NO SILENT FAIL)
-    #   - mode 1/2 basic failure → return empty triples + loud @warn
-    #     (basic extraction on simple input is less critical; an empty triple
-    #      set just means pattern-scan alone drives the decision.)
-    # --------------------------------------------------------------------------
-    user_triples = if scan_mode >= 3
-        # GRUG: High-res mode → DYNAMIC triples REQUIRED. No fallback.
-        try
-            result = extract_dynamic_relational_triples(input_text, scan_mode)
-            println("[ENGINE] 🌊 High-res dynamic relational extraction: $(length(result)) triples from complex input")
-            result
-        catch e
-            # GRUG: Complex input failed dynamic extraction. This is serious.
-            # Do NOT quietly degrade to basic — the caller asked for complex
-            # analysis and we must either deliver or fail loudly.
-            @error "[ENGINE] ⚠ Dynamic relational extraction FAILED on complex input (mode=$scan_mode). NO SILENT FAIL — rethrowing: $e"
-            rethrow(e)
-        end
-    else
-        # GRUG: Simple mode (1 or 2) → basic extraction. Non-fatal on failure
-        # because basic triples are complementary to pattern scan, not required.
-        try
-            extract_relational_triples(input_text)
-        catch e
-            @warn "[ENGINE] Basic relational extraction failed on simple input (mode=$scan_mode), returning empty triples: $e"
-            RelationalTriple[]
-        end
-    end
-
-    # GRUG: ACTION+TONE PRE-PREDICTION (DIAGNOSTIC ONLY)
-    # Side processes must NEVER affect vote confidence. ActionTonePredictor may
-    # observe, log, and populate LAST_PREDICTION for UI/telemetry, but the scan
-    # score below remains pure core matching: token_conf + rel_conf.
-    # If prediction fails for any reason, Grug logs warning and continues.
-    prediction = try
-        ActionTonePredictor.predict_action_tone(input_text, SemanticVerbs.get_all_verbs())
-    catch e
-        @warn "[ENGINE] ActionTonePredictor failed (non-fatal): $e"
-        nothing
-    end
-
-    if !isnothing(prediction)
-        # GRUG v7.21b-3a: Run the TonalJudge against the prediction so its
-        # frame_hint verdict lands in LAST_JUDGEMENT. b-3a is OBSERVATION-ONLY
-        # at the orchestrator level — the judge runs and surfaces a [FRAME=...]
-        # diagnostic, but no scoring dimension reads it yet (that's b-3b). If
-        # judging fails for any reason, log and continue — the existing log
-        # line keeps working without the frame tag.
-        frame_str = try
-            judgement = TonalJudge.judge_from_prediction(prediction)
-            mode_label = judgement.mode === TonalJudge.RELATIONAL ? "rel" : "basic"
-            " [FRAME=$(TonalJudge.frame_hint_label(judgement.frame_hint))/$(mode_label)]"
-        catch e
-            @warn "[ENGINE] TonalJudge.judge_from_prediction failed (non-fatal): $e"
-            ""
-        end
-
-        @info "[ENGINE] 🔮 $(ActionTonePredictor.format_prediction_summary(prediction))$(frame_str)"
-        # GRUG: If predictor found a dangling verb (incomplete causal chain), warn user.
-        # Informational only -- scan still proceeds, but output may be less coherent.
-        if prediction.incomplete_chain
-            @warn "[ENGINE] Incomplete causal chain detected (dangling verb: '$(prediction.dangling_verb)'). Input may be truncated."
-        end
-    end
-
-    # GRUG: HOPFIELD FAST-PATH — REMOVED (SMELL-003 cleanup)
-    # ============================================================================
-    # The Hopfield cache fast-path was disabled and left as a 30-line comment
-    # block. Removed during the QoL sweep — git history preserves the original.
-    # If you need to re-enable familiar-input caching for very large lobes
-    # (50k+ nodes per lobe), reintroduce a minimal lookup here. Current 1000-
-    # node-per-cycle cap makes this unnecessary.
-    # ============================================================================
-
-    # GRUG: SCAN NODES - Already have scan_mode from earlier (deterministic selection)
-    # scan_mode was computed before relational extraction to decide extraction strategy
-
-    # GRUG: PARALLEL FIRE PIPELINE (new architecture)
-    # --------------------------------------------------------------------------
-    # Old code was a serial for-loop. New code:
-    #   1. Snapshot node map under NODE_LOCK -> release lock.
-    #   2. Build FireCounter (hard cap = 1000, shared across ALL fire types).
-    #   3. Dispatch batched fire Tasks via VoteOrchestrator.parallel_fire_batches.
-    #      Each Task has a unique non-colliding name so there is NO collision.
-    #   4. Results are aggregated flat. Attachment relay later uses SAME counter.
-    # --------------------------------------------------------------------------
-    # GRUG: Snapshot key list under lock, then release so per-node work can run
-    # without blocking other threads. Each node is read-only inside the fire
-    # closure (only bump_strength! mutates, and it takes its own sub-lock).
-    active_keys = lock(NODE_LOCK) do
-        if isempty(NODE_MAP)
-            error("!!! FATAL: Grug find cave empty! No specimens to scan! !!!")
-        end
-
-        # GRUG DOC 2.6: Biological Attention Bottleneck!
-        # Grug cannot look at 1,000,000 rocks at once. Cave will catch fire!
-        # active_cap  = 1000  # GRUG: HARD CAP - 1000 nodes max per cycle (now in VoteOrchestrator)
-        all_keys    = collect(keys(NODE_MAP))
-        shuffle!(all_keys)
-        # GRUG: Pre-trim to cap so we don't even build Tasks for over-cap ids.
-        all_keys[1:min(length(all_keys), VoteOrchestrator.ACTIVE_FIRE_CAP)]
-    end
-
-    # GRUG: Build FireCounter for this cycle. Cap = 1000. All firing shares this.
-    # cycle_id carries the input hash for diagnostic traceability.
-    cycle_id = "scan#$(hash(input_text))"
-    fire_counter = VoteOrchestrator.FireCounter(cycle_id, VoteOrchestrator.ACTIVE_FIRE_CAP)
-
-    # GRUG: The fire_one closure. One node = one fire attempt. Called from
-    # many Tasks in parallel. Returns a tuple if node voted, nothing if skipped.
-    # Returns shape: (id, confidence, is_antimatch, user_triples, node_triples)
-    fire_one = function(id::String, fc::VoteOrchestrator.FireCounter)
-        # GRUG: Read node under lock, then release for scan work.
-        # Scan work (pattern matching, relational eval) is read-only on the node.
-        node = lock(NODE_LOCK) do
-            get(NODE_MAP, id, nothing)
-        end
-        if isnothing(node)
-            return nothing
-        end
-
-        # GRUG: Skip grave nodes. They are negative reinforcement markers, not voters!
-        if node.is_grave
-            return nothing
-        end
-
-        # GRUG: LITERAL TOKEN PRE-GATE — pattern side.
-        # Hard correctness gate AND coinflip-bypass for text nodes.
-        #
-        # Order is intentional: this runs BEFORE strength_biased_scan_coinflip.
-        # Why? Because the coinflip is a "should we burn cycles on fuzzy work?"
-        # gate. If the input literally contains one of the node's pattern
-        # tokens, the work is already justified — there's no reason to skip
-        # a sure thing 70% of the time just because the node is freshly
-        # created with strength=1.0. That was causing weak-but-relevant nodes
-        # (e.g. greeting's "good morning" node firing on input "good morning")
-        # to go silent half the time.
-        #
-        # Behavior matrix:
-        #   text node + literal-token hit  → BYPASS coinflip, fall through to scanner.
-        #   text node + no literal hit     → reject outright (no fuzzy noise vote).
-        #   text node + empty pattern      → coinflip as before.
-        #   image node                     → coinflip as before (uses SDF signal,
-        #                                    different match path entirely).
-        # GRUG: STOPWORDS — closed-class words that match almost anything.
-        # The float-hash scanner cannot distinguish "shared stop-word" from
-        # "shared content-word", so a node that only collides with the input
-        # on `the` or `for` will get the same hash-window similarity boost
-        # as a node that genuinely shares `cliff`. We exclude stop-words from
-        # the literal-hit decision: if the ONLY shared tokens are stop-words,
-        # the node falls back to coinflip-gated scanning like an OOV node.
-        # Content overlap still grants literal_hit and bypasses the coinflip.
-        literal_hit = false
-        literal_jaccard = 0.0
-        if !node.is_image_node && !isempty(node.pattern)
-            pattern_token_set = Set(split(lowercase(strip(node.pattern))))
-            if !isempty(pattern_token_set) && !isempty(input_token_set)
-                shared = intersect(pattern_token_set, input_token_set)
-                # GRUG: Strip stop-words from the shared set for the gate decision.
-                # Pattern AND input both lose stop-words from the union for Jaccard
-                # so a single content-word match scores reasonably (e.g. "cliff"
-                # in "watch out for the cliff" vs "beware the cliff edge" gives
-                # content-Jaccard = 1/4 = 0.25 instead of full-Jaccard = 1/8).
-                shared_content = Set(t for t in shared if !(t in STOPWORDS))
-                if isempty(shared_content)
-                    # No CONTENT token in common → not a real lexical hit. Don't
-                    # grant the literal bypass; let coinflip decide. Still allow
-                    # the scan to run if coinflip passes (image-node behavior).
-                    literal_hit = false
-                    # We still know there's *some* overlap (stop-word). Reject
-                    # outright like the original gate did when shared was empty:
-                    # patterns sharing only stop-words with the input are noise.
-                    return nothing
-                else
-                    literal_hit = true
-                    pat_content = Set(t for t in pattern_token_set if !(t in STOPWORDS))
-                    inp_content = Set(t for t in input_token_set if !(t in STOPWORDS))
-                    union_content = union(pat_content, inp_content)
-                    union_size = isempty(union_content) ?
-                        length(union(pattern_token_set, input_token_set)) :
-                        length(union_content)
-                    literal_jaccard = length(shared_content) / max(1, union_size)
-                end
-            end
-        end
-
-        # GRUG: STRENGTH-BIASED COINFLIP — only runs when no literal hit decided
-        # the question. A literal-token match is a sure thing; don't roll dice
-        # on it. Image nodes and empty-pattern nodes still go through coinflip
-        # because their match path can't be cheaply pre-gated by tokens.
-        if !literal_hit
-            if !strength_biased_scan_coinflip(node)
-                return nothing
-            end
-        end
-
-        # GRUG: Image nodes use SDF signal, not text signal. Skip size check for them.
-        # BUG-004: When pattern is longer than user input, the original code
-        # SILENTLY skipped the node. Now we downgrade to cheap bidirectional
-        # scan instead — the bidirectional scan handles short-input-vs-long-pattern
-        # by matching on the shorter side. We also apply a confidence penalty
-        # (BUG_004_PENALTY) because swapped-argument cheap scans are inherently
-        # less reliable — the best_idx is in node-signal space, not input space,
-        # so chunk resolution is lost and the match semantics are inverted.
-        # v7.24: Changed from one-shot @warn to ALWAYS warn (visible in CLI
-        # as well) and apply penalty. Operators should fix patterns that are
-        # longer than typical inputs — single-token patterns avoid this entirely.
-        long_pattern_short_input = false
-        if !node.is_image_node
-            if length(target_signal) < length(node.signal)
-                long_pattern_short_input = true
-                # v7.24: ALWAYS warn (not one-shot). Operators must fix patterns.
-                @warn "[ENGINE] BUG-004: pattern ($(length(node.signal)) tokens) longer than input ($(length(target_signal)) tokens) — cheap bidirectional scan + penalty applied. Fix: use single-token patterns." node_id=node.id pattern=node.pattern
-            end
-        end
-
-        # GRUG v7.23 CHUNKED AFFINITIES: best_idx tracks WHERE in the input
-        # signal the scanner found the best match. This is the 1-based token
-        # position. When no scan succeeds (fallback paths), best_idx stays 0.
-        # Downstream, scan_and_expand cross-references this against InputChunk
-        # boundaries to stamp each specimen with input_chunks::Vector{Int}.
-        best_idx = 0
-        token_conf = 0.0
-        try
-            if node.is_image_node
-                # GRUG: Image nodes cannot be scanned with text signals.
-                # They only respond to image inputs that have been SDF-converted.
-                # Skip image nodes during text scans (they'll fire in image scan path).
-                return nothing
-            end
-
-            # GRUG: SELECTIVE PATTERN SCAN — downgrade scan tier for simple patterns.
-            effective_mode = _effective_scan_mode(scan_mode, node.signal)
-
-            # BUG-004: If pattern is longer than input, FORCE cheap bidirectional
-            # scan regardless of complexity tier. Higher tiers assume input ≥ pattern.
-            if long_pattern_short_input
-                effective_mode = 1
-            end
-
-            if effective_mode == 1
-                # GRUG: BIDIRECTIONAL CHEAP SCAN — simple patterns (≤3 signal elements)
-                # v7.20: pass per-node NONJITTER opt-out so anchor / calibration /
-                # canonical-form nodes return bit-stable confidence. Tag lives in
-                # node.required_relations (see is_nonjitter / set_nonjitter! above).
-                #
-                # v7.20 VOTE-LEVEL OVERRIDE: also pass JITTER_CONFIDENCE_FLOOR so a
-                # solidified rock firing low-confidence still gets jittered. The
-                # combined behavior is "high-conf solid: silent; low-conf solid:
-                # still jitters; unsolid: always jitters." See jitter_allowed_for.
-                #
-                # v7.23 CHUNKED AFFINITIES: capture best_idx from the scanner.
-                # This is the token position where the match starts — used to
-                # determine which input chunk(s) this vote resolves.
-                #
-                # BUG-004: When pattern is longer than input, swap arg roles so
-                # the (smaller) input acts as the pattern and the (larger) node
-                # signal acts as the target. The cheap scan loops `(length(target)
-                # - pat_len + 1)` and would otherwise have an empty range.
-                # NOTE: In BUG-004 mode, best_idx refers to the node signal, not
-                # the input signal — so it's not meaningful for chunk resolution.
-                # We keep best_idx=0 in that case (set below after the scan).
-                if long_pattern_short_input
-                    _, token_conf = _bidirectional_cheap_scan(
-                        node.signal, target_signal;
-                        threshold=CHEAP_SCAN_THRESHOLD,
-                        nonjitter=is_nonjitter(node),
-                        jitter_floor=JITTER_CONFIDENCE_FLOOR
-                    )
-                    # BUG-004 path: best_idx is in node-signal space, not input-
-                    # signal space. Not useful for chunk resolution, leave as 0.
-                else
-                    best_idx, token_conf = _bidirectional_cheap_scan(
-                        target_signal, node.signal;
-                        threshold=CHEAP_SCAN_THRESHOLD,
-                        nonjitter=is_nonjitter(node),
-                        jitter_floor=JITTER_CONFIDENCE_FLOOR
-                    )
-                end
-            elseif effective_mode == 2
-                best_idx, token_conf = medium_scan(target_signal, node.signal; threshold=MEDIUM_SCAN_THRESHOLD)
-            else
-                best_idx, token_conf = high_res_scan(target_signal, node.signal; threshold=HIGH_SCAN_THRESHOLD)
-            end
-        catch e
-            if e isa PatternNotFoundError
-                # Normal logic: Scanner says no match in any direction.
-                #
-                # BUT: if the literal-token gate confirmed a real lexical hit
-                # earlier, we don't want to silently drop this node just
-                # because the float scanner couldn't find a clean window. A
-                # short pattern (e.g. "hello hi") embedded in a longer input
-                # (e.g. "hello again old friend") will fail cheap_scan's
-                # window threshold even though "hello" is literally present —
-                # the noise tokens around it drag the per-window similarity
-                # below CHEAP_SCAN_THRESHOLD.
-                #
-                # Resolution: when literal_hit=true, fall back to the Jaccard
-                # of pattern_tokens ∩ input_tokens / pattern_tokens ∪ input_tokens
-                # as a literal-hit floor. This is honest about partial overlap:
-                # full overlap → ~1.0, single-word-of-many → low. Still gives
-                # the node a fair shot at the vote pool instead of dropping it.
-                if literal_hit
-                    token_conf = literal_jaccard
-                    # GRUG v7.23: Scanner didn't find a clean window, so we have
-                    # no meaningful best_idx for chunk resolution. The literal
-                    # token gate confirmed a real hit, but we can't pinpoint WHERE.
-                    # best_idx stays 0 — downstream will treat this as "unknown position."
-                    best_idx = 0
-                else
-                    return nothing
-                end
-            elseif e isa PatternScanError
-                # FATAL LOGIC ERROR. NO SILENT FAILURE! Scream loud!
-                rethrow(e)
-            else
-                error("!!! FATAL: Unknown error during complexity-based pattern scan: $e !!!")
-            end
-        end
-
-        # GRUG: LITERAL-JACCARD BLEND.
-        # The float-hash scanner produces unreliable inflation when only stop
-        # words or hash collisions happen to align — it can score 0.5 for a
-        # pattern that genuinely shares only one content token. Now that the
-        # literal-token pre-gate guarantees real content overlap, we blend the
-        # scanner's output with the content-Jaccard so the final score reflects
-        # actual lexical overlap rather than hash noise.
-        #
-        # final = JACCARD_BLEND_W * jaccard + (1 - JACCARD_BLEND_W) * cheap_scan
-        # The blend is only applied when literal_hit fired AND we got a real
-        # cheap_scan number (not the Jaccard fallback path above). Jaccard is
-        # already honest by construction; the scanner is the noisy one.
-        if literal_hit && token_conf > 0.0
-            JACCARD_BLEND_W = 0.6
-            blended = JACCARD_BLEND_W * literal_jaccard + (1.0 - JACCARD_BLEND_W) * token_conf
-            token_conf = blended
-        end
-
-        # BUG-004 PENALTY: When pattern is longer than input, the cheap
-        # bidirectional scan with swapped arguments is inherently less
-        # reliable — best_idx is in node-signal space (useless for chunk
-        # resolution) and match semantics are inverted. Apply a penalty
-        # so these votes rank lower than properly-sized patterns.
-        if long_pattern_short_input && token_conf > 0.0
-            penalty = token_conf * BUG_004_PENALTY
-            token_conf = max(0.0, token_conf - penalty)
-        end
-
-        # 2. Relational Matcher (Dialectical)
-        rel_conf, is_antimatch = evaluate_relational_dialectics(
-            user_triples, node.relational_patterns, node.required_relations, node.relation_weights
-        )
-
-        # 3. Hard Anti-Match / Missing Requirement Penalty
-        # GRUG: -9999.0 means node demanded a gear user did not have!
-        if is_antimatch || rel_conf == -9999.0
-            return nothing
-        end
-
-        confidence = token_conf + rel_conf
-
-        # GRUG v7.21c-5: Side-process isolation.
-        # Do NOT multiply confidence by ActionTonePredictor, TonalJudge, memory,
-        # lobe routing, timing ledgers, or any other auxiliary process. Vote
-        # confidence is the raw result of core node matching only.
-
-        if token_conf > 0 || rel_conf > 0
-            # GRUG: Node wants to fire. Claim a slot from the shared FireCounter.
-            # If cap reached, skip — hard cap applies to ALL fire paths.
-            if !VoteOrchestrator.try_claim_fire_slot!(fc)
-                return nothing
-            end
-            # GRUG DEBUG: gated diagnostic for fire trace.
-            if get(ENV, "GRUG_DEBUG_FIRE", "") != ""
-                try
-                    @info "[FIRE] $(node.id) pat='$(node.pattern)' act='$(node.action_packet)' tok=$(round(token_conf,digits=3)) rel=$(round(rel_conf,digits=3)) conf=$(round(confidence,digits=3)) lit=$(literal_hit) jac=$(round(literal_jaccard,digits=3))"
-                catch
-                end
-            end
-            return (id, confidence, is_antimatch, user_triples, node.relational_patterns, best_idx)
-        end
-        return nothing
-    end
-
-    # GRUG: Launch parallel fire. Each batch is its own Task with unique name.
-    # Errors from any Task surface here via fetch_with_timeout inside
-    # parallel_fire_batches. TaskTimeoutError distinguishable from other errors
-    # so caller can choose retry vs abort. NO SILENT FAILURES.
-    fire_results = try
-        VoteOrchestrator.parallel_fire_batches(
-            active_keys, fire_counter, fire_one;
-            batch_size       = VoteOrchestrator.FIRE_BATCH_SIZE,
-            task_prefix      = "scan_fire",
-            batch_timeout_s  = VoteOrchestrator.FIRE_BATCH_TIMEOUT_S
-        )
-    catch e
-        # GRUG: Parallel fire exploded or timed out. Scream, don't hide.
-        if e isa VoteOrchestrator.TaskTimeoutError
-            @error "[ENGINE] parallel_fire_batches TIMEOUT during scan_specimens: $e"
-        else
-            @error "[ENGINE] parallel_fire_batches failed during scan_specimens: $e"
-        end
-        rethrow(e)
-    end
-
-    # GRUG: Re-type the flat Any[] into our specimen tuple vector.
-    for r in fire_results
-        push!(all_valid_specimens, r)
-    end
-
-    # GRUG: Attach FireCounter to a task-local so scan_and_expand relay pass
-    # can count attachment fires toward the same 1000 cap. We pass it via a
-    # thread-local-ish handoff: store last cycle's counter in a const Ref.
-    lock(_FIRE_COUNTER_LOCK) do
-        _LAST_FIRE_COUNTER[] = fire_counter
-    end
-
-    if isempty(all_valid_specimens)
-        # GRUG QoL FIX: If no valid rocks found, this is not a logic failure!
-        # The Antikythera gears simply did not lock for this signal. Return empty basket!
-        return all_valid_specimens
-    end
-
-    return all_valid_specimens
-end
-
-# ==============================================================================
-# SCAN SPECIMENS WITH DROP TABLE CO-ACTIVATION
-# ==============================================================================
-
-"""
-scan_and_expand(input_text; chunks)
-
-GRUG: Run scan_specimens then expand results in two passes:
-
-Pass 1 — Drop-table expansion (same lobe co-activation):
-  Nodes paired in drop tables activate together.
-  Drop-table neighbors inherit 80% of activating node confidence.
-
-Pass 2 — Lobe cascade expansion (cross-lobe bridge activation):
-  When a primary node lives in a lobe, cascade into other lobes —
-  but ONLY inject a non-primary lobe's node if its own pattern signal
-  shares at least one token with the input (within scan tolerance).
-  This is the "share at least one node pattern token with the input"
-  rule the original cascade design promised but never enforced.
-  Without this gate, every lobe got its full node set injected at the
-  cascade discount whenever ANY primary fired loudly — flooding the
-  vote pool with semantically unrelated nodes from every domain and
-  collapsing routing to coinflip-on-a-flat-plateau. The gate keeps
-  cross-lobe talk alive (genuinely overlapping queries still cascade)
-  while killing the indiscriminate flood.
-  Cascade threshold: 0.15 (soft gate on cascade_conf).
-  Cascade confidence: 60% of the highest primary confidence (cross-lobe discount).
-
-v7.23 CHUNKED AFFINITIES:
-  When `chunks` is provided (Vector{InputChunk}), each primary specimen's
-  `best_idx` from the scanner is cross-referenced against chunk boundaries
-  to produce `input_chunks::Vector{Int}` — which input chunk(s) this vote
-  resolved. Expansion specimens (drop-table, cascade, relay) inherit the
-  activating node's input_chunks; if no activating context, input_chunks
-  is Int[]. When `chunks` is empty or not provided, all specimens get
-  Int[] (backward compatible — old behavior).
-"""
-function scan_and_expand(input_text::String;
-                         chunks::Vector{InputDecomposer.InputChunk} = InputDecomposer.InputChunk[]
-                         )::Vector{Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}}
-    # ──────────────────────────────────────────────────────────────────────
-    # STAGE 1.5a — FRONT-DOOR SIGIL PROMOTION
-    # ──────────────────────────────────────────────────────────────────────
-    # GRUG: Before anything else, run the input through the SigilPromoter.
-    # Two layers:
-    #   Layer 1 — thesaurus canonicalization ("two plus two" -> "2 + 2")
-    #   Layer 2 — registry shape promotion   ("2 + 2"        -> "&n &op &n")
-    # The matcher downstream just compares strings; pre-rewriting collapses
-    # many surface variants of the same shape onto ONE pattern bucket. For
-    # pure-text inputs (no digits, no math words) the rewrite is a no-op
-    # confidence-equivalence guarantee; existing tests are unaffected.
-    #
-    # The bindings (position-keyed Vector{SigilBinding}) get stashed into
-    # task-local storage so downstream phases (vote, ATP) can read them
-    # without changing the scan_and_expand return-tuple shape. ATP arithmetic
-    # dispatch (Stage 1.5b) reads from current_promotion_bindings().
-    #
-    # No silent failures: if the promoter raises, we let it propagate. The
-    # alternative (catch + fall back to raw input) would mask configuration
-    # bugs in specimen-level registries, exactly the kind of thing we need
-    # to surface loudly.
-    promoted_text, promotion_bindings = SigilPromoter.promote_input(
-        _ENGINE_SIGIL_TABLE, input_text)
-
-    # GRUG: Stash promotion results. Each scan_and_expand call OVERWRITES
-    # any prior binding so stale state from a previous input never leaks.
-    # We write to BOTH task-local storage AND module-level Refs:
-    #   - Task-local: backward compat for code in the same task
-    #   - Module-level Refs: survive @spawn Task boundaries (BUG-5 fix).
-    #     scan_and_expand runs in a @spawn'd Task but generate_aiml_payload
-    #     runs in a DIFFERENT @spawn'd Task, so task-local storage is invisible.
-    task_local_storage(_PROMOTION_RAW_KEY,       input_text)
-    task_local_storage(_PROMOTION_REWRITTEN_KEY, promoted_text)
-    task_local_storage(_PROMOTION_BINDINGS_KEY,  promotion_bindings)
-    lock(_GLOBAL_PROMOTION_LOCK) do
-        _GLOBAL_PROMOTION_RAW[]        = input_text
-        _GLOBAL_PROMOTION_REWRITTEN[]  = promoted_text
-        _GLOBAL_PROMOTION_BINDINGS[]   = promotion_bindings
-    end
-
-    # GRUG v8.1: TIME ORIENTATION — extract temporal orientation from promotion
-    # bindings and stash it the same way (task-local + global Ref). When a time
-    # sigil (&now/&before/&next) fired, this carries orientation + vote_flags
-    # downstream to generate_aiml_payload and the hippocampal lever.
-    time_orient, time_meta = extract_time_orientation(promotion_bindings)
-    task_local_storage(_TIME_ORIENTATION_KEY, (time_orient, time_meta))
-    lock(_GLOBAL_PROMOTION_LOCK) do
-        _GLOBAL_TIME_ORIENTATION[] = (time_orient, time_meta)
-    end
-    if time_orient != "none"
-        @info "[ENGINE v8.1] Time orientation detected: $(time_orient) (sigil=$(get(time_meta, "sigil_name", "?")), surface='$(get(time_meta, "surface", ""))')"
-    end
-
-    # GRUG: From here on, scan_specimens and the cascade gates see the
-    # PROMOTED text, not the raw text. That is the whole point — one shape,
-    # one node.
-    primary_results = scan_specimens(promoted_text)
-
-    if isempty(primary_results)
-        # GRUG: Return empty vector with the correct 6-tuple element type.
-        return Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-    end
-
-    # GRUG v7.23 CHUNKED AFFINITIES: Resolve best_idx -> input_chunks.
-    # Each specimen now carries best_idx (6th element) from the scanner.
-    # Cross-reference against InputChunk boundaries to determine which
-    # chunk(s) this specimen's match covers. The match covers tokens
-    # [best_idx, best_idx + pattern_length - 1]; a chunk overlaps if
-    # its [first_token, last_token] range intersects that match range.
-    # When no chunks are provided (backward compat), all get Int[].
-    if !isempty(chunks)
-        # GRUG: We need the pattern length for each specimen to compute
-        # the match range. Read node.signal length from NODE_MAP.
-        # If best_idx is 0 (scanner fallback) or node not found,
-        # input_chunks is Int[] (unknown position).
-        resolved_results = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-        for (id, conf, antimatch, u_trips, n_trips, bidx) in primary_results
-            ichunks = if bidx > 0
-                node_for_range = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
-                pat_len = if !isnothing(node_for_range)
-                    length(node_for_range.signal)
-                else
-                    1  # Fallback: assume single-token match
-                end
-                _match_to_chunks(bidx, pat_len, chunks)
-            else
-                Int[]  # best_idx=0 means unknown position
-            end
-            push!(resolved_results, (id, conf, antimatch, u_trips, n_trips, ichunks))
-        end
-        primary_results = resolved_results
-    else
-        # GRUG: No chunks provided — still need to convert 6th element
-        # from Int (best_idx) to Vector{Int} (input_chunks) for type
-        # consistency. Downstream code (antimatch separation, drain pass,
-        # Main.jl specimen wrapping) all expect Vector{Int}.
-        nochunk_results = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-        for (id, conf, antimatch, u_trips, n_trips, bidx) in primary_results
-            push!(nochunk_results, (id, conf, antimatch, u_trips, n_trips, Int[]))
-        end
-        primary_results = nochunk_results
-    end
-
-    # ── v7.49 ANTI-MATCH NODE SEPARATION ────────────────────────────
-    # GRUG: Anti-match nodes must NOT be expanded (no drop-table, no cascade,
-    # no relay) — they exist only to drain confidence. Separate them out here
-    # and only carry regular entries into the expansion passes. Anti-match
-    # entries are collected separately and re-joined before the drain pass
-    # (which runs after relay and before score_lobes).
-    antimatch_primary = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-    regular_primary   = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-    for entry in primary_results
-        entry_node = lock(() -> get(NODE_MAP, entry[1], nothing), NODE_LOCK)
-        if !isnothing(entry_node) && entry_node.is_antimatch_node
-            push!(antimatch_primary, entry)
-        else
-            push!(regular_primary, entry)
-        end
-    end
-    primary_results = regular_primary
-
-    # GRUG: Pre-compute input CONTENT TOKEN SET once for cascade overlap gate.
-    # We compare cascade-candidate nodes' pattern-token sets against this set
-    # (CONTENT tokens only, stop-words stripped) to decide whether a cross-lobe
-    # node's pattern is genuinely related to the input. The original gate used
-    # signal-hash bands, which suffer the same hash-collision noise as the
-    # primary scanner — every "the/for/a" overlap let cross-lobe garbage in.
-    # Switching to content tokens makes the gate semantically honest.
-    #
-    # NOTE: we use the PROMOTED text here for the same reason the primary
-    # scanner does — cascade gates need to see the same token universe the
-    # matcher does, otherwise sigil tokens (&n, &op) wouldn't gate properly.
-    cascade_input_tokens = try
-        Set(String(t) for t in split(lowercase(strip(promoted_text))) if !(t in STOPWORDS))
-    catch
-        Set{String}()
-    end
-
-    # GRUG: Track which IDs are already in the result set to avoid duplicates
-    already_included = Set(r[1] for r in primary_results)
-    expanded = copy(primary_results)
-
-    user_triples = extract_relational_triples(input_text)
-    max_primary_conf = isempty(primary_results) ? 0.0 : maximum(r[2] for r in primary_results)
-
-    # ── PASS 1: Drop-table expansion (same lobe, 80% confidence discount) ──────
-    for (id, conf, antimatch, u_trips, n_trips, ichunks) in primary_results
-        activating_node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
-        isnothing(activating_node) && continue
-
-        drop_neighbors = collect_drop_table_neighbors(activating_node)
-        for drop_id in drop_neighbors
-            if !(drop_id in already_included)
-                drop_node = lock(() -> get(NODE_MAP, drop_id, nothing), NODE_LOCK)
-                isnothing(drop_node) && continue
-
-                # GRUG: Drop-table neighbor gets discounted confidence (80% of activator)
-                # v7.23: Drop-table neighbors inherit the activating node's input_chunks.
-                # They fire alongside the activator in the same lobe, so they resolve
-                # the same part of the input.
-                drop_conf = conf * 0.8
-                push!(expanded, (drop_id, drop_conf, false, user_triples, drop_node.relational_patterns, ichunks))
-                push!(already_included, drop_id)
-            end
-        end
-    end
-
-    # ── PASS 2: Lobe cascade expansion (cross-lobe bridge, 60% of max primary) ─
-    # GRUG: Only run cascade if LobeTable and Lobe modules are loaded.
-    if isdefined(@__MODULE__, :LobeTable) && isdefined(@__MODULE__, :Lobe)
-        cascade_conf = max_primary_conf * 0.6
-
-        # GRUG: Cascade threshold - only cascade if primary conf was meaningful
-        if cascade_conf >= 0.15
-            # GRUG: Collect lobes that own the primary firing nodes
-            primary_lobe_names = Set{String}()
-            for (id, conf, _, _, _, _) in primary_results
-                lobe_name = Lobe.find_lobe_for_node(id)
-                !isnothing(lobe_name) && push!(primary_lobe_names, lobe_name)
-            end
-
-            # GRUG: For each OTHER lobe not in primary set, cascade into it
-            if !isempty(primary_lobe_names)
-                all_lobe_names = try
-                    Lobe.get_lobe_ids()
-                catch ex
-                    # GRUG: Lobe registry blew up — log it, don't kill the scan!
-                    @warn "[ENGINE] ⚠ Failed to get lobe IDs for cascade: $ex"
-                    String[]
-                end
-
-                for lobe_name in all_lobe_names
-                    lobe_name in primary_lobe_names && continue  # GRUG: Already fired, skip!
-
-                    # GRUG: Get active node IDs from this lobe via LobeTable
-                    lobe_node_ids = try
-                        LobeTable.table_exists(lobe_name) ?
-                            LobeTable.get_active_node_ids(lobe_name) : String[]
-                    catch ex
-                        # GRUG: One lobe table exploded — warn and skip, don't nuke cascade!
-                        @warn "[ENGINE] ⚠ Failed to get node IDs from lobe '$lobe_name': $ex"
-                        String[]
-                    end
-
-                    for node_id in lobe_node_ids
-                        node_id in already_included && continue
-
-                        cascade_node = lock(() -> get(NODE_MAP, node_id, nothing), NODE_LOCK)
-                        isnothing(cascade_node) && continue
-                        cascade_node.is_grave && continue  # GRUG: Dead nodes don't cascade!
-
-                        # GRUG: CONTENT-TOKEN OVERLAP GATE — only cascade if this
-                        # node's pattern shares at least one CONTENT token (non
-                        # stop-word) with the input. The original gate compared
-                        # signal-hash bands and leaked through every "the/for/a"
-                        # collision, flooding routing with cross-lobe noise.
-                        # Switching to content tokens makes the gate honest.
-                        if cascade_node.is_image_node
-                            continue
-                        end
-                        if isempty(cascade_input_tokens) || isempty(cascade_node.pattern)
-                            continue
-                        end
-                        cand_tokens = Set(t for t in split(lowercase(strip(cascade_node.pattern)))
-                                          if !(t in STOPWORDS))
-                        if isempty(cand_tokens)
-                            continue
-                        end
-                        if isempty(intersect(cand_tokens, cascade_input_tokens))
-                            continue  # GRUG: No shared content token → skip.
-                        end
-
-                        push!(expanded, (node_id, cascade_conf, false, user_triples, cascade_node.relational_patterns, Int[]))
-                        push!(already_included, node_id)
-                    end
-                end
-            end
-        end
-    end
-
-    # ── PASS 3: Cascade bridge handoff (match-cascade relay system) ──────
-    # GRUG v8.0: For every node that made it into the expanded set, check if it
-    # has bridges. If so, fire_cascades! hands off the unmatched input tail (the
-    # match boundary) to the bridged partner node's lobe scanner. The unmatched
-    # tail IS the natural cross-lobe bridge — no more dumb middle-man connector
-    # pattern. The seam tokens at the boundary become the handoff payload.
-    #
-    # The seam text also surfaces as a RelationalTriple in the node's context
-    # so the generative pipeline knows WHY this node was co-activated.
-    # Triple format: (source_id, "cascade_bridge", seam_text)
-    # GRUG: Relay pass uses the SAME FireCounter that scan_specimens built for
-    # this cycle. That means bridge fires COUNT against the global 1000 cap
-    # along with pattern-scan fires, drop-table fires, and cascade fires.
-    # If scan already consumed all 1000 slots, bridges simply won't fire.
-    # If scan_specimens was never called (edge case, e.g. empty NODE_MAP branch),
-    # fall back to a fresh FireCounter so relay still respects the cap.
-    shared_fc = lock(_FIRE_COUNTER_LOCK) do; _LAST_FIRE_COUNTER[] end
-    if isnothing(shared_fc)
-        shared_fc = VoteOrchestrator.FireCounter("relay_fallback#$(hash(input_text))", VoteOrchestrator.ACTIVE_FIRE_CAP)
-    end
-    relay_cap   = shared_fc.cap
-    relay_additions = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-
-    # GRUG v8.0: Compute the unmatched tail from the input. This is the match
-    # boundary — the tokens the primary scan DIDN'T consume. These become the
-    # seam tokens for the cascade handoff. Simple approach: tokens in the input
-    # that aren't in any matched node's pattern. This is the "cut off where it
-    # didn't match" the user was talking about.
-    # GRUG v8.1: Use String[] not SubString{String}[] for input_tokens.
-    # split() returns SubString{String} which causes TypeError when passed
-    # as unmatched_tail (declared Vector{String}) to fire_cascades!.
-    # Converting up front keeps the set difference type-consistent.
-    input_tokens = Set(String.(split(lowercase(input_text))))
-    matched_tokens = Set{String}()
-    for (id, conf, antimatch, u_trips, n_trips, ichunks) in expanded
-        if !antimatch
-            node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
-            if !isnothing(node)
-                for tok in split(lowercase(node.pattern))
-                    push!(matched_tokens, String(tok))
-                end
-            end
-        end
-    end
-    unmatched_tail = collect(setdiff(input_tokens, matched_tokens))
-
-    for (id, conf, antimatch, u_trips, n_trips, ichunks) in expanded
-        # GRUG: Stop firing bridges if global cap is already hit. Hard cap
-        # applies across ALL fire paths — no bypass for bridges!
-        if VoteOrchestrator.fire_cap_reached(shared_fc)
-            println("[ENGINE] 🧠  Cascade bridge halted — global fire cap ($relay_cap) reached.")
-            break
-        end
-        # GRUG v8.0: Pass unmatched tail to fire_cascades! so the bridge
-        # handoff carries the match-boundary payload. This is the core of
-        # the match-cascade system — the scanner's cutoff IS the bridge.
-        fired_pairs = fire_cascades!(id, VoteOrchestrator.current_fire_count(shared_fc), relay_cap;
-                                     unmatched_tail=unmatched_tail)
-        for (fired_id, fired_conf, seam_text) in fired_pairs
-            if !(fired_id in already_included)
-                # GRUG: Claim a fire slot for this bridge. If cap is hit, skip.
-                # This ensures bridge-node firings count toward the 1000 limit.
-                if !VoteOrchestrator.try_claim_fire_slot!(shared_fc)
-                    break
-                end
-                fired_node = lock(() -> get(NODE_MAP, fired_id, nothing), NODE_LOCK)
-                isnothing(fired_node) && continue
-                # GRUG v8.0: Inject the seam text as a cascade triple so generative
-                # knows WHY this node was co-fired. The triple reads:
-                #   subject=source_id, relation="cascade_bridge", object=seam_text
-                relay_triple = RelationalTriple(id, "cascade_bridge", seam_text)
-                relay_triples = vcat(fired_node.relational_patterns, [relay_triple])
-                # v10-coherence-fix: CASCADE-RELAY CONFIDENCE DISCOUNT AT INJECTION.
-                # Bridge handoffs are CONTEXT co-activations, not direct answers.
-                # The bridge's pre-baked base_confidence (~0.4-0.5) was high enough
-                # that, combined with the lobe-curve's winner bonus, a bridged
-                # partner in a different lobe could out-rank the genuine primary
-                # content match (e.g. gravity→derivative bridge made n103 beat the
-                # real n101 gravity node). Discounting the relay confidence HERE —
-                # before score_lobes runs — keeps bridges alive for generative
-                # context while ensuring they can't steal the lobe winner crown
-                # or the primary vote from a real content match. Downstream
-                # composite_vote_score still applies its own RELAY discount via
-                # the relay_attached detection; this is the earlier, structural cut.
-                discounted_conf = fired_conf * CASCADE_RELAY_CONF_DISCOUNT
-                push!(relay_additions, (fired_id, discounted_conf, false, user_triples, relay_triples, Int[]))
-                push!(already_included, fired_id)
-            end
-        end
-    end
-
-    if !isempty(relay_additions)
-        append!(expanded, relay_additions)
-        println("[ENGINE] 🌉  Cascade bridge pass added $(length(relay_additions)) node(s) to expanded set.")
-    end
-
-    # GRUG v7.49: Re-join anti-match primary entries into expanded before drain.
-    # They were separated out before expansion passes (no drop/cascade/relay
-    # for anti-match), but the drain pass needs to see them to compute drain.
-    if !isempty(antimatch_primary)
-        append!(expanded, antimatch_primary)
-    end
-
-    # ── ANTI-MATCH DRAIN PASS (v7.49) ────────────────────────────────
-    # GRUG: Anti-match nodes are pattern-activated but vote-silent. They exist
-    # to suppress confidence in their lobe — like inhibitory interneurons.
-    # Every anti-match activation drains a small random tick from all regular
-    # votes in the same lobe. NONJITTER anti-match nodes drain a fixed constant
-    # instead of a random tick. Anti-match nodes never enter the vote pool,
-    # never gain/lose strength, and never compete for stages.
-    #
-    # Pipeline: separate anti-match entries → group regular entries by lobe →
-    # for each anti-match activation, drain confidence from regular entries in
-    # the same lobe → remove anti-match entries from expanded before score_lobes.
-    #
-    # See ANTIMATCH_DRAIN_FIXED and ANTIMATCH_DRAIN_MAX_JITTER at module level.
-
-    antimatch_entries = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-    regular_entries = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
-
-    for entry in expanded
-        entry_id = entry[1]
-        entry_node = lock(() -> get(NODE_MAP, entry_id, nothing), NODE_LOCK)
-        if !isnothing(entry_node) && entry_node.is_antimatch_node
-            push!(antimatch_entries, entry)
-        else
-            push!(regular_entries, entry)
-        end
-    end
-
-    if !isempty(antimatch_entries)
-        # GRUG: Group regular entries by lobe for efficient drain application.
-        regular_by_lobe = Dict{String, Vector{Int}}()  # lobe_id -> indices into regular_entries
-        for (i, entry) in enumerate(regular_entries)
-            lobe_id = Lobe.find_lobe_for_node(entry[1])
-            if !isnothing(lobe_id)
-                if !haskey(regular_by_lobe, lobe_id)
-                    regular_by_lobe[lobe_id] = Int[]
-                end
-                push!(regular_by_lobe[lobe_id], i)
-            end
-        end
-
-        # GRUG: For each anti-match activation, drain confidence from regular
-        # entries in the same lobe. The drain is a random tick (jitter) unless
-        # the anti-match node has NONJITTER tag, in which case it's a fixed constant.
-        total_drain = 0.0
-        for am_entry in antimatch_entries
-            am_id = am_entry[1]
-            am_node = lock(() -> get(NODE_MAP, am_id, nothing), NODE_LOCK)
-            isnothing(am_node) && continue
-
-            am_lobe = Lobe.find_lobe_for_node(am_id)
-            isnothing(am_lobe) && continue
-
-            # GRUG: Determine drain amount — jitter or fixed.
-            is_fixed = is_nonjitter(am_node)
-            drain_amount = is_fixed ? ANTIMATCH_DRAIN_FIXED : (rand() * ANTIMATCH_DRAIN_MAX_JITTER)
-
-            # GRUG: Apply drain to all regular entries in the same lobe.
-            if haskey(regular_by_lobe, am_lobe)
-                for idx in regular_by_lobe[am_lobe]
-                    old_conf = regular_entries[idx][2]
-                    new_conf = max(0.0, old_conf - drain_amount)
-                    # GRUG: Rebuild the tuple with the drained confidence.
-                    regular_entries[idx] = (
-                        regular_entries[idx][1],  # id
-                        new_conf,                  # drained confidence
-                        regular_entries[idx][3],  # antimatch flag
-                        regular_entries[idx][4],  # user_triples
-                        regular_entries[idx][5],  # node_triples
-                        regular_entries[idx][6]   # input_chunks
-                    )
-                    total_drain += drain_amount
-                end
-            end
-        end
-        println("[ENGINE] 🧫 Anti-match drain: $(length(antimatch_entries)) activation(s) applied $(round(total_drain, digits=3)) total drain across $(length(regular_by_lobe)) lobe(s).")
-
-        # GRUG: Replace expanded with regular entries only (anti-match removed).
-        expanded = regular_entries
-    end
-
-    # ── LOBE CURVE — averages-based selection (replaces the v7.18 hard mute) ──
-    # GRUG: After all expansion passes, group entries by lobe and compute the
-    # base_avg × top_avg curve. Winner lobe goes first; runners-up that pass
-    # the multi-lobe threshold (score >= MIN_PASS_THROUGH_SCORE AND >=
-    # MIN_WINNING_VOTES_PER_LOBE hard-selected votes) fire after. Lobes that
-    # don't clear are dropped from the firing list. Cross-domain leakage is
-    # naturally prevented because off-topic lobes will have low confidence
-    # averages even if they lexically match a few tokens. No hard subject-
-    # token muting needed. See plans/semantic_plugins/QOL_SWEEP_2025.md
-    # "BUG-011 rewrite" for the architectural reasoning.
-    expanded = try
-        if isempty(expanded)
-            expanded
-        else
-            orders = LobeOrchestrator.score_lobes(expanded, Lobe.find_lobe_for_node;
-                input_tokens=collect(String, split(lowercase(strip(input_text)))))
-            if isempty(orders)
-                # No lobe cleared (would only happen with totally empty pool).
-                # Return empty — downstream prints "Cave is silent" cleanly.
-                eltype(expanded)[]
-            else
-                # Loud trace so operators see the curve at work.
-                println("[ORCHESTRATOR] 🎯 ", LobeOrchestrator.last_summary())
-                LobeOrchestrator.flatten_in_fire_order(orders)
-            end
-        end
-    catch e
-        @warn "[ORCHESTRATOR] lobe curve FAILED (continuing with unfiltered pool): $e"
-        expanded
-    end
-
-    return expanded
-end
-
-# ==============================================================================
-# VOTE CASTING  
-# ==============================================================================
 
 """
 cast_vote(id, conf, antimatch, u_trips, n_trips)
@@ -5403,8 +4191,7 @@ function cast_vote(id, conf, antimatch, u_trips, n_trips)
         error("!!! FATAL: Grug rolled unknown action [$(winning_action)]! Not in COMMANDS dictionary !!!")
     end
 
-    # GRUG NEW: Bump strength on a coinflip when a node votes (used = maybe stronger)
-    bump_strength!(node)
+    # GRUG BUG-011: Voting/use no longer changes strength. Only lock-in feedback can.
 
     return Vote(id, winning_action, conf, negatives, u_trips, n_trips, antimatch)
 end
@@ -5454,7 +4241,7 @@ function cast_vote_with_group(id, conf, antimatch, u_trips, n_trips,
         error("!!! FATAL: Grug rolled unknown action [$(winning_action)]! Not in COMMANDS dictionary !!!")
     end
 
-    bump_strength!(node)
+    # GRUG BUG-011: Voting/use no longer changes strength. Only lock-in feedback can.
 
     return Vote(id, winning_action, conf, negatives, u_trips, n_trips, antimatch,
                 multipart_group, multipart_role)
@@ -5494,7 +4281,7 @@ function cast_vote_chunked(id, conf, antimatch, u_trips, n_trips,
         error("!!! FATAL: Grug rolled unknown action [$(winning_action)]! Not in COMMANDS dictionary !!!")
     end
 
-    bump_strength!(node)
+    # GRUG BUG-011: Voting/use no longer changes strength. Only lock-in feedback can.
 
     # GRUG: Derive multipart_group from input_chunks.
     # Single chunk -> group "mp_{chunk}". Multiple -> group "mp_{first}".
@@ -5506,41 +4293,17 @@ function cast_vote_chunked(id, conf, antimatch, u_trips, n_trips,
 end
 
 # ==============================================================================
-# /WRONG FEEDBACK: PENALIZE ALL VOTERS
+# /RIGHT AND /WRONG FEEDBACK: LOCK-IN-ONLY STRENGTH CHANGES
 # ==============================================================================
 
-"""
-apply_wrong_feedback!(voter_ids::Vector{String})
-
-GRUG: /wrong command! Every node who voted gets a coinflip.
-Losers have their strength lowered. Nodes that hit 0 are marked GRAVE.
-Grave nodes become negative reinforcement anchors during generative phase.
-"""
 #=
     apply_right_feedback!(contributor_votes, locked_node_ids) -> Dict
 
-Apply secondary reinforcement to nodes that contributed to output.
-
-v7.23 TIERED REWARD:
-- LOCKED votes (node_id in locked_node_ids) -> GUARANTEED reward. These
-  are the top-tier votes that were hard-selected by the orchestrator.
-  They earned their spot — /right confirms them unconditionally.
-- UNSURE votes (not locked) -> CONFIDENCE-BIASED coinflip. The coinflip
-  probability equals the vote's confidence. High-confidence unsure votes
-  are more likely to be rewarded; low-confidence ones are less likely.
-- EITHER tier: skip if gained_this_cycle is already true. Nodes that
-  already got a strength bump from their use-coinflip (bump_strength!)
-  this cycle don't get a second one — no double reward.
-- Grave nodes are always skipped.
-
-Returns statistics dictionary with:
-- "total_contributors": Total number of contributing votes
-- "rewarded": Node IDs that gained strength
-- "locked_rewarded": Node IDs from locked tier that gained strength
-- "unsure_rewarded": Node IDs from unsure tier that gained strength
-- "skipped_double_reward": Node IDs that already gained (skipped)
-- "coinflip_missed": Node IDs from unsure tier that lost the coinflip
-- "grave_skipped": Node IDs that are grave and were skipped
+BUG-011: Apply /right reinforcement only to contributor votes whose node_id is
+present in locked_node_ids. Non-lock / unsure contributors never change strength.
+Eligible locked nodes still gain only through bump_strength!'s stochastic coinflip.
+Grave nodes are skipped. Compatibility fields for the old tiered/double-reward
+result shape remain, but unsure_rewarded and skipped_double_reward are empty.
 =#
 function apply_right_feedback!(contributor_votes::Vector{Vote},
                                locked_node_ids::Set{String} = Set{String}())::Dict{String, Any}
@@ -5550,128 +4313,144 @@ function apply_right_feedback!(contributor_votes::Vector{Vote},
 
     rewarded = String[]
     locked_rewarded = String[]
-    unsure_rewarded = String[]
+    unsure_rewarded = String[]  # BUG-011: kept for result compatibility; always empty.
     skipped_double_reward = String[]
     coinflip_missed = String[]
     grave_skipped = String[]
-    STRENGTH_DELTA = 1.0  # Same as AIML_STRENGTH_DELTA
+    nonlocked_skipped = String[]
 
-    # GRUG: Deduplicate by node_id — a node can appear in multiple votes
-    # (e.g., as both a primary and a support in different objectives).
-    # First occurrence wins; subsequent ones are skipped.
     seen_nodes = Set{String}()
 
     lock(NODE_LOCK) do
         for vote in contributor_votes
             id = vote.node_id
+            id in seen_nodes && continue
+            push!(seen_nodes, id)
 
-            # Skip duplicate node entries
-            if id in seen_nodes
+            if !(id in locked_node_ids)
+                push!(nonlocked_skipped, id)
                 continue
             end
-            push!(seen_nodes, id)
 
             node = get(NODE_MAP, id, nothing)
             if isnothing(node)
-                # GRUG: Node may have already been deleted. Non-fatal, skip.
                 println("[ENGINE] ⚠  /right: Node [$id] not found, skipping.")
                 continue
             end
 
-            # Skip grave nodes
             if node.is_grave
                 push!(grave_skipped, node.id)
                 continue
             end
 
-            # Skip nodes that already gained strength this cycle (no double reward)
             if node.gained_this_cycle
                 push!(skipped_double_reward, node.id)
                 continue
             end
 
-            is_locked = id in locked_node_ids
-
-            if is_locked
-                # LOCKED TIER: Guaranteed reward. This node was hard-selected
-                # by the orchestrator — it earned its spot. /right confirms it.
-                node.strength = min(node.strength + STRENGTH_DELTA, STRENGTH_CAP)
-                node.gained_this_cycle = true
-                node.strength_delta_this_cycle += STRENGTH_DELTA
-                check_solidify_threshold!(node)
+            # GRUG BUG-011: Only lock-in votes can change strength, and even
+            # lock-ins remain stochastic through bump_strength!'s jittered coinflip.
+            before = node.strength
+            bump_strength!(node)
+            if node.strength > before
                 push!(rewarded, node.id)
                 push!(locked_rewarded, node.id)
             else
-                # UNSURE TIER: Confidence-biased coinflip.
-                # The probability of reward equals the vote's confidence.
-                # High-confidence unsure votes are likely rewarded;
-                # low-confidence ones are unlikely. This is the GRUG way:
-                # uncertain contributors get an uncertain reward.
-                if rand() < vote.confidence
-                    node.strength = min(node.strength + STRENGTH_DELTA, STRENGTH_CAP)
-                    node.gained_this_cycle = true
-                    node.strength_delta_this_cycle += STRENGTH_DELTA
-                    check_solidify_threshold!(node)
-                    push!(rewarded, node.id)
-                    push!(unsure_rewarded, node.id)
-                else
-                    push!(coinflip_missed, node.id)
-                end
+                push!(coinflip_missed, node.id)
             end
         end
     end
 
     result = Dict{String, Any}(
         "total_contributors"    => length(contributor_votes),
+        "locked_considered"     => length(intersect(Set(v.node_id for v in contributor_votes), locked_node_ids)),
         "rewarded"              => rewarded,
         "locked_rewarded"       => locked_rewarded,
         "unsure_rewarded"       => unsure_rewarded,
+        "nonlocked_skipped"     => nonlocked_skipped,
         "skipped_double_reward" => skipped_double_reward,
         "coinflip_missed"       => coinflip_missed,
         "grave_skipped"         => grave_skipped,
     )
-    println("[ENGINE] ✅ /right: total=$(length(contributor_votes)) rewarded=$(length(rewarded)) [locked=$(length(locked_rewarded)) unsure=$(length(unsure_rewarded))] double_skip=$(length(skipped_double_reward)) coinflip_miss=$(length(coinflip_missed)) grave_skip=$(length(grave_skipped))")
+    println("[ENGINE] ✅ /right lock-in-only: total=$(length(contributor_votes)) locked=$(result["locked_considered"]) rewarded=$(length(rewarded)) nonlocked_skip=$(length(nonlocked_skipped)) coinflip_miss=$(length(coinflip_missed)) grave_skip=$(length(grave_skipped))")
     return result
 end
 
-# GRUG: Old signature kept for backward compat — delegates to new tiered version.
-# Any code still calling with just node IDs gets flat 50/50 coinflip for all
-# (confidence=0.5 stub, no locked tier).
+# GRUG: Backward-compatible signature. Under BUG-011 there is no implicit
+# lock-in evidence here, so this path performs NO strength changes. Callers
+# that want reinforcement must pass locked_node_ids to the Vote-based method.
 function apply_right_feedback!(contributor_ids::Vector{String})::Dict{String, Any}
-    # Build stub votes with confidence=0.5 (old 50/50 behavior) and empty locked set.
-    # This preserves backward compat for any callers that haven't been migrated.
     stub_votes = [Vote(id, "", 0.5, String[], RelationalTriple[], RelationalTriple[], false, "", :singleton)
                   for id in contributor_ids]
     return apply_right_feedback!(stub_votes, Set{String}())
 end
 
-function apply_wrong_feedback!(contributor_ids::Vector{String})
+function apply_wrong_feedback!(contributor_ids::Vector{String},
+                               locked_node_ids::Set{String}=Set(contributor_ids))::Dict{String, Any}
     if isempty(contributor_ids)
         error("!!! FATAL: apply_wrong_feedback! got empty contributor_ids list! !!!")
     end
 
-    penalized_count = 0
-    graved_count    = 0
+    penalized = String[]
+    coinflip_missed = String[]
+    nonlocked_skipped = String[]
+    grave_skipped = String[]
+    missing_skipped = String[]
+    graved_count = 0
+    seen_nodes = Set{String}()
 
-    for id in contributor_ids
-        node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
-        if isnothing(node)
-            # GRUG: Node may have already been graved. Non-fatal, skip.
-            println("[ENGINE] ⚠  /wrong: Node [$id] not found, skipping.")
-            continue
-        end
+    lock(NODE_LOCK) do
+        for id in contributor_ids
+            id in seen_nodes && continue
+            push!(seen_nodes, id)
 
-        was_grave_before = node.is_grave
-        penalize_strength!(node)
+            if !(id in locked_node_ids)
+                push!(nonlocked_skipped, id)
+                continue
+            end
 
-        penalized_count += 1
-        if node.is_grave && !was_grave_before
-            graved_count += 1
+            node = get(NODE_MAP, id, nothing)
+            if isnothing(node)
+                println("[ENGINE] ⚠  /wrong: Node [$id] not found, skipping.")
+                push!(missing_skipped, id)
+                continue
+            end
+
+            if node.is_grave
+                push!(grave_skipped, id)
+                continue
+            end
+
+            was_grave_before = node.is_grave
+            before = node.strength
+            # GRUG BUG-011: Only lock-in votes can change strength, and penalty
+            # remains stochastic through penalize_strength!'s jittered coinflip.
+            penalize_strength!(node)
+            if node.strength < before || (node.is_grave && !was_grave_before)
+                push!(penalized, id)
+                if node.is_grave && !was_grave_before
+                    graved_count += 1
+                end
+            else
+                push!(coinflip_missed, id)
+            end
         end
     end
 
-    println("[ENGINE] ❌  /wrong applied to $(length(contributor_ids)) contributors. penalized= $penalized_count, newly_graved= $graved_count.")
+    result = Dict{String, Any}(
+        "total_contributors" => length(contributor_ids),
+        "locked_considered" => length(intersect(Set(contributor_ids), locked_node_ids)),
+        "penalized" => penalized,
+        "coinflip_missed" => coinflip_missed,
+        "nonlocked_skipped" => nonlocked_skipped,
+        "grave_skipped" => grave_skipped,
+        "missing_skipped" => missing_skipped,
+        "newly_graved" => graved_count,
+    )
+    println("[ENGINE] ❌ /wrong lock-in-only: total=$(length(contributor_ids)) locked=$(result["locked_considered"]) penalized=$(length(penalized)) nonlocked_skip=$(length(nonlocked_skipped)) coinflip_miss=$(length(coinflip_missed)) newly_graved=$graved_count")
+    return result
 end
+
 
 # ==============================================================================
 # JSON NODE GROWER (MAP EXPANSION)
@@ -5695,11 +4474,9 @@ Called from grow_nodes_from_packet (seed-time) and from load_specimen
 Idempotent: registering the same prose action twice is a no-op.
 """
 function ensure_action_packet_registered!(action_packet::AbstractString)
-    for entry in split(action_packet, '|')
-        cleaned = strip(entry)
-        isempty(cleaned) && continue
-        no_brackets = replace(cleaned, r"\[[^\]]*\]" => "")
-        action_name = String(strip(split(no_brackets, '^')[1]))
+    _, _, action_items = parse_action_packet(String(action_packet))
+    for item in action_items
+        action_name = String(item[1])
         isempty(action_name) && continue
         haskey(COMMANDS, action_name) && continue
 
@@ -5713,6 +4490,7 @@ function ensure_action_packet_registered!(action_packet::AbstractString)
             valid_list = join(valid_actions, ", ")
             error("!!! FATAL: action_packet contains unknown action '$action_name'. " *
                   "Valid actions: $valid_list. " *
+                  "Use {PIPE} or {{PIPE}} inside action names when you need a literal '|'. " *
                   "(see plans/semantic_plugins/QOL_SWEEP_2025.md BUG-007) !!!")
         end
     end
@@ -6083,6 +4861,145 @@ end
 # causal chain detection emits a non-fatal @warn when the input ends on a verb with
 # no object, helping surface ambiguous or truncated inputs.
 # ==============================================================================
+
+# ==============================================================================
+# SCAN + EXPAND COMPATIBILITY API
+# ==============================================================================
+
+function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
+    input_tokens = Set(split(lowercase(strip(input_text))))
+    node_tokens = Set(split(lowercase(strip(node.pattern))))
+    if isempty(input_tokens) || isempty(node_tokens)
+        return 0.0
+    end
+    overlap = length(intersect(input_tokens, node_tokens))
+    overlap == 0 && return 0.0
+    denom = max(1, min(length(input_tokens), length(node_tokens)))
+    return clamp(overlap / denom, 0.0, 1.0)
+end
+
+function _scan_confidence_for_node(input_signal::Vector{Float64}, input_text::String, node::Node, base_mode::Int)::Float64
+    node.is_image_node && return 0.0
+    isempty(node.signal) && return _lexical_overlap_confidence(input_text, node)
+
+    mode = _effective_scan_mode(base_mode, node.signal)
+    conf = 0.0
+    try
+        if mode == 1
+            _, conf = _bidirectional_cheap_scan(input_signal, node.signal; threshold=0.1, nonjitter=is_nonjitter(node))
+        elseif mode == 2
+            _, conf = medium_scan(input_signal, node.signal; threshold=0.1)
+        else
+            _, conf = high_res_scan(input_signal, node.signal; threshold=0.1)
+        end
+    catch e
+        if e isa PatternNotFoundError || e isa PatternScanError
+            conf = 0.0
+        else
+            rethrow(e)
+        end
+    end
+
+    # PatternScanner cannot match a longer node pattern against a shorter input;
+    # lexical overlap is the compatibility fallback used by old smoke/anti-match
+    # tests and preserves semantic activation for partial user phrases.
+    return max(conf, _lexical_overlap_confidence(input_text, node))
+end
+
+function _specimen_tuple(id::String, conf::Float64, antimatch::Bool,
+                         user_triples::Vector{RelationalTriple},
+                         node_triples::Vector{RelationalTriple},
+                         input_chunks::Vector{Int}=Int[])
+    return (id, conf, antimatch, user_triples, node_triples, input_chunks)
+end
+
+"""
+    scan_specimens(input::String; chunks=[])
+
+Compatibility scanner used by scan_and_expand. Returns six-tuples:
+`(node_id, confidence, antimatch, user_triples, node_triples, input_chunks)`.
+BUG-011: scanning/firing is marker-only and never mutates strength.
+"""
+function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}}
+    strip(input) == "" && error("!!! FATAL: scan_specimens got empty input! !!!")
+
+    input_signal = words_to_signal(input)
+    user_triples = extract_dynamic_relational_triples(input, screen_input_complexity(input_signal, RelationalTriple[]))
+    base_mode = screen_input_complexity(input_signal, user_triples)
+    input_chunk_ids = isempty(chunks) ? Int[] : collect(1:length(chunks))
+    active_cap = rand(600:1800)
+
+    matched = Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}[]
+    seen = Set{String}()
+    high_conf_ids = String[]
+
+    nodes = lock(() -> collect(values(NODE_MAP)), NODE_LOCK)
+    for node in nodes
+        length(matched) >= active_cap && break
+        node.is_grave && continue
+
+        conf = _scan_confidence_for_node(input_signal, input, node, base_mode)
+        conf <= 0.0 && continue
+
+        if node.is_antimatch_node
+            # Anti-match nodes fire as drains but do not enter the voter pool.
+            node.fired_this_cycle = true
+            continue
+        end
+
+        push!(matched, _specimen_tuple(node.id, Float64(conf), false, user_triples, node.relational_patterns, input_chunk_ids))
+        push!(seen, node.id)
+        node.fired_this_cycle = true
+        node.voted_this_cycle = true
+        conf >= HOPFIELD_STORE_THRESHOLD && push!(high_conf_ids, node.id)
+
+        # Drop-table co-activation: associative memory, no strength mutation.
+        for drop_id in node.drop_table
+            length(matched) >= active_cap && break
+            drop_id in seen && continue
+            drop_node = get(NODE_MAP, drop_id, nothing)
+            isnothing(drop_node) && continue
+            (drop_node.is_grave || drop_node.is_antimatch_node) && continue
+            drop_conf = max(0.1, Float64(conf) * 0.8)
+            push!(matched, _specimen_tuple(drop_id, drop_conf, false, user_triples, drop_node.relational_patterns, input_chunk_ids))
+            push!(seen, drop_id)
+            drop_node.fired_this_cycle = true
+            drop_node.voted_this_cycle = true
+        end
+    end
+
+    # Bridge/cascade pass over a stable snapshot of current matches.
+    for source_id in copy(collect(seen))
+        length(matched) >= active_cap && break
+        for (bridge_id, bridge_conf, seam_text) in fire_cascades!(source_id, length(matched), active_cap)
+            bridge_id in seen && continue
+            bridge_node = get(NODE_MAP, bridge_id, nothing)
+            isnothing(bridge_node) && continue
+            (bridge_node.is_grave || bridge_node.is_antimatch_node) && continue
+            seam_triples = isempty(strip(seam_text)) ? RelationalTriple[] : extract_relational_triples(seam_text)
+            node_triples = vcat(bridge_node.relational_patterns, seam_triples)
+            push!(matched, _specimen_tuple(bridge_id, Float64(bridge_conf), false, user_triples, node_triples, input_chunk_ids))
+            push!(seen, bridge_id)
+            bridge_node.fired_this_cycle = true
+            bridge_node.voted_this_cycle = true
+        end
+    end
+
+    input_hash = hopfield_input_hash(input)
+    hopfield_record!(input_hash, high_conf_ids)
+
+    sort!(matched, by=x -> x[2], rev=true)
+    return matched
+end
+
+"""
+    scan_and_expand(input::String; chunks=[])
+
+Public compatibility wrapper for the historical three-pass scan API.
+"""
+function scan_and_expand(input::String; chunks=[])
+    return scan_specimens(input; chunks=chunks)
+end
 
 # ==============================================================================
 # LOBE POPULATION HELPERS
