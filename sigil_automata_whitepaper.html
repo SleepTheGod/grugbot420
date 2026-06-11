@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SIGILS MACROS + AUTOMATA</title>
+<style>
+body {
+  background: #000;
+  color: #0f0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  margin: 20px 40px;
+  line-height: 1.5;
+}
+a { color: #0f0; }
+h1 {
+  font-size: 28px;
+  text-align: center;
+  border: 1px solid #0f0;
+  padding: 12px;
+  margin-top: 30px;
+  letter-spacing: 4px;
+}
+h2 {
+  font-size: 18px;
+  border-bottom: 1px solid #0f0;
+  padding-bottom: 4px;
+  margin-top: 30px;
+  letter-spacing: 2px;
+}
+h3 {
+  font-size: 14px;
+  margin-top: 20px;
+  text-decoration: underline;
+}
+pre {
+  background: #0a0a0a;
+  border: 1px solid #0f0;
+  padding: 10px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.4;
+}
+code {
+  color: #0f0;
+}
+.warn { color: #ff0; }
+.dim { color: #090; }
+.hot { color: #f00; }
+.cyan { color: #0ff; }
+.magenta { color: #f0f; }
+.white { color: #fff; }
+.indent { margin-left: 30px; }
+table {
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+td, th {
+  border: 1px solid #0f0;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+th { background: #0a0a0a; }
+hr { border: none; border-top: 1px solid #0f0; margin: 20px 0; }
+.sigil { color: #0ff; }
+.macro { color: #f0f; }
+.binding { color: #ff0; }
+.note { color: #090; font-style: italic; }
+</style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+
+<h1>SIGILS + MACROS + AUTOMATA<br>A WHITEPAPER</h1>
+
+<pre>
+  grug-group420 // 2025
+  version 1.0
+
+  "the symbol is the machine"
+</pre>
+
+<hr>
+
+<h2>0. WHAT THIS IS</h2>
+
+<p>
+this document describes a system of symbolic computation where typed
+handles called <span class="sigil">sigils</span> serve as structural priors
+for input processing, pattern matching, and automated reasoning. sigils are
+not passive tokens. they are active macro-expansion sites that rewrite input
+into executable automaton instructions. the result is a computational model
+where <b>training is definition, inference is execution, and context is state</b>.
+</p>
+
+<p>
+the core implementation lives in three files of the grugbot420 codebase:
+</p>
+
+<pre>
+  src/SigilRegistry.jl    -- the symbol table (1168 lines)
+  src/SigilPromoter.jl    -- the input rewriter (635 lines)
+  src/ArithmeticEngine.jl -- a concrete automaton (439 lines)
+</pre>
+
+<p>
+everything below derives from what those files actually do, plus
+architectural extensions that follow from the same principles.
+</p>
+
+<hr>
+
+<h2>1. SIGIL REGISTRY</h2>
+
+<h3>1.1 the sigil entry</h3>
+
+<p>
+every sigil is a typed symbolic handle registered in a central
+<span class="sigil">SigilRegistry</span>. each entry carries enough metadata
+to drive promotion, matching, expansion, and voting without ad-hoc logic.
+the struct:
+</p>
+
+<pre>
+struct SigilEntry
+    name              :: Symbol    # e.g. :n, :word, :temporal
+    class             :: Symbol    # one of SIGIL_CLASSES
+    applies_at        :: Symbol    # one of SIGIL_APPLIES_AT
+    sigil_type        :: Symbol    # e.g. :numeric, :alphanumeric
+    lexicon           :: Vector{String}  # surface forms this sigil captures
+    params            :: Dict{Symbol,Any} # class-specific parameters
+    expansion         :: Vector{String}   # macro expansion targets
+    provenance        :: Symbol    # :builtin or :user
+    promote_at_tokenize :: Bool   # auto-promote during input rewrite?
+    promote_predicate   :: Function # conditional promotion gate
+end
+</pre>
+
+<p>
+the registry itself is a <code>Dict{Symbol, SigilEntry}</code> keyed by
+name. lookup is O(1). conflict resolution on merge supports three policies:
+<code>:error</code> (throw), <code>:overwrite</code> (new wins),
+<code>:keep</code> (old wins).
+</p>
+
+<h3>1.2 sigil classes</h3>
+
+<p>
+seven classes partition the sigil namespace by structural role:
+</p>
+
+<pre>
+SIGIL_CLASSES = (:lambda, :macro, :tag, :glue, :functor, :procedure, :relation)
+</pre>
+
+<table>
+<tr><th>class</th><th>role</th><th>example</th></tr>
+<tr><td><span class="sigil">:lambda</span></td><td>parametric position capture</td><td>&amp;n captures any number</td></tr>
+<tr><td><span class="sigil">:macro</span></td><td>alternation family</td><td>&amp;word captures any word</td></tr>
+<tr><td><span class="sigil">:tag</span></td><td>annotation marker</td><td>metadata labels</td></tr>
+<tr><td><span class="sigil">:glue</span></td><td>reserved (join logic)</td><td>future use</td></tr>
+<tr><td><span class="sigil">:functor</span></td><td>reserved (higher-order)</td><td>future use</td></tr>
+<tr><td><span class="macro">:procedure</span></td><td>ordered chain expansion</td><td>PEMDAS-style macros</td></tr>
+<tr><td><span class="macro">:relation</span></td><td>dynamic relational triples</td><td>&amp;temporal, &amp;causal</td></tr>
+</table>
+
+<h3>1.3 applies_at domains</h3>
+
+<p>
+each sigil declares where in the processing pipeline it activates:
+</p>
+
+<pre>
+SIGIL_APPLIES_AT = (:bind, :match, :vote_shape, :tone, :render,
+                    :thesaurus, :drop_table, :inhibit, :relation)
+</pre>
+
+<table>
+<tr><th>domain</th><th>meaning</th></tr>
+<tr><td>:bind</td><td>captures a value during input promotion</td></tr>
+<tr><td>:match</td><td>participates in pattern matching</td></tr>
+<tr><td>:vote_shape</td><td>shapes the voting architecture of nodes</td></tr>
+<tr><td>:tone</td><td>affects response tone/style</td></tr>
+<tr><td>:render</td><td>drives output rendering</td></tr>
+<tr><td>:thesaurus</td><td>provides synonym expansion</td></tr>
+<tr><td>:drop_table</td><td>pruning logic for cascade voting</td></tr>
+<tr><td>:inhibit</td><td>suppresses certain pathways</td></tr>
+<tr><td>:relation</td><td>relational triple construction</td></tr>
+</table>
+
+<p>
+this separation means the same symbol can participate in multiple
+pipeline stages without collision. a <span class="sigil">&amp;n</span> that
+binds a numeric value at <code>:bind</code> time is the same entry that
+shapes the vote at <code>:vote_shape</code> time.
+</p>
+
+<h3>1.4 default registry</h3>
+
+<p>
+the shipped registry defines these sigils out of the box:
+</p>
+
+<pre>
+&amp;n          -- class :lambda, applies_at :bind, captures numeric tokens
+&amp;word       -- class :macro,  applies_at :bind, captures any single word
+&amp;rest       -- class :macro,  applies_at :bind, captures remaining input
+&amp;noun       -- class :macro,  applies_at :bind, captures noun-class words
+&amp;op         -- class :lambda, applies_at :bind, captures operator tokens
+&amp;temporal   -- class :relation, expands to ["before","after","during",...]
+&amp;causal     -- class :relation, expands to ["causes","results in",...]
+&amp;spatial    -- class :relation, expands to ["above","below","beside",...]
+&amp;possessive -- class :relation, expands to ["has","owns","contains",...]
+&amp;similarity -- class :relation, expands to ["resembles","mirrors",...]
+</pre>
+
+<p>
+users add more. the registry grows. no recompilation needed.
+</p>
+
+<h3>1.5 registration</h3>
+
+<p>
+<code>register_sigil!</code> validates the entry against class constraints,
+checks for name collisions, and inserts. the validation rules per class:
+</p>
+
+<pre>
+# lambda: must have params[:position] (1-based integer)
+# macro:  must have non-empty lexicon
+# tag:    must have non-empty lexicon
+# procedure: must have non-empty expansion, each element is a valid
+#            sigil name or literal string
+# relation:  must have non-empty expansion, each element is a verb string
+</pre>
+
+<p>
+pseudocode for the registration gate:
+</p>
+
+<pre>
+function register_sigil!(registry, entry)
+    # 1. class must be in SIGIL_CLASSES
+    assert entry.class in SIGIL_CLASSES
+
+    # 2. applies_at must be in SIGIL_APPLIES_AT
+    assert entry.applies_at in SIGIL_APPLIES_AT
+
+    # 3. class-specific validation
+    switch entry.class
+        case :lambda
+            assert haskey(entry.params, :position)
+            assert entry.params[:position] &gt; 0
+        case :macro
+            assert length(entry.lexicon) &gt; 0
+        case :procedure
+            assert length(entry.expansion) &gt; 0
+            for target in entry.expansion
+                assert is_valid_sigil_ref(target) or is_literal(target)
+        case :relation
+            assert length(entry.expansion) &gt; 0
+            for verb in entry.expansion
+                assert typeof(verb) == String
+
+    # 4. name collision check
+    if haskey(registry, entry.name)
+        error("sigil already registered: " + string(entry.name))
+
+    # 5. insert
+    registry[entry.name] = entry
+</pre>
+
+<h3>1.6 pattern resolution</h3>
+
+<p>
+<code>resolve_sigils_in_pattern</code> parses a pattern string containing
+sigil references (like <code>"&amp;n &amp;op &amp;n"</code>) into a structured
+list of (literal | sigil_ref) segments. this is the bridge between human-readable
+pattern syntax and the matching engine:
+</p>
+
+<pre>
+function resolve_sigils_in_pattern(pattern, registry)
+    segments = []
+    i = 1
+    while i &lt;= length(pattern)
+        if pattern[i] == '&amp;'
+            # scan to end of sigil name (alphanumeric + _)
+            j = i + 1
+            while j &lt;= length(pattern) &amp;&amp; is_sigil_char(pattern[j])
+                j += 1
+            name = Symbol(pattern[i+1 : j-1])
+            assert haskey(registry, name)
+            push!(segments, (:sigil, name))
+            i = j
+        else
+            # literal character
+            push!(segments, (:literal, pattern[i]))
+            i += 1
+    return segments
+</pre>
+
+<p>
+the result feeds directly into the cascade matching logic. a node's pattern
+<code>"what is &amp;n &amp;op &amp;n"</code> resolves to:
+</p>
+
+<pre>
+  [:literal "what is "] [:sigil :n] [:literal " "] [:sigil :op] [:literal " "] [:sigil :n]
+</pre>
+
+<p>
+matching then walks the input token stream against this resolved pattern,
+binding captured values at each sigil position.
+</p>
+
+<hr>
+
+<h2>2. SIGIL PROMOTION</h2>
+
+<h3>2.1 two-layer rewriting</h3>
+
+<p>
+the <span class="sigil">SigilPromoter</span> is the front door of the system.
+raw user input enters. promoted input exits. the rewriting has two layers:
+</p>
+
+<pre>
+  Layer 1: CANONICALIZE
+    "two"        -&gt; "2"
+    "plus"       -&gt; "+"
+    "times"      -&gt; "*"
+    "divided by" -&gt; "/"
+
+  Layer 2: SHAPE-PROMOTE
+    "2"   -&gt; "&amp;n"   (numeric shape matches &amp;n)
+    "+"   -&gt; "&amp;op"  (operator shape matches &amp;op)
+    "cat" -&gt; "&amp;word" (word shape matches &amp;word)
+</pre>
+
+<p>
+the output is a tuple: <code>(rewritten_string, bindings)</code> where
+<code>bindings</code> is a position-keyed dictionary of
+<span class="binding">SigilBinding</span> structs:
+</p>
+
+<pre>
+struct SigilBinding
+    position     :: Int      # 1-based position in rewritten string
+    name         :: Symbol   # which sigil captured this
+    value        :: String   # the original surface token
+    class        :: Symbol   # sigil class
+    surface      :: String   # pre-canonicalization form
+    raw_position :: Int      # position in original (un-rewritten) input
+end
+</pre>
+
+<p>
+the bindings travel as a <b>side channel</b>. the rewritten string drives
+pattern matching. the bindings drive computation. they are two views of
+the same input, separated by purpose.
+</p>
+
+<h3>2.2 the promote_input pipeline</h3>
+
+<pre>
+function promote_input(raw_input, registry)
+    # Phase 1: canonicalize
+    canonical = raw_input
+    for (word, symbol) in NUMBER_WORD_MAP
+        canonical = replace(canonical, word =&gt; symbol)
+    for (word, symbol) in OP_WORD_MAP
+        canonical = replace(canonical, word =&gt; symbol)
+
+    # Phase 2: tokenize + shape-promote
+    tokens = split(canonical)
+    rewritten = []
+    bindings  = Dict{Int, SigilBinding}()
+
+    for (i, token) in enumerate(tokens)
+        if starts_with_ampersand(token)
+            # already a sigil -- pass through (idempotency)
+            push!(rewritten, token)
+            continue
+
+        # find best matching sigil by shape
+        best_match = find_shape_match(token, registry)
+
+        if best_match !== nothing &amp;&amp; best_match.promote_at_tokenize
+            # Phase 1.5c: promote_predicate gate
+            if best_match.promote_predicate(token)
+                push!(rewritten, "&amp;" + string(best_match.name))
+                bindings[i] = SigilBinding(
+                    position = i,
+                    name     = best_match.name,
+                    value    = token,
+                    class    = best_match.class,
+                    surface  = raw_token_at(i),
+                    raw_position = original_position(i)
+                )
+            else
+                push!(rewritten, token)  # predicate said no
+            end
+        else
+            push!(rewritten, token)  # no sigil match
+        end
+
+    return (join(rewritten, " "), bindings)
+</pre>
+
+<h3>2.3 promote_predicate: the conditional gate</h3>
+
+<p>
+not every token that <i>could</i> match a sigil <i>should</i> be promoted.
+the <code>promote_predicate</code> field on each SigilEntry is a function
+that takes the surface token and returns <code>true</code> or
+<code>false</code>. this is stage 1.5c -- a conditional gate between
+shape-matching and actual rewriting.
+</p>
+
+<p>
+example: <span class="sigil">&amp;n</span> has a promote_predicate that
+checks whether the token is actually numeric (not just looks numeric in
+certain contexts). <span class="sigil">&amp;op</span> checks whether the
+token is in the operator lexicon. this prevents over-eager promotion of
+ambiguous tokens.
+</p>
+
+<pre>
+# &amp;n promote_predicate
+(token) -&gt; occursin(r"^[0-9]+\.?[0-9]*$", token)
+
+# &amp;op promote_predicate
+(token) -&gt; token in ["+", "-", "*", "/", "^", "%"]
+</pre>
+
+<h3>2.4 idempotency</h3>
+
+<p>
+if input is already promoted (contains <code>&amp;sigil</code> tokens),
+the promoter passes them through unchanged. you can run
+<code>promote_input</code> on its own output and get the same result.
+this is critical for composability -- downstream systems can re-promote
+without corruption.
+</p>
+
+<pre>
+# already-promoted input passes through
+promote_input("&amp;n &amp;op &amp;n") == ("&amp;n &amp;op &amp;n", {})
+</pre>
+
+<hr>
+
+<h2>3. PROCEDURE SIGILS</h2>
+
+<h3>3.1 math-acronym macros</h3>
+
+<p>
+procedure sigils are ordered chains of sigil references and literals.
+think PEMDAS as a macro: you define a procedure sigil called
+<span class="macro">&amp;arith</span> that expands into a sequence of
+evaluation steps. each step is either a literal operation or a reference
+to another sigil.
+</p>
+
+<pre>
+# registration
+register_procedure_sigil!(registry,
+    name      = :arith,
+    expansion = ["&amp;n", "&amp;op", "&amp;n"],   # left-to-right bind order
+    params    = Dict(:max_depth =&gt; 8)
+)
+</pre>
+
+<p>
+the expansion list is <i>not</i> a flat string. it is an ordered vector
+of references. each reference is resolved at expansion time, meaning
+procedure sigils can reference other procedure sigils, producing recursive
+expansion trees bounded by <code>MAX_PROCEDURE_DEPTH = 8</code>.
+</p>
+
+<h3>3.2 recursive expansion</h3>
+
+<p>
+<code>expand_procedure_sigil</code> walks the expansion vector depth-first.
+when it encounters a sigil reference (a string starting with <code>&amp;</code>),
+it looks up that sigil in the registry. if the referenced sigil is also a
+procedure, it recurses. if it is a lambda or macro, it returns the binding.
+if it is a literal string, it returns the literal.
+</p>
+
+<pre>
+function expand_procedure_sigil(name, registry, bindings, depth=0)
+    if depth &gt; MAX_PROCEDURE_DEPTH
+        error("procedure expansion exceeded max depth")
+
+    entry = registry[name]
+    result = []
+
+    for target in entry.expansion
+        if startswith(target, "&amp;")
+            ref_name = Symbol(target[2:end])
+            ref_entry = registry[ref_name]
+
+            if ref_entry.class == :procedure
+                # recursive expansion
+                sub = expand_procedure_sigil(ref_name, registry,
+                                             bindings, depth + 1)
+                append!(result, sub)
+            elseif ref_entry.class == :lambda
+                # pull from bindings
+                pos = ref_entry.params[:position]
+                push!(result, bindings[pos].value)
+            elseif ref_entry.class == :macro
+                # pull from bindings (first match)
+                for (p, b) in bindings
+                    if b.name == ref_name
+                        push!(result, b.value)
+                        break
+            else
+                push!(result, target)  # literal passthrough
+        else
+            push!(result, target)  # literal string
+
+    return result
+</pre>
+
+<h3>3.3 example: multi-step arithmetic procedure</h3>
+
+<p>
+define a procedure for evaluating <code>"(a + b) * c"</code>:
+</p>
+
+<pre>
+# step 1: register sub-procedure for the paren group
+register_procedure_sigil!(registry,
+    name      = :paren_sum,
+    expansion = ["&amp;n", "+", "&amp;n"],   # binds positions 1 and 3
+    params    = Dict(:position =&gt; 1)
+)
+
+# step 2: register the full expression procedure
+register_procedure_sigil!(registry,
+    name      = :expr_mul,
+    expansion = ["&amp;paren_sum", "*", "&amp;n"],  # recursive ref + literal + lambda
+    params    = Dict(:position =&gt; 2)
+)
+
+# expansion trace for input "3 + 5 times 2":
+# promote_input -&gt; "&amp;n + &amp;n * &amp;n" with bindings {1=&gt;3, 3=&gt;5, 5=&gt;2}
+# expand_procedure_sigil(:expr_mul)
+#   -&gt; expand "&amp;paren_sum" -&gt; expand_procedure_sigil(:paren_sum)
+#       -&gt; ["3", "+", "5"]
+#   -&gt; "*"
+#   -&gt; bindings[5] = "2"
+#   result: ["3", "+", "5", "*", "2"]
+#   evaluate: (3 + 5) * 2 = 16
+</pre>
+
+<p>
+the depth bound prevents infinite loops from mutually-referencing procedures.
+at depth 8, expansion halts and returns whatever has been accumulated so far
+(plus an error flag). in practice, most useful procedures are depth 1-3.
+</p>
+
+<hr>
+
+<h2>4. RELATION SIGILS</h2>
+
+<h3>4.1 dynamic relational triples</h3>
+
+<p>
+relation sigils expand to alternative verb strings for dynamic relational
+triples. a relational triple is (subject, verb, object). the relation sigil
+provides the verb slot with a set of alternatives drawn from a semantic
+category:
+</p>
+
+<pre>
+(subject, &amp;temporal, object) -&gt;
+  (subject, "before",    object)
+  (subject, "after",     object)
+  (subject, "during",    object)
+  (subject, "preceding", object)
+  (subject, "following", object)
+  (subject, "while",     object)
+  ...
+</pre>
+
+<p>
+the purpose is not to enumerate all possibilities but to give the matching
+engine a <b>semantic category</b> to work with. a node that matches on
+<code>&amp;temporal</code> can fire on any temporal relation verb, without
+needing separate patterns for each one.
+</p>
+
+<h3>4.2 registration and expansion</h3>
+
+<pre>
+function register_relation_sigil!(registry, name, expansion, provenance=:user)
+    entry = SigilEntry(
+        name       = name,
+        class      = :relation,
+        applies_at = :relation,
+        sigil_type = :relation,
+        lexicon    = expansion,     # the verb strings ARE the lexicon
+        params     = Dict(),
+        expansion  = expansion,
+        provenance = provenance,
+        promote_at_tokenize = false,
+        promote_predicate   = (_ -&gt; false)  # relations don't promote from input
+    )
+    register_sigil!(registry, entry)
+
+function expand_relation_sigil(name, registry)
+    entry = registry[name]
+    assert entry.class == :relation
+    return entry.expansion   # vector of verb strings
+</pre>
+
+<h3>4.3 built-in relation categories</h3>
+
+<table>
+<tr><th>sigil</th><th>category</th><th>sample expansions</th></tr>
+<tr><td><span class="sigil">&amp;temporal</span></td><td>time relations</td><td>before, after, during, preceding, following, while</td></tr>
+<tr><td><span class="sigil">&amp;causal</span></td><td>cause/effect</td><td>causes, results in, leads to, produces, enables, prevents</td></tr>
+<tr><td><span class="sigil">&amp;spatial</span></td><td>space relations</td><td>above, below, beside, inside, outside, between, through</td></tr>
+<tr><td><span class="sigil">&amp;possessive</span></td><td>ownership</td><td>has, owns, contains, holds, carries, possesses</td></tr>
+<tr><td><span class="sigil">&amp;similarity</span></td><td>resemblance</td><td>resembles, mirrors, approximates, echoes, parallels</td></tr>
+</table>
+
+<p>
+the matching engine uses <code>expand_relation_if_sigil</code> to check
+whether a verb token falls inside a relation sigil's expansion:
+</p>
+
+<pre>
+function expand_relation_if_sigil(token, registry)
+    for (name, entry) in registry
+        if entry.class == :relation &amp;&amp; token in entry.expansion
+            return (true, name, entry.expansion)
+    return (false, nothing, nothing)
+</pre>
+
+<p>
+this is how the system knows that "before" and "after" are both temporal
+relations, without hard-coding that knowledge anywhere outside the
+registry entry for <code>&amp;temporal</code>.
+</p>
+
+<hr>
+
+<h2>5. ARITHMETIC ENGINE: A CONCRETE AUTOMATON</h2>
+
+<h3>5.1 from bindings to numbers</h3>
+
+<p>
+the <span class="binding">ArithmeticEngine</span> is the first concrete
+automaton built on sigil bindings. it reads the <code>&amp;n</code> and
+<code>&amp;op</code> bindings produced by the promoter and evaluates the
+expression. the architecture:
+</p>
+
+<pre>
+  user input: "what is two plus three times five"
+      |
+      v
+  SigilPromoter.promote_input()
+      |
+      +-- rewritten: "what is &amp;n &amp;op &amp;n &amp;op &amp;n"
+      +-- bindings:  {2 =&gt; SigilBinding(:n, "2", "two"),
+                     4 =&gt; SigilBinding(:op, "+", "plus"),
+                     6 =&gt; SigilBinding(:n, "3", "three"),
+                     8 =&gt; SigilBinding(:op, "*", "times"),
+                     10=&gt; SigilBinding(:n, "5", "five")}
+      |
+      v
+  ArithmeticEngine.compute_arithmetic(bindings)
+      |
+      +-- steps: [Step(2, "+", 3), Step(5, "*", 5)]  // left-to-right
+      +-- result: 25  (2+3=5, 5*5=25)
+      |
+      v
+  format_arithmetic_reply(result, steps)
+      -&gt; "two plus three is five, times five is twenty-five"
+</pre>
+
+<h3>5.2 ComputationStep struct</h3>
+
+<pre>
+struct ComputationStep
+    left     :: Float64
+    operator :: String
+    right    :: Float64
+end
+
+struct ArithmeticResult
+    value      :: Float64
+    steps      :: Vector{ComputationStep}
+    expression :: String
+    success    :: Bool
+    error_msg  :: Union{String, Nothing}
+end
+</pre>
+
+<h3>5.3 multi-step evaluation</h3>
+
+<p>
+the engine evaluates left-to-right with no operator precedence. this is
+intentional -- the sigil binding order from the promoter is the evaluation
+order. if the user wants precedence, they use procedure sigils to define
+the grouping.
+</p>
+
+<pre>
+function compute_arithmetic(bindings)
+    nums = []   # collect &amp;n bindings in order
+    ops  = []   # collect &amp;op bindings in order
+
+    for (pos, binding) in sort(bindings)
+        if binding.name == :n
+            push!(nums, parse_float(binding.value))
+        elseif binding.name == :op
+            push!(ops, binding.operator)
+
+    if length(ops) == 0 &amp;&amp; length(nums) == 1
+        return ArithmeticResult(nums[1], [], string(nums[1]), true, nothing)
+
+    if length(ops) != length(nums) - 1
+        return ArithmeticResult(0, [], "", false, "mismatched operators and operands")
+
+    # left-to-right evaluation
+    accumulator = nums[1]
+    steps = []
+    for i in 1:length(ops)
+        step = ComputationStep(accumulator, ops[i], nums[i+1])
+        accumulator = apply_op(accumulator, ops[i], nums[i+1])
+        push!(steps, step)
+
+    return ArithmeticResult(accumulator, steps, format_expr(nums, ops),
+                           true, nothing)
+</pre>
+
+<h3>5.4 natural language output</h3>
+
+<p>
+<code>format_arithmetic_reply</code> converts the computation back into
+spoken language, using the <code>surface</code> field from bindings to
+recover the user's original words:
+</p>
+
+<pre>
+function format_arithmetic_reply(result, steps, bindings)
+    parts = []
+    for step in steps
+        left_word  = find_surface_for_value(step.left, bindings)
+        op_word    = find_surface_for_op(step.operator, bindings)
+        right_word = find_surface_for_value(step.right, bindings)
+        result_word = number_to_words(step.result)
+
+        push!(parts, left_word + " " + op_word + " " + right_word +
+                     " is " + result_word)
+
+    return join(parts, ", ")
+    # e.g. "two plus three is five, five times five is twenty-five"
+</pre>
+
+<p>
+this round-trip -- natural input to sigil bindings to computation back to
+natural output -- is the full automaton lifecycle in miniature.
+</p>
+
+<hr>
+
+<h2>6. FAST MAPPING VIA SIGILS</h2>
+
+<h3>6.1 the cognitive phenomenon</h3>
+
+<p>
+in cognitive science, <b>fast mapping</b> is the ability of children (and
+adults) to learn the meaning of a new word after a single exposure, by
+slotting it into an existing syntactic/semantic structure. the key insight
+is that the structure already exists -- the learner has a <i>prior</i>
+that constrains where the new item can go.
+</p>
+
+<p>
+sigils are that prior. a <span class="sigil">&amp;n</span> slot in a
+pattern says "a number goes here". when a new number appears in that slot,
+it is immediately bound with full type information, full position metadata,
+and full provenance. no statistical discovery. no gradient descent. one
+exposure, full integration.
+</p>
+
+<h3>6.2 sigils as structural priors</h3>
+
+<p>
+the analogy is exact:
+</p>
+
+<pre>
+  cognitive fast mapping:     child hears "the dax is red"
+                              knows "the ___ is red" structure
+                              slots "dax" into the noun position
+                              immediately knows dax is a noun-class thing
+
+  sigil fast mapping:         system sees "what is xtal plus 3"
+                              knows "&amp;n &amp;op &amp;n" structure
+                              "xtal" matches &amp;n by shape
+                              immediately bound as SigilBinding(:n, "xtal", ...)
+                              full type, position, surface captured
+</pre>
+
+<p>
+the sigil registry is the "existing syntactic/semantic structure" that
+makes fast mapping possible. every new token is either:
+</p>
+
+<ol>
+<li>matched by an existing sigil (fast mapped, zero-shot learned)</li>
+<li>not matched (deferred to slower statistical or fallback processing)</li>
+</ol>
+
+<h3>6.3 extending the prior</h3>
+
+<p>
+when a user registers a new sigil, they are extending the structural prior.
+this is analogous to a child learning a new grammatical construction and
+then being able to fast-map tokens into it:
+</p>
+
+<pre>
+# before: no sigil for hex numbers
+# "what is 0xFF plus 0x0A" -&gt; "0xFF" doesn't match &amp;n, falls through
+
+# user registers hex sigil:
+register_sigil!(registry, SigilEntry(
+    name       = :hex,
+    class      = :lambda,
+    applies_at = :bind,
+    sigil_type = :numeric,
+    lexicon    = ["0x0","0x1",...,"0xF","0xFF",...],
+    params     = Dict(:position =&gt; 1, :base =&gt; 16),
+    expansion  = [],
+    provenance = :user,
+    promote_at_tokenize = true,
+    promote_predicate   = (t -&gt; occursin(r"^0x[0-9A-Fa-f]+$", t))
+))
+
+# after: "what is 0xFF plus 0x0A" -&gt; 0xFF fast-mapped as &amp;hex
+# arithmetic engine can now handle hex via &amp;hex bindings
+</pre>
+
+<p>
+one registration. instant fast mapping for all inputs matching the new shape.
+</p>
+
+<hr>
+
+<h2>7. TIME SIGILS AND TEMPORAL AUTOMATA</h2>
+
+<h3>7.1 time nodes are tense, not chronology</h3>
+
+<p>
+time nodes in the grug architecture are not about when things happened.
+they are about <b>orientation toward action</b>. three orientations:
+</p>
+
+<pre>
+  PAST    = reflect   (look backward, summarize, recall)
+  PRESENT = assess    (look around, evaluate, describe current state)
+  FUTURE  = project   (look forward, predict, plan)
+</pre>
+
+<p>
+a user asking "what now?" hits a PRESENT-oriented time node. "what happened?"
+hits PAST. "what will happen?" hits FUTURE. the node type determines not
+the temporal <i>fact</i> but the <i>reasoning mode</i> the system enters.
+</p>
+
+<h3>7.2 reserved vote flags</h3>
+
+<p>
+time nodes carry <b>reserved vote flags</b> that command the AIML reasoning
+layer. when a time node fires in a cascade, its vote flags travel with the
+signal and instruct downstream processing how to orient:
+</p>
+
+<pre>
+const TIME_ORIENTATIONS = Dict(
+    :past    =&gt; Dict(:reflect =&gt; true,  :assess =&gt; false, :project =&gt; false),
+    :present =&gt; Dict(:reflect =&gt; false, :assess =&gt; true,  :project =&gt; false),
+    :future  =&gt; Dict(:reflect =&gt; false, :assess =&gt; false, :project =&gt; true)
+)
+
+# when a time node fires, its vote includes:
+vote.flags = TIME_ORIENTATIONS[node.orientation]
+# downstream AIML reads vote.flags[:reflect] etc.
+</pre>
+
+<h3>7.3 time sigil macros</h3>
+
+<p>
+the time sigil system lets end users define temporal automata using the
+same macro expansion machinery. a time sigil is a procedure sigil whose
+expansion wires vote flags and seam tokens automatically:
+</p>
+
+<pre>
+# register a temporal macro for "what happens next" -&gt; FUTURE orientation
+register_procedure_sigil!(registry,
+    name      = :t_next,
+    expansion = ["&amp;future_orient", "&amp;assess_current", "&amp;project_next"],
+    params    = Dict(
+        :orientation =&gt; :future,
+        :vote_flags  =&gt; Dict(:reflect =&gt; false, :assess =&gt; true, :project =&gt; true),
+        :seam_tokens =&gt; ["&lt;NOW&gt;", "&lt;NEXT&gt;"]
+    )
+)
+
+# expansion produces an automaton sequence:
+#   1. &amp;future_orient  -&gt; sets node orientation to :future, wires vote flags
+#   2. &amp;assess_current -&gt; triggers AIML assessment of current state
+#   3. &amp;project_next   -&gt; triggers AIML projection of next state
+#   seam tokens &lt;NOW&gt; and &lt;NEXT&gt; bridge between steps 2 and 3
+</pre>
+
+<h3>7.4 coherence-ordered transitions</h3>
+
+<p>
+temporal automata transition between states in <b>coherence order</b>,
+not chronological order. coherence means: the next state is the one that
+maximally resolves the current state's open questions. this is computed by
+checking which remaining expansion step has the highest overlap with
+already-resolved bindings:
+</p>
+
+<pre>
+function next_temporal_state(current, remaining_steps, resolved_bindings)
+    best_step = nothing
+    best_coherence = -1
+
+    for step in remaining_steps
+        # compute overlap between step's required bindings and resolved
+        coherence = count_intersect(step.required_bindings, resolved_bindings)
+        if coherence &gt; best_coherence
+            best_coherence = coherence
+            best_step = step
+
+    return best_step
+</pre>
+
+<p>
+this means temporal automata are not fixed sequences. they are
+<b>opportunistic</b> -- they follow the path of maximum coherence given
+what has already been resolved. if the user provides information out of
+order, the automaton adapts.
+</p>
+
+<h3>7.5 user-defined temporal automata</h3>
+
+<p>
+the end user can define arbitrary temporal automata by registering
+procedure sigils with <code>:orientation</code> parameters:
+</p>
+
+<pre>
+# "morning routine" automaton
+register_procedure_sigil!(registry,
+    name      = :morning_routine,
+    expansion = ["&amp;past_orient", "&amp;reflect_sleep",
+                 "&amp;present_orient", "&amp;assess_energy",
+                 "&amp;future_orient", "&amp;plan_day"],
+    params    = Dict(
+        :orientation =&gt; :sequential,  # past-&gt;present-&gt;future in order
+        :vote_flags  =&gt; Dict(:reflect =&gt; true, :assess =&gt; true, :project =&gt; true),
+        :seam_tokens =&gt; ["&lt;WOKE&gt;", "&lt;ENERGY&gt;", "&lt;PLAN&gt;"]
+    )
+)
+
+# "troubleshooting" automaton (present-centric with future probes)
+register_procedure_sigil!(registry,
+    name      = :troubleshoot,
+    expansion = ["&amp;present_orient", "&amp;assess_state",
+                 "&amp;present_orient", "&amp;assess_logs",
+                 "&amp;future_orient", "&amp;project_fix"],
+    params    = Dict(
+        :orientation =&gt; :present_heavy,
+        :vote_flags  =&gt; Dict(:reflect =&gt; false, :assess =&gt; true, :project =&gt; true)
+    )
+)
+</pre>
+
+<p>
+each macro expansion auto-wires the vote flags and seam tokens. the user
+just declares the sequence. the system handles the wiring.
+</p>
+
+<hr>
+
+<h2>8. SIGIL-MACRO LLM: REPLACING TRANSFORMERS</h2>
+
+<h3>8.1 the core thesis</h3>
+
+<p>
+a transformer does three things: it attends over context, it interpolates
+from training data, and it predicts the next token. a sigil-macro system
+does three different things: it matches input to structural priors, it
+expands those priors into automaton instructions, and it executes those
+instructions to produce output. the mapping:
+</p>
+
+<pre>
+  TRANSFORMER              SIGIL-MACRO
+  -----------              -----------
+  training      =          definition (register_sigil!)
+  inference     =          execution  (expand + compute)
+  context       =          state      (bindings + registry)
+  attention     =          matching   (shape-promote + resolve)
+  parameters    =          entries    (SigilEntry structs)
+  gradient      =          (none)     (no optimization needed)
+</pre>
+
+<h3>8.2 architecture</h3>
+
+<pre>
+                        +-----------------+
+                        |   USER INPUT    |
+                        +--------+--------+
+                                 |
+                                 v
+                        +--------+--------+
+                        |  SIGIL PROMOTER  |  canonicalize + shape-promote
+                        +--------+--------+
+                                 |
+                         rewritten + bindings
+                                 |
+                                 v
+                        +--------+--------+
+                        |  SIGIL MATCHER   |  resolve_sigils_in_pattern
+                        +--------+--------+        |
+                                 |           matched sigil entries
+                                 v
+                        +--------+--------+
+                        |  MACRO EXPANDER  |  expand_procedure/relation_sigil
+                        +--------+--------+
+                                 |
+                          automaton instructions
+                                 |
+                                 v
+                        +--------+--------+
+                        |  AUTOMATON EXEC  |  compute / render / respond
+                        +--------+--------+
+                                 |
+                                 v
+                           +-----+------+
+                           |   OUTPUT   |
+                           +------------+
+</pre>
+
+<h3>8.3 training is definition</h3>
+
+<p>
+in a transformer, "learning" means adjusting billions of floating point
+weights via backpropagation. in a sigil-macro LLM, "learning" means
+calling <code>register_sigil!</code>:
+</p>
+
+<pre>
+# "teach" the system about color adjectives
+register_sigil!(registry, SigilEntry(
+    name       = :color,
+    class      = :macro,
+    applies_at = :bind,
+    sigil_type = :alphanumeric,
+    lexicon    = ["red","blue","green","yellow","purple","orange",
+                  "cyan","magenta","black","white","gray","brown"],
+    params     = Dict(),
+    expansion  = [],
+    provenance = :user,
+    promote_at_tokenize = true,
+    promote_predicate   = (t -&gt; t in COLOR_LEXICON)
+))
+
+# "teach" the system about color-noun phrases
+register_procedure_sigil!(registry,
+    name      = :color_noun,
+    expansion = ["&amp;color", "&amp;noun"],
+    params    = Dict(:position =&gt; 1)
+)
+
+# done. no gradient. no epochs. no loss function.
+# every input containing a color adjective is now fast-mapped.
+</pre>
+
+<h3>8.4 inference is execution</h3>
+
+<p>
+when input arrives, the system does not interpolate between training
+examples. it executes the automaton defined by the matched sigil's expansion.
+the output is deterministic given the input and the registry state:
+</p>
+
+<pre>
+# input: "the red cat sat on the blue mat"
+# promotion: "the &amp;color &amp;noun sat on the &amp;color &amp;noun"
+# bindings: {2=&gt;(:color,"red"), 3=&gt;(:noun,"cat"),
+#            7=&gt;(:color,"blue"), 8=&gt;(:noun,"mat")}
+#
+# match: two color_noun procedure instances
+# expand: [&amp;color, &amp;noun] for each instance
+# execute: bind and produce structured representation
+#
+# result: [ColorNoun("red","cat"), ColorNoun("blue","mat")]
+#
+# no interpolation. no hallucination. pure execution.
+</pre>
+
+<h3>8.5 context is state</h3>
+
+<p>
+a transformer maintains context through attention over a sliding window
+of tokens. a sigil-macro system maintains context through the
+<b>registry state + accumulated bindings</b>. the registry is the
+long-term context (which sigils exist). the bindings are the short-term
+context (what the current input captured). together they are the full
+context, no attention matrix required.
+</p>
+
+<pre>
+# long-term context: the registry
+# (persists across conversations, grows as user adds sigils)
+
+# short-term context: the bindings
+# (created fresh for each input, consumed by the automaton)
+
+# conversation state = registry state + current bindings
+# no KV cache. no context window. no token limit.
+</pre>
+
+<h3>8.6 ephemeral automata</h3>
+
+<p>
+automata spawned by macro expansion are <b>ephemeral</b>. they exist for
+one input cycle. they compute their result. they vanish. no persistent
+weights. no memory of past executions (unless explicitly stored in the
+registry). this makes the system naturally stateless at the automaton
+layer, which is a feature not a bug:
+</p>
+
+<ul>
+<li>no stale state accumulation</li>
+<li>no context window overflow</li>
+<li>no cross-contamination between inputs</li>
+<li>deterministic replay given same registry + input</li>
+</ul>
+
+<pre>
+# each input cycle:
+1. promote_input(raw) -&gt; (rewritten, bindings)
+2. match(rewritten, registry) -&gt; matched_entries
+3. expand(matched_entries, registry, bindings) -&gt; instructions
+4. execute(instructions) -&gt; output
+5. discard bindings, discard instructions, discard automaton
+6. keep registry (it persists)
+7. keep output (it is the answer)
+</pre>
+
+<h3>8.7 comparison</h3>
+
+<table>
+<tr><th>property</th><th>transformer</th><th>sigil-macro</th></tr>
+<tr><td>training cost</td><td>millions of GPU-hours</td><td>O(1) per definition</td></tr>
+<tr><td>inference cost</td><td>O(n^2) attention per layer</td><td>O(k) where k = sigil matches</td></tr>
+<tr><td>context window</td><td>fixed, expensive to extend</td><td>unbounded (registry is dict)</td></tr>
+<tr><td>hallucination</td><td>inherent (interpolation artifact)</td><td>impossible (no interpolation)</td></tr>
+<tr><td>adaptability</td><td>fine-tuning or in-context learning</td><td>register_sigil! at runtime</td></tr>
+<tr><td>transparency</td><td>black box (billions of weights)</td><td>white box (named entries, inspectable)</td></tr>
+<tr><td>composability</td><td>prompt chaining</td><td>procedure sigil recursion</td></tr>
+<tr><td>energy</td><td>megawatts</td><td>milliwatts</td></tr>
+</table>
+
+<hr>
+
+<h2>9. TEXT RENDERING VIA SIGIL AUTOMATA</h2>
+
+<h3>9.1 the observation</h3>
+
+<p>
+operating systems render text by rasterizing each glyph from a font atlas,
+compositing the results into a framebuffer. for a 1000-word document with
+an average of 5 characters per word, that is 5000 rasterization operations.
+most of those glyphs are repeated -- "e" alone accounts for roughly 13%
+of English text. the redundancy is massive.
+</p>
+
+<h3>9.2 sigil-based rendering</h3>
+
+<p>
+the idea: define sigils for paragraph, word, and character-class levels.
+each sigil expands into a render automaton that maintains state between
+glyphs. repeated glyphs hit the same automaton state, which returns a
+cached bitmap instead of re-rasterizing:
+</p>
+
+<pre>
+# character-class sigils
+register_sigil!(registry, SigilEntry(
+    name       = :glyph_lower,
+    class      = :macro,
+    applies_at = :render,
+    sigil_type = :char_class,
+    lexicon    = ["a","b","c",...,"z"],
+    params     = Dict(:cache =&gt; Dict{Char, Bitmap}()),
+    expansion  = ["render_cached"],
+    provenance = :builtin,
+    promote_at_tokenize = false,
+    promote_predicate   = (t -&gt; occursin(r"^[a-z]$", t))
+))
+
+register_sigil!(registry, SigilEntry(
+    name       = :glyph_upper,
+    class      = :macro,
+    applies_at = :render,
+    sigil_type = :char_class,
+    lexicon    = ["A","B","C",...,"Z"],
+    params     = Dict(:cache =&gt; Dict{Char, Bitmap}()),
+    expansion  = ["render_cached"],
+    provenance = :builtin,
+    promote_at_tokenize = false,
+    promote_predicate   = (t -&gt; occursin(r"^[A-Z]$", t))
+))
+
+register_sigil!(registry, SigilEntry(
+    name       = :glyph_digit,
+    class      = :macro,
+    applies_at = :render,
+    sigil_type = :char_class,
+    lexicon    = ["0","1","2",...,"9"],
+    params     = Dict(:cache =&gt; Dict{Char, Bitmap}()),
+    expansion  = ["render_cached"],
+    provenance = :builtin,
+    promote_at_tokenize = false,
+    promote_predicate   = (t -&gt; occursin(r"^[0-9]$", t))
+))
+
+register_sigil!(registry, SigilEntry(
+    name       = :glyph_space,
+    class      = :macro,
+    applies_at = :render,
+    sigil_type = :char_class,
+    lexicon    = [" "],
+    params     = Dict(:width =&gt; SPACE_WIDTH, :bitmap =&gt; nothing),
+    expansion  = ["advance_cursor"],
+    provenance = :builtin,
+    promote_at_tokenize = false,
+    promote_predicate   = (t -&gt; t == " ")
+))
+</pre>
+
+<h3>9.3 the render pipeline</h3>
+
+<pre>
+function sigil_render(text, registry, framebuffer, cursor)
+    # promote: classify each character into glyph sigils
+    (rewritten, bindings) = promote_render_input(text, registry)
+
+    for (pos, binding) in sort(bindings)
+        entry = registry[binding.name]
+
+        # check glyph cache in entry.params[:cache]
+        ch = binding.value[1]   # single character
+        if haskey(entry.params[:cache], ch)
+            # cache hit: blit cached bitmap, advance cursor
+            bitmap = entry.params[:cache][ch]
+            blit(framebuffer, cursor, bitmap)
+            advance(cursor, bitmap.width)
+        else
+            # cache miss: rasterize, store, blit, advance
+            bitmap = rasterize(ch, current_font, current_size)
+            entry.params[:cache][ch] = bitmap
+            blit(framebuffer, cursor, bitmap)
+            advance(cursor, bitmap.width)
+
+    return framebuffer
+</pre>
+
+<h3>9.4 word-level and paragraph-level sigils</h3>
+
+<p>
+higher-level sigils handle word wrapping, line breaks, and paragraph
+spacing. these are procedure sigils that expand into sequences of
+lower-level glyph sigils plus layout instructions:
+</p>
+
+<pre>
+# word-level sigil: sequences of same-class glyphs between spaces
+register_procedure_sigil!(registry,
+    name      = :render_word,
+    expansion = ["&amp;glyph_lower*", "&amp;glyph_upper*", "&amp;glyph_digit*"],
+    # the * means "zero or more repetitions of this sigil class"
+    params    = Dict(:word_gap =&gt; WORD_SPACING)
+)
+
+# paragraph-level sigil: sequences of words with line wrapping
+register_procedure_sigil!(registry,
+    name      = :render_paragraph,
+    expansion = ["&amp;render_word*", "&amp;glyph_space", "&amp;render_word*"],
+    params    = Dict(:line_height =&gt; LINE_HEIGHT,
+                     :margin =&gt; PARAGRAPH_MARGIN,
+                     :wrap =&gt; true)
+)
+</pre>
+
+<h3>9.5 constant-cost state transitions</h3>
+
+<p>
+the key performance property: for a glyph that has been seen before, the
+render automaton does constant work. it checks the cache (O(1) dict lookup),
+blits the bitmap, and advances the cursor. no font lookup, no hinting, no
+rasterization. the cost of rendering "e" the 500th time is the same as
+the cost of rendering it the 2nd time (the 1st time pays the rasterization).
+</p>
+
+<pre>
+# cost model:
+#   first occurrence of glyph g:  O(rasterize) + O(1)  =  O(rasterize)
+#   subsequent occurrences of g:  O(1) cache hit + O(1) blit = O(1)
+#
+# for a document with N total characters, U unique characters:
+#   total cost = U * O(rasterize) + (N - U) * O(1)
+#             = O(U * rasterize + N)
+#
+# compare to traditional: N * O(rasterize) = O(N * rasterize)
+#
+# speedup factor: N * rasterize / (U * rasterize + N)
+#               ≈ N / U for large N (since rasterize >> 1)
+#
+# for English text: N ≈ 5000, U ≈ 70 (52 letters + 10 digits + ~8 punct)
+# speedup ≈ 5000 / 70 ≈ 71x
+</pre>
+
+<p>
+this is not a minor optimization. it is a structural change in how text
+rendering works. the sigil cache makes rendering an O(N + U) operation
+instead of O(N * R) where R is the per-glyph rasterization cost.
+</p>
+
+<hr>
+
+<h2>10. TOPOLOGICAL FOLDING AND SIGIL ROUTING</h2>
+
+<h3>10.1 primes as folds</h3>
+
+<p>
+the sieve of eratosthenes can be understood as a topological operation.
+each prime p "folds" the number line by wrapping it into a loop
+(Z/pZ -- the integers modulo p). the first fold (p=2) is unique: it
+bipartitions the entire number line into even and odd, setting the floor
+for the minimum gap between surviving numbers. every subsequent fold
+operates on a line already bent by all previous folds.
+</p>
+
+<p>
+the gap distribution between consecutive primes encodes the history of
+all folds applied so far. this is why twin primes (gap=2) cluster where
+the fold history has left room for a minimal gap -- the residual of the
+p=2 bipartition that hasn't been consumed by higher folds.
+</p>
+
+<h3>10.2 folding as sigil routing</h3>
+
+<p>
+the same topological intuition applies to sigil routing. each sigil
+class defines a "fold" on the input token stream:
+</p>
+
+<pre>
+  &amp;n fold:    splits tokens into numeric / non-numeric
+  &amp;op fold:   splits tokens into operator / non-operator
+  &amp;word fold: splits tokens into word / non-word
+  &amp;temporal fold: splits relations into temporal / non-temporal
+</pre>
+
+<p>
+the order of folds matters, just as the order of prime folds matters.
+the <code>&amp;n</code> fold (numeric bipartition) is the first fold
+applied by the promoter, analogous to p=2 being the first sieve fold.
+subsequent folds operate on a token stream already partitioned by
+previous sigil matches.
+</p>
+
+<h3>10.3 routing affinity</h3>
+
+<p>
+the concept of <b>routing affinity</b> captures how strongly a token
+is drawn to a particular sigil fold. a token like "42" has high affinity
+for <code>&amp;n</code> and low affinity for everything else. a token like
+"before" has high affinity for <code>&amp;temporal</code> but also moderate
+affinity for <code>&amp;word</code>. the promote_predicate resolves these
+affinities by deciding which fold the token enters:
+</p>
+
+<pre>
+function compute_affinities(token, registry)
+    affinities = Dict{Symbol, Float64}()
+    for (name, entry) in registry
+        if entry.promote_at_tokenize &amp;&amp; entry.promote_predicate(token)
+            # base affinity from lexicon membership
+            if token in entry.lexicon
+                affinities[name] = 1.0
+            else
+                # shape-based affinity (partial match)
+                affinities[name] = shape_similarity(token, entry.sigil_type)
+    return affinities
+
+# "before" affinities:
+#   &amp;temporal : 1.0  (lexicon member)
+#   &amp;word     : 0.8  (shape match: alphanumeric word)
+#   &amp;n        : 0.0  (not numeric)
+#
+# promote_predicate for &amp;temporal says true
+# promote_predicate for &amp;word says true
+# winner: &amp;temporal (highest affinity)
+# "before" enters the &amp;temporal fold
+</pre>
+
+<h3>10.4 oscillation vs routing</h3>
+
+<p>
+a transformer resolves ambiguity through <b>oscillation</b> -- multiple
+attention heads "debate" the classification of a token over many layers.
+a sigil system resolves ambiguity through <b>routing</b> -- the token
+enters exactly one fold, determined by affinity ranking. there is no
+debate. the first fold wins. subsequent folds see only the residue.
+</p>
+
+<p>
+this is why biological morphogenesis works the same way. cell fate
+determination is not a committee vote. it is a routing decision. the
+first morphogen gradient that crosses threshold wins the cell. all
+subsequent gradients see a cell already committed. topological folding
+over a developmental surface, routing affinity over oscillation. same
+math, different substrate.
+</p>
+
+<hr>
+
+<h2>11. AUTOMATON COMPOSITION PATTERNS</h2>
+
+<h3>11.1 sequential composition</h3>
+
+<p>
+the simplest pattern: procedure A's output feeds procedure B's input.
+this is the default behavior of procedure sigil expansion:
+</p>
+
+<pre>
+# define a two-stage pipeline
+register_procedure_sigil!(registry,
+    name      = :parse_and_eval,
+    expansion = ["&amp;parse_expr", "&amp;eval_expr"],
+    params    = Dict(:position =&gt; 1)
+)
+
+# expansion:
+#   1. &amp;parse_expr binds the input tokens into a structured form
+#   2. &amp;eval_expr takes the structured form and computes the result
+#   seam between them: the bindings from step 1 are available to step 2
+</pre>
+
+<h3>11.2 parallel composition</h3>
+
+<p>
+multiple sigils match the same input region. their expansions run in
+parallel and the results are merged by a voting mechanism:
+</p>
+
+<pre>
+# input: "the big red cat"
+# matches: &amp;adjective at "big", &amp;adjective at "red", &amp;noun at "cat"
+# expansions run in parallel:
+#   &amp;adjective("big") -&gt; [AdjEntry("big", :size)]
+#   &amp;adjective("red") -&gt; [AdjEntry("red", :color)]
+#   &amp;noun("cat")      -&gt; [NounEntry("cat", :animal)]
+# merge: [AdjEntry, AdjEntry, NounEntry] -&gt; NounPhrase("big red cat")
+</pre>
+
+<h3>11.3 conditional composition</h3>
+
+<p>
+the promote_predicate acts as a conditional gate. different inputs take
+different paths through the same sigil, depending on whether the predicate
+fires:
+</p>
+
+<pre>
+# &amp;n with a conditional that rejects hex values:
+#   input "42"  -&gt; predicate true  -&gt; promoted to &amp;n -&gt; arithmetic path
+#   input "0xFF" -&gt; predicate false -&gt; not promoted  -&gt; fallback path
+#
+# if &amp;hex sigil is registered later:
+#   input "0xFF" -&gt; &amp;hex predicate true -&gt; promoted to &amp;hex -&gt; hex arithmetic path
+</pre>
+
+<h3>11.4 recursive composition</h3>
+
+<p>
+procedure sigils that reference other procedure sigils. bounded by
+MAX_PROCEDURE_DEPTH. the recursion is not unbounded -- it is a controlled
+unfolding of nested definitions:
+</p>
+
+<pre>
+# recursive arithmetic with precedence
+register_procedure_sigil!(registry,
+    name      = :expr,
+    expansion = ["&amp;term", "&amp;add_op", "&amp;expr"],  # right-recursive
+    params    = Dict(:max_depth =&gt; 8)
+)
+
+register_procedure_sigil!(registry,
+    name      = :term,
+    expansion = ["&amp;factor", "&amp;mul_op", "&amp;term"],  # right-recursive
+    params    = Dict(:max_depth =&gt; 8)
+)
+
+register_procedure_sigil!(registry,
+    name      = :factor,
+    expansion = ["&amp;n"],  # base case
+    params    = Dict()
+)
+
+# expansion of "2 + 3 * 4":
+#   &amp;expr -&gt; [&amp;term, &amp;add_op, &amp;expr]
+#     &amp;term -&gt; [&amp;factor, &amp;mul_op, &amp;term]
+#       &amp;factor -&gt; [&amp;n] -&gt; [2]
+#       &amp;mul_op -&gt; [*]
+#       &amp;term -&gt; [&amp;factor] -&gt; [&amp;n] -&gt; [4]
+#     result: 3 * 4 = 12
+#     &amp;add_op -&gt; [+]
+#     &amp;expr -&gt; [&amp;term] -&gt; [&amp;factor] -&gt; [&amp;n] -&gt; [12]
+#   result: 2 + 12 = 14
+</pre>
+
+<h3>11.5 ephemeral vs persistent automata</h3>
+
+<p>
+by default, automata are ephemeral -- they execute once and vanish. but
+some applications need persistent automata that maintain state across
+inputs. the registry itself serves as the persistence layer:
+</p>
+
+<pre>
+# persistent counter automaton
+register_procedure_sigil!(registry,
+    name      = :count_entity,
+    expansion = ["&amp;entity", "increment_counter"],
+    params    = Dict(
+        :counter =&gt; Ref(0),  # mutable reference persists in registry
+        :entity_name =&gt; nothing
+    )
+)
+
+# each execution:
+#   1. &amp;entity binds the matched entity
+#   2. increment_counter reads and increments params[:counter][]
+#   counter value persists across inputs because it lives in the registry
+</pre>
+
+<hr>
+
+<h2>12. PUTTING IT ALL TOGETHER</h2>
+
+<h3>12.1 the full lifecycle</h3>
+
+<pre>
+  1. BOOT
+     registry = default_registry()
+     # &amp;n, &amp;word, &amp;rest, &amp;noun, &amp;op, &amp;temporal, &amp;causal,
+     # &amp;spatial, &amp;possessive, &amp;similarity are available
+
+  2. CUSTOMIZE
+     register_sigil!(registry, :hex, ...)
+     register_procedure_sigil!(registry, :color_noun, ...)
+     register_procedure_sigil!(registry, :morning_routine, ...)
+     # user extends the structural prior at runtime
+
+  3. INPUT ARRIVES
+     raw = "what is two plus three"
+
+  4. PROMOTE
+     (rewritten, bindings) = promote_input(raw, registry)
+     # rewritten = "what is &amp;n &amp;op &amp;n"
+     # bindings  = {2 =&gt; (:n,"2","two"), 4 =&gt; (:op,"+","plus"),
+     #              6 =&gt; (:n,"3","three")}
+
+  5. MATCH
+     pattern = "&amp;n &amp;op &amp;n"
+     resolved = resolve_sigils_in_pattern(pattern, registry)
+     # resolved = [(:sigil,:n), (:sigil,:op), (:sigil,:n)]
+
+  6. EXPAND
+     # matched procedure sigil: &amp;arith
+     instructions = expand_procedure_sigil(:arith, registry, bindings)
+     # instructions = ["2", "+", "3"]
+
+  7. EXECUTE
+     result = compute_arithmetic(bindings)
+     # result = ArithmeticResult(5.0, [Step(2,"+",3)], "2+3", true, nothing)
+
+  8. RENDER
+     reply = format_arithmetic_reply(result, bindings)
+     # reply = "two plus three is five"
+
+  9. DISCARD
+     # bindings, instructions, automaton state all discarded
+     # registry persists for next input
+
+  10. LOOP
+      goto 3
+</pre>
+
+<h3>12.2 the design principles</h3>
+
+<p>
+<b>1. symbols are active, not passive.</b> a sigil is not a label. it is
+a machine. its expansion is its program. its parameters are its memory.
+its predicate is its guard condition.
+</p>
+
+<p>
+<b>2. promotion is rewriting.</b> input is not processed in place. it is
+rewritten into a canonical form that the downstream system can match on.
+the original form is preserved in the bindings side channel.
+</p>
+
+<p>
+<b>3. matching is routing.</b> a token enters exactly one sigil fold.
+ambiguity is resolved by affinity ranking, not by committee. the first
+fold that accepts the token owns it.
+</p>
+
+<p>
+<b>4. expansion is compilation.</b> macro expansion converts sigil
+references into executable instructions. recursive expansion handles
+nested definitions. the depth bound prevents infinite loops.
+</p>
+
+<p>
+<b>5. execution is deterministic.</b> given the same registry state and
+the same input, the system produces the same output. no randomness.
+no sampling temperature. no top-k. the answer is the answer.
+</p>
+
+<p>
+<b>6. state is the registry.</b> everything that persists lives in the
+registry. everything that is ephemeral lives in bindings and instructions.
+the boundary is clear. the registry is the long-term memory. the bindings
+are the working memory.
+</p>
+
+<p>
+<b>7. growth is additive.</b> new capabilities are added by registering
+new sigils. existing capabilities are never broken by additions. the
+registry is a monoid: the empty registry is the identity, and merge is
+the operation.
+</p>
+
+<h3>12.3 what this enables</h3>
+
+<p>
+the sigil-macro-automata architecture is not just a different way to
+build chatbots. it is a different way to think about symbolic computation.
+every domain where structured input meets structured processing is a
+candidate:
+</p>
+
+<pre>
+  arithmetic       - done (ArithmeticEngine)
+  natural language - done (promoter + matching + formatting)
+  temporal reason  - ready (time sigils + vote flags)
+  text rendering   - ready (glyph sigils + cache)
+  code parsing     - obvious (token class sigils + procedure expansion)
+  query planning   - obvious (relation sigils + coherent ordering)
+  game AI          - possible (state sigils + ephemeral strategy automata)
+  OS shell         - possible (command sigils + pipeline procedures)
+</pre>
+
+<p>
+the common pattern: define the symbols, define their expansions, register
+them, and the system can process inputs in that domain. no training. no
+data. no GPU. just definitions.
+</p>
+
+<hr>
+
+<h2>13. APPENDIX: PSEUDOCODE REFERENCE</h2>
+
+<h3>A.1 complete promote_input</h3>
+
+<pre>
+function promote_input(raw_input, registry)
+    # === LAYER 1: CANONICALIZE ===
+    canonical = lowercase(raw_input)
+    canonical = strip(canonical)
+
+    # number words -&gt; digits
+    for (word, digit) in NUMBER_WORD_MAP   # "zero"-&gt;"0", ... "nine"-&gt;"9"
+        canonical = replace(canonical, r"\b" + word + r"\b" =&gt; digit)
+    # multi-word numbers: "twenty one" -&gt; "21"
+    # (handled by composite number parser after basic word map)
+
+    # operator words -&gt; symbols
+    for (word, symbol) in OP_WORD_MAP     # "plus"-&gt;"+", "minus"-&gt;"-", ...
+        canonical = replace(canonical, r"\b" + word + r"\b" =&gt; symbol)
+
+    # === LAYER 2: SHAPE-PROMOTE ===
+    tokens = split(canonical)
+    rewritten_tokens = []
+    bindings = Dict{Int, SigilBinding}()
+    sigil_counts = Dict{Symbol, Int}()  # track position per sigil
+
+    for (i, token) in enumerate(tokens)
+        if startswith(token, "&amp;")
+            # already promoted -- idempotent passthrough
+            push!(rewritten_tokens, token)
+            name = Symbol(token[2:end])
+            sigil_counts[name] = get(sigil_counts, name, 0) + 1
+            continue
+
+        # find best sigil match by shape
+        best = find_best_shape_match(token, registry)
+
+        if best !== nothing &amp;&amp; best.promote_at_tokenize
+            # conditional gate
+            if best.promote_predicate(token)
+                name = best.name
+                sigil_counts[name] = get(sigil_counts, name, 0) + 1
+
+                push!(rewritten_tokens, "&amp;" + string(name))
+
+                bindings[i] = SigilBinding(
+                    position     = sigil_counts[name],
+                    name         = name,
+                    value        = token,
+                    class        = best.class,
+                    surface      = find_surface(i, raw_input),
+                    raw_position = find_raw_position(i, raw_input)
+                )
+                continue
+
+        # no match or predicate rejected -- pass through as-is
+        push!(rewritten_tokens, token)
+
+    return (join(rewritten_tokens, " "), bindings)
+</pre>
+
+<h3>A.2 complete expand_procedure_sigil</h3>
+
+<pre>
+const MAX_PROCEDURE_DEPTH = 8
+
+function expand_procedure_sigil(name, registry, bindings, depth=0)
+    if depth &gt; MAX_PROCEDURE_DEPTH
+        return ExpansionResult([], false, "max depth exceeded")
+
+    if !haskey(registry, name)
+        return ExpansionResult([], false, "sigil not found: " + name)
+
+    entry = registry[name]
+
+    if entry.class != :procedure
+        return ExpansionResult([], false, "not a procedure sigil: " + name)
+
+    result = []
+    all_ok = true
+
+    for target in entry.expansion
+        if startswith(target, "&amp;")
+            ref_name = Symbol(target[2:end])
+
+            if !haskey(registry, ref_name)
+                all_ok = false
+                continue
+
+            ref_entry = registry[ref_name]
+
+            switch ref_entry.class
+                case :procedure
+                    sub = expand_procedure_sigil(ref_name, registry,
+                                                 bindings, depth + 1)
+                    if sub.success
+                        append!(result, sub.elements)
+                    else
+                        all_ok = false
+
+                case :lambda
+                    # find binding for this lambda at current position
+                    pos = ref_entry.params[:position]
+                    for (i, b) in bindings
+                        if b.name == ref_name &amp;&amp; b.position == pos
+                            push!(result, b.value)
+                            break
+
+                case :macro
+                    # find first binding for this macro
+                    for (i, b) in bindings
+                        if b.name == ref_name
+                            push!(result, b.value)
+                            break
+
+                case :relation
+                    verbs = expand_relation_sigil(ref_name, registry)
+                    push!(result, verbs)  # attach full alternation set
+
+                default
+                    push!(result, target)
+
+        else
+            # literal string
+            push!(result, target)
+
+    return ExpansionResult(result, all_ok, nothing)
+</pre>
+
+<h3>A.3 complete compute_arithmetic</h3>
+
+<pre>
+function compute_arithmetic(bindings)
+    # collect numeric and operator bindings in position order
+    sorted = sort(collect(bindings), by = (pair -&gt; pair[1]))
+
+    nums = []
+    ops  = []
+
+    for (pos, binding) in sorted
+        if binding.name == :n
+            push!(nums, parse(Float64, binding.value))
+        elseif binding.name == :op
+            push!(ops, binding.value)
+
+    # validation
+    if length(nums) == 0
+        return ArithmeticResult(0, [], "", false, "no numbers found")
+
+    if length(nums) == 1 &amp;&amp; length(ops) == 0
+        return ArithmeticResult(nums[1], [], string(nums[1]), true, nothing)
+
+    if length(ops) != length(nums) - 1
+        return ArithmeticResult(0, [], "", false,
+                 "operator/operand count mismatch: " +
+                 string(length(ops)) + " ops, " +
+                 string(length(nums)) + " nums")
+
+    # left-to-right evaluation (no operator precedence)
+    accumulator = nums[1]
+    steps = []
+
+    for i in 1:length(ops)
+        right = nums[i + 1]
+        op = ops[i]
+
+        result = apply_op(accumulator, op, right)
+        if result === nothing
+            return ArithmeticResult(0, [], "", false,
+                     "unknown operator: " + op)
+
+        push!(steps, ComputationStep(accumulator, op, right))
+        accumulator = result
+
+    return ArithmeticResult(accumulator, steps,
+                           format_expression(nums, ops),
+                           true, nothing)
+
+function apply_op(left, op, right)
+    switch op
+        case "+"  return left + right
+        case "-"  return left - right
+        case "*"  return left * right
+        case "/"  return right != 0 ? left / right : nothing
+        case "^"  return left ^ right
+        case "%"  return right != 0 ? left % right : nothing
+        default   return nothing
+</pre>
+
+<h3>A.4 time sigil auto-wiring</h3>
+
+<pre>
+function auto_wire_temporal_macro!(registry, name, orientation, steps)
+    # build expansion vector from step names
+    expansion = []
+    for step in steps
+        push!(expansion, "&amp;" + string(step))
+    end
+
+    # build vote flags from orientation
+    vote_flags = Dict(
+        :reflect =&gt; (orientation in [:past, :sequential]),
+        :assess  =&gt; (orientation in [:present, :sequential, :present_heavy]),
+        :project =&gt; (orientation in [:future, :sequential, :present_heavy])
+    )
+
+    # build seam tokens between steps
+    seam_tokens = []
+    for i in 1:length(steps)-1
+        push!(seam_tokens, "&lt;" + uppercase(steps[i]) + "_" +
+                           uppercase(steps[i+1]) + "&gt;")
+
+    register_procedure_sigil!(registry,
+        name      = name,
+        expansion = expansion,
+        params    = Dict(
+            :orientation  =&gt; orientation,
+            :vote_flags   =&gt; vote_flags,
+            :seam_tokens  =&gt; seam_tokens,
+            :auto_wired   =&gt; true
+        )
+    )
+end
+
+# usage:
+auto_wire_temporal_macro!(registry, :morning_routine, :sequential,
+                          [:reflect_sleep, :assess_energy, :plan_day])
+# produces:
+#   name = :morning_routine
+#   expansion = ["&amp;reflect_sleep", "&amp;assess_energy", "&amp;plan_day"]
+#   vote_flags = {reflect=&gt;true, assess=&gt;true, project=&gt;true}
+#   seam_tokens = ["&lt;REFLECT_SLEEP_ASSESS_ENERGY&gt;",
+#                  "&lt;ASSESS_ENERGY_PLAN_DAY&gt;"]
+</pre>
+
+<h3>A.5 sigil render cache</h3>
+
+<pre>
+struct GlyphCache
+    bitmaps   :: Dict{Char, Bitmap}     # char -&gt; rasterized bitmap
+    hits      :: Dict{Char, Int}        # char -&gt; hit count (diagnostics)
+    misses    :: Dict{Char, Int}        # char -&gt; miss count (diagnostics)
+    font_id   :: String                 # font + size identifier
+    max_size  :: Int                     # max cache entries (eviction policy)
+end
+
+function render_with_cache(text, cache, framebuffer, cursor)
+    for ch in text
+        if haskey(cache.bitmaps, ch)
+            # CACHE HIT: constant cost
+            cache.hits[ch] = get(cache.hits, ch, 0) + 1
+            bitmap = cache.bitmaps[ch]
+        else
+            # CACHE MISS: pay rasterization cost
+            cache.misses[ch] = get(cache.misses, ch, 0) + 1
+            bitmap = rasterize_glyph(ch, cache.font_id)
+
+            # eviction: LRU if cache is full
+            if length(cache.bitmaps) &gt;= cache.max_size
+                evict_lru!(cache)
+
+            cache.bitmaps[ch] = bitmap
+
+        blit(framebuffer, cursor.x, cursor.y, bitmap)
+        cursor.x += bitmap.advance_width
+
+    return framebuffer
+
+function render_stats(cache)
+    total_hits   = sum(values(cache.hits))
+    total_misses = sum(values(cache.misses))
+    total_ops    = total_hits + total_misses
+    hit_rate     = total_hits / total_ops
+    traditional_ops = total_ops   # every char = rasterize
+    sigil_ops    = total_misses  # only misses pay rasterize cost
+    speedup      = traditional_ops / max(sigil_ops, 1)
+
+    return Dict(
+        :hit_rate    =&gt; hit_rate,
+        :speedup     =&gt; speedup,
+        :unique_glyphs =&gt; length(cache.bitmaps),
+        :total_chars =&gt; total_ops
+    )
+</pre>
+
+<hr>
+
+<pre>
+  grug-group420 // sigil automata whitepaper v1.0
+  "the symbol is the machine"
+  EOF
+</pre>
+
+</body>
+</html>
