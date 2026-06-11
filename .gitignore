@@ -9,6 +9,10 @@ Manifest.toml
 .DS_Store
 Thumbs.db
 
+# Test runtime artifacts (post-run specimen saves are large + regenerable)
+specimens/kitchensink_postlive.json
+specimens/*_postlive.json
+
 # Editor artifacts
 *.swp
 *.swo

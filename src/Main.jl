@@ -3039,8 +3039,11 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     conversational_reply = "$voice_prefix$core_reply$pinned_citation$lobe_tag"
 
-    # GRUG: Wait little bit so cpu fire not burn down hut.
-    sleep(0.3)
+    # GRUG PERF FIX: Removed sleep(0.3) here. generate_aiml_payload is called
+    # once PER FIRED NODE — with a 95-node specimen that's 40-60 calls per turn,
+    # so a 0.3s sleep added 12-19s of pure dead wait to every response. The
+    # "don't burn CPU" rationale was never real (the synthesis itself is <1ms).
+    # This single line was ~100% of the input→response latency.
 
     # =====================================================================
     # Assemble the payload: conversational reply first, debug telemetry
@@ -5472,10 +5475,12 @@ function process_mission(mission_text::String)
     # selection, then fires the generative engine. Typical runtime: <2s.
     # 20s guard catches any deadlock in the generative path (JIT layer can
     # occasionally take time on first-hit compilation). NO SILENT FAILURES.
+    # GRUG: Bumped timeout from 20s → 60s for large specimens (95+ nodes).
+    # 20s was fine for small specimens but large ones need more orchestrator time.
     orch_task_name, orch_task = VoteOrchestrator.dispatch_task_with_timeout(
         () -> ephemeral_aiml_orchestrator(mission_text, cast_votes),
         "aiml_orchestrator",
-        20.0;
+        60.0;
         context = "run_mission.orchestrator"
     )
     output, sure_votes, unsure_votes = try
