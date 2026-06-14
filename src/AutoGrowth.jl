@@ -1350,7 +1350,19 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
         _latched_to_id = ""
 
         # GRUG: Antimatch and AIML = always singleton
+        # GRUG v7.59: Sigil nodes are also singleton (node_type==:sigil).
+        # They are NOCHAT (ineligible for idle chatter) and never placed in
+        # growth groups. register_group! rejects them; the catch below handles it.
         _is_singleton = is_antimatch
+        # GRUG v7.59: Also check if the new node is a sigil node.
+        if !_is_singleton
+            _new_node_obj = lock(node_lock) do
+                get(node_map, new_id, nothing)
+            end
+            if _new_node_obj !== nothing && isdefined(_new_node_obj, :node_type) && _new_node_obj.node_type === :sigil
+                _is_singleton = true
+            end
+        end
 
         if _is_singleton
             try

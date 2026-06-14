@@ -6681,7 +6681,12 @@ function save_specimen_to_file!(filepath::String)::String
                 "hopfield_key"        => string(node.hopfield_key),  # UInt64 -> String for JSON safety
                 # GRUG BUG-010b: Original content frozen at birth. Chatter swaps don't touch these.
                 "original_pattern"        => node.original_pattern,
-                "original_action_packet"  => node.original_action_packet
+                "original_action_packet"  => node.original_action_packet,
+                # GRUG v7.59: node_type serialized as string. :voter -> "voter", :sigil -> "sigil".
+                # Sigil nodes are NOCHAT (ineligible for idle chatter) and singleton (never
+                # placed in growth groups). Persisting this field ensures save/load round-trips
+                # preserve the sigil / voter distinction without relying on drop_table heuristics.
+                "node_type"           => String(node.node_type)
             )
             push!(node_list, nd)
         end
@@ -7934,7 +7939,7 @@ function load_specimen_from_file!(filepath::String)::String
                         "coherence_config",
                         "autogrowth_evidence", "autogrowth_co_occur",
                         "autolink_evidence",
-                        "flashcards", "curiosity"])
+                        "flashcards", "curiosity", "_comments"])
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -8399,7 +8404,15 @@ function load_specimen_from_file!(filepath::String)::String
                         # GRUG BUG-010b: Original content for inhibition rules.
                         # If missing from specimen (old format), fall back to current pattern/action_packet.
                         String(get(nd, "original_pattern", String(nd["pattern"]))),
-                        String(get(nd, "original_action_packet", String(nd["action_packet"])))
+                        String(get(nd, "original_action_packet", String(nd["action_packet"]))),
+                        # GRUG v7.59: node_type — :voter (default) or :sigil (NOCHAT, singleton).
+                        # Sigil nodes are ineligible for idle chatter and never placed in growth
+                        # groups. Their patterns are syntactic grammars, not semantic content.
+                        # People don't dream in procedures. Relational triples can optionally
+                        # USE sigils, making them dynamic rather than static — easy to forget
+                        # when authoring specimens. Legacy specimens without this field default
+                        # to :voter, which is backward-compatible.
+                        Symbol(get(nd, "node_type", "voter"))
                     )
                     NODE_MAP[node.id] = node
                     n_nodes += 1
@@ -9737,6 +9750,58 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  CoherenceField config: FAILED to load (defaults will apply)")
     end
 
+    # ══════════════════════════════════════════════════════════════════════════════
+    # PHASE 4.5: ENSURE SIGIL SEED NODES EXIST
+    # GRUG v7.59: All sigil seed nodes are created with node_type=:sigil, which
+    # makes them NOCHAT (ineligible for idle chatter) and singleton (never placed
+    # in growth groups). Their patterns are syntactic grammars (e.g. "&n &op &n"),
+    # not semantic content — ChatterMode must not remix their deterministic
+    # execution chains. People don't dream in procedures.
+    # RELATIONAL TRIPLES REMINDER: Relational triples can optionally USE sigils,
+    # making them dynamic rather than static. A required_relations entry like
+    # "&n is_greater_than &n" evaluates at match time with sigil-bound values —
+    # NOT a fixed string comparison. This is easy to forget when authoring
+    # specimens. Comments about this appear throughout the codebase as reminders.
+    # ══════════════════════════════════════════════════════════════════════════════
+    begin
+        local math_ids  = list_sigil_node_ids(:math)
+        local mp_ids    = list_sigil_node_ids(:multipart)
+        if isempty(math_ids)
+            math_ctx = Dict{String, Any}(
+                "system_prompt" => "Arithmetic reasoning voice",
+                "sigil_kind"    => "math",
+            )
+            create_sigil_node("&n &op &n", "calculate^4 | reason^2 | analyze^1", math_ctx, String[]; kind = :math)
+            create_sigil_node("&n &op &n &op &n", "calculate^4 | reason^2 | ponder^1", math_ctx, String[]; kind = :math)
+            println("  🔢 @sigil:math seed nodes created (specimen had none)")
+        else
+            println("  🔢 @sigil:math nodes already present ($(length(math_ids))), skipping seed")
+        end
+        if isempty(mp_ids)
+            multipart_ctx = Dict{String, Any}(
+                "system_prompt" => "Multi-clause reasoning voice",
+                "sigil_kind"    => "multipart",
+            )
+            create_sigil_node("&conj", "explain^4 | describe^2 | elaborate^1", multipart_ctx, String[]; kind = :multipart)
+            println("  🔗 @sigil:multipart seed node created (specimen had none)")
+        else
+            println("  🔗 @sigil:multipart nodes already present ($(length(mp_ids))), skipping seed")
+        end
+        # GRUG v7.34: Also ensure :doaction sigil seed nodes exist.
+        local da_ids = list_sigil_node_ids(:doaction)
+        if isempty(da_ids)
+            doaction_ctx = Dict{String, Any}(
+                "system_prompt" => "Action execution voice - verb-driven action scripting",
+                "sigil_kind"    => "doaction",
+            )
+            create_sigil_node("&doAction &word &n", "say^4 | repeat^3 | count^2 | tell^1", doaction_ctx, String[]; kind = :doaction)
+            create_sigil_node("&doAction &rest", "check^4 | tell^3 | compute^2 | resolve^1", doaction_ctx, String[]; kind = :doaction)
+            println("  ⚡ @sigil:doaction seed nodes created (specimen had none)")
+        else
+            println("  ⚡ @sigil:doaction nodes already present ($(length(da_ids))), skipping seed")
+        end
+    end
+
     # PHASE 5: BUILD SUMMARY SCROLL
     # ══════════════════════════════════════════════════════════════════════
 
@@ -9918,6 +9983,13 @@ STOCHASTIC LEVER MODEL:
     No floaters — every new node connects to the web.
   - For mature specimens, 50/50 Chatter or Phagy follows after mitosis check.
   - For small specimens (< 1000 nodes), mitosis is the ONLY idle action.
+
+GRUG v7.59: Sigil nodes (node_type==:sigil) are NOCHAT (ineligible for idle
+chatter) and singleton (never placed in growth groups). Their patterns are
+syntactic grammars, not semantic content. Chatter must not remix procedural
+votes. People don't dream in procedures. The NOCHAT exclusion is enforced in
+ChatterMode's node categorization loop. The singleton rejection is enforced in
+register_group! and add_to_group! in engine.jl.
 """
 function maybe_run_idle()
     # GRUG: Don't start if chatter is already running (single-threaded loop guard)
@@ -9932,8 +10004,9 @@ function maybe_run_idle()
 
     try  # GRUG: finally block guarantees _IDLE_ACTIVE clears on every exit path
     # GRUG: Count alive non-image nodes for population gate.
+    # GRUG v7.59: Sigil nodes (NOCHAT) don't count toward chatter population.
     alive_count = lock(NODE_LOCK) do
-        count(n -> !n.is_grave && !n.is_image_node, values(NODE_MAP))
+        count(n -> !n.is_grave && !n.is_image_node && !is_nochat(n), values(NODE_MAP))
     end
 
     # GRUG: Count all alive nodes (including image) for mitosis gate.

@@ -1106,6 +1106,22 @@ mutable struct Node
     # frozen at node creation and never updated by chatter.
     original_pattern::String             # GRUG: Pattern at birth. Chatter never touches this.
     original_action_packet::String       # GRUG: Action packet at birth. Chatter never touches this.
+
+    # GRUG v7.59: Node type discriminator. :voter = regular voter node (grows in groups,
+    # eligible for idle chatter, votes remixed by ChatterVoteSwap). :sigil = procedural/
+    # sigil-using node (NOCHAT — ineligible for idle chatter, always singleton, never
+    # placed in growth groups). Sigil nodes carry syntactic grammars (e.g. "&n &op &n")
+    # whose patterns are NOT semantic — they are deterministic execution chains. Chatter
+    # must not remix procedural votes any more than dreams remix motor procedures.
+    # Biology: basal ganglia/cerebellum (procedural) do not participate in hippocampal
+    # replay (declarative/episodic). People don't dream in procedures.
+    #
+    # IMPORTANT: Relational triples can optionally USE sigils, making them dynamic rather
+    # than static. A required_relations entry like "&n is_greater_than &n" means the
+    # relation is evaluated at match time with the sigil-bound values — not a fixed string
+    # comparison. This is easy to forget when authoring specimens. Comments about this
+    # appear throughout the codebase as reminders.
+    node_type::Symbol                 # GRUG: :voter (default) or :sigil (NOCHAT, singleton)
 end
 
 struct Vote
@@ -2057,15 +2073,101 @@ function next_group_id()::String
     return "group_$n"
 end
 
+# ── GRUG v7.59: Sigil node helper functions ──────────────────────────────────────
+# These predicates identify sigil nodes by their node_type field. Sigil nodes
+# carry syntactic grammars (e.g. "&n &op &n") whose patterns are NOT semantic
+# content — they are deterministic execution chains. Chatter must not remix
+# procedural votes. Biology: people don't dream in procedures.
+#
+# Relational triples can optionally USE sigils, making them dynamic rather than
+# static. A required_relations entry like "&n is_greater_than &n" means the
+# relation evaluates at match time with sigil-bound values — not a fixed string
+# comparison. Easy to forget when authoring specimens.
+
+const SIGIL_TAG_PREFIX = "@sigil:"
+
+"""
+    node_sigil_kind(node) -> Symbol
+
+Inspect `node.drop_table` for a "@sigil:<kind>" tag and return the kind as
+a Symbol (e.g. :math, :multipart). Returns :none if no sigil tag is found.
+If multiple sigil tags are present (rare; would be a specimen authoring
+mistake), returns the first one in drop_table order.
+"""
+function node_sigil_kind(node::Node)::Symbol
+    for entry in node.drop_table
+        if startswith(entry, SIGIL_TAG_PREFIX)
+            kind_str = entry[length(SIGIL_TAG_PREFIX)+1:end]
+            return isempty(kind_str) ? :none : Symbol(kind_str)
+        end
+    end
+    return :none
+end
+
+"""
+    has_sigil_tag(node) -> Bool
+
+Convenience predicate: true when the node carries any "@sigil:*" tag.
+"""
+has_sigil_tag(node::Node)::Bool = node_sigil_kind(node) !== :none
+
+"""
+    is_nochat(node) -> Bool
+
+GRUG v7.59: Returns true when the node is ineligible for idle chatter.
+Sigil nodes (node_type == :sigil) are always NOCHAT because their patterns
+are syntactic grammars (e.g. "&n &op &n"), not semantic content. ChatterVoteSwap
+must not remix their deterministic execution chains. Biology: people don't dream
+in procedures — the basal ganglia/cerebellum (procedural) do not participate in
+hippocampal replay (declarative/episodic).
+
+Relational triples can optionally USE sigils, making them dynamic rather than static.
+A required_relations entry like "&n is_greater_than &n" means the relation evaluates
+at match time with sigil-bound values — not a fixed string comparison. This is easy
+to forget when authoring specimens.
+"""
+is_nochat(node::Node)::Bool = node.node_type === :sigil
+
+"""
+    is_singleton(node) -> Bool
+
+GRUG v7.59: Returns true when the node must never be placed in growth groups.
+Sigil nodes are always singleton — they carry procedural execution chains that
+must not be contaminated by group dynamics (partner cap, unlinkable mechanics,
+chatter windows). GroupRegistry.register_node_in_group! rejects singleton nodes.
+
+Relational triples can optionally USE sigils, making them dynamic rather than static.
+A required_relations entry using sigils evaluates at match time with the sigil-bound
+values, not as a fixed string. Easy to forget when authoring specimens.
+"""
+is_singleton(node::Node)::Bool = node.node_type === :sigil
+
+# ── End v7.59 helpers ────────────────────────────────────────────────────────────
+
 """
     register_group!(seed_node::Node) -> NodeGroup
 
 GRUG: Create a fresh group seeded by a single node. The node becomes the
-group's centroid \u2014 future joiners are evaluated against this pattern. Idempotent
+group's centroid — future joiners are evaluated against this pattern. Idempotent
 when the seed already belongs to a group: returns the existing group.
 NO SILENT FAILURES: errors if seed_node has empty pattern.
+
+GRUG v7.59: Singleton (sigil) nodes are REJECTED — they must never be placed
+in growth groups. Their patterns are syntactic grammars, not semantic content.
+People don't dream in procedures.
 """
 function register_group!(seed_node::Node)::NodeGroup
+    # GRUG v7.59: SINGLETON REJECTION — sigil nodes NEVER join groups.
+    # They are NOCHAT (ineligible for idle chatter) and singleton (no group
+    # partners). Their patterns are syntactic grammars, not semantic content.
+    # Group dynamics (partner caps, unlinkable mechanics, chatter windows)
+    # must not contaminate procedural execution. People don't dream in procedures.
+    if is_singleton(seed_node)
+        error("!!! FATAL: register_group! rejected singleton node $(seed_node.id) " *
+              "(sigil node, node_type==:sigil); singleton nodes are never placed " *
+              "in groups — they are NOCHAT and ineligible for idle chatter. " *
+              "People don't dream in procedures. !!!")
+    end
     if strip(seed_node.pattern) == ""
         error("!!! FATAL: register_group! seed node $(seed_node.id) has empty pattern! !!!")
     end
@@ -2099,6 +2201,14 @@ members are present (NOCHAT_GRADUATE_MIN_NEIGHBORS = 4).
 function add_to_group!(group::NodeGroup, node_id::String)::Bool
     if isempty(strip(node_id))
         error("!!! FATAL: add_to_group! got empty node_id! !!!")
+    end
+    # GRUG v7.59: Singleton (sigil) nodes are REJECTED from group membership.
+    # They are NOCHAT (ineligible for idle chatter) and singleton (no group
+    # partners). Their patterns are syntactic grammars, not semantic content.
+    # People don't dream in procedures.
+    _joining = get(NODE_MAP, node_id, nothing)
+    if !isnothing(_joining) && is_singleton(_joining)
+        return false  # silent reject — sigil nodes never join groups
     end
     return lock(GROUP_LOCK) do
         if node_id in group.members
@@ -4095,7 +4205,8 @@ function create_node(
     drop_table::Vector{String};
     is_image_node::Bool  = false,
     is_antimatch_node::Bool = false,
-    initial_strength::Float64 = 1.0
+    initial_strength::Float64 = 1.0,
+    node_type::Symbol = :voter  # GRUG v7.59: :voter (default) or :sigil (NOCHAT, singleton)
 )::String
     if strip(pattern) == ""
         error("!!! FATAL: Grug cannot grow node with empty pattern! !!!")
@@ -4172,6 +4283,7 @@ function create_node(
         0.0,                # strength_delta_this_cycle
         pattern,             # original_pattern (BUG-010b: frozen at birth, chatter never touches)
         action_packet,       # original_action_packet (BUG-010b: frozen at birth, chatter never touches)
+        node_type,           # GRUG v7.59: :voter or :sigil (NOCHAT, singleton)
     )
 
     lock(NODE_LOCK) do
@@ -4220,7 +4332,11 @@ function create_node(
     #   - If we did not latch (small map, no candidates, or partner full):
     #     seed a new group with this node as the founder.
     # Image nodes and anti-match nodes do not chatter — skip groups.
-    if !is_image_node && !is_antimatch_node
+    # GRUG v7.59: Sigil nodes are also excluded — they are singleton (never
+    # in groups) and NOCHAT (ineligible for idle chatter). Their patterns
+    # are syntactic grammars, not semantic content. People don't dream in
+    # procedures.
+    if !is_image_node && !is_antimatch_node && node_type !== :sigil
         try
             if !isnothing(latched_to_id)
                 partner_grp = group_for(latched_to_id)
@@ -4249,6 +4365,67 @@ function create_node(
     end
 
     return id
+end
+
+# ==============================================================================
+# GRUG v7.59: SIGIL NODE CREATION HELPERS
+# ==============================================================================
+
+"""
+    create_sigil_node(pattern, action_packet, data, drop_table; kind, ...) -> String
+
+GRUG v7.59: Convenience wrapper around `create_node` that creates a sigil node
+with the appropriate @sigil:kind tag in the drop_table and node_type=:sigil.
+Sigil nodes are NOCHAT (ineligible for idle chatter) and singleton (never placed
+in growth groups). Their patterns are syntactic grammars (e.g. "&n &op &n"),
+not semantic content. People don't dream in procedures.
+
+Relational triples can optionally USE sigils, making them dynamic rather than
+static. A required_relations entry like "&n is_greater_than &n" means the
+relation evaluates at match time with sigil-bound values — not a fixed string
+comparison. Easy to forget when authoring specimens.
+"""
+function create_sigil_node(
+    pattern::String,
+    action_packet::String,
+    data::Dict,
+    drop_table::Vector{String};
+    kind::Symbol = :none,
+    initial_strength::Float64 = 1.0,
+)::String
+    # GRUG: Inject @sigil:kind tag into drop_table
+    tag = "$(SIGIL_TAG_PREFIX)$(kind)"
+    dt_with_tag = vcat(drop_table, [tag])
+    # GRUG: Also set is_unlinkable — sigil nodes never get neighbors
+    data_with_sigil = copy(data)
+    data_with_sigil["is_unlinkable"] = true
+    data_with_sigil["is_nochat"] = true
+    data_with_sigil["is_singleton"] = true
+    data_with_sigil["neighbor_ids"] = String[]
+    return create_node(
+        pattern, action_packet, data_with_sigil, dt_with_tag;
+        initial_strength = initial_strength,
+        node_type = :sigil,
+    )
+end
+
+"""
+    list_sigil_node_ids(kind=:any) -> Vector{String}
+
+GRUG v7.59: Return IDs of all non-grave nodes that carry the specified sigil
+tag kind. Pass kind=:any to list all sigil nodes regardless of kind.
+"""
+function list_sigil_node_ids(kind::Symbol = :any)::Vector{String}
+    result = String[]
+    for (id, node) in NODE_MAP
+        node.is_grave && continue
+        nk = node_sigil_kind(node)
+        nk === :none && continue
+        if kind === :any || nk === kind
+            push!(result, id)
+        end
+    end
+    return result
 end
 
 # ==============================================================================

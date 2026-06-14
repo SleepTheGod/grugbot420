@@ -941,6 +941,12 @@ function start_chatter_session!(
                     node.is_grave && continue
                     node.is_image_node && continue
                     node.is_antimatch_node && continue  # GRUG v7.39: antimatch nodes drain confidence, don't participate in steal+remix
+                    # GRUG v7.59: Sigil nodes are NOCHAT — their patterns are syntactic
+                    # grammars (e.g. "&n &op &n"), not semantic content. Chatter must not
+                    # remix procedural votes. People don't dream in procedures. Relational
+                    # triples can optionally USE sigils, making them dynamic rather than
+                    # static — easy to forget when authoring specimens.
+                    (isdefined(node, :node_type) && node.node_type === :sigil) && continue
 
                     # GRUG: Cooldown check — skip nodes still on cooldown
                     if cooldown_query(mid) > 0.0
