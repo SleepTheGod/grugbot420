@@ -533,4 +533,19 @@ export get_strain_energy, is_hippocampal_warrant_active
 export STRAIN_NOVELTY_WEIGHT, STRAIN_QUALITY_WEIGHT, STRAIN_THRESHOLD, STRAIN_FLOOR, STRAIN_CEILING
 export MLP_TRANSFORM_FUZZY, MLP_TRANSFORM_SOLID
 
+# GRUG v8.20: CLI entry-point + specimen lifecycle exports.
+# These live in Main.jl (included into this module) but were never exported,
+# forcing callers to use `import .GrugBot420: run_cli, ...` with explicit
+# naming. Now boot.jl (and end users) can just do `using .GrugBot420`
+# and call run_cli(), process_mission(), etc. directly.
+export run_cli, process_mission
+export load_specimen_from_file!, save_specimen_to_file!
+export _LAST_VOICE_OUTPUT, _LAST_VOICE_OUTPUT_LOCK
+export _LAST_FIRED_NODE, _LAST_PRIMARY_ACTION, _LAST_CONFIDENCE
+export _LAST_SPECIMEN_PATH, _LAST_SPECIMEN_PATH_LOCK
+export LAST_VOTER_IDS, LAST_VOTER_LOCK
+export NODE_MAP, NODE_LOCK
+export MESSAGE_HISTORY, MESSAGE_HISTORY_LOCK
+export HELP_MSG
+
 end # module GrugBot420
