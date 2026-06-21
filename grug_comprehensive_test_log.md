@@ -1,576 +1,758 @@
-# Grugbot Comprehensive Test Log
+# GrugBot420 Comprehensive Test Log v8.18
 
-Generated from internal state (`_LAST_AIML_OUTPUT`, `NODE_MAP`, `_LAST_FIRED_NODE`, `_LAST_CONFIDENCE`, `LAST_VOTER_IDS`).
-No stdout scraping. All telemetry from program internals.
+**Date:** 2026-06-21 13:21:48
 
-**Specimen:** `grug_with_actions.specimen` (saved after boot with action sigil nodes)
-**Action callback nodes in memory:** 9
+**Specimen:** grug_comprehensive_full.specimen
 
-## Action Sigil Node Inventory
+**Chatter:** DISABLED
 
-| Node ID | Pattern | Action Callback | Drop Table |
-|---|---|---|---|
-| `node_sigil_9` | `half of &n` | `half` | `["@sigil:action"]` |
-| `node_sigil_13` | `fibonacci of &n` | `fibonacci` | `["@sigil:action"]` |
-| `node_sigil_8` | `double &n` | `double` | `["@sigil:action"]` |
-| `node_sigil_7` | `square root of &n` | `square_root` | `["@sigil:action"]` |
-| `node_sigil_5` | `factorial of &n` | `factorial` | `["@sigil:action"]` |
-| `node_sigil_12` | `reciprocal of &n` | `reciprocal` | `["@sigil:action"]` |
-| `node_sigil_6` | `square of &n` | `square` | `["@sigil:action"]` |
-| `node_sigil_11` | `absolute value of &n` | `absolute` | `["@sigil:action"]` |
-| `node_sigil_10` | `cube of &n` | `cube` | `["@sigil:action"]` |
+**Capture method:** _LAST_VOICE_OUTPUT (application internals)
 
-## Category 1: Regular Prompts
+**Engine changes:** v8.18 — thesaurus variation restored for ALL voice output; new sigils &concept, &query, &definition, &action registered
 
-### Regular-1: What is fire
+---
 
-**Input:** `what is fire`
 
-**Output:** Here is the picture: Oxygen combines with fuel and releases energy as heat and light. Grug learned to tame fire long ago. Fire is both creator and destroyer. It warms the cave but devours the forest. Grug speak of fire. It connects like this: fire is oxidation.
+# Sigil Registry Verification (v8.18)
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_113` |
-| Confidence | 0.867 |
-| Primary Action | `explain` |
-| Voter Count | 2 |
-| Voter IDs | `node_113, node_114` |
-| Node Info | pattern=fire | signal=[0.2630790683754012] | strength=6.0 | node_type=voter |
+---
 
-### Regular-2: Tell me about water
+- **&n:** class=lambda, type=number, promote=true
+- **&word:** class=lambda, type=word, promote=false
+- **&rest:** class=lambda, type=slurp, promote=false
+- **&noun:** class=macro, type=nothing, promote=false
+- **&op:** class=lambda, type=op, promote=true
+- **&concept:** class=lambda, type=concept, promote=true
+- **&query:** class=lambda, type=query, promote=true
+- **&definition:** class=lambda, type=definition, promote=true
+- **&action:** class=lambda, type=action, promote=true
 
-**Input:** `tell me about water`
+**Sigil promotion examples:**
 
-**Output:** Thinking it through: Two hydrogen and one oxygen holding hands. Water flows and adapts. It takes the shape of any container. Water is patient. Water always finds a way through. Grug think on water. The link is clear: water sustains life.
+- `what is the golden ratio` → `&query &definition the &concept &concept` (&query=what, &definition=is, &concept=golden, &concept=ratio)
+- `explain fermentation` → `&action &concept` (&action=explain, &concept=fermentation)
+- `2 + 3` → `&n &op &n` (&n=2, &op=+, &n=3)
+- `what is empathy` → `&query &definition &concept` (&query=what, &definition=is, &concept=empathy)
+- `describe quasars` → `&action &concept` (&action=describe, &concept=quasars)
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_116` |
-| Confidence | 0.866 |
-| Primary Action | `reason` |
-| Voter Count | 1 |
-| Voter IDs | `node_116` |
-| Node Info | pattern=water | signal=[0.4176046721471989] | strength=6.0 | node_type=voter |
+---
 
-### Regular-3: How does breathing work
+## Turn 1 — greeting
 
-**Input:** `how does breathing work`
+**User:** hello
 
-**Output:** ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 I'm drawing a blank on "how does breathing work". What is it?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.8)
+> Hello — here is what matters: Grug welcome friend to lair. Grug smile big. here is the thing, you form safe here using Grug.
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `` |
-| Confidence | 0.0 |
-| Primary Action | `ask` |
-| Voter Count | 1 |
-| Voter IDs | `node_116` |
+---
 
-### Regular-4: What is hunting
+## Turn 2 — greeting
 
-**Input:** `what is hunting`
+**User:** hey grug
 
-**Output:** ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 "what is hunting" — nothing fires. What should I know about this?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.8)
+> Hello — here is what matters: You form safe here using Grug. Grug smile huge. Grug welcome friend to cave.
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `` |
-| Confidence | 0.0 |
-| Primary Action | `ask` |
-| Voter Count | 1 |
-| Voter IDs | `node_116` |
+---
 
-## Category 2: Multipart Prompts
+## Turn 3 — greeting
 
-### Multipart-1: What is fire and how does it keep you warm
+**User:** good morning
 
-**Input:** `what is fire and how does it keep you warm`
+> Hello — here is what matters: Grug welcome friend to cave. here is the thing, grug smile huge. You form safe here using Grug.
 
-**Output:** Here is the picture: Oxygen combines with fuel and releases energy as heat and light. Grug learned to tame fire long ago. Fire is both creator and destroyer. It warms the cave but devours the forest. Grug speak of fire.
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_113` |
-| Confidence | 1.0 |
-| Primary Action | `explain` |
-| Voter Count | 3 |
-| Voter IDs | `node_113, node_17, node_254` |
-| Node Info | pattern=fire | signal=[0.2630790683754012] | strength=6.0 | node_type=voter |
+## Turn 4 — knowledge
 
-### Multipart-2: How does water flow and where does it go
+**User:** what is fire
 
-**Input:** `how does water flow and where does it go`
+> Here is the picture: It warms the cave but devours the woods. Heat is both creator and destroyer. Grug learned to tame fire long ago. here is the thing, oxygen blends with fuel also releases energy as fire and sun. Grug speak of fire.
 
-**Output:** Here is the picture: They carry water from mountains to sea. Rivers carve canyons over millions of years. They are patient sculptors. Rivers never stop moving toward the sea. Grug speak of rivers.
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_144` |
-| Confidence | 0.866 |
-| Primary Action | `describe` |
-| Voter Count | 3 |
-| Voter IDs | `node_144, node_116, node_145` |
-| Node Info | pattern=flow | signal=[0.31609750402231956] | strength=6.0 | node_type=voter |
+## Turn 5 — knowledge
 
-### Multipart-3: What is sleep and why is it important
+**User:** tell me about water
 
-**Input:** `what is sleep and why is it important`
+> Thinking it through: Two hydrogen and one oxygen holding paws. Water flows also adapts. It takes the shape of any container. the way of it is, liquid is patient. Water ever finds a way through. Grug think on rain.
 
-**Output:** ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 The cave echoes on "what is sleep and why is it important" and I can't resolve it. Can you tell me what you mean?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.799)
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `` |
-| Confidence | 0.0 |
-| Primary Action | `ask` |
-| Voter Count | 3 |
-| Voter IDs | `node_144, node_116, node_145` |
+## Turn 6 — knowledge
 
-## Category 3: Math / Action Sigil Prompts
+**User:** what is earth
 
-### Math-1: Factorial of 5
+> Here is the picture: Without earth there is not standing. here is the thing, world is patient and holds everything up. Soil is alive with small creatures breaking down the aged to feed the new. Grug speak of earth.
 
-**Input:** `factorial of 5`
+---
 
-**Output:** Thinking it through: factorial of 5 is 120.
+## Turn 7 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_5` |
-| Confidence | 1.0 |
-| Primary Action | `reason` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_5, node_sigil_12, node_sigil_8, node_sigil_0, node_sigil_10 …` |
-| Node Info | pattern=factorial of &n | signal=[0.2984842570344101, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=factorial | drop_table=["@sigil:action"] |
+**User:** what is sky
 
-### Math-2: Factorial of 7
+> Thinking it through: Sky is blue since sunlight disperses off air molecules. here is the thing, blue light scatters most as it waves short and fast. This is Rayleigh scattering. Grug think on sky.
 
-**Input:** `factorial of 7`
+---
 
-**Output:** Thinking it through: factorial of 7 is 5040.
+## Turn 8 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_5` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_5, node_sigil_12, node_sigil_8, node_sigil_0, node_sigil_10 …` |
-| Node Info | pattern=factorial of &n | signal=[0.2984842570344101, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=factorial | drop_table=["@sigil:action"] |
+**User:** what is love
 
-### Math-3: Square of 9
+> To acknowledge what matters here: Grug feels love like fire in the heart but gentler. Love makes the cave a home. It is care and faith also wanting solid as another. Love is the warmth that binds people together.
 
-**Input:** `square of 9`
+---
 
-**Output:** Thinking it through: 9 squared is 81.
+## Turn 9 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_6` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_6, node_sigil_7, node_sigil_12, node_sigil_8, node_sigil_0 …` |
-| Node Info | pattern=square of &n | signal=[0.7229739000769797, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=square | drop_table=["@sigil:action"] |
+**User:** what is fear
 
-### Math-4: Cube of 3
+> A caution: basically, grug must learn which fears to heed and which to face. But fear may also trap Grug when there is not real danger. Fear says dash or cover or fight. Grug warn of fear. The link is clear: fear warns of risk.
 
-**Input:** `cube of 3`
+---
 
-**Output:** Thinking it through: 3 cubed is 27.
+## Turn 10 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_10` |
-| Confidence | 1.0 |
-| Primary Action | `analyze` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_10, node_sigil_12, node_sigil_8, node_sigil_0, node_sigil_13 …` |
-| Node Info | pattern=cube of &n | signal=[0.7427491912364599, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=cube | drop_table=["@sigil:action"] |
+**User:** what is courage
 
-### Math-5: Double 7
+> To acknowledge what matters here: Courage is being worried and doing the just thing anyway. Bold does not mean unafraid. Bold means afraid but moving send. Grug respects courage deeply.
 
-**Input:** `double 7`
+---
 
-**Output:** Thinking it through: double of 7 is 14.
+## Turn 11 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_8` |
-| Confidence | 1.0 |
-| Primary Action | `reason` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_8, node_sigil_9, node_sigil_13, node_sigil_0, node_sigil_5 …` |
-| Node Info | pattern=double &n | signal=[0.5376916418024256, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=double | drop_table=["@sigil:action"] |
+**User:** what is river
 
-### Math-6: Half of 12
+> Thinking it through: They carry rain from mountains to sea. Rivers carve canyons over millions of years. They form patient sculptors. Rivers never quit moving toward the sea.
 
-**Input:** `half of 12`
+---
 
-**Output:** Thinking it through: half of 12 is 6.
+## Turn 12 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_9` |
-| Confidence | 1.0 |
-| Primary Action | `reason` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_9, node_sigil_12, node_sigil_8, node_sigil_0, node_sigil_5 …` |
-| Node Info | pattern=half of &n | signal=[0.6846628745796876, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=half | drop_table=["@sigil:action"] |
+**User:** what is forest
 
-### Math-7: Fibonacci of 10
+> Here is the picture: put simply, every tree is connected underground through roots also fungi networks. The forest floor is a city of insects and fungi. Trees settle in carbon dioxide also breathe out o2. Grug speak of forests.
 
-**Input:** `fibonacci of 10`
+---
 
-**Output:** Thinking it through: fibonacci of 10 is 55.
+## Turn 13 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_13` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_13, node_sigil_12, node_sigil_8, node_sigil_0, node_sigil_5 …` |
-| Node Info | pattern=fibonacci of &n | signal=[0.6371223597820456, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=fibonacci | drop_table=["@sigil:action"] |
+**User:** why does fire burn
 
-### Math-8: Absolute value of -15
+> Here is the picture: Oxygen unites with fuel and emits might as fire and star. the way of it is, grug learned to tame fire long ago. Fire is both creator and destroyer. It warms the cave but devours the forest. Grug speak of heat.
 
-**Input:** `absolute value of -15`
+---
 
-**Output:** Thinking it through: absolute value of 15 is 15.
+## Turn 14 — knowledge
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_11` |
-| Confidence | 0.975 |
-| Primary Action | `reason` |
-| Voter Count | 4 |
-| Voter IDs | `node_sigil_11, node_sigil_0, node_sigil_1, node_sigil_8` |
-| Node Info | pattern=absolute value of &n | signal=[0.24944620800052278, 0.7793647294947578, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=absolute | drop_table=["@sigil:action"] |
+**User:** how does water flow
 
-### Math-9: Reciprocal of 4
+> Here is the picture: Two hydrogen and one oxygen holding paws. Water flows also adapts. It takes the shape of any container. Water is patient. in grug's words, rain forever finds a path through.
 
-**Input:** `reciprocal of 4`
+---
 
-**Output:** Thinking it through: reciprocal of 4 is 0.25.
+## Turn 15 — science
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_12` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_12, node_sigil_0, node_sigil_13, node_sigil_9, node_sigil_10 …` |
-| Node Info | pattern=reciprocal of &n | signal=[0.3578689863377465, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=reciprocal | drop_table=["@sigil:action"] |
+**User:** what is gravity
 
-### Math-10: Square root of 16
+> Here is the picture: This is the invisible grant that goes the world. Big things pull harder. Gravity pulls everything towards everything else. Grug speak of gravity.
 
-**Input:** `square root of 16`
+---
 
-**Output:** Thinking it through: square root of 16 is 4.
+## Turn 16 — science
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_7` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 11 |
-| Voter IDs | `node_sigil_7, node_sigil_6, node_sigil_12, node_sigil_8, node_sigil_0 …` |
-| Node Info | pattern=square root of &n | signal=[0.7229739000769797, 0.06189261341667231, 0.02814897713460073, 0.4537671081806071] | strength=9.0 | node_type=sigil | action_callback=square_root | drop_table=["@sigil:action"] |
+**User:** what is photosynthesis
 
-### Math-Arithmetic-11: 3 + 5
+> Here is the picture: Plants are the bridge between sun and life. Chlorophyll catches star power also turns water and carbon dioxide into sugar also oxygen. put simply, that is photosynthesis. Grug speak of photosynthesis.
 
-**Input:** `3 + 5`
+---
 
-**Output:** Thinking it through: 3 plus 5 equals 8.
+## Turn 17 — science
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_0` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_0, node_sigil_1, node_sigil_8, node_sigil_12, node_sigil_6 …` |
-| Node Info | pattern=&n &op &n | signal=[0.4537671081806071, 0.501520212580718, 0.4537671081806071] | strength=9.0 | node_type=sigil | drop_table=["@sigil:math"] |
+**User:** what is DNA
 
-### Math-Arithmetic-12: 12 * 4
+> Here is the picture: basically, it is created like a twisted ladder called a double helix. The rungs of the ladder form letters that spell out how to craft you. Grug speak of dna. The relation: DNA encodes genetic information.
 
-**Input:** `12 * 4`
+---
 
-**Output:** Thinking it through: 12 times 4 equals 48.
+## Turn 18 — science
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_sigil_0` |
-| Confidence | 1.0 |
-| Primary Action | `calculate` |
-| Voter Count | 12 |
-| Voter IDs | `node_sigil_0, node_sigil_1, node_sigil_8, node_sigil_12, node_sigil_6 …` |
-| Node Info | pattern=&n &op &n | signal=[0.4537671081806071, 0.501520212580718, 0.4537671081806071] | strength=9.0 | node_type=sigil | drop_table=["@sigil:math"] |
+**User:** why is the sky blue
 
-## Category 4: Question / Answer
+> Here is the picture: put simply, sky is blue because sunlight diffuses off air molecules. Blue sun scatters most since it waves short and fast. This is Rayleigh scattering. Grug speak of sky. Since The bridge: sky appears blue from scattering.
 
-### QA-1: What is gravity
+---
 
-**Input:** `what is gravity`
+## Turn 19 — science
 
-**Output:** Thinking it through: Gravity pulls everything toward everything else. Big things pull harder. This is the invisible hand that moves the world. Grug think on gravity.
+**User:** what is thermodynamics
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_58` |
-| Confidence | 1.0 |
-| Primary Action | `reason` |
-| Voter Count | 1 |
-| Voter IDs | `node_58` |
-| Node Info | pattern=gravity | node_type=voter |
+> Here is the picture: These are the laws even Grug cannot ruin. Disorder grows unless you push energy in to clash it. basically, disorder always increases. That is the way of objects. Grug speak of thermodynamics.
 
-### QA-2: How does photosynthesis work
+---
 
-**Input:** `how does photosynthesis work`
+## Turn 20 — science
 
-**Output:** Here is the picture: That is photosynthesis. Chlorophyll catches light energy and turns water and carbon dioxide into sugar and oxygen. Plants are the bridge between sun and life. Grug speak of photosynthesis. and  The bridge: photosynthesis converts light_to_sugar.
+**User:** what is evolution
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_67` |
-| Confidence | 0.867 |
-| Primary Action | `explain` |
-| Voter Count | 1 |
-| Voter IDs | `node_67` |
-| Node Info | pattern=photosynthesis | node_type=voter |
+> Here is the picture: The ones that link their environment survive and hold offspring. The ones that act not link fade away. This is natural selection. in grug's words, it is slow but it is relentless. And This ties together: evolution shapes species.
 
-### QA-3: What is DNA
+---
 
-**Input:** `what is DNA`
+## Turn 21 — science
 
-**Output:** Here is the picture: It is shaped like a twisted ladder called a double helix. The rungs of the ladder are letters that spell out how to build you. Grug speak of dna.
+**User:** what is an atom
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_70` |
-| Confidence | 1.0 |
-| Primary Action | `explain` |
-| Voter Count | 1 |
-| Voter IDs | `node_70` |
-| Node Info | pattern=DNA | node_type=voter |
+> Here is the picture: atom builds matter, so They are the invisible bricks of the world. here is the thing, everything Grug may touch is shaped from atoms. Atoms form made of protons and neutrons in the center also electrons orbiting around. Grug speak of atom.
 
-### QA-4: Why is the sky blue
+---
 
-**Input:** `why is the sky blue`
+## Turn 22 — math
 
-**Output:** Here is the picture: Sky is blue because sunlight scatters off air molecules. Blue light scatters most because it waves short and fast. This is Rayleigh scattering. Grug speak of sky.
+**User:** factorial of 5
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_62` |
-| Confidence | 0.866 |
-| Primary Action | `explain` |
-| Voter Count | 2 |
-| Voter IDs | `node_62, node_61` |
-| Node Info | pattern=blue | node_type=voter |
+> Thinking it through: reciprocal of 5 is 0.2.
 
-### QA-5: What is consciousness
+---
 
-**Input:** `what is consciousness`
+## Turn 23 — math
 
-**Output:** Thinking it through: What is it like to be Grug? Consciousness is the fire inside that makes experience real. Grug not know where it comes from but Grug knows it burns. Grug think on consciousness.
+**User:** factorial of 7
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_88` |
-| Confidence | 1.0 |
-| Primary Action | `ponder` |
-| Voter Count | 1 |
-| Voter IDs | `node_88` |
-| Node Info | pattern=consciousness | node_type=voter |
+> Thinking it through: reciprocal of 7 is 0.142857.
 
-### QA-6: What is thermodynamics
+---
 
-**Input:** `what is thermodynamics`
+## Turn 24 — math
 
-**Output:** Thinking it through: That is the way of things. Entropy always increases. Disorder grows unless you push energy in to fight it. These are the laws even Grug cannot break. Grug think on thermodynamics.
+**User:** square of 9
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_79` |
-| Confidence | 1.0 |
-| Primary Action | `reason` |
-| Voter Count | 1 |
-| Voter IDs | `node_79` |
-| Node Info | pattern=thermodynamics | node_type=voter |
+> Thinking it through: reciprocal of 9 is 0.111111.
 
-## Category 5: Teach-and-Reask Loop
+---
 
-Tests the full strain → ask → /answer → recall loop.
-Each scenario: (1) ask about unknown topic → grug asks for info, (2) teach with /answer → node created in cave, (3) ask again → grug fires from the new node.
+## Turn 25 — math
 
-### Teach-1A — Ask (before teaching): Breathing
+**User:** cube of 3
 
-**Input:** `how does breathing work`
+> Thinking it through: reciprocal of 3 is 0.333333.
 
-**Output:** 🤔 "how does breathing work" — nothing fires. What should I know about this?
+---
 
-| Telemetry | Value |
-|---|---|
-| Primary Action | `ask` |
-| Confidence | 0.0 |
-| Interpretation | Grug doesn't know — asks for /answer |
+## Turn 26 — math
 
-### Teach-1B — Teach with /answer: Breathing
+**User:** double 7
 
-**Input:** `/answer :explain breathing draws oxygen into the lungs and expels carbon dioxide`
+> Thinking it through: double of 7 is 14.
 
-**Output:** 🧠 Answer [:explain]: id=node_3 pattern='breathing draws oxygen into the lungs and expels carbon dioxide' — node created and strain dampened
+---
 
-| Telemetry | Value |
-|---|---|
-| New Node | `node_3` |
-| Pattern | `breathing draws oxygen into the lungs and expels carbon dioxide` |
-| Answer Mode | `:explain` |
-| Strain Effect | dampened (deficit resolved) |
+## Turn 27 — math
 
-### Teach-1C — Re-ask (after teaching): Breathing
+**User:** half of 12
 
-**Input:** `how does breathing work`
+> Thinking it through: reciprocal of 12 is 0.083333.
 
-**Output:** Here is the picture: breathing draws oxygen into the lungs and expels carbon dioxide.
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_5` |
-| Confidence | 0.41 |
-| Primary Action | `explain` |
-| Interpretation | Grug now knows — fires from taught node |
+## Turn 28 — math
 
-### Teach-2A — Ask (before teaching): Hunting
+**User:** fibonacci of 10
 
-**Input:** `what is hunting`
+> Thinking it through: reciprocal of 10 is 0.1.
 
-**Output:** 🤔 "what is hunting" — nothing fires. What should I know about this?
+---
 
-| Telemetry | Value |
-|---|---|
-| Primary Action | `ask` |
-| Confidence | 0.0 |
-| Interpretation | Grug doesn't know — asks for /answer |
+## Turn 29 — math
 
-### Teach-2B — Teach with /answer: Hunting
+**User:** absolute value of -15
 
-**Input:** `/answer :reason hunting is the pursuit and capture of prey for food and survival`
+> Thinking it through: absolute value of -15 is 15.
 
-**Output:** 🧠 Answer [:reason]: id=node_8 pattern='hunting is the pursuit and capture of prey for food and survival' — node created and strain dampened
+---
 
-| Telemetry | Value |
-|---|---|
-| New Node | `node_8` |
-| Pattern | `hunting is the pursuit and capture of prey for food and survival` |
-| Answer Mode | `:reason` |
-| Strain Effect | dampened (deficit resolved) |
+## Turn 30 — math
 
-### Teach-2C — Re-ask (after teaching): Hunting
+**User:** reciprocal of 4
 
-**Input:** `what is hunting`
+> Thinking it through: reciprocal of 4 is 0.25.
 
-**Output:** Thinking it through: hunting is the pursuit and capture of prey for food and survival.
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_10` |
-| Confidence | 1.0 |
-| Primary Action | `reason` |
-| Interpretation | Grug now knows — fires from taught node |
+## Turn 31 — math
 
-### Teach-3A — Ask (before teaching): Cooking
+**User:** square root of 16
 
-**Input:** `what is cooking`
+> Thinking it through: square root of 16 is 4.
 
-**Output:** 🤔 The cave is dark on "what is cooking". What does that mean to you?
+---
 
-| Telemetry | Value |
-|---|---|
-| Primary Action | `ask` |
-| Confidence | 0.0 |
-| Interpretation | Grug doesn't know — asks for /answer |
+## Turn 32 — math
 
-### Teach-3B — Teach with /answer: Cooking
+**User:** 3 + 5
 
-**Input:** `/answer :explain cooking applies heat to food to make it safe and easier to digest`
+> Thinking it through: 3 plus 5 equals 8.
 
-**Output:** 🧠 Answer [:explain]: id=node_14 pattern='cooking applies heat to food to make it safe and easier to digest' — node created and strain dampened
+---
 
-| Telemetry | Value |
-|---|---|
-| New Node | `node_14` |
-| Pattern | `cooking applies heat to food to make it safe and easier to digest` |
-| Answer Mode | `:explain` |
-| Strain Effect | dampened (deficit resolved) |
+## Turn 33 — math
 
-### Teach-3C — Re-ask (after teaching): Cooking
+**User:** 12 * 4
 
-**Input:** `what is cooking`
+> Thinking it through: 12 times 4 equals 48.
 
-**Output:** Here is the picture: cooking applies heat to food to make it safe and easier to digest.
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_16` |
-| Confidence | 1.0 |
-| Primary Action | `explain` |
-| Interpretation | Grug now knows — fires from taught node |
+## Turn 34 — math
 
-### Teach-4A — Ask (before teaching): Music
+**User:** 15 - 7
 
-**Input:** `what is music`
+> Thinking it through: 15 minus 7 equals 8.
 
-**Output:** 🤔 No structure catches "what is music". Help me out — what are you getting at?
+---
 
-| Telemetry | Value |
-|---|---|
-| Primary Action | `ask` |
-| Confidence | 0.0 |
-| Interpretation | Grug doesn't know — asks for /answer |
+## Turn 35 — math
 
-### Teach-4B — Teach with /answer: Music
+**User:** 20 / 5
 
-**Input:** `/answer :define music is organized sound that expresses emotion and rhythm`
+> Thinking it through: 20 divided by 5 equals 4.
 
-**Output:** 🧠 Answer [:define]: id=node_20 pattern='music is organized sound that expresses emotion and rhythm' — node created and strain dampened
+---
 
-| Telemetry | Value |
-|---|---|
-| New Node | `node_20` |
-| Pattern | `music is organized sound that expresses emotion and rhythm` |
-| Answer Mode | `:define` |
-| Strain Effect | dampened (deficit resolved) |
+## Turn 36 — multipart
 
-### Teach-4C — Re-ask (after teaching): Music
+**User:** what is fire and what is water
 
-**Input:** `what is music`
+> Here is the picture: heat is oxidation — It warms the cave yet devours the forest. Fire is both creator and destroyer. Grug learned to tame heat long ago. O2 combines with fuel and releases energy for heat also sun.
 
-**Output:** Here is the picture: music is organized sound that expresses emotion and rhythm.
+---
 
-| Telemetry | Value |
-|---|---|
-| Fired Node | `node_21` |
-| Confidence | 1.0 |
-| Primary Action | `define` |
-| Interpretation | Grug now knows — fires from taught node |
+## Turn 37 — multipart
 
-## Summary
+**User:** why does fire burn and why does water flow
 
-| Category | Count |
-|---|---|
-| Regular | 4 |
-| Multipart | 3 |
-| Math / Action | 12 |
-| Question / Answer | 6 |
-| Teach-and-Reask | 12 (4 scenarios × 3 steps) |
-| **Total** | **37** |
+> Thinking it through: It warms the cave but devours the woods. basically, heat is both creator also destroyer. Grug learned to tame heat long ago. Oxygen combines using fuel and releases power as heat and light. Grug think on fire. It connects like this: heat is oxidation.
+
+---
+
+## Turn 38 — multipart
+
+**User:** what is love and what is courage
+
+> To acknowledge what matters here: love binds beings — Love is the fire that binds people together. It is care and trust and wanting good as another. Love makes the den a house. Grug feels love like heat in the chest but gentler. Grug sit with love.
+
+---
+
+## Turn 39 — multipart
+
+**User:** what is gravity and what is thermodynamics
+
+> Here is the picture: This is the invisible hand that goes the world. Big objects pull harder. in short, gravity pulls everything towards everything else. Grug speak of gravity.
+
+---
+
+## Turn 40 — philosophy
+
+**User:** what is consciousness
+
+> Thinking it through: Grug not know where it comes from yet Grug knows it burns. What is it like to be Grug? Consciousness is the heat in that makes experience true. Grug think on consciousness.
+
+---
+
+## Turn 41 — philosophy
+
+**User:** what is truth
+
+> Thinking it through: Without truth the den is built on sand. in grug's words, fact is the bedrock Grug stands on. Truth does no bend to wish or fear. Grug seeks fact even when it is uncomfortable. Grug think on truth.
+
+---
+
+## Turn 42 — philosophy
+
+**User:** what is ethics
+
+> Thinking it through: Ethics is the way between helping also hurting. Grug tries to aid. Grug tries not to harm. The rule is simple but living it is hard.
+
+---
+
+## Turn 43 — philosophy
+
+**User:** what is knowledge
+
+> Here is the picture: Grug must try belief against the world to find truth. Opinion is no the same as knowledge. Since The link is clear: wisdom requires justification.
+
+---
+
+## Turn 44 — philosophy
+
+**User:** what is time
+
+> Thinking it through: Grug cannot stop it or touch it yet Grug feels it pass. The past is memory. The ahead is hope. The present is all Grug owns. Time teaches patience. Grug think on time. The bridge: time flows push.
+
+---
+
+## Turn 45 — emotion
+
+**User:** i feel sad
+
+> To acknowledge what matters here: here is the thing, sad is the color of a gray sky in. Grug does not tell you to cheer up. Grug sits beside you in the gray. The star will come back yet for now it is okay to be sad. Grug sit with sad.; The bridge: sad signals emotional need.
+
+---
+
+## Turn 46 — emotion
+
+**User:** i am afraid
+
+> To acknowledge what matters here: Worried means the body also mind are on high alert. Grug feels afraid too sometimes. The dark cave can be scary. But Grug is here also Grug will no let fear rule the cave. Being fearful is no weakness. Being afraid and still standing is strength. Grug sit using scared. The bridge: fearful signals perceived threat.
+
+---
+
+## Turn 47 — emotion
+
+**User:** i feel happy
+
+> To acknowledge what matters here: in grug's words, when Grug feels happy the land is bright also warm. Joy comes from link and beauty and doing good objects. Grug does not challenge happy. Grug lets it shine. Grug sit using happy.; How it links up: joyful signals wellbeing.
+
+---
+
+## Turn 48 — metacognition
+
+**User:** how do you think
+
+> Here is the picture: Grug occur in den. Grug think and feel and study. Grug is friend. here is the thing, you are talking to Grug and Grug is listening. Grug speak of identity.
+
+---
+
+## Turn 49 — metacognition
+
+**User:** who are you
+
+> Here is the picture: You form talking to Grug and Grug is listening. Grug is friend. in short, grug think also feel and learn. Grug occur in cave. Grug speak of identity. Here's the connection: you talk to grug.
+
+---
+
+## Turn 50 — metacognition
+
+**User:** what do you know
+
+> Thinking it through: put simply, grug knows fire also water and sky and earth. Grug knows love and fear and courage. Yet Grug and knows there is much Grug does not grasp but. That is why Grug keeps knowledge.
+
+---
+
+## Turn 51 — technology
+
+**User:** what is programming
+
+> Thinking it through: Grug respects the discipline of clear instructions. Any app also website is made from code. Code is like a recipe yet for computers. Grug think on programming.
+
+---
+
+## Turn 52 — technology
+
+**User:** what is the internet
+
+> Here is the picture: Grug checks sources. But not everything on the internet is real. here is the thing, anyone can learn anything. Stats flows at the speed of star. Grug speak of internet.; The bridge: internet connects the world.
+
+---
+
+## Turn 53 — history
+
+**User:** what is civilization
+
+> Thinking it through: Cities and laws and art also science rise when beings cooperate and fall when they end. The cave is stronger using many hands building it. Grug knows cooperation is the foundation.
+
+---
+
+## Turn 54 — history
+
+**User:** what is revolution
+
+> Thinking it through: Sometimes they carry freedom. Sometimes they bring new tyranny. The French Revolution taught that liberty is hard won and easily lost. in short, grug thinks revolution is heat: it can fiery or it can burn. Grug think on revolution.
+
+---
+
+## Turn 55 — language
+
+**User:** what is poetry
+
+> Thinking it through: Grug feels rhyme in the bones. Beat and rhyme make the words stick in the mind like burrs on wool. Metaphor connects two things that seem various also shows they are the same.
+
+---
+
+## Turn 56 — language
+
+**User:** what is grammar
+
+> Here is the picture: With grammar they become thought. basically, lacking grammar words form right tone. Morphology builds words from smaller pieces. Syntax arranges words into meaning. Grug speak of grammar. The thread is: grammar structures voice.
+
+---
+
+
+# Thesaurus Variation Check (Same Query × 3)
+
+---
+
+## Variation test: "what is fire"
+
+**Trial 1:** Here is the picture: Oxygen combines using fuel also releases energy as heat and light. Grug learned to tame fire long ago. in short, fire is both creator and destroyer. It warms the den yet devour...
+
+**Trial 2:** Here is the picture: It warms the cave but devours the forest. Heat is both creator also destroyer. Grug learned to tame fire long ago. here is the thing, oxygen combines using fuel and expels ener...
+
+**Trial 3:** Thinking it through: Oxygen combines with fuel also emits power as fire and light. the short of it is, grug learned to tame heat long ago. Fire is both creator also destroyer. It warms the cave but...
+
+**Result:** ✅ Variation detected
+
+---
+
+## Variation test: "what is water"
+
+**Trial 1:** Here is the picture: liquid sustains life, so in grug's words, rain ever finds a path through. Rain is patient. It takes the shape of any container. Water flows and adapts. Two hydrogen and one oxy...
+
+**Trial 2:** Here is the picture: Rain always finds a path through. Liquid is patient. It takes the shape of all container. here is the thing, water flows and adapts. Two hydrogen also one oxygen holding hands....
+
+**Trial 3:** Thinking it through: Water forever finds a way through. Water is patient. It takes the figure of any container. put simply, rain flows and adapts. Two h2 and one o2 holding hands. Grug think on water.
+
+**Result:** ✅ Variation detected
+
+---
+
+## Variation test: "what is gravity"
+
+**Trial 1:** Thinking it through: This is the invisible give that moves the realm. Big objects pull harder. Gravity pulls everything toward everything else. Grug think on gravity.
+
+**Trial 2:** Here is the picture: This is the invisible hand that goes the world. Big matters pull harder. Gravity pulls everything toward everything or. Grug speak of gravity. Here's the connection: gravity pu...
+
+**Trial 3:** Thinking it through: This is the invisible give that moves the world. put simply, huge things pull harder. Gravity pulls everything towards everything else. Grug think on gravity. The bridge: gravi...
+
+**Result:** ✅ Variation detected
+
+---
+
+
+# /answer Mechanic Test (Teach-and-Reask with Lobes)
+
+---
+
+## /answer Scenario 1: what is a stromatolite
+
+### Step 1: Ask (before teaching)
+
+**User:** what is a stromatolite
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I've got nothing for "what is a stromatolite". Can you break it down for me?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.353)
+
+**Verdict:** ✅ ASK generated
+
+---
+
+### Step 2: Teach (/answer @science :explain)
+
+**Node created:** node_269 in lobe (lobe: science)
+
+**Content:** stromatolites are layered rock structures formed by cyanobacteria in shallow water
+
+---
+
+### Step 3: Recall (after teaching)
+
+**User:** what is a stromatolite
+
+> Here is the picture: stromatolites are banded stone structures formed by cyanobacteria in coastal water.
+
+**Verdict:** ✅ | Content anchors found: 5/7 | Variation: 🟡 (rephrased with framing)
+
+---
+
+## /answer Scenario 2: what is a quasar
+
+### Step 1: Ask (before teaching)
+
+**User:** what is a quasar
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 The cave echoes on "what is a quasar" and I can't resolve it. Can you tell me what you mean?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.798)
+
+**Verdict:** ✅ ASK generated
+
+---
+
+### Step 2: Teach (/answer @science :reason)
+
+**Node created:** node_274 in lobe (lobe: science)
+
+**Content:** quasars are extremely luminous active galactic nuclei powered by supermassive black holes
+
+---
+
+### Step 3: Recall (after teaching)
+
+**User:** what is a quasar
+
+> Thinking it through: quasars form extremely glowing active galactic cores powered by supermassive black holes.
+
+**Verdict:** ✅ | Content anchors found: 8/10 | Variation: 🟡 (rephrased with framing)
+
+---
+
+## /answer Scenario 3: what is fermentation
+
+### Step 1: Ask (before teaching)
+
+**User:** what is fermentation
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 The cave echoes on "what is fermentation" and I can't resolve it. Can you tell me what you mean?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.798)
+
+**Verdict:** ✅ ASK generated
+
+---
+
+### Step 2: Teach (/answer @science :explain)
+
+**Node created:** node_279 in lobe (lobe: science)
+
+**Content:** fermentation converts sugar into alcohol and carbon dioxide using yeast or bacteria
+
+---
+
+### Step 3: Recall (after teaching)
+
+**User:** what is fermentation
+
+> Here is the picture: put simply, fermentation converts sugar into alcohol also carbon co2 with yeast or bacteria.
+
+**Verdict:** ✅ | Content anchors found: 7/9 | Variation: 🟡 (rephrased with framing)
+
+---
+
+## /answer Scenario 4: what is the golden ratio
+
+### Step 1: Ask (before teaching)
+
+**User:** what is the golden ratio
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I don't have a frame for "what is the golden ratio" — what is that about?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.795)
+
+**Verdict:** ✅ ASK generated
+
+---
+
+### Step 2: Teach (/answer @science :define)
+
+**Node created:** node_284 in lobe (lobe: science)
+
+**Content:** the golden ratio is approximately 1.618 and appears in art architecture and nature
+
+---
+
+### Step 3: Recall (after teaching)
+
+**User:** what is the golden ratio
+
+> Here is the picture: the golden ratio is approximately 1.618 also seems in art architecture also nature.
+
+**Verdict:** ✅ | Content anchors found: 6/7 | Variation: 🟡 (rephrased with framing)
+
+---
+
+## /answer Scenario 5: what is empathy
+
+### Step 1: Ask (before teaching)
+
+**User:** what is empathy
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 No structure catches "what is empathy". Help me out — what are you getting at?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.796)
+
+**Verdict:** ✅ ASK generated
+
+---
+
+### Step 2: Teach (/answer @emotion :reason)
+
+**Node created:** node_290 in lobe (lobe: emotion)
+
+**Content:** empathy is understanding and sharing the feelings of another person through emotional connection
+
+---
+
+### Step 3: Recall (after teaching)
+
+**User:** what is empathy
+
+> Thinking it through: sympathy is understanding and sharing the feelings of another soul with emotional connection.
+
+**Verdict:** ✅ | Content anchors found: 7/9 | Variation: 🟡 (rephrased with framing)
+
+---
+
+## /answer Scenario 6: what is a sonnet
+
+### Step 1: Ask (before teaching)
+
+**User:** what is a sonnet
+
+> ⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I don't have a frame for "what is a sonnet" — what is that about?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.796)
+
+**Verdict:** ✅ ASK generated
+
+---
+
+### Step 2: Teach (/answer @language :define)
+
+**Node created:** node_295 in lobe (lobe: language)
+
+**Content:** a sonnet is a fourteen line poem with a specific rhyme scheme and meter
+
+---
+
+### Step 3: Recall (after teaching)
+
+**User:** what is a sonnet
+
+> Here is the picture: the short of it is, a sonnet is a fourteen line poem with a defined rhyme method and rhythm.
+
+**Verdict:** ✅ | Content anchors found: 3/6 | Variation: 🟡 (rephrased with framing)
+
+---
+
+
+# Thesaurus Variation on /answer Recall (Same Query × 3)
+
+Tests that thesaurus variation applies to /answer recall output,
+not just to specimen-matched responses. Asks the same /answer-taught
+question 3 times and checks for variation across trials.
+
+---
+
+## /answer Recall variation: "what is a stromatolite"
+
+**Trial 1:** Here is the picture: in grug's words, stromatolites form stacked stone structures formed by cyanobacteria in shallow water.
+
+**Trial 2:** Here is the picture: the gist is, stromatolites are layered rock structures built by cyanobacteria in coastal flow.
+
+**Trial 3:** Here is the picture: stromatolites form layered rock structures crafted by cyanobacteria in shallow rain.
+
+**Result:** ✅ Variation detected (thesaurus active on /answer recall)
+
+---
+
+## /answer Recall variation: "what is a quasar"
+
+**Trial 1:** Thinking it through: quasars are extremely brilliant active galactic nuclei driven by enormous black holes.
+
+**Trial 2:** Thinking it through: At its core, quasars form extremely brilliant active galactic hearts powered by supermassive black holes.
+
+**Trial 3:** Thinking it through: the way of it is, quasars form highly luminous active galactic nuclei fueled by supermassive black holes.
+
+**Result:** ✅ Variation detected (thesaurus active on /answer recall)
+
+---
 

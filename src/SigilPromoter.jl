@@ -644,13 +644,44 @@ function _try_lambda_promote(
     elseif st === :slurp
         # :slurp is multi-token by definition; can't promote a single token.
         return nothing
+    # GRUG v8.18: Knowledge-layer shape predicates. These partition pattern
+    # space so math sigils (&n &op &n) don't compete with knowledge/definition
+    # nodes. Each shape predicate checks the token against a closed set of
+    # qualifying words.
+    elseif st === :concept
+        # :concept — any non-stopword, non-operator token. The promote_predicate
+        # in the registry already filters out stopwords and operators, so if
+        # the promote_predicate passed, this token qualifies as a concept.
+        # We just return the canonical string (no numeric parsing needed).
+        return canonical
+    elseif st === :query
+        # :query — question words (what, who, how, why, when, where, etc.)
+        # The promote_predicate already gates the closed set, so if we reach
+        # here the token matched. Return the canonical string.
+        return canonical
+    elseif st === :definition
+        # :definition — definition verbs (is, are, means, refers, etc.)
+        # The promote_predicate already gates the closed set. Return canonical.
+        return canonical
+    elseif st === :action
+        # :action — action verbs (explain, describe, tell, define, etc.)
+        # The promote_predicate already gates the closed set. Return canonical.
+        return canonical
     else
-        # GRUG: unknown sigil_type with promote_at_tokenize=true is a
-        # registry config error. The registry kernel doesn't know about
-        # specific sigil_types so it can't validate this; the promoter is
-        # the authoritative gate. Fail loud.
+        # GRUG v8.19: user-registered sigils (via /sigil add) may carry
+        # custom sigil_types that have no hardcoded shape branch here.
+        # Instead of throwing, fall back to the promote_predicate: if the
+        # predicate already passed (it's checked before this function in the
+        # promote pipeline), the token qualifies and we return canonical.
+        # If no predicate exists either, THEN it's a config error.
+        if e.promote_predicate !== nothing
+            # The predicate already gated acceptance upstream; return the
+            # canonical string as the captured value (same as &concept etc.)
+            return canonical
+        end
+        # GRUG: no shape branch AND no promote_predicate — genuine config error.
         throw(PromoterConfigError(
-            "sigil &$(e.name) has promote_at_tokenize=true but unknown sigil_type :$(st); promoter has no shape predicate for it",
+            "sigil &$(e.name) has promote_at_tokenize=true but unknown sigil_type :$(st) and no promote_predicate; promoter has no shape predicate for it",
             "sigil_type"))
     end
 end

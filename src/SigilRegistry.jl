@@ -977,6 +977,84 @@ function default_registry()::SigilTable
         provenance="engine-default",
         promote_at_tokenize=true)
 
+    # GRUG v8.18: Knowledge-layer sigils — partition pattern space so that
+    # math sigil nodes (&n &op &n) don't compete with knowledge/definition
+    # nodes. Each sigil has a shape predicate in SigilPromoter that gates
+    # which tokens can be promoted. This prevents greedy over-matching
+    # where &n swallows concept words like "golden" or "ratio".
+
+    # GRUG v8.18: &concept — knowledge concept placeholder.
+    # promote_predicate excludes: stopwords, operators, numbers (matching &n),
+    # query words (matching &query), definition verbs (matching &definition),
+    # and action verbs (matching &action). This ensures &concept only captures
+    # genuine content words (nouns, adjectives, domain terms) that don't belong
+    # to a more specific sigil class.
+    register_sigil!(t;
+        name="concept",
+        class=:lambda,
+        applies_at=:match,
+        sigil_type=:concept,
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> (
+            # Must contain at least one alphabetic character
+            any(c -> isletter(c), t) &&
+            # Not a number (let &n catch these)
+            !occursin(r"^[+-]?\d+(?:\.\d+)?$", t) &&
+            # Not an operator symbol (let &op catch these)
+            !(t in ["+","-","*","/","=","<<",">","%","^"]) &&
+            # Not a query word (let &query catch these)
+            !(t in ["what","who","how","why","when","where","which","whom","whose","whether"]) &&
+            # Not a definition verb (let &definition catch these)
+            !(t in ["is","are","means","refers","represents","defines","denotes","signifies","embodies","constitutes","characterizes"]) &&
+            # Not an action verb (let &action catch these)
+            !(t in ["explain","describe","tell","define","reason","discuss","elaborate","clarify","illustrate","analyze","interpret","compare","contrast","evaluate","assess","summarize","outline"]) &&
+            # Not a stopword
+            !(t in ["the","a","an","was","were","be","been","have","has","had",
+                    "do","does","did","will","would","could","should","may",
+                    "might","shall","can","to","of","in","for","on","with",
+                    "at","by","from","as","into","through","during","after",
+                    "above","below","between","out","off","over","under","again",
+                    "further","then","once","and","but","or","nor","not","so",
+                    "yet","both","either","neither","each","every","all","any",
+                    "few","more","most","other","some","such","no","only","own",
+                    "same","than","too","very","just","because","if","this",
+                    "that","these","those","it","its"])
+        )))
+
+    register_sigil!(t;
+        name="query",
+        class=:lambda,
+        applies_at=:match,
+        sigil_type=:query,
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> t in ["what","who","how","why","when","where",
+                                     "which","whom","whose","whether"]))
+
+    register_sigil!(t;
+        name="definition",
+        class=:lambda,
+        applies_at=:match,
+        sigil_type=:definition,
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> t in ["is","are","means","refers","represents",
+                                     "defines","denotes","signifies","embodies",
+                                     "constitutes","characterizes"]))
+
+    register_sigil!(t;
+        name="action",
+        class=:lambda,
+        applies_at=:match,
+        sigil_type=:action,
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> t in ["explain","describe","tell","define","reason",
+                                     "discuss","elaborate","clarify","illustrate",
+                                     "analyze","interpret","compare","contrast",
+                                     "evaluate","assess","summarize","outline"]))
+
     # GRUG v7.56: Pre-registered relation sigils — semantic category macros
     # for dynamic relational triples. Each :relation sigil's expansion lists
     # alternative verbs that share the same semantic category. At evaluation
@@ -1014,6 +1092,28 @@ function default_registry()::SigilTable
         name="similarity",
         expansion=["resembles", "mirrors", "echoes", "parallels", "mimics",
                    "approximates", "is_like"],
+        provenance="engine-default")
+
+    # GRUG v8.16: &being — identity/existence verbs. Used as required_relations
+    # on node_17 (pattern "you") to prevent greedy over-matching. Identity
+    # questions like "what are you" / "what is grug" supply "is"/"are" as
+    # relation verbs, but emotion questions like "do you have feelings" supply
+    # "have", and "what do you know about fear" supplies "know". Without this
+    # gate, node_17 captures any input containing "you" regardless of intent.
+    register_relation_sigil!(t;
+        name="being",
+        expansion=["is", "are", "am", "be", "was", "were"],
+        provenance="engine-default")
+
+    # GRUG v8.16: &arithmetic — math operation verbs. Used as required_relations
+    # on node_sigil_0/1 to prevent them from firing as low-confidence side-features
+    # on non-math questions. Math inputs like "2 + 3" or "what is 5 times 7"
+    # produce triples with "plus"/"times"/"minus" etc. as relation verbs, but
+    # non-math inputs like "what is AI" produce "is"/"about" verbs.
+    register_relation_sigil!(t;
+        name="arithmetic",
+        expansion=["plus", "minus", "times", "divided", "multiply", "add",
+                   "subtract", "over", "mod", "modulo", "power", "equals"],
         provenance="engine-default")
 
     # ── GRUG v8.1: TIME NODE SIGILS ──

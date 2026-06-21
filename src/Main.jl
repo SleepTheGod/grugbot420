@@ -2255,6 +2255,113 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         "forage",       # slightly elevated → canonical "gather"
         "guard",        # slightly elevated → canonical "protect"
         "collect",      # slightly formal → canonical "gather"
+        # GRUG v8.15: expanded exclusion set — synonyms that pass the +1
+        # length rule but are still wrong for caveman voice
+        "amidst",       # literary → canonical "among"
+        "amuse",        # formal → canonical "play"
+        "anxious",      # clinical → canonical "afraid"
+        "azure",        # poetic → canonical "blue"
+        "battle",       # military → canonical "fight"
+        "blaze",        # poetic → canonical "fire"
+        "cautious",     # formal → canonical "careful"
+        "cease",        # formal → canonical "stop"
+        "combat",       # military → canonical "fight"
+        "convey",       # formal → canonical "bring"
+        "daring",       # literary → canonical "brave"
+        "datum",        # scientific → canonical "fact"
+        "definitely",   # formal → canonical "certainly"
+        "domain",       # formal → canonical "world"
+        "edict",        # formal → canonical "rule"
+        "entity",       # philosophical → canonical "thing"
+        "epoch",        # scientific → canonical "time"
+        "flame",        # poetic → canonical "fire"
+        "fortitude",    # literary → canonical "courage"
+        "fright",       # literary → canonical "fear"
+        "hence",        # formal → canonical "thus"
+        "heroic",       # literary → canonical "brave"
+        "insight",      # formal → canonical "wisdom"
+        "involve",      # formal → canonical "engage"
+        "launch",       # formal → canonical "start"
+        "march",        # military → canonical "walk"
+        "matter",       # philosophical → canonical "thing"
+        "nerve",        # slang/elevated → canonical "courage"
+        "object",       # philosophical → canonical "thing"
+        "obstacle",     # formal → canonical "problem"
+        "omission",     # formal → canonical "absence"
+        "opposing",     # formal → canonical "against"
+        "perception",   # philosophical → canonical "awareness"
+        "peril",        # literary → canonical "risk"
+        "perplexed",    # formal → canonical "confused"
+        "reckon",       # dialect/elevated → canonical "think"
+        "regard",       # formal → canonical "care"
+        "resist",       # formal → canonical "fight"
+        "reality",      # philosophical → canonical "truth"
+        "route",        # formal → canonical "way"
+        "safeguard",    # formal → canonical "preserve"
+        "seize",        # literary → canonical "take"
+        "solicitude",   # literary → canonical "care"
+        "stamina",      # clinical → canonical "energy"
+        "terrain",      # military/formal → canonical "ground"
+        "terror",       # literary → canonical "fear"
+        "wariness",     # formal → canonical "caution"
+        "whilst",       # archaic → canonical "while"
+        "wrath",        # literary → canonical "rage"
+        "certainty",    # philosophical → canonical "truth"
+        "bliss",        # poetic → canonical "joy"
+        "elation",      # formal → canonical "joy"
+        "equals",       # mathematical → canonical "is"
+        # GRUG v8.15b: second batch — more synonyms found in decoherence check
+        "moreover",     # formal connector → canonical "also"
+        "era",          # formal → canonical "time"
+        "dispatch",     # formal → canonical "send"
+        "cadence",      # formal → canonical "rhythm"
+        "heed",         # archaic → canonical "care"
+        "elated",       # formal → canonical "happy"
+        "nervous",      # clinical → canonical "afraid"
+        "vast",         # literary → canonical "big"
+        "epistemology", # philosophical jargon → canonical "knowledge"
+        "comprehension",# formal → canonical "understanding"
+        # GRUG v8.15c: third batch — more found in decoherence check
+        "betwixt",      # archaic → canonical "between"
+        "constitutes",  # formal → canonical "is"
+        "represents",   # formal → canonical "is"
+        "inferno",      # literary → canonical "fire"
+        "moreover",     # formal connector → canonical "also"
+        "furthermore",  # formal connector → canonical "also"
+        "however",      # formal connector → canonical "but"
+        "therefore",    # formal connector → canonical "so"
+        # GRUG v8.15d: fourth batch — same-length/similar-length synonyms
+        # that pass +1 length rule but are wrong for caveman voice
+        "glow",         # poetic → canonical "fire"
+        "intellect",    # formal → canonical "mind"
+        "title",        # formal → canonical "name"
+        "woe",          # literary → canonical "sorrow"
+        "via",          # formal/latin → canonical "with"
+        "clasps",       # literary → canonical "hands"
+        "vigor",        # formal → canonical "energy"
+        "inquiry",      # formal → canonical "question"
+        "soot",         # weird swap → canonical "carbon"
+        "grace",        # poetic → canonical "beauty"
+        "items",        # formal → canonical "things"
+        "alike",        # formal → canonical "same"
+        "supposed",     # weird swap → canonical "thought"
+        "minus",        # weird swap → canonical "lacking"
+        "age",          # formal → canonical "time"
+        "shall",        # archaic → canonical "will"
+        "hot",          # weird swap → canonical "warm"
+        "thicket",      # literary → canonical "forest"
+        # GRUG v8.15e: fifth batch — more same-length synonyms that
+        # produce wrong register or weird substitutions in caveman voice
+        "grips",        # weird swap → canonical "hands"
+        "notion",       # formal → canonical "thought"/"idea"
+        "offer",        # weird swap → canonical "force"
+        "choice",       # weird swap → canonical "selection"
+        "force",        # weird swap → canonical "might"
+        "diverse",      # formal → canonical "different"
+        "equal",        # formal/math → canonical "same"
+        "being",        # philosophical → canonical "life"
+        "grove",        # poetic → canonical "forest"/"woods"
+        "tint",         # formal → canonical "color"/"shade"
     ])
 
     # -------------------------------------------------------------------
@@ -2330,7 +2437,10 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
 
         # Filter out inhibited words (both negative-thesaurus and
         # per-node drop_table), AND elevated-register verb aliases
-        # that don't fit grug's output voice (v7.61).
+        # that don't fit grug's output voice (v7.61), AND synonyms
+        # that are significantly longer than the original (v8.14
+        # simplicity bias — grug speaks plainly, not fancily).
+        _orig_len = length(clean)
         allowed = filter(candidates) do c
             c_clean = lowercase(strip(c))
             if InputQueue.is_inhibited(String(c_clean))
@@ -2343,6 +2453,26 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             # output. These are valid for input matching but wrong voice
             # for grug's speech. "love" should never become "adore".
             if c_clean in _grug_voice_excluded_synonyms
+                return false
+            end
+            # GRUG v8.15: SIMPLICITY BIAS — grug's caveman voice should
+            # never replace a simple word with a fancy longer one. If a
+            # synonym is even 1 char longer than the original, it's
+            # probably elevated register ("is"→"equals", "fire"→"flame",
+            # "fear"→"dread", "care"→"regard"). These are fine for INPUT
+            # MATCHING (thesaurus gate) but wrong for voice OUTPUT.
+            # Thesaurus matters for matching — multiple wordings can
+            # still hit the right node. But the voice should stay simple.
+            if length(c_clean) > _orig_len + 1
+                return false
+            end
+            # GRUG v8.15: Hyphenated synonyms ("amounts-to",
+            # "by-means-of") are always wrong in voice output.
+            # They're thesaurus gate artifacts, not spoken words.
+            # Multi-word phrases ("in essence", "owing to", "a lot")
+            # are also thesaurus gate artifacts — grug speaks one
+            # word at a time, not compound phrases.
+            if occursin('-', c_clean) || occursin(' ', c_clean)
                 return false
             end
             return true
@@ -2365,11 +2495,16 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         # fresh synonym, giving natural variation while preserving meaning.
         # Stochastic pick means two cycles on the same prompt roll different
         # synonyms. Env-overridable for operator tuning.
+        # GRUG v8.15d: Swap rate drastically reduced from 0.35 to 0.0.
+        # The thesaurus is for INPUT MATCHING only (so "blaze" finds "fire" node).
+        # Voice output must use the node's authored prose as-is, not randomly
+        # swap words with synonyms that break caveman register.
+        # Old value 0.35 caused "fire"→"glow", "force"→"offer", "hands"→"grips".
         swap_rate = try
-            r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.35"))
-            (r < 0.0 || r > 1.0) ? 0.35 : r
+            r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.0"))
+            (r < 0.0 || r > 1.0) ? 0.0 : r
         catch
-            0.35
+            0.0
         end
         if rand() > swap_rate
             return word
@@ -2397,15 +2532,16 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         # GRUG v8.11: raised default from 0.10 to 0.30. The thesaurus is the
         # primary anti-stale lever at orchestration time — it MUST fire often
         # enough to prevent verbatim repetition across turns. v7.41 dropped
-        # this to 0.10 after removing wrong-register synonyms, but that made
-        # voice_body responses nearly static. 0.30 means ~1 in 3 eligible
-        # words gets a fresh synonym — enough to keep output alive without
-        # garbling. Env-overridable for operator tuning.
+        # GRUG v8.15d: Light touch rate reduced from 0.30 to 0.0.
+        # Same rationale as swap_rate: thesaurus is for INPUT matching only,
+        # not for voice output. Authored prose must be preserved as-is.
+        # Old value 0.30 meant ~1 in 3 eligible words got swapped, which
+        # constantly broke caveman register with elevated synonyms.
         light_rate = try
-            r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.30"))
-            (r < 0.0 || r > 1.0) ? 0.30 : r
+            r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.0"))
+            (r < 0.0 || r > 1.0) ? 0.0 : r
         catch
-            0.30
+            0.0
         end
         tokens = split(String(sentence))
         out = String[]
@@ -2417,10 +2553,11 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             end
             prefix, core, suffix = String(m_tok.captures[1]), String(m_tok.captures[2]), String(m_tok.captures[3])
             clean = lowercase(core)
-            # Skip: required relations, inhibited words, drop_table
+            # Skip: required relations, inhibited words, drop_table, excluded synonyms
             clean in required_relations && (push!(out, String(tok)); continue)
             InputQueue.is_inhibited(clean) && (push!(out, String(tok)); continue)
             clean in drop_table && (push!(out, String(tok)); continue)
+            clean in _grug_voice_excluded_synonyms && (push!(out, String(tok)); continue)
             # GRUG v7.38: Lowered threshold from 3+ to 2+ alternatives.
             # Domain-specific entries (math, survival, philosophy) often have
             # exactly 2 high-quality synonyms. The old 3+ gate was preventing
@@ -2435,9 +2572,29 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                 push!(out, String(tok))
                 continue
             end
-            # Pick a synonym (filtered by inhibition/drop_table)
+            # Pick a synonym (filtered by inhibition/drop_table/simplicity)
             candidates = collect(Thesaurus.SYNONYM_SEED_MAP[clean])
-            allowed = filter(c -> !InputQueue.is_inhibited(c) && !(c in drop_table), candidates)
+            # GRUG v8.15: Simplicity bias + hyphen/multi-word filter — same as _pick_synonym.
+            _lt_orig_len = length(clean)
+            allowed = filter(candidates) do c
+                if InputQueue.is_inhibited(c)
+                    return false
+                end
+                if c in drop_table
+                    return false
+                end
+                if c in _grug_voice_excluded_synonyms
+                    return false
+                end
+                if length(c) > _lt_orig_len + 1
+                    return false
+                end
+                # No hyphenated or multi-word synonyms in voice output
+                if occursin('-', c) || occursin(' ', c)
+                    return false
+                end
+                return true
+            end
             if isempty(allowed)
                 push!(out, String(tok))
                 continue
@@ -2453,29 +2610,19 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
     end
 
     # -------------------------------------------------------------------
-    # GRUG v8.2: _hippocampal_touch — moderate synonym variation for
-    # hippocampal_answer voice_body claims. The user teaches grug an
-    # answer, and when that node fires, grug should NOT parrot the
-    # exact answer verbatim — it should rephrase using the thesaurus
-    # while preserving meaning. This is the middle ground between
-    # _light_thesaurus_touch (too conservative — 10%, 2+ syns) and
-    # _swap_words_in (too aggressive — hits every token).
-    #
-    # Rate: GRUG_HIPPOCAMPAL_TOUCH_RATE (default 0.45). Nearly half
-    # of eligible words get a synonym swap, giving clear rephrasing
-    # without word-salad. Only words with 1+ synonym in the seed map
-    # are eligible (lower threshold than light touch's 2+ gate, since
-    # hippocampal answers often use domain words with limited but
-    # valid synonyms). Inhibited words and drop_table entries are
-    # still protected. Case preservation follows the same rules.
+    # GRUG v8.2→v8.15d: _hippocampal_touch — rate reduced from 0.45 to 0.0.
+    # Same rationale: thesaurus is for INPUT matching only, not voice output.
+    # Authored prose must be preserved as-is. The old 0.45 rate meant nearly
+    # half of eligible words got swapped, which constantly broke caveman
+    # register with "force"→"offer", "hands"→"grips", "selection"→"choice".
     # -------------------------------------------------------------------
     function _hippocampal_touch(sentence::String, drop_table::Vector{String},
                                 required_relations::Vector{String})::String
         hipp_rate = try
-            r = parse(Float64, get(ENV, "GRUG_HIPPOCAMPAL_TOUCH_RATE", "0.45"))
-            (r < 0.0 || r > 1.0) ? 0.45 : r
+            r = parse(Float64, get(ENV, "GRUG_HIPPOCAMPAL_TOUCH_RATE", "0.0"))
+            (r < 0.0 || r > 1.0) ? 0.0 : r
         catch
-            0.45
+            0.0
         end
         tokens = split(String(sentence))
         out = String[]
@@ -2491,6 +2638,7 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             clean in required_relations && (push!(out, String(tok)); continue)
             InputQueue.is_inhibited(clean) && (push!(out, String(tok)); continue)
             clean in drop_table && (push!(out, String(tok)); continue)
+            clean in _grug_voice_excluded_synonyms && (push!(out, String(tok)); continue)
             # GRUG v8.2: Lower threshold — 1+ synonym is enough.
             # Hippocampal answers often use domain words with limited
             # but valid alternatives (e.g. "oxygen" has 0, "breathe"
@@ -2506,9 +2654,29 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                 push!(out, String(tok))
                 continue
             end
-            # Pick a synonym (filtered by inhibition/drop_table)
+            # Pick a synonym (filtered by inhibition/drop_table/simplicity)
             candidates = collect(Thesaurus.SYNONYM_SEED_MAP[clean])
-            allowed = filter(c -> !InputQueue.is_inhibited(c) && !(c in drop_table), candidates)
+            # GRUG v8.15: Simplicity bias + hyphen/multi-word filter — same as _pick_synonym.
+            _ht_orig_len = length(clean)
+            allowed = filter(candidates) do c
+                if InputQueue.is_inhibited(c)
+                    return false
+                end
+                if c in drop_table
+                    return false
+                end
+                if c in _grug_voice_excluded_synonyms
+                    return false
+                end
+                if length(c) > _ht_orig_len + 1
+                    return false
+                end
+                # No hyphenated or multi-word synonyms in voice output
+                if occursin('-', c) || occursin(' ', c)
+                    return false
+                end
+                return true
+            end
             if isempty(allowed)
                 push!(out, String(tok))
                 continue
@@ -2538,8 +2706,14 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
     # "also" → "moreover" — always valid. No swap rate needed. Just pick
     # words that CAN be replaced and replace them.
     #
-    # GRUG_VOTE_SWAP_COUNT (default 3): how many words to pick & swap.
-    # If the claim has fewer eligible words than this, swap all of them.
+    # GRUG v8.18: vote_word_swap default budget restored.
+    # Thesaurus applies to ALL voice output by default — both specimen
+    # nodes and hippocampal answer nodes. This prevents rote repetition
+    # on /answer recall and keeps responses lively across turns.
+    # Budget: ~40% of eligible words, clamped to [3, 8].
+    # Simplicity bias + hyphen/multi-word filter prevent garbled output.
+    # Override with explicit max_swaps=N for specific use cases (e.g.
+    # relational triple rephrasing with max_swaps=1).
     # -------------------------------------------------------------------
     function _vote_word_swap(sentence::String, drop_table::Vector{String},
                              required_relations::Vector{String};
@@ -2581,12 +2755,37 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             if clean in drop_table
                 continue
             end
+            if clean in _grug_voice_excluded_synonyms
+                continue
+            end
             # Must have thesaurus entries
             if !haskey(Thesaurus.SYNONYM_SEED_MAP, clean)
                 continue
             end
             candidates = collect(Thesaurus.SYNONYM_SEED_MAP[clean])
-            allowed = filter(c -> !InputQueue.is_inhibited(c) && !(c in drop_table), candidates)
+            # GRUG v8.15: Simplicity bias + hyphen/multi-word filter — same as _pick_synonym.
+            # Never replace a simple word with a fancy long one in voice output.
+            _orig_len = length(clean)
+            allowed = filter(candidates) do c
+                if InputQueue.is_inhibited(c)
+                    return false
+                end
+                if c in drop_table
+                    return false
+                end
+                if c in _grug_voice_excluded_synonyms
+                    return false
+                end
+                # Simplicity bias: no synonyms >1 char longer than original
+                if length(c) > _orig_len + 1
+                    return false
+                end
+                # No hyphenated or multi-word synonyms in voice output
+                if occursin('-', c) || occursin(' ', c)
+                    return false
+                end
+                return true
+            end
             if isempty(allowed)
                 continue
             end
@@ -2602,15 +2801,12 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         if max_swaps > 0
             n_pick = min(max_swaps, n_eligible)
         else
-            # Dynamic: ~45% of eligible words, clamped to [3, 8]
-            # Common sense — short answers get min 3, long answers cap at 8
-            # to avoid sounding like a thesaurus explosion.
-            raw = round(Int, n_eligible * 0.45)
-            n_pick = clamp(raw, 3, 8)
-            # If fewer than 3 eligible, just swap all of them
-            if n_eligible <= 3
-                n_pick = n_eligible
-            end
+            # GRUG v8.18: Swap budget restored for voice output thesaurus variation.
+            # Thesaurus now applies to ALL voice output by default — specimen nodes
+            # AND hippocampal answer nodes. This prevents rote repetition on /answer
+            # recall and keeps responses lively across turns.
+            # Budget: ~40% of eligible words, clamped to [3, 8].
+            n_pick = clamp(floor(Int, n_eligible * 0.4), 3, 8)
         end
 
         picked_indices = n_eligible <= n_pick ?
@@ -3616,7 +3812,9 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                                 "&doAction"=>"action","&rest"=>"rest",
                                 "&temporal"=>"time","&causal"=>"cause",
                                 "&emotional"=>"feeling","&spatial"=>"place",
-                                "&similarity"=>"likeness","&possessive"=>"possession")
+                                "&similarity"=>"likeness","&possessive"=>"possession",
+                                "&concept"=>"concept","&query"=>"question",
+                                "&definition"=>"definition","&action"=>"action")
             _raw_subj = String(t.subject)
             _raw_rel  = String(t.relation)
             _raw_obj  = String(t.object)
@@ -3625,10 +3823,13 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                 _raw_rel  = replace(_raw_rel,  _sk => _sv)
                 _raw_obj  = replace(_raw_obj,  _sk => _sv)
             end
-            # Fallback: any remaining &token → strip & and add " concept"
-            _raw_subj = replace(_raw_subj, r"&(\w+)" => s"\1 concept")
-            _raw_rel  = replace(_raw_rel,  r"&(\w+)" => s"\1 concept")
-            _raw_obj  = replace(_raw_obj,  r"&(\w+)" => s"\1 concept")
+            # GRUG v8.19: Fallback for any remaining &token → strip & prefix.
+            # User-registered sigils (e.g. &bodypart) dereference to just
+            # the name ("bodypart"). Known engine sigils above get friendly
+            # names ("number", "operation"); unknown ones get their raw name.
+            _raw_subj = replace(_raw_subj, r"&(\w+)" => s"\1")
+            _raw_rel  = replace(_raw_rel,  r"&(\w+)" => s"\1")
+            _raw_obj  = replace(_raw_obj,  r"&(\w+)" => s"\1")
             rel_swapped  = _pick_synonym(_raw_rel, node_drop_table, node_required)
             subj_swapped = _vote_word_swap(_raw_subj,  node_drop_table, node_required; max_swaps=1)
             obj_swapped  = _vote_word_swap(_raw_obj,   node_drop_table, node_required; max_swaps=1)
@@ -3785,16 +3986,18 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         core_reply = replace(core_reply, r"\.\s*\." => ".")
         # "., " → ". " (period-comma from claim-period + comma-connector)
         core_reply = replace(core_reply, r"\.,\s+" => ". ")
-        # GRUG v8.3: COHERENCE FIX — ". and " artifact. When claim ends
+        # GRUG v8.3→v8.15d: COHERENCE FIX — ". and " artifact. When claim ends
         # with a period and the connector is ", and {SUPPORT}", the output
         # reads as "...identity. and  It connects like this:..." which is
-        # garbled. The period before "and" breaks the sentence flow. Replace
-        # with ". Moreover, " or just remove the "and" and capitalize.
-        core_reply = replace(core_reply, r"\.\s+and\s+" => ". Moreover, ")
-        # v8.3: Also fix ". because " — same problem: claim ends with period,
+        # garbled. The period before "and" breaks the sentence flow.
+        # OLD: replaced with ". Moreover, " — injects formal register!
+        # NEW: just capitalize the next word (caveman voice appropriate).
+        core_reply = replace(core_reply, r"\.\s+and\s+" => ". And ")
+        # v8.3→v8.15d: Also fix ". because " — same problem: claim ends with period,
         # support-first connector inserts "because" producing garbled prose like
         # "Grug turn to fear. because The thread is: ..."
-        core_reply = replace(core_reply, r"\.\s+because\s+" => ". For this reason, ")
+        # OLD: ". For this reason, " — too formal. NEW: ". Since " is simpler.
+        core_reply = replace(core_reply, r"\.\s+because\s+" => ". Since ")
         # Also handle period-double-space from claim + connector assembly
         core_reply = replace(core_reply, r"  +" => " ")
     end
@@ -5247,6 +5450,25 @@ const HELP_MSG = """
 ║  /tableStatus <lobe_id>     Show hash table chunk sizes      ║
 ║  /tableMatch <l> <c> <pat>  Pattern-activate table entries   ║
 ║                                                              ║
+║  SIGIL MANAGEMENT (v8.19 — runtime sigil registration)      ║
+║  /sigil list                   Show all sigils in registry ║
+║  /sigil add <name> <class> <applies_at> [options]          ║
+║    class: lambda | macro | tag                               ║
+║    applies_at: bind | match                                  ║
+║    Options:                                                  ║
+║      type=<sigil_type>    Lambda sigil type (number,word,   ║
+║                           op,slurp,concept,query,action,    ║
+║                           or any custom type)               ║
+║      lexicon=<a,b,c>     Macro word list                    ║
+║      promote=true         Enable tokenizer-level promotion  ║
+║      predicate=<mode>     Auto-generate promote_predicate   ║
+║        lexicon  → t in macro lexicon (for :macro class)     ║
+║        w1,w2,w3 → t in ["w1","w2"] (for :lambda class)     ║
+║        notstop  → non-stopword/non-op/non-number (broad)  ║
+║        regex=X → occursin(Regex(X), t) (advanced)          ║
+║  /sigil remove <name>     Remove user-registered sigil     ║
+║    (engine-default sigils are protected)                    ║
+║                                                             ║
 ║  INVERSESIGIL (inverse evidence table diagnostics)          ║
 ║  /inverseStatus              Show inverse table summary     ║
 ║  /inverseDetail <sigil_name> Show detailed entry for sigil  ║
@@ -5598,14 +5820,11 @@ const _TRIPLE_PREFIX_POOL = [
     "The bridge:",
 ]
 const _COMPANION_PREFIX_POOL = [
-    "Also,",
-    "What's more,",
-    "And also,",
-    "Moreover,",
-    "Beyond that,",
-    "Likewise,",
-    "In the same vein,",
-    "Similarly,",
+    # GRUG v8.16: companion prefixes must be caveman-voice.
+    # Removed "Also,", "And also," — "also" sounds stilted in caveman voice.
+    # No elevated register ("Moreover,", "Likewise,", etc.)
+    "And,",
+    "Plus,",
 ]
 
 # GRUG v8.3: Rephrase engine constants for _hippocampal_rephrase
@@ -5615,10 +5834,12 @@ const _REPHRASE_HEDGES = [
     "the short of it is", "here is the thing",
 ]
 const _REPHRASE_CONNECTOR_SWAPS = Dict{String, Vector{String}}(
-    "and"      => ["moreover", "also", "furthermore"],
-    "because"  => ["since", "for", "as"],
-    "but"      => ["yet", "however", "still"],
-    "so"       => ["thus", "therefore", "hence"],
+    # GRUG v8.16: connector swaps must stay caveman-voice appropriate.
+    # Removed "and"→"also" — "also" sounds stilted in caveman voice
+    # ("Water flows also adapts" → should be "Water flows and adapts").
+    # No elevated register connectors. Only natural simple swaps.
+    "because"  => ["since", "for"],
+    "but"      => ["yet", "still"],
 )
 
 # GRUG v7.33: META-COGNITION — reflection & adaptive picking.
@@ -5869,6 +6090,11 @@ function process_mission(mission_text::String)
     clear_multipart_lobe_states!()
     clear_multipart_scoped_text!()
 
+    # GRUG v8.14: Clear pre-expansion raw text at start of each cycle.
+    lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_RAW_PRE_EXPANSION[] = ""
+    end
+
     # GRUG: Start a new AIML cycle. Resets all per-cycle bookkeeping flags on every
     # contributors from THIS cycle. Mere voting/firing is not reinforcement.
     # Must run BEFORE any AIML voting/firing so cycle memory is clean at the start.
@@ -5977,6 +6203,14 @@ function process_mission(mission_text::String)
     # prevent noise injection on very long synonym chains.
     # ------------------------------------------------------------
     mission_text_for_scan = mission_text  # default: unexpanded
+    # GRUG v8.14: Stash the pre-expansion raw text so _scan_confidence_for_node
+    # can compute lexical overlap against the ORIGINAL input (without thesaurus
+    # expansion dilution). Without this, expansion tokens like "constitutes",
+    # "equals", "amounts-to" (synonyms of stopword "is") bloat input_coverage's
+    # denominator and drop confidence below SCAN_CONFIDENCE_LOCK.
+    lock(_GLOBAL_PROMOTION_LOCK) do
+        _GLOBAL_RAW_PRE_EXPANSION[] = mission_text
+    end
     if !is_image
         try
             gate_tokens = Thesaurus.thesaurus_gate_filter(mission_text)
@@ -6159,9 +6393,13 @@ function process_mission(mission_text::String)
         end
         # GRUG: Singleton specimens — no multipart stamping.
         # v7.23: Carry input_chunks through.
-        [(id, conf, antimatch, u_trips, n_trips, ichunks, "", :singleton)
+        _singleton_result = [(id, conf, antimatch, u_trips, n_trips, ichunks, "", :singleton)
          for (id, conf, antimatch, u_trips, n_trips, ichunks) in specimens]
+        # DEBUG-TRACE removed (v8.14)
+        _singleton_result
     end
+
+    # all_specimens count trace removed (v8.14)
 
     # GRUG v8.2-coherence-fix: PROPAGATE SINGLETON BINDINGS TO CHUNK-DERIVED GROUPS.
     # When a singleton (non-compound) input is chunked by InputDecomposer, the
@@ -14221,28 +14459,35 @@ elseif !isnothing(m_right)
                 println(join(lines, "\n"))
 
             elseif !isnothing(m_sigiladd)
-                # GRUG v7.24: /sigil add <name> <class> <applies_at> [type=X] [lexicon=a,b,c] [promote=true]
+                # GRUG v8.19: /sigil add <name> <class> <applies_at> [options...]
                 #   class      : lambda | macro | tag (functor/procedure/glue reserved)
                 #   applies_at : bind | match
-                #   type=...   : for :lambda only — number, word, op, slurp
-                #   lexicon=...: for :macro only — comma-separated word list
+                #   type=...   : for :lambda — number, word, op, slurp, concept, query, definition, action, or custom
+                #   lexicon=...: for :macro — comma-separated word list (also used by predicate=lexicon)
                 #   promote=...: front-door tokenizer rewrites raw matches into &name
+                #   predicate=...: promote_predicate generator — auto-generates the gate function
+                #       predicate=lexicon     → t in lexicon (for :macro, reuses the lexicon you gave)
+                #       predicate=w1,w2,w3   → t in ["w1","w2","w3"] (for :lambda, closed-set membership)
+                #       predicate=notstop    → non-stopword, non-operator, non-number (like &concept)
+                #       predicate=regex=...  → occursin(regex, t) (advanced, for custom patterns)
                 #
-                # Math acronym example (macro class with math constant lexicon):
-                #   /sigil add mathconst macro bind lexicon=pi,e,phi,tau,inf
-                #   /sigil add mathfunc  macro bind lexicon=sin,cos,tan,log,exp,sqrt
-                #
-                # Token sigil example (lambda class for math operators with promote):
-                #   /sigil add op2 lambda match type=op promote=true
+                # Examples:
+                #   /sigil add mathconst macro bind lexicon=pi,e,phi,tau,inf promote=true predicate=lexicon
+                #   /sigil add bodypart lambda match type=bodypart promote=true predicate=head,arm,leg,torso,hand,foot
+                #   /sigil add organ lambda match type=organ promote=true predicate=heart,lung,brain,liver,kidney
+                #   /sigil add weather lambda match type=weather promote=true predicate=rain,snow,sun,wind,storm,hail
+                #   /sigil add emotion lambda match type=emotion promote=true predicate=happy,sad,angry,afraid,disgust,surprise
+                #   /sigil add topic lambda match type=topic promote=true predicate=notstop
                 sigil_name  = String(strip(m_sigiladd.captures[1]))
                 class_str   = lowercase(String(strip(m_sigiladd.captures[2])))
                 applies_str = lowercase(String(strip(m_sigiladd.captures[3])))
                 opts_str    = m_sigiladd.captures[4] === nothing ? "" : String(m_sigiladd.captures[4])
 
                 # Parse optional kwargs
-                opt_type     = nothing
-                opt_lexicon  = nothing
-                opt_promote  = false
+                opt_type      = nothing
+                opt_lexicon   = nothing
+                opt_promote   = false
+                opt_predicate = nothing          # GRUG v8.19: parsed predicate mode
                 for tok in split(opts_str)
                     tok = String(strip(tok))
                     isempty(tok) && continue
@@ -14253,8 +14498,66 @@ elseif !isnothing(m_right)
                         opt_lexicon = String[String(strip(w)) for w in split(raw, ",") if !isempty(strip(w))]
                     elseif startswith(tok, "promote=")
                         opt_promote = lowercase(tok[9:end]) in ("true","1","yes","y")
+                    elseif startswith(tok, "predicate=")
+                        opt_predicate = String(tok[11:end])
                     else
-                        println("⚠  /sigil add: unknown option '$tok' ignored. Use type=X | lexicon=a,b,c | promote=true.")
+                        println("⚠  /sigil add: unknown option '$tok' ignored. Use type=X | lexicon=a,b,c | promote=true | predicate=lexicon|w1,w2|notstop|regex=...")
+                    end
+                end # for tok in split(opts_str)
+
+                # GRUG v8.19: Build promote_predicate from predicate= option.
+                # If promote=true but no predicate= given, promote_predicate stays nothing
+                # (the sigil_type must have a hardcoded shape branch in SigilPromoter).
+                # If predicate= is given, we auto-set promote=true (predicate without promote is useless).
+                generated_predicate = nothing
+                if opt_predicate !== nothing
+                    if !opt_promote
+                        # predicate= implies promote=true; warn the user we flipped it.
+                        opt_promote = true
+                        println("ℹ  /sigil add: predicate= implies promote=true; auto-enabled.")
+                    end
+                    pred_lower = lowercase(opt_predicate)
+                    if pred_lower == "lexicon"
+                        # :macro class — predicate checks membership in the lexicon.
+                        if opt_lexicon === nothing || isempty(opt_lexicon)
+                            println("⚠  /sigil add: predicate=lexicon requires a lexicon= option. No predicate generated.")
+                        else
+                            # Capture the lexicon vector so the closure sees the right one.
+                            lex_copy = copy(opt_lexicon)
+                            generated_predicate = (t -> t in lex_copy)
+                        end
+                    elseif pred_lower == "notstop"
+                        # Like &concept — any non-stopword, non-operator, non-number token.
+                        # GRUG: reuse the same stopword/operator/number filters as the engine-default &concept.
+                        generated_predicate = (t -> (
+                            any(c -> isletter(c), t) &&
+                            !occursin(r"^[+-]?\d+(?:\.\d+)?$", t) &&
+                            !(t in ["+","-","*","/","=","<<",">","%","^"]) &&
+                            !(t in ["what","who","how","why","when","where","which","whom","whose","whether"]) &&
+                            !(t in ["is","are","means","refers","represents","defines","denotes","signifies","embodies","constitutes","characterizes"]) &&
+                            !(t in ["explain","describe","tell","define","reason","discuss","elaborate","clarify","illustrate","analyze","interpret","compare","contrast","evaluate","assess","summarize","outline"]) &&
+                            !(t in ["the","a","an","was","were","be","been","have","has","had","do","does","did","will","would","can","could","shall","should","may","might","must","am","are","is","it","its","this","that","these","those","i","me","my","we","us","our","you","your","he","him","his","she","her","they","them","their","and","or","but","not","no","nor","if","then","else","so","than","too","very","just","also","well","only","own","same","such","each","every","all","any","few","more","most","some","many","much","both","other","another","into","about","above","after","against","along","among","around","at","before","behind","below","beneath","beside","between","beyond","by","down","during","for","from","in","inside","like","near","of","off","on","out","over","past","since","through","to","toward","under","until","up","upon","with","within","without"])
+                        ))
+                    elseif startswith(pred_lower, "regex=")
+                        # Advanced: regex-based predicate. User provides a regex pattern.
+                        pattern = opt_predicate[7:end]  # strip "regex=" prefix
+                        try
+                            compiled = Regex(pattern)
+                            generated_predicate = (t -> occursin(compiled, t))
+                        catch e
+                            println("⚠  /sigil add: invalid regex '$pattern': $e. No predicate generated.")
+                        end
+                    else
+                        # Comma-separated word list — closed-set membership predicate.
+                        # This is the most common case for user-registered lambda sigils.
+                        word_list = String[String(strip(w)) for w in split(opt_predicate, ",") if !isempty(strip(w))]
+                        if isempty(word_list)
+                            println("⚠  /sigil add: predicate= yielded empty word list. No predicate generated.")
+                        else
+                            # Capture word_list so closure sees the right one.
+                            wl_copy = copy(word_list)
+                            generated_predicate = (t -> t in wl_copy)
+                        end
                     end
                 end
 
@@ -14266,11 +14569,13 @@ elseif !isnothing(m_right)
                         sigil_type=opt_type,
                         lexicon=opt_lexicon,
                         provenance="user-cli",
-                        promote_at_tokenize=opt_promote)
+                        promote_at_tokenize=opt_promote,
+                        promote_predicate=generated_predicate)
                     extras = String[]
-                    !isnothing(opt_type)    && push!(extras, "type=$(opt_type)")
-                    !isnothing(opt_lexicon) && push!(extras, "lexicon=$(length(opt_lexicon)) words")
-                    opt_promote             && push!(extras, "promote=true")
+                    !isnothing(opt_type)        && push!(extras, "type=$(opt_type)")
+                    !isnothing(opt_lexicon)     && push!(extras, "lexicon=$(length(opt_lexicon)) words")
+                    opt_promote                 && push!(extras, "promote=true")
+                    generated_predicate !== nothing && push!(extras, "predicate=auto")
                     suffix = isempty(extras) ? "" : " (" * join(extras, ", ") * ")"
                     msg = "🔮 Sigil &$sigil_name registered as :$class_str @ :$applies_str$suffix"
                     println(msg)
