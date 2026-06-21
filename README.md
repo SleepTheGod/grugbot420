@@ -1,3 +1,4 @@
+NOTE: readme and binary are outdated I hadn't had time to update I been busy with auto growth mechanics. Source still works in Julia just hadn't updated the binary or documentation.
 # 🧠 grugbot420
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
