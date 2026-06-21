@@ -68,6 +68,30 @@
 
 module MitosisMode
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 using Random
 using Base.Threads: ReentrantLock
 
@@ -324,16 +348,15 @@ end
 # ==============================================================================
 # HELPER: Check if action family is AIML (always singleton)
 # ==============================================================================
-# GRUG: AIML nodes are executive/template nodes managed by AIMLNodeSystem.
-# They don't participate in group latching — they're always singletons.
-# Detected via action_family_name == "ACTION_AIML" or json_data["is_aiml"].
-# This is separate from is_antimatch_node (which is a Node struct field).
-# AIML growth is handled by stochastic_aiml_growth_fn, not group latching.
+# GRUG: AIMLNodeSystem removed in v8.12. AIML nodes were executive/template
+# nodes that were always singletons. Kept for specimen backward-compat:
+# old specimens may still have ACTION_AIML or is_aiml entries. We still
+# recognize them as singletons so they don't crash during load.
 
 function _is_singleton_action_family(action_family_name::String, json_data::Dict{String,Any})::Bool
-    # GRUG: AIML action family = always singleton
+    # GRUG: AIML action family = always singleton (backward-compat)
     action_family_name == "ACTION_AIML" && return true
-    # GRUG: Explicit AIML flag in json_data
+    # GRUG: Explicit AIML flag in json_data (backward-compat)
     get(json_data, "is_aiml", false) === true && return true
     return false
 end
@@ -1092,7 +1115,7 @@ Required kwargs:
   - lobe_registry: the LOBE_REGISTRY dict (or empty dict)
   - attachment_map: the ATTACHMENT_MAP dict (or empty dict)
   - immune_gate_fn: function (pattern, data) -> Bool (or nothing)
-  - stochastic_aiml_growth_fn: function (lobe_id, hint_pattern; data_warrant) -> Union{AIMLNode, Nothing} (or nothing)
+  - stochastic_aiml_growth_fn: NO-OP since v8.12 (AIMLNodeSystem removed). Kept as kwarg for backward-compat.
 
 Semantic subsystem kwargs (mitosis v9 — pattern from questions, vote from actions):
   - prediction_fn: function () -> Union{Nothing, PredictionResult} (or nothing)
@@ -1125,7 +1148,7 @@ function run_mitosis!(;
     lobe_registry = Dict{String, Any}(),
     attachment_map = Dict{String, Vector}(),
     immune_gate_fn = nothing,
-    stochastic_aiml_growth_fn = nothing,  # GRUG: stochastic AIML sub-population growth (~1/3 rate)
+    stochastic_aiml_growth_fn = nothing,  # GRUG v8.12: no-op (AIMLNodeSystem removed)
     # GRUG (v9): Semantic subsystem — pattern from questions, vote from actions
     prediction_fn = nothing,           # () -> Union{Nothing, PredictionResult}
     last_user_text_fn = nothing,       # () -> Union{Nothing, String}
@@ -1437,16 +1460,8 @@ function run_mitosis!(;
                 push!(lobe.node_ids, new_id)
             end
 
-            # GRUG: STOCHASTIC AIML GROWTH — DISABLED while mitosis is commented out.
-            # When mitosis plants a main node in a lobe, coinflip ~1/3 to auto-grow
-            # an AIML executive node. Commented out until mitosis is re-enabled.
-            # if stochastic_aiml_growth_fn !== nothing
-            #     try
-            #         stochastic_aiml_growth_fn(lobe_hint, pattern; data_warrant=warrant)
-            #     catch e
-            #         @warn "[MITOSIS] Stochastic AIML growth failed for lobe '$lobe_hint': $e"
-            #     end
-            # end
+            # GRUG: STOCHASTIC AIML GROWTH — removed v8.12 (AIMLNodeSystem removed).
+            # The :aiml growth_type branch in AutoGrowth is now a no-op.
         end
 
         # ── GROUP-BASED LATCHING (v9.2 — RELATIONAL+THESAURUS COHERENCE) ────
@@ -1457,12 +1472,12 @@ function run_mitosis!(;
         #   3. vote_overlap > MITOSIS_VOTE_SIM_FLOOR     (action_packet name overlap)
         # Hard strength floor is REPLACED by strength-biased coinflip:
         #   p_join = avg_strength / STRENGTH_CAP
-        # AIML nodes and antimatch nodes are ALWAYS singletons — no latching.
+        # AIML nodes (backward-compat) and antimatch nodes are ALWAYS singletons — no latching.
         # Match nodes and time nodes participate in the full pipeline.
         # Singletons with <4 connected nodes get NOCHAT label (ChatterMode-ineligible).
-        # NO AUTO GROWTH — stochastic gate and AIML growth remain disabled.
+        # NO AUTO GROWTH — stochastic gate remains disabled.
 
-        # GRUG: First — node type branch. AIML and antimatch = always singleton.
+        # GRUG: First — node type branch. AIML (backward-compat) and antimatch = always singleton.
         _is_antimatch = false
         _is_singleton_type = false
         try
@@ -1481,7 +1496,7 @@ function run_mitosis!(;
         if _is_antimatch || _is_singleton_type
             # ── ANTIMATCH/AIML: ALWAYS SINGLETON ──────────────────────────
             # GRUG: Antimatch nodes drain confidence, they don't join groups.
-            # AIML nodes are executive templates managed by AIMLNodeSystem.
+            # AIML nodes were executive templates (AIMLNodeSystem removed v8.12).
             # Both go straight to singleton group. No chatter. No latching.
             try
                 if register_group_fn !== nothing
@@ -1689,7 +1704,7 @@ function run_mitosis!(;
         _type_tag = if _is_antimatch
             "antimatch:singleton"
         elseif _is_singleton_type
-            "aiml:singleton"
+            "aiml:singleton"  # backward-compat label (AIMLNodeSystem removed v8.12)
         else
             "match"
         end

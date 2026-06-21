@@ -3,13 +3,34 @@
 # Dump stats from a specimen build (no missions)
 # =============================================================================
 using Pkg
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 Pkg.activate(joinpath(@__DIR__, ".."))
 ENV["GRUG_NO_AUTOLOAD"] = "1"
 include(joinpath(@__DIR__, "..", "src", "GrugBot420.jl"))
 using .GrugBot420
 
 import .GrugBot420: grow_nodes_from_packet, attach_node!,
-    add_orchestration_rule!, AIML_DROP_TABLE,
+    add_orchestration_rule!, ORCHESTRATION_RULES,
     Lobe, EyeSystem, SemanticVerbs, RelationalJitter, InputDecomposer,
     HippocampalModulator, AIMLNodeSystem,
     NODE_MAP, NODE_LOCK, ATTACHMENT_MAP, ATTACHMENT_LOCK,
@@ -205,8 +226,8 @@ end
 
 println("\n=== ORCHESTRATION RULES ===")
 try
-    println("  Active: $(length(AIML_DROP_TABLE))")
-    for (i, rule) in enumerate(AIML_DROP_TABLE)
+    println("  Active: $(length(ORCHESTRATION_RULES))")
+    for (i, rule) in enumerate(ORCHESTRATION_RULES)
         println("    Rule $(i): prob=$(rule.fire_probability), text=\"$(first(rule.text, 70))$(length(rule.text) > 70 ? "..." : "")\"")
     end
 catch e

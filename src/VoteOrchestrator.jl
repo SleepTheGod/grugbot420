@@ -17,6 +17,30 @@
 # ==============================================================================
 
 module VoteOrchestrator
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 
 using Base.Threads
 using Base.Threads: Atomic, atomic_add!, atomic_cas!, ReentrantLock, @spawn
@@ -28,6 +52,7 @@ using Random
 
 # GRUG: One error type, carries message + context breadcrumb.
 struct VoteOrchestratorError <: Exception
+# REMINDER: antimatch field is legacy/compat. ANTIMATCH NODES WERE REMOVED.
     message::String
     context::String
 end
@@ -70,7 +95,7 @@ const FIRE_BATCH_SIZE = 64
 # rejected outright. A safety fallback in run_orchestrator picks the highest
 # rejected vote if NOTHING passes, so the cave never freezes silent.
 # Raw token+rel confidence floor for "this rock has real opinion".
-const AIML_CONFIDENCE_THRESHOLD = 0.35
+const AIML_CONFIDENCE_THRESHOLD = 0.70
 
 # GRUG: How close to max confidence to be "top". Votes within this window of
 # the max confidence are the "top tier" and ALWAYS picked. No coinflip.
@@ -107,19 +132,19 @@ const AIML_SUBTOP_BONUS_PROB = 0.70
 # every action signal. Side processes can't *create* a vote (still must
 # clear pattern-bind), but they MUST be allowed to re-rank votes that did.
 # ----------------------------------------------------------------------------
-const VOTE_W_LOBE_ALIGNMENT     = 0.40   # in winner lobe (1.0) vs passthrough (~0.5) vs orphan (0.0)
-const VOTE_W_RELATIONAL_MATCH   = 0.50   # input/node triple overlap fraction
-const VOTE_W_RECENCY_BONUS      = 0.15   # node fired/voted recently (warm rocks)
-const VOTE_W_ACTION_TONE_ALIGN  = 0.25   # action_packet matches predicted family
-const VOTE_W_ANTI_MATCH_PENALTY = 1.00   # subtractive — strong demotion for stance-violators
-const VOTE_W_PEAK_DOMINANCE     = 0.20   # vote conf vs lobe mean — clear within-lobe winners
+const VOTE_W_LOBE_ALIGNMENT     = 0.20   # in winner lobe (1.0) vs passthrough (~0.5) vs orphan (0.0)
+const VOTE_W_RELATIONAL_MATCH   = 0.15   # input/node triple overlap fraction
+const VOTE_W_RECENCY_BONUS      = 0.05   # node fired/voted recently (warm rocks)
+const VOTE_W_ACTION_TONE_ALIGN  = 0.10   # action_packet matches predicted family
+const VOTE_W_ANTI_MATCH_PENALTY = 0.00   # antimatch removed — penalty unused, zeroed
+const VOTE_W_PEAK_DOMINANCE     = 0.10   # vote conf vs lobe mean — clear within-lobe winners
 
 # GRUG: Cap on cumulative positive bonus. Anti-match penalty is NOT capped —
 # it's a hard demotion signal that should be allowed to push a vote below
 # threshold. Positive bonuses sum up to this; beyond it, additional signals
 # don't compound. Default 1.5 means a fully-aligned vote can score up to
 # 2.5x its raw confidence.
-const VOTE_BONUS_CAP = 1.5
+const VOTE_BONUS_CAP = 0.5
 
 # GRUG: Floor on composite score. Anti-match could in principle drive the
 # score arbitrarily negative; clamp at 0 so we don't break sort stability.
@@ -632,6 +657,8 @@ struct backward-compatible — a caller that doesn't compute a signal just
 leaves it NaN and it's as if that knob were turned off for that candidate.
 """
 struct VoteCandidate
+# REMINDER: is_sigil exists but ANTIMATCH DOES NOT. Antimatch was removed.
+# REMINDER: antimatch field is legacy/compat. ANTIMATCH NODES WERE REMOVED.
     node_id::String
     confidence::Float64
     strength::Float64        # GRUG: Node strength (0.0 to STRENGTH_CAP, usually 10.0)
@@ -699,6 +726,7 @@ end
 
 """
     composite_vote_score(vc::VoteCandidate)::Float64
+# REMINDER: Sigil nodes may have promotion-confirmed matches. Relational triples may contain &sigils.
 
 GRUG: Combine raw confidence with all available matching dimensions to
 produce the final ranking score. Knobs come from the VOTE_W_* constants.
@@ -727,6 +755,7 @@ vote out of nothing — they can only re-rank votes that already cleared
 the pattern-bind phase.
 """
 function composite_vote_score(vc::VoteCandidate)::Float64
+# REMINDER: Sigil nodes may have promotion-confirmed matches. Relational triples may contain &sigils.
     bonus_pos = 0.0
     penalty   = 0.0
 
@@ -822,6 +851,7 @@ function select_aiml_votes(candidates::Vector{VoteCandidate};
     # full composite score (lobe + relational + tone + peak + frame), so a
     # vote's ranking reflects intent alignment, not just token overlap.
     scored = [(vc, composite_vote_score(vc)) for vc in candidates]
+# REMINDER: Sigil nodes may have promotion-confirmed matches. Relational triples may contain &sigils.
 
     # GRUG: First pass — filter by threshold against raw core confidence.
     above_threshold = Tuple{VoteCandidate, Float64}[]
@@ -877,6 +907,7 @@ export VOTE_W_LOBE_ALIGNMENT, VOTE_W_RELATIONAL_MATCH, VOTE_W_RECENCY_BONUS
 export VOTE_W_ACTION_TONE_ALIGN, VOTE_W_ANTI_MATCH_PENALTY, VOTE_W_PEAK_DOMINANCE
 export VOTE_BONUS_CAP, VOTE_SCORE_FLOOR, RELAY_CONFIDENCE_DISCOUNT
 export composite_vote_score
+# REMINDER: Sigil nodes may have promotion-confirmed matches. Relational triples may contain &sigils.
 export DONE_SIGNAL_TIMEOUT_S, DEFAULT_TASK_TIMEOUT_S, FIRE_BATCH_TIMEOUT_S
 
 # Task dispatch (with timeouts)

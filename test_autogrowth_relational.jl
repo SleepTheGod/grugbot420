@@ -16,6 +16,27 @@
 # explicit `global` declarations.
 # ============================================================
 ENV["GRUG_NO_AUTOLOAD"] = "1"
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 include("src/Main.jl")
 
 const SPEC = joinpath(@__DIR__, "specimens", "comprehensive_v3_specimen.json")
@@ -26,8 +47,8 @@ using .AutoGrowth
 
 # ── Helper: run a mission silently and capture result ──
 function run_silent_mission(text::String)
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        _LAST_AIML_OUTPUT[] = ""
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        _LAST_VOICE_OUTPUT[] = ""
         _LAST_FIRED_NODE[] = ""
         _LAST_PRIMARY_ACTION[] = ""
         _LAST_CONFIDENCE[] = 0.0
@@ -38,8 +59,8 @@ function run_silent_mission(text::String)
     redirect_stdout(orig)
     close(wr); close(rd)
     resp = ""; node = ""; action = ""; conf = 0.0
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        resp   = _LAST_AIML_OUTPUT[]
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        resp   = _LAST_VOICE_OUTPUT[]
         node   = _LAST_FIRED_NODE[]
         action = _LAST_PRIMARY_ACTION[]
         conf   = _LAST_CONFIDENCE[]

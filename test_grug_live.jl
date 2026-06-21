@@ -4,6 +4,27 @@
 # causal inputs. Log all telemetry to MD file. Check for decoherence.
 
 using Pkg
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 Pkg.instantiate()
 using Dates
 
@@ -14,7 +35,7 @@ import .GrugBot420:
     process_mission, load_specimen_from_file!,
     add_message_to_history!, cast_vote, create_node,
     get_node_status_summary, get_bridge_summary,
-    _LAST_AIML_OUTPUT, _LAST_AIML_OUTPUT_LOCK,
+    _LAST_VOICE_OUTPUT, _LAST_VOICE_OUTPUT_LOCK,
     _LAST_FIRED_NODE, _LAST_PRIMARY_ACTION, _LAST_CONFIDENCE,
     NODE_MAP, NODE_LOCK, get_alive_node_count,
     maybe_run_idle, AIMLNodeSystem, ChatterMode,
@@ -23,8 +44,8 @@ import .GrugBot420:
 const LOG_PATH = joinpath(@__DIR__, "grug_live_test_log.md")
 
 function read_last_output()::String
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        _LAST_AIML_OUTPUT[]
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        _LAST_VOICE_OUTPUT[]
     end
 end
 
@@ -211,8 +232,8 @@ function main()
             turn += 1
             print("Turn $turn: \"$input\" ... ")
 
-            lock(_LAST_AIML_OUTPUT_LOCK) do
-                _LAST_AIML_OUTPUT[] = ""
+            lock(_LAST_VOICE_OUTPUT_LOCK) do
+                _LAST_VOICE_OUTPUT[] = ""
             end
 
             local _turn_elapsed = 0.0

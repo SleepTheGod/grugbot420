@@ -10,7 +10,7 @@
 #   2. Frame-keyed skeleton dispatch — which skeleton fires for each frame
 #   3. Action-keyed skeleton fallback — when no judgement is available
 #   4. CLAIM priority: system_prompt body > node.pattern > mission fallback
-#   5. End-to-end: feed a synthetic mission through generate_aiml_payload
+#   5. End-to-end: feed a synthetic mission through synthesize_voice_reply
 #      and check the spoken reply contains the expected sentences and is
 #      not just echoing the trigger pattern
 #
@@ -19,6 +19,27 @@
 # ==============================================================================
 
 using Test
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 using Random
 
 const REPO_ROOT = dirname(@__DIR__)
@@ -33,7 +54,7 @@ println("GRUG v7.21b-3d — coherence fix (system_prompt body + frame skeleton)"
 println("="^70)
 
 # ------------------------------------------------------------------------------
-# Helpers — build a node and feed it through generate_aiml_payload.
+# Helpers — build a node and feed it through synthesize_voice_reply.
 # ------------------------------------------------------------------------------
 
 function make_test_node!(node_id::String, pattern::String, system_prompt::String;
@@ -86,7 +107,7 @@ function build_payload(mission::String, node_id::String, action::String;
         node_id, action, 0.7,
         String[], RelationalTriple[], RelationalTriple[], false
     )
-    payload = generate_aiml_payload(
+    payload = synthesize_voice_reply(
         mission, primary, [primary], Vote[], [primary],
         Dict{String,Any}("system_prompt" => sp)
     )

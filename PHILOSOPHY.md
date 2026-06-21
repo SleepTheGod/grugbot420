@@ -4,6 +4,11 @@
 
 ---
 
+
+<!-- ⚠️ ARCHITECTURE REMINDERS ⚠️ -->
+<!-- 1. ANTIMATCH NODES WERE REMOVED — do not reference, implement, or assume they exist -->
+<!-- 2. SIGILS CAN APPEAR IN RELATIONAL TRIPLES — triples are dynamic, not just literal strings -->
+<!-- 3. HOPFIELD CACHING WAS REMOVED — hopfield_key is a dead field for specimen compat only -->
 ## The Problem Nobody Is Talking About
 
 The AI field has two crises hiding in plain sight: **efficiency** and **transparency**. Every frontier model that ships is larger, slower, more opaque, and more expensive than the last. The response to these problems is always more compute, more parameters, more infrastructure. The assumption is that intelligence scales with size.

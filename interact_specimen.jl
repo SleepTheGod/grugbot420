@@ -4,6 +4,27 @@
 # Usage: julia --project=. interact_specimen.jl
 
 using Pkg
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 Pkg.activate(".")
 
 # Disable auto-load so we load our specimen
@@ -187,7 +208,7 @@ for (i, mission) in enumerate(missions)
     inhibition_count = length(InputQueue.list_inhibitions())
     bridge_count_val = count_bridges()
     thesaurus_count = Thesaurus.seed_synonym_count()
-    rule_count = length(AIML_DROP_TABLE)
+    rule_count = length(ORCHESTRATION_RULES)
 
     result = Dict(
         "mission_id" => i,
@@ -300,8 +321,8 @@ open(report_path, "w") do f
     println(f, "|--------|-------|")
     println(f, "| Thesaurus seeds | $(Thesaurus.seed_synonym_count()) synonym groups |")
     println(f, "| Inhibitions (neg thesaurus) | $(length(InputQueue.list_inhibitions())) words inhibited |")
-    println(f, "| Automaton escalation rules | $(length(AIML_DROP_TABLE)) stochastic rules in table |")
-    println(f, "| Stochastic rules | $(length(AIML_DROP_TABLE)) |")
+    println(f, "| Automaton escalation rules | $(length(ORCHESTRATION_RULES)) stochastic rules in table |")
+    println(f, "| Stochastic rules | $(length(ORCHESTRATION_RULES)) |")
     println(f, "| Cross-lobe bridges | $(count_bridges()) |")
     println(f, "| Chatter groups | $(length(GROUP_MAP)) groups |")
     println(f, "| Arousal baseline | $_final_arousal |")

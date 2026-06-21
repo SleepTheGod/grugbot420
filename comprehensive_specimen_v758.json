@@ -162,7 +162,27 @@
     "node_31": "survival",
     "node_36": "social",
     "node_40": "math",
-    "node_12": "survival"
+    "node_12": "survival",
+    "node_133": "language",
+    "node_134": "language",
+    "node_135": "language",
+    "node_136": "language",
+    "node_137": "math",
+    "node_138": "emotions",
+    "node_139": "emotions",
+    "node_140": "emotions",
+    "node_141": "science",
+    "node_142": "science",
+    "node_143": "science",
+    "node_144": "science",
+    "node_145": "science",
+    "node_146": "survival",
+    "node_147": "survival",
+    "node_148": "social",
+    "node_149": "social",
+    "node_150": "language",
+    "node_151": "math",
+    "node_152": "math"
   },
   "sigil_table": [
     {
@@ -373,6 +393,44 @@
       "lexicon": null,
       "applies_at": "match",
       "params": null
+    },
+    {
+      "name": "conj",
+      "class": "macro",
+      "applies_at": "bind",
+      "type": "word",
+      "lexicon": [
+        "and",
+        "or",
+        "but",
+        "also",
+        "however"
+      ],
+      "promote_on": "match",
+      "provenance": "specimen-v758"
+    },
+    {
+      "name": "doAction",
+      "class": "procedure",
+      "applies_at": "match",
+      "type": "word",
+      "lexicon": [
+        "say",
+        "repeat",
+        "count",
+        "check",
+        "tell",
+        "remind",
+        "confirm",
+        "verify",
+        "search",
+        "compare",
+        "summarize",
+        "describe",
+        "evaluate"
+      ],
+      "promote_on": "match",
+      "provenance": "specimen-v758"
     }
   ],
   "chatter_cursor": {
@@ -391,7 +449,7 @@
       "role": "System",
       "id": 1,
       "pinned": false,
-      "text": "Mission \"Hey Grug, what do you know about fire?\" → primary=reason conf=0.37 node=node_45"
+      "text": "Mission \"Hey Grug, what do you know about fire?\" \u2192 primary=reason conf=0.37 node=node_45"
     },
     {
       "intensity": 0.044035101766499885,
@@ -405,7 +463,7 @@
       "role": "System",
       "id": 3,
       "pinned": false,
-      "text": "Mission \"Tell me about water.\" → primary=reason conf=0.34 node=node_14"
+      "text": "Mission \"Tell me about water.\" \u2192 primary=reason conf=0.34 node=node_14"
     },
     {
       "intensity": 0.00046595533746637244,
@@ -419,7 +477,7 @@
       "role": "System",
       "id": 5,
       "pinned": false,
-      "text": "Mission \"How does gravity work?\" → primary=explain conf=0.42 node=node_21"
+      "text": "Mission \"How does gravity work?\" \u2192 primary=explain conf=0.42 node=node_21"
     },
     {
       "intensity": 0.023235864047037553,
@@ -433,7 +491,7 @@
       "role": "System",
       "id": 7,
       "pinned": false,
-      "text": "Mission \"Why does fire burn, Grug?\" → primary=reason conf=0.49 node=node_108"
+      "text": "Mission \"Why does fire burn, Grug?\" \u2192 primary=reason conf=0.49 node=node_108"
     },
     {
       "intensity": 0.0013146665505901136,
@@ -447,7 +505,7 @@
       "role": "System",
       "id": 9,
       "pinned": false,
-      "text": "Mission \"Why is the sky blue?\" → primary=explain conf=2.82 node=node_19"
+      "text": "Mission \"Why is the sky blue?\" \u2192 primary=explain conf=2.82 node=node_19"
     },
     {
       "intensity": 0.000631415859565804,
@@ -461,7 +519,7 @@
       "role": "System",
       "id": 11,
       "pinned": false,
-      "text": "Mission \"Why do we feel sad sometimes?\" → primary=comfort conf=0.43 node=node_33"
+      "text": "Mission \"Why do we feel sad sometimes?\" \u2192 primary=comfort conf=0.43 node=node_33"
     },
     {
       "intensity": 0.06751991393853465,
@@ -475,7 +533,7 @@
       "role": "System",
       "id": 13,
       "pinned": false,
-      "text": "Mission \"Define gravity for me.\" → primary=define conf=1.0 node=node_23"
+      "text": "Mission \"Define gravity for me.\" \u2192 primary=define conf=1.0 node=node_23"
     },
     {
       "intensity": 0.18178736702373904,
@@ -489,7 +547,7 @@
       "role": "System",
       "id": 15,
       "pinned": false,
-      "text": "Mission \"What is an atom?\" → primary=reason conf=0.5 node=node_106"
+      "text": "Mission \"What is an atom?\" \u2192 primary=reason conf=0.5 node=node_106"
     },
     {
       "intensity": 0.05336626957412797,
@@ -503,7 +561,7 @@
       "role": "System",
       "id": 17,
       "pinned": false,
-      "text": "Mission \"Is fire dangerous?\" → primary=reason conf=0.5 node=node_108"
+      "text": "Mission \"Is fire dangerous?\" \u2192 primary=reason conf=0.5 node=node_108"
     },
     {
       "intensity": 0.17565278897078082,
@@ -517,7 +575,7 @@
       "role": "System",
       "id": 19,
       "pinned": false,
-      "text": "Mission \"What about deep water?\" → primary=alert conf=0.5 node=node_30"
+      "text": "Mission \"What about deep water?\" \u2192 primary=alert conf=0.5 node=node_30"
     },
     {
       "intensity": 0.0007415191498816447,
@@ -531,21 +589,21 @@
       "role": "System",
       "id": 21,
       "pinned": false,
-      "text": "Mission \"I feel sad today, Grug.\" → primary=comfort conf=0.37 node=node_33"
+      "text": "Mission \"I feel sad today, Grug.\" \u2192 primary=comfort conf=0.37 node=node_33"
     },
     {
-      "intensity": 2.5712654459126145e-5,
+      "intensity": 2.5712654459126145e-05,
       "role": "User",
       "id": 22,
       "pinned": false,
       "text": "I'm scared of what's coming."
     },
     {
-      "intensity": 2.1746659034427455e-5,
+      "intensity": 2.1746659034427455e-05,
       "role": "System",
       "id": 23,
       "pinned": false,
-      "text": "Mission \"I'm scared of what's coming.\" → primary=comfort conf=0.29 node=node_34"
+      "text": "Mission \"I'm scared of what's coming.\" \u2192 primary=comfort conf=0.29 node=node_34"
     },
     {
       "intensity": 0.0009213618784420343,
@@ -559,7 +617,7 @@
       "role": "System",
       "id": 25,
       "pinned": false,
-      "text": "Mission \"I feel so lonely.\" → primary=comfort conf=0.79 node=node_35"
+      "text": "Mission \"I feel so lonely.\" \u2192 primary=comfort conf=0.79 node=node_35"
     },
     {
       "intensity": 0.18112294540219148,
@@ -573,7 +631,7 @@
       "role": "System",
       "id": 27,
       "pinned": false,
-      "text": "Mission \"What is 2 plus 2?\" → primary=reason conf=2.41 node=node_128"
+      "text": "Mission \"What is 2 plus 2?\" \u2192 primary=reason conf=2.41 node=node_128"
     },
     {
       "intensity": 0.18477043325584233,
@@ -587,7 +645,7 @@
       "role": "System",
       "id": 29,
       "pinned": false,
-      "text": "Mission \"What is 3 times 4?\" → primary=reason conf=2.46 node=node_127"
+      "text": "Mission \"What is 3 times 4?\" \u2192 primary=reason conf=2.46 node=node_127"
     },
     {
       "intensity": 0.18420772138739702,
@@ -601,7 +659,7 @@
       "role": "System",
       "id": 31,
       "pinned": false,
-      "text": "Mission \"What is 10 minus 3?\" → primary=reason conf=2.47 node=node_126"
+      "text": "Mission \"What is 10 minus 3?\" \u2192 primary=reason conf=2.47 node=node_126"
     },
     {
       "intensity": 0.20717514017083893,
@@ -615,7 +673,7 @@
       "role": "System",
       "id": 33,
       "pinned": false,
-      "text": "Mission \"What comes before the present?\" → primary=reason conf=0.34 node=node_54"
+      "text": "Mission \"What comes before the present?\" \u2192 primary=reason conf=0.34 node=node_54"
     },
     {
       "intensity": 0.004206464258401141,
@@ -629,7 +687,7 @@
       "role": "System",
       "id": 35,
       "pinned": false,
-      "text": "Mission \"Tell me about spring and summer.\" → primary=reason conf=0.47 node=node_59"
+      "text": "Mission \"Tell me about spring and summer.\" \u2192 primary=reason conf=0.47 node=node_59"
     },
     {
       "intensity": 0.000689664196803026,
@@ -643,7 +701,7 @@
       "role": "System",
       "id": 37,
       "pinned": false,
-      "text": "Mission \"Heat causes evaporation.\" → primary=reason conf=0.67 node=node_92"
+      "text": "Mission \"Heat causes evaporation.\" \u2192 primary=reason conf=0.67 node=node_92"
     },
     {
       "intensity": 0.0018787193607704572,
@@ -657,7 +715,7 @@
       "role": "System",
       "id": 39,
       "pinned": false,
-      "text": "Mission \"Clouds are in the sky.\" → primary=reason conf=1.0 node=node_98"
+      "text": "Mission \"Clouds are in the sky.\" \u2192 primary=reason conf=1.0 node=node_98"
     },
     {
       "intensity": 0.0011060316851213114,
@@ -671,7 +729,7 @@
       "role": "System",
       "id": 41,
       "pinned": false,
-      "text": "Mission \"A tree has branches.\" → primary=reason conf=1.0 node=node_103"
+      "text": "Mission \"A tree has branches.\" \u2192 primary=reason conf=1.0 node=node_103"
     },
     {
       "intensity": 0.040409264067766446,
@@ -685,7 +743,7 @@
       "role": "System",
       "id": 43,
       "pinned": false,
-      "text": "Mission \"How do I make fire?\" → primary=reason conf=0.49 node=node_46"
+      "text": "Mission \"How do I make fire?\" \u2192 primary=reason conf=0.49 node=node_46"
     },
     {
       "intensity": 0.042608593414759366,
@@ -699,7 +757,7 @@
       "role": "System",
       "id": 45,
       "pinned": false,
-      "text": "Mission \"How do I find water?\" → primary=reason conf=0.5 node=node_104"
+      "text": "Mission \"How do I find water?\" \u2192 primary=reason conf=0.5 node=node_104"
     },
     {
       "intensity": 0.005894489028470774,
@@ -713,7 +771,7 @@
       "role": "System",
       "id": 47,
       "pinned": false,
-      "text": "Mission \"Flame combust wood.\" → primary=reason conf=0.38 node=node_3"
+      "text": "Mission \"Flame combust wood.\" \u2192 primary=reason conf=0.38 node=node_3"
     },
     {
       "intensity": 0.003832245994555976,
@@ -734,7 +792,7 @@
       "role": "System",
       "id": 50,
       "pinned": false,
-      "text": "Mission \"Construct a shelter.\" → primary=reason conf=0.29 node=node_110"
+      "text": "Mission \"Construct a shelter.\" \u2192 primary=reason conf=0.29 node=node_110"
     },
     {
       "intensity": 0.05290264584339609,
@@ -748,7 +806,7 @@
       "role": "System",
       "id": 52,
       "pinned": false,
-      "text": "Mission \"Fire makes me feel warm and safe.\" → primary=alert conf=0.3 node=node_29"
+      "text": "Mission \"Fire makes me feel warm and safe.\" \u2192 primary=alert conf=0.3 node=node_29"
     },
     {
       "intensity": 0.01707844822061423,
@@ -762,7 +820,7 @@
       "role": "System",
       "id": 54,
       "pinned": false,
-      "text": "Mission \"I need shelter from the cold.\" → primary=reason conf=0.25 node=node_94"
+      "text": "Mission \"I need shelter from the cold.\" \u2192 primary=reason conf=0.25 node=node_94"
     },
     {
       "intensity": 0.025355087012990725,
@@ -776,7 +834,7 @@
       "role": "System",
       "id": 56,
       "pinned": false,
-      "text": "Mission \"Person feels music.\" → primary=reason conf=0.8 node=node_115"
+      "text": "Mission \"Person feels music.\" \u2192 primary=reason conf=0.8 node=node_115"
     },
     {
       "intensity": 0.04189806066672951,
@@ -790,7 +848,7 @@
       "role": "System",
       "id": 58,
       "pinned": false,
-      "text": "Mission \"Spring season.\" → primary=reason conf=0.33 node=node_58"
+      "text": "Mission \"Spring season.\" \u2192 primary=reason conf=0.33 node=node_58"
     },
     {
       "intensity": 0.06367211879413125,
@@ -804,7 +862,7 @@
       "role": "System",
       "id": 60,
       "pinned": false,
-      "text": "Mission \"Friendship brings joy.\" → primary=reason conf=0.79 node=node_15"
+      "text": "Mission \"Friendship brings joy.\" \u2192 primary=reason conf=0.79 node=node_15"
     },
     {
       "intensity": 0.09655872740432489,
@@ -818,7 +876,7 @@
       "role": "System",
       "id": 62,
       "pinned": false,
-      "text": "Mission \"Cooperation builds trust.\" → primary=reason conf=1.0 node=node_16"
+      "text": "Mission \"Cooperation builds trust.\" \u2192 primary=reason conf=1.0 node=node_16"
     },
     {
       "intensity": 0.07163628675729752,
@@ -860,7 +918,7 @@
       "role": "System",
       "id": 68,
       "pinned": false,
-      "text": "Mission \"Cooking food makes it safe.\" → primary=reason conf=0.11 node=node_13"
+      "text": "Mission \"Cooking food makes it safe.\" \u2192 primary=reason conf=0.11 node=node_13"
     },
     {
       "intensity": 0.11393489047539662,
@@ -881,7 +939,7 @@
       "role": "System",
       "id": 71,
       "pinned": false,
-      "text": "Mission \"fire\" → primary=reason conf=0.33 node=node_45"
+      "text": "Mission \"fire\" \u2192 primary=reason conf=0.33 node=node_45"
     },
     {
       "intensity": 0.6190988889810074,
@@ -895,7 +953,7 @@
       "role": "System",
       "id": 73,
       "pinned": false,
-      "text": "Mission \"What is water?\" → primary=reason conf=0.43 node=node_46"
+      "text": "Mission \"What is water?\" \u2192 primary=reason conf=0.43 node=node_46"
     },
     {
       "intensity": 0.5515397745553898,
@@ -909,7 +967,7 @@
       "role": "System",
       "id": 75,
       "pinned": false,
-      "text": "Mission \"Define happiness.\" → primary=define conf=1.0 node=node_26"
+      "text": "Mission \"Define happiness.\" \u2192 primary=define conf=1.0 node=node_26"
     },
     {
       "intensity": 0.832703368244453,
@@ -923,7 +981,7 @@
       "role": "System",
       "id": 77,
       "pinned": false,
-      "text": "Mission \"I miss someone.\" → primary=comfort conf=1.0 node=node_36"
+      "text": "Mission \"I miss someone.\" \u2192 primary=comfort conf=1.0 node=node_36"
     },
     {
       "intensity": 1.2855496088254474,
@@ -937,7 +995,7 @@
       "role": "System",
       "id": 79,
       "pinned": false,
-      "text": "Mission \"What comes after winter?\" → primary=reason conf=0.25 node=node_64"
+      "text": "Mission \"What comes after winter?\" \u2192 primary=reason conf=0.25 node=node_64"
     },
     {
       "intensity": 1.0,
@@ -1262,7 +1320,7 @@
   "chatter_groups": [
     {
       "centroid_pattern": "hello hi greeting mornin",
-      "created_at": 1.780520164775324e9,
+      "created_at": 1780520164.775324,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1275,7 +1333,7 @@
     },
     {
       "centroid_pattern": "think ponder reason calculate",
-      "created_at": 1.780520164775343e9,
+      "created_at": 1780520164.775343,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1288,7 +1346,7 @@
     },
     {
       "centroid_pattern": "happiness feels good",
-      "created_at": 1.780520165670641e9,
+      "created_at": 1780520165.670641,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1301,7 +1359,7 @@
     },
     {
       "centroid_pattern": "fire hearth",
-      "created_at": 1.780520166198733e9,
+      "created_at": 1780520166.198733,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1314,7 +1372,7 @@
     },
     {
       "centroid_pattern": "fish river",
-      "created_at": 1.780520166198749e9,
+      "created_at": 1780520166.198749,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1327,7 +1385,7 @@
     },
     {
       "centroid_pattern": "people village",
-      "created_at": 1.780520166198762e9,
+      "created_at": 1780520166.198762,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1340,7 +1398,7 @@
     },
     {
       "centroid_pattern": "tree branches",
-      "created_at": 1.780520166231391e9,
+      "created_at": 1780520166.231391,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1353,7 +1411,7 @@
     },
     {
       "centroid_pattern": "river water",
-      "created_at": 1.780520166231428e9,
+      "created_at": 1780520166.231428,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1366,7 +1424,7 @@
     },
     {
       "centroid_pattern": "person feelings",
-      "created_at": 1.780520166231443e9,
+      "created_at": 1780520166.231443,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1379,7 +1437,7 @@
     },
     {
       "centroid_pattern": "atom electrons",
-      "created_at": 1.780520166231462e9,
+      "created_at": 1780520166.231462,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1392,7 +1450,7 @@
     },
     {
       "centroid_pattern": "clan elders",
-      "created_at": 1.780520166231478e9,
+      "created_at": 1780520166.231478,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1405,7 +1463,7 @@
     },
     {
       "centroid_pattern": "fire star",
-      "created_at": 1.78052016626402e9,
+      "created_at": 1780520166.26402,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1418,7 +1476,7 @@
     },
     {
       "centroid_pattern": "joy warmth",
-      "created_at": 1.780520166264058e9,
+      "created_at": 1780520166.264058,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1431,7 +1489,7 @@
     },
     {
       "centroid_pattern": "sadness feels heavy",
-      "created_at": 1.780520165670657e9,
+      "created_at": 1780520165.670657,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1444,7 +1502,7 @@
     },
     {
       "centroid_pattern": "cave shelter",
-      "created_at": 1.780520166264076e9,
+      "created_at": 1780520166.264076,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1457,7 +1515,7 @@
     },
     {
       "centroid_pattern": "family roots",
-      "created_at": 1.780520166264093e9,
+      "created_at": 1780520166.264093,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1470,7 +1528,7 @@
     },
     {
       "centroid_pattern": "person music",
-      "created_at": 1.780520166326973e9,
+      "created_at": 1780520166.326973,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1483,7 +1541,7 @@
     },
     {
       "centroid_pattern": "child mother",
-      "created_at": 1.780520166327016e9,
+      "created_at": 1780520166.327016,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1496,7 +1554,7 @@
     },
     {
       "centroid_pattern": "warrior battle",
-      "created_at": 1.78052016632703e9,
+      "created_at": 1780520166.32703,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1509,7 +1567,7 @@
     },
     {
       "centroid_pattern": "friend companion",
-      "created_at": 1.780520166327046e9,
+      "created_at": 1780520166.327046,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1522,7 +1580,7 @@
     },
     {
       "centroid_pattern": "&season spring",
-      "created_at": 1.780520166352333e9,
+      "created_at": 1780520166.352333,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1535,7 +1593,7 @@
     },
     {
       "centroid_pattern": "&season summer",
-      "created_at": 1.780520166352361e9,
+      "created_at": 1780520166.352361,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1548,7 +1606,7 @@
     },
     {
       "centroid_pattern": "&season autumn",
-      "created_at": 1.780520166352371e9,
+      "created_at": 1780520166.352371,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1561,7 +1619,7 @@
     },
     {
       "centroid_pattern": "&season winter",
-      "created_at": 1.780520166352379e9,
+      "created_at": 1780520166.352379,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1574,7 +1632,7 @@
     },
     {
       "centroid_pattern": "shelter protects from cold",
-      "created_at": 1.78052016567067e9,
+      "created_at": 1780520165.67067,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1587,7 +1645,7 @@
     },
     {
       "centroid_pattern": "&danger poison",
-      "created_at": 1.780520166396213e9,
+      "created_at": 1780520166.396213,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1600,7 +1658,7 @@
     },
     {
       "centroid_pattern": "&danger venom",
-      "created_at": 1.780520166396244e9,
+      "created_at": 1780520166.396244,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1613,7 +1671,7 @@
     },
     {
       "centroid_pattern": "&danger hazard",
-      "created_at": 1.780520166396253e9,
+      "created_at": 1780520166.396253,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1626,7 +1684,7 @@
     },
     {
       "centroid_pattern": "what is &n plus &n",
-      "created_at": 1.780520166418832e9,
+      "created_at": 1780520166.418832,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1639,7 +1697,7 @@
     },
     {
       "centroid_pattern": "what is &n times &n",
-      "created_at": 1.780520166418874e9,
+      "created_at": 1780520166.418874,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1652,7 +1710,7 @@
     },
     {
       "centroid_pattern": "what is &n minus &n",
-      "created_at": 1.780520166418894e9,
+      "created_at": 1780520166.418894,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1665,7 +1723,7 @@
     },
     {
       "centroid_pattern": "what is &n divided by &n",
-      "created_at": 1.780520166418914e9,
+      "created_at": 1780520166.418914,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1678,7 +1736,7 @@
     },
     {
       "centroid_pattern": "define &word",
-      "created_at": 1.780520166440726e9,
+      "created_at": 1780520166.440726,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1691,7 +1749,7 @@
     },
     {
       "centroid_pattern": "explain &word",
-      "created_at": 1.780520166440763e9,
+      "created_at": 1780520166.440763,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1704,7 +1762,7 @@
     },
     {
       "centroid_pattern": "what is &word",
-      "created_at": 1.780520166440787e9,
+      "created_at": 1780520166.440787,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1717,7 +1775,7 @@
     },
     {
       "centroid_pattern": "food gives energy",
-      "created_at": 1.780520165670686e9,
+      "created_at": 1780520165.670686,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1730,7 +1788,7 @@
     },
     {
       "centroid_pattern": "water is essential",
-      "created_at": 1.780520165670698e9,
+      "created_at": 1780520165.670698,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1743,7 +1801,7 @@
     },
     {
       "centroid_pattern": "friendship brings joy",
-      "created_at": 1.780520165670708e9,
+      "created_at": 1780520165.670708,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1756,7 +1814,7 @@
     },
     {
       "centroid_pattern": "cooperation builds trust",
-      "created_at": 1.780520165670723e9,
+      "created_at": 1780520165.670723,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1769,7 +1827,7 @@
     },
     {
       "centroid_pattern": "words carry meaning",
-      "created_at": 1.780520165670734e9,
+      "created_at": 1780520165.670734,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1782,7 +1840,7 @@
     },
     {
       "centroid_pattern": "why does fire burn",
-      "created_at": 1.780520165710917e9,
+      "created_at": 1780520165.710917,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1795,7 +1853,7 @@
     },
     {
       "centroid_pattern": "why is the sky blue",
-      "created_at": 1.780520165716358e9,
+      "created_at": 1780520165.716358,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1808,7 +1866,7 @@
     },
     {
       "centroid_pattern": "grug hits rock and makes fire",
-      "created_at": 1.780520164778179e9,
+      "created_at": 1780520164.778179,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1821,7 +1879,7 @@
     },
     {
       "centroid_pattern": "why do we feel sad",
-      "created_at": 1.780520165716397e9,
+      "created_at": 1780520165.716397,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1834,7 +1892,7 @@
     },
     {
       "centroid_pattern": "how does shelter work",
-      "created_at": 1.780520165716413e9,
+      "created_at": 1780520165.716413,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1847,7 +1905,7 @@
     },
     {
       "centroid_pattern": "why do we need friends",
-      "created_at": 1.78052016571643e9,
+      "created_at": 1780520165.71643,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1860,7 +1918,7 @@
     },
     {
       "centroid_pattern": "define gravity",
-      "created_at": 1.780520165733072e9,
+      "created_at": 1780520165.733072,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1873,7 +1931,7 @@
     },
     {
       "centroid_pattern": "define atom",
-      "created_at": 1.780520165733106e9,
+      "created_at": 1780520165.733106,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1886,7 +1944,7 @@
     },
     {
       "centroid_pattern": "define addition",
-      "created_at": 1.780520165733117e9,
+      "created_at": 1780520165.733117,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1899,7 +1957,7 @@
     },
     {
       "centroid_pattern": "define happiness",
-      "created_at": 1.780520165733129e9,
+      "created_at": 1780520165.733129,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1912,7 +1970,7 @@
     },
     {
       "centroid_pattern": "define shelter",
-      "created_at": 1.780520165733139e9,
+      "created_at": 1780520165.733139,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1925,7 +1983,7 @@
     },
     {
       "centroid_pattern": "define synonym",
-      "created_at": 1.78052016573315e9,
+      "created_at": 1780520165.73315,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1938,7 +1996,7 @@
     },
     {
       "centroid_pattern": "fire is dangerous",
-      "created_at": 1.780520165749482e9,
+      "created_at": 1780520165.749482,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1951,7 +2009,7 @@
     },
     {
       "centroid_pattern": "fire burns wood",
-      "created_at": 1.780520165665349e9,
+      "created_at": 1780520165.665349,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1964,7 +2022,7 @@
     },
     {
       "centroid_pattern": "deep water is dangerous",
-      "created_at": 1.780520165749518e9,
+      "created_at": 1780520165.749518,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1977,7 +2035,7 @@
     },
     {
       "centroid_pattern": "wild animals are dangerous",
-      "created_at": 1.780520165749534e9,
+      "created_at": 1780520165.749534,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -1990,7 +2048,7 @@
     },
     {
       "centroid_pattern": "betrayal is dangerous",
-      "created_at": 1.780520165749547e9,
+      "created_at": 1780520165.749547,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2003,7 +2061,7 @@
     },
     {
       "centroid_pattern": "i feel sad",
-      "created_at": 1.780520165767049e9,
+      "created_at": 1780520165.767049,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2016,7 +2074,7 @@
     },
     {
       "centroid_pattern": "i am scared",
-      "created_at": 1.780520165767083e9,
+      "created_at": 1780520165.767083,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2029,7 +2087,7 @@
     },
     {
       "centroid_pattern": "i feel lonely",
-      "created_at": 1.780520165767097e9,
+      "created_at": 1780520165.767097,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2042,7 +2100,7 @@
     },
     {
       "centroid_pattern": "i miss someone",
-      "created_at": 1.780520165767109e9,
+      "created_at": 1780520165.767109,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2055,7 +2113,7 @@
     },
     {
       "centroid_pattern": "2 plus 2",
-      "created_at": 1.780520165795146e9,
+      "created_at": 1780520165.795146,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2068,7 +2126,7 @@
     },
     {
       "centroid_pattern": "3 times 4",
-      "created_at": 1.78052016579521e9,
+      "created_at": 1780520165.79521,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2081,7 +2139,7 @@
     },
     {
       "centroid_pattern": "10 minus 3",
-      "created_at": 1.78052016579524e9,
+      "created_at": 1780520165.79524,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2094,7 +2152,7 @@
     },
     {
       "centroid_pattern": "water flows downhill",
-      "created_at": 1.78052016567052e9,
+      "created_at": 1780520165.67052,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2107,7 +2165,7 @@
     },
     {
       "centroid_pattern": "15 divided by 5",
-      "created_at": 1.78052016579527e9,
+      "created_at": 1780520165.79527,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2120,7 +2178,7 @@
     },
     {
       "centroid_pattern": "7 plus 8",
-      "created_at": 1.780520165795293e9,
+      "created_at": 1780520165.795293,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2133,7 +2191,7 @@
     },
     {
       "centroid_pattern": "9 times 6",
-      "created_at": 1.780520165795326e9,
+      "created_at": 1780520165.795326,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2146,7 +2204,7 @@
     },
     {
       "centroid_pattern": "20 minus 8",
-      "created_at": 1.780520165795364e9,
+      "created_at": 1780520165.795364,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2159,7 +2217,7 @@
     },
     {
       "centroid_pattern": "100 divided by 10",
-      "created_at": 1.780520165795388e9,
+      "created_at": 1780520165.795388,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2172,7 +2230,7 @@
     },
     {
       "centroid_pattern": "fire burns wood",
-      "created_at": 1.780520165854805e9,
+      "created_at": 1780520165.854805,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2185,7 +2243,7 @@
     },
     {
       "centroid_pattern": "water extinguishes fire",
-      "created_at": 1.780520165860365e9,
+      "created_at": 1780520165.860365,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2198,7 +2256,7 @@
     },
     {
       "centroid_pattern": "earth orbits sun",
-      "created_at": 1.780520165860404e9,
+      "created_at": 1780520165.860404,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2211,7 +2269,7 @@
     },
     {
       "centroid_pattern": "hunger causes hunting",
-      "created_at": 1.780520165860428e9,
+      "created_at": 1780520165.860428,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2224,7 +2282,7 @@
     },
     {
       "centroid_pattern": "love comforts sadness",
-      "created_at": 1.780520165860449e9,
+      "created_at": 1780520165.860449,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2237,7 +2295,7 @@
     },
     {
       "centroid_pattern": "sky is blue",
-      "created_at": 1.780520165670551e9,
+      "created_at": 1780520165.670551,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2250,7 +2308,7 @@
     },
     {
       "centroid_pattern": "fear precedes courage",
-      "created_at": 1.780520165860467e9,
+      "created_at": 1780520165.860467,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2263,7 +2321,7 @@
     },
     {
       "centroid_pattern": "sharing strengthens community",
-      "created_at": 1.780520165860485e9,
+      "created_at": 1780520165.860485,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2276,7 +2334,7 @@
     },
     {
       "centroid_pattern": "trust enables cooperation",
-      "created_at": 1.780520165860503e9,
+      "created_at": 1780520165.860503,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2289,7 +2347,7 @@
     },
     {
       "centroid_pattern": "past present",
-      "created_at": 1.780520165895168e9,
+      "created_at": 1780520165.895168,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2302,7 +2360,7 @@
     },
     {
       "centroid_pattern": "present future",
-      "created_at": 1.780520165895212e9,
+      "created_at": 1780520165.895212,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2315,7 +2373,7 @@
     },
     {
       "centroid_pattern": "dawn day",
-      "created_at": 1.780520165895233e9,
+      "created_at": 1780520165.895233,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2328,7 +2386,7 @@
     },
     {
       "centroid_pattern": "day dusk",
-      "created_at": 1.780520165895252e9,
+      "created_at": 1780520165.895252,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2341,7 +2399,7 @@
     },
     {
       "centroid_pattern": "dusk night",
-      "created_at": 1.780520165895269e9,
+      "created_at": 1780520165.895269,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2354,7 +2412,7 @@
     },
     {
       "centroid_pattern": "spring summer",
-      "created_at": 1.780520165895286e9,
+      "created_at": 1780520165.895286,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2367,7 +2425,7 @@
     },
     {
       "centroid_pattern": "summer autumn",
-      "created_at": 1.780520165895303e9,
+      "created_at": 1780520165.895303,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2380,7 +2438,7 @@
     },
     {
       "centroid_pattern": "gravity pulls objects",
-      "created_at": 1.780520165670582e9,
+      "created_at": 1780520165.670582,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2393,7 +2451,7 @@
     },
     {
       "centroid_pattern": "autumn winter",
-      "created_at": 1.78052016589532e9,
+      "created_at": 1780520165.89532,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2406,7 +2464,7 @@
     },
     {
       "centroid_pattern": "planting harvest",
-      "created_at": 1.780520165895337e9,
+      "created_at": 1780520165.895337,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2419,7 +2477,7 @@
     },
     {
       "centroid_pattern": "hunting feasting",
-      "created_at": 1.780520165895355e9,
+      "created_at": 1780520165.895355,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2432,7 +2490,7 @@
     },
     {
       "centroid_pattern": "morning afternoon",
-      "created_at": 1.780520165895374e9,
+      "created_at": 1780520165.895374,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2445,7 +2503,7 @@
     },
     {
       "centroid_pattern": "winter spring",
-      "created_at": 1.780520165895391e9,
+      "created_at": 1780520165.895391,
       "is_time_node_group": true,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2458,7 +2516,7 @@
     },
     {
       "centroid_pattern": "gather dry wood",
-      "created_at": 1.78052016593559e9,
+      "created_at": 1780520165.93559,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2471,7 +2529,7 @@
     },
     {
       "centroid_pattern": "arrange kindling",
-      "created_at": 1.780520165943843e9,
+      "created_at": 1780520165.943843,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2484,7 +2542,7 @@
     },
     {
       "centroid_pattern": "strike spark",
-      "created_at": 1.780520165943892e9,
+      "created_at": 1780520165.943892,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2497,7 +2555,7 @@
     },
     {
       "centroid_pattern": "blow gently",
-      "created_at": 1.780520165943916e9,
+      "created_at": 1780520165.943916,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2510,7 +2568,7 @@
     },
     {
       "centroid_pattern": "add larger sticks",
-      "created_at": 1.780520165943947e9,
+      "created_at": 1780520165.943947,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2523,7 +2581,7 @@
     },
     {
       "centroid_pattern": "atoms are small",
-      "created_at": 1.780520165670599e9,
+      "created_at": 1780520165.670599,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2536,7 +2594,7 @@
     },
     {
       "centroid_pattern": "look for green plants",
-      "created_at": 1.780520165965789e9,
+      "created_at": 1780520165.965789,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2549,7 +2607,7 @@
     },
     {
       "centroid_pattern": "dig near roots",
-      "created_at": 1.780520165965844e9,
+      "created_at": 1780520165.965844,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2562,7 +2620,7 @@
     },
     {
       "centroid_pattern": "collect dew at dawn",
-      "created_at": 1.780520165965875e9,
+      "created_at": 1780520165.965875,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2575,7 +2633,7 @@
     },
     {
       "centroid_pattern": "filter through cloth",
-      "created_at": 1.780520165965902e9,
+      "created_at": 1780520165.965902,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2588,7 +2646,7 @@
     },
     {
       "centroid_pattern": "find sturdy branches",
-      "created_at": 1.780520165965987e9,
+      "created_at": 1780520165.965987,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2601,7 +2659,7 @@
     },
     {
       "centroid_pattern": "lean against tree",
-      "created_at": 1.780520165966012e9,
+      "created_at": 1780520165.966012,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2614,7 +2672,7 @@
     },
     {
       "centroid_pattern": "cover with leaves",
-      "created_at": 1.780520165966035e9,
+      "created_at": 1780520165.966035,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2627,7 +2685,7 @@
     },
     {
       "centroid_pattern": "seal gaps with moss",
-      "created_at": 1.780520165966057e9,
+      "created_at": 1780520165.966057,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2640,7 +2698,7 @@
     },
     {
       "centroid_pattern": "identify the unknown",
-      "created_at": 1.780520165966099e9,
+      "created_at": 1780520165.966099,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2653,7 +2711,7 @@
     },
     {
       "centroid_pattern": "isolate the variable",
-      "created_at": 1.780520165966123e9,
+      "created_at": 1780520165.966123,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2666,7 +2724,7 @@
     },
     {
       "centroid_pattern": "light travels fast",
-      "created_at": 1.780520165670612e9,
+      "created_at": 1780520165.670612,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2679,7 +2737,7 @@
     },
     {
       "centroid_pattern": "apply inverse operations",
-      "created_at": 1.780520165966148e9,
+      "created_at": 1780520165.966148,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2692,7 +2750,7 @@
     },
     {
       "centroid_pattern": "verify the solution",
-      "created_at": 1.780520165966169e9,
+      "created_at": 1780520165.966169,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2705,7 +2763,7 @@
     },
     {
       "centroid_pattern": "approach with smile",
-      "created_at": 1.780520165966207e9,
+      "created_at": 1780520165.966207,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2718,7 +2776,7 @@
     },
     {
       "centroid_pattern": "share something",
-      "created_at": 1.780520165966228e9,
+      "created_at": 1780520165.966228,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2731,7 +2789,7 @@
     },
     {
       "centroid_pattern": "listen carefully",
-      "created_at": 1.780520165966248e9,
+      "created_at": 1780520165.966248,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2744,7 +2802,7 @@
     },
     {
       "centroid_pattern": "offer help",
-      "created_at": 1.780520165966268e9,
+      "created_at": 1780520165.966268,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2757,7 +2815,7 @@
     },
     {
       "centroid_pattern": "be reliable",
-      "created_at": 1.780520165966288e9,
+      "created_at": 1780520165.966288,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2770,7 +2828,7 @@
     },
     {
       "centroid_pattern": "describe and explain fire",
-      "created_at": 1.780520165989998e9,
+      "created_at": 1780520165.989998,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2783,7 +2841,7 @@
     },
     {
       "centroid_pattern": "comfort and explain sadness",
-      "created_at": 1.780520165990031e9,
+      "created_at": 1780520165.990031,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2796,7 +2854,7 @@
     },
     {
       "centroid_pattern": "alert and explain water danger",
-      "created_at": 1.78052016599005e9,
+      "created_at": 1780520165.99005,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2809,7 +2867,7 @@
     },
     {
       "centroid_pattern": "earth orbits the sun",
-      "created_at": 1.780520165670626e9,
+      "created_at": 1780520165.670626,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2822,7 +2880,7 @@
     },
     {
       "centroid_pattern": "system status report",
-      "created_at": 1.780520166128639e9,
+      "created_at": 1780520166.128639,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2835,7 +2893,7 @@
     },
     {
       "centroid_pattern": "element properties carbon",
-      "created_at": 1.780520166134065e9,
+      "created_at": 1780520166.134065,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2848,7 +2906,7 @@
     },
     {
       "centroid_pattern": "heat evaporation",
-      "created_at": 1.780520166166037e9,
+      "created_at": 1780520166.166037,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2861,7 +2919,7 @@
     },
     {
       "centroid_pattern": "rain flooding",
-      "created_at": 1.780520166166078e9,
+      "created_at": 1780520166.166078,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2874,7 +2932,7 @@
     },
     {
       "centroid_pattern": "cold freezing",
-      "created_at": 1.780520166166094e9,
+      "created_at": 1780520166.166094,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2887,7 +2945,7 @@
     },
     {
       "centroid_pattern": "hunger foraging",
-      "created_at": 1.780520166166109e9,
+      "created_at": 1780520166.166109,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2900,7 +2958,7 @@
     },
     {
       "centroid_pattern": "darkness fire making",
-      "created_at": 1.780520166166135e9,
+      "created_at": 1780520166.166135,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2913,7 +2971,7 @@
     },
     {
       "centroid_pattern": "betrayal isolation",
-      "created_at": 1.78052016616615e9,
+      "created_at": 1780520166.16615,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2926,7 +2984,7 @@
     },
     {
       "centroid_pattern": "clouds sky",
-      "created_at": 1.78052016619868e9,
+      "created_at": 1780520166.19868,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -2939,7 +2997,7 @@
     },
     {
       "centroid_pattern": "roots ground",
-      "created_at": 1.780520166198719e9,
+      "created_at": 1780520166.198719,
       "is_time_node_group": false,
       "last_chatter_at": 0.0,
       "has_grave_slot": false,
@@ -7132,7 +7190,7 @@
   "phagy_rules_ref": [],
   "lobe_tables": [
     {
-      "created_at": 1.78052016555088e9,
+      "created_at": 1780520165.55088,
       "lobe_id": "emotions",
       "chunks": {
         "nodes": {
@@ -7141,105 +7199,105 @@
             "node_id": "node_20",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165716399e9
+            "inserted_at": 1780520165.716399
           },
           "node_50": {
             "is_active": true,
             "node_id": "node_50",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165860468e9
+            "inserted_at": 1780520165.860468
           },
           "node_26": {
             "is_active": true,
             "node_id": "node_26",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.78052016573313e9
+            "inserted_at": 1780520165.73313
           },
           "node_116": {
             "is_active": true,
             "node_id": "node_116",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520166327017e9
+            "inserted_at": 1780520166.327017
           },
           "node_105": {
             "is_active": true,
             "node_id": "node_105",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520166231447e9
+            "inserted_at": 1780520166.231447
           },
           "node_109": {
             "is_active": true,
             "node_id": "node_109",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.78052016626406e9
+            "inserted_at": 1780520166.26406
           },
           "node_10": {
             "is_active": true,
             "node_id": "node_10",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165670645e9
+            "inserted_at": 1780520165.670645
           },
           "node_33": {
             "is_active": true,
             "node_id": "node_33",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165767053e9
+            "inserted_at": 1780520165.767053
           },
           "node_115": {
             "is_active": true,
             "node_id": "node_115",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520166326978e9
+            "inserted_at": 1780520166.326978
           },
           "node_49": {
             "is_active": true,
             "node_id": "node_49",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.78052016586045e9
+            "inserted_at": 1780520165.86045
           },
           "node_35": {
             "is_active": true,
             "node_id": "node_35",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165767098e9
+            "inserted_at": 1780520165.767098
           },
           "node_34": {
             "is_active": true,
             "node_id": "node_34",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165767084e9
+            "inserted_at": 1780520165.767084
           },
           "node_88": {
             "is_active": true,
             "node_id": "node_88",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165990032e9
+            "inserted_at": 1780520165.990032
           },
           "node_117": {
             "is_active": true,
             "node_id": "node_117",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520166327031e9
+            "inserted_at": 1780520166.327031
           },
           "node_11": {
             "is_active": true,
             "node_id": "node_11",
             "_type": "NodeRef",
             "lobe_id": "emotions",
-            "inserted_at": 1.780520165670658e9
+            "inserted_at": 1780520165.670658
           }
         },
         "drop": {},
@@ -7249,7 +7307,7 @@
       }
     },
     {
-      "created_at": 1.780520165550933e9,
+      "created_at": 1780520165.550933,
       "lobe_id": "math",
       "chunks": {
         "nodes": {
@@ -7258,133 +7316,133 @@
             "node_id": "node_128",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520166418895e9
+            "inserted_at": 1780520166.418895
           },
           "node_114": {
             "is_active": true,
             "node_id": "node_114",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520166283288e9
+            "inserted_at": 1780520166.283288
           },
           "node_37": {
             "is_active": true,
             "node_id": "node_37",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795152e9
+            "inserted_at": 1780520165.795152
           },
           "node_38": {
             "is_active": true,
             "node_id": "node_38",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795211e9
+            "inserted_at": 1780520165.795211
           },
           "node_42": {
             "is_active": true,
             "node_id": "node_42",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795341e9
+            "inserted_at": 1780520165.795341
           },
           "node_126": {
             "is_active": true,
             "node_id": "node_126",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520166418837e9
+            "inserted_at": 1780520166.418837
           },
           "node_129": {
             "is_active": true,
             "node_id": "node_129",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520166418915e9
+            "inserted_at": 1780520166.418915
           },
           "node_79": {
             "is_active": true,
             "node_id": "node_79",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165966126e9
+            "inserted_at": 1780520165.966126
           },
           "node_43": {
             "is_active": true,
             "node_id": "node_43",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795365e9
+            "inserted_at": 1780520165.795365
           },
           "node_81": {
             "is_active": true,
             "node_id": "node_81",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.78052016596617e9
+            "inserted_at": 1780520165.96617
           },
           "node_44": {
             "is_active": true,
             "node_id": "node_44",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795389e9
+            "inserted_at": 1780520165.795389
           },
           "node_41": {
             "is_active": true,
             "node_id": "node_41",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795294e9
+            "inserted_at": 1780520165.795294
           },
           "node_39": {
             "is_active": true,
             "node_id": "node_39",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795241e9
+            "inserted_at": 1780520165.795241
           },
           "node_78": {
             "is_active": true,
             "node_id": "node_78",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165966101e9
+            "inserted_at": 1780520165.966101
           },
           "node_25": {
             "is_active": true,
             "node_id": "node_25",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165733118e9
+            "inserted_at": 1780520165.733118
           },
           "node_80": {
             "is_active": true,
             "node_id": "node_80",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165966149e9
+            "inserted_at": 1780520165.966149
           },
           "node_90": {
             "is_active": true,
             "node_id": "node_90",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520166128645e9
+            "inserted_at": 1780520166.128645
           },
           "node_127": {
             "is_active": true,
             "node_id": "node_127",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520166418874e9
+            "inserted_at": 1780520166.418874
           },
           "node_40": {
             "is_active": true,
             "node_id": "node_40",
             "_type": "NodeRef",
             "lobe_id": "math",
-            "inserted_at": 1.780520165795271e9
+            "inserted_at": 1780520165.795271
           }
         },
         "drop": {},
@@ -7394,7 +7452,7 @@
       }
     },
     {
-      "created_at": 1.780520164775206e9,
+      "created_at": 1780520164.775206,
       "lobe_id": "default",
       "chunks": {
         "nodes": {
@@ -7403,49 +7461,49 @@
             "node_id": "node_2",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520164778188e9
+            "inserted_at": 1780520164.778188
           },
           "node_0": {
             "is_active": true,
             "node_id": "node_0",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520164778183e9
+            "inserted_at": 1780520164.778183
           },
           "node_4": {
             "is_active": true,
             "node_id": "node_4",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520165670524e9
+            "inserted_at": 1780520165.670524
           },
           "node_5": {
             "is_active": true,
             "node_id": "node_5",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520165670564e9
+            "inserted_at": 1780520165.670564
           },
           "node_1": {
             "is_active": true,
             "node_id": "node_1",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520164778187e9
+            "inserted_at": 1780520164.778187
           },
           "node_3": {
             "is_active": true,
             "node_id": "node_3",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520165665355e9
+            "inserted_at": 1780520165.665355
           },
           "node_112": {
             "is_active": true,
             "node_id": "node_112",
             "_type": "NodeRef",
             "lobe_id": "default",
-            "inserted_at": 1.780520166283238e9
+            "inserted_at": 1780520166.283238
           }
         },
         "drop": {},
@@ -7455,7 +7513,7 @@
       }
     },
     {
-      "created_at": 1.780520165550923e9,
+      "created_at": 1780520165.550923,
       "lobe_id": "time",
       "chunks": {
         "nodes": {
@@ -7464,77 +7522,77 @@
             "node_id": "node_63",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895375e9
+            "inserted_at": 1780520165.895375
           },
           "node_57": {
             "is_active": true,
             "node_id": "node_57",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895269e9
+            "inserted_at": 1780520165.895269
           },
           "node_56": {
             "is_active": true,
             "node_id": "node_56",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895252e9
+            "inserted_at": 1780520165.895252
           },
           "node_121": {
             "is_active": true,
             "node_id": "node_121",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520166352372e9
+            "inserted_at": 1780520166.352372
           },
           "node_54": {
             "is_active": true,
             "node_id": "node_54",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895213e9
+            "inserted_at": 1780520165.895213
           },
           "node_122": {
             "is_active": true,
             "node_id": "node_122",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520166352382e9
+            "inserted_at": 1780520166.352382
           },
           "node_119": {
             "is_active": true,
             "node_id": "node_119",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.78052016635234e9
+            "inserted_at": 1780520166.35234
           },
           "node_64": {
             "is_active": true,
             "node_id": "node_64",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895391e9
+            "inserted_at": 1780520165.895391
           },
           "node_53": {
             "is_active": true,
             "node_id": "node_53",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895173e9
+            "inserted_at": 1780520165.895173
           },
           "node_55": {
             "is_active": true,
             "node_id": "node_55",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520165895234e9
+            "inserted_at": 1780520165.895234
           },
           "node_120": {
             "is_active": true,
             "node_id": "node_120",
             "_type": "NodeRef",
             "lobe_id": "time",
-            "inserted_at": 1.780520166352362e9
+            "inserted_at": 1780520166.352362
           }
         },
         "drop": {},
@@ -7544,7 +7602,7 @@
       }
     },
     {
-      "created_at": 1.780520165550956e9,
+      "created_at": 1780520165.550956,
       "lobe_id": "social",
       "chunks": {
         "nodes": {
@@ -7553,119 +7611,119 @@
             "node_id": "node_83",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165966229e9
+            "inserted_at": 1780520165.966229
           },
           "node_32": {
             "is_active": true,
             "node_id": "node_32",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165749549e9
+            "inserted_at": 1780520165.749549
           },
           "node_111": {
             "is_active": true,
             "node_id": "node_111",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520166264095e9
+            "inserted_at": 1780520166.264095
           },
           "node_16": {
             "is_active": true,
             "node_id": "node_16",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165670724e9
+            "inserted_at": 1780520165.670724
           },
           "node_118": {
             "is_active": true,
             "node_id": "node_118",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520166327048e9
+            "inserted_at": 1780520166.327048
           },
           "node_52": {
             "is_active": true,
             "node_id": "node_52",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165860504e9
+            "inserted_at": 1780520165.860504
           },
           "node_22": {
             "is_active": true,
             "node_id": "node_22",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165716431e9
+            "inserted_at": 1780520165.716431
           },
           "node_97": {
             "is_active": true,
             "node_id": "node_97",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520166166151e9
+            "inserted_at": 1780520166.166151
           },
           "node_51": {
             "is_active": true,
             "node_id": "node_51",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165860487e9
+            "inserted_at": 1780520165.860487
           },
           "node_84": {
             "is_active": true,
             "node_id": "node_84",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.78052016596625e9
+            "inserted_at": 1780520165.96625
           },
           "node_102": {
             "is_active": true,
             "node_id": "node_102",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520166198763e9
+            "inserted_at": 1780520166.198763
           },
           "node_85": {
             "is_active": true,
             "node_id": "node_85",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.78052016596627e9
+            "inserted_at": 1780520165.96627
           },
           "node_86": {
             "is_active": true,
             "node_id": "node_86",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165966289e9
+            "inserted_at": 1780520165.966289
           },
           "node_82": {
             "is_active": true,
             "node_id": "node_82",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165966209e9
+            "inserted_at": 1780520165.966209
           },
           "node_15": {
             "is_active": true,
             "node_id": "node_15",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.78052016567071e9
+            "inserted_at": 1780520165.67071
           },
           "node_107": {
             "is_active": true,
             "node_id": "node_107",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520166231479e9
+            "inserted_at": 1780520166.231479
           },
           "node_36": {
             "is_active": true,
             "node_id": "node_36",
             "_type": "NodeRef",
             "lobe_id": "social",
-            "inserted_at": 1.780520165767111e9
+            "inserted_at": 1780520165.767111
           }
         },
         "drop": {},
@@ -7675,7 +7733,7 @@
       }
     },
     {
-      "created_at": 1.780520165545702e9,
+      "created_at": 1780520165.545702,
       "lobe_id": "science",
       "chunks": {
         "nodes": {
@@ -7684,168 +7742,168 @@
             "node_id": "node_92",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166166043e9
+            "inserted_at": 1780520166.166043
           },
           "node_87": {
             "is_active": true,
             "node_id": "node_87",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165990003e9
+            "inserted_at": 1780520165.990003
           },
           "node_91": {
             "is_active": true,
             "node_id": "node_91",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.78052016613407e9
+            "inserted_at": 1780520166.13407
           },
           "node_8": {
             "is_active": true,
             "node_id": "node_8",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165670612e9
+            "inserted_at": 1780520165.670612
           },
           "node_24": {
             "is_active": true,
             "node_id": "node_24",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165733107e9
+            "inserted_at": 1780520165.733107
           },
           "node_18": {
             "is_active": true,
             "node_id": "node_18",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165710923e9
+            "inserted_at": 1780520165.710923
           },
           "node_45": {
             "is_active": true,
             "node_id": "node_45",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165854811e9
+            "inserted_at": 1780520165.854811
           },
           "node_47": {
             "is_active": true,
             "node_id": "node_47",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165860406e9
+            "inserted_at": 1780520165.860406
           },
           "node_58": {
             "is_active": true,
             "node_id": "node_58",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165895288e9
+            "inserted_at": 1780520165.895288
           },
           "node_106": {
             "is_active": true,
             "node_id": "node_106",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166231464e9
+            "inserted_at": 1780520166.231464
           },
           "node_99": {
             "is_active": true,
             "node_id": "node_99",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.78052016619872e9
+            "inserted_at": 1780520166.19872
           },
           "node_19": {
             "is_active": true,
             "node_id": "node_19",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165716363e9
+            "inserted_at": 1780520165.716363
           },
           "node_93": {
             "is_active": true,
             "node_id": "node_93",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166166079e9
+            "inserted_at": 1780520166.166079
           },
           "node_6": {
             "is_active": true,
             "node_id": "node_6",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165670584e9
+            "inserted_at": 1780520165.670584
           },
           "node_7": {
             "is_active": true,
             "node_id": "node_7",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.7805201656706e9
+            "inserted_at": 1780520165.6706
           },
           "node_9": {
             "is_active": true,
             "node_id": "node_9",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165670627e9
+            "inserted_at": 1780520165.670627
           },
           "node_59": {
             "is_active": true,
             "node_id": "node_59",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165895304e9
+            "inserted_at": 1780520165.895304
           },
           "node_113": {
             "is_active": true,
             "node_id": "node_113",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166283273e9
+            "inserted_at": 1780520166.283273
           },
           "node_60": {
             "is_active": true,
             "node_id": "node_60",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165895321e9
+            "inserted_at": 1780520165.895321
           },
           "node_23": {
             "is_active": true,
             "node_id": "node_23",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165733077e9
+            "inserted_at": 1780520165.733077
           },
           "node_98": {
             "is_active": true,
             "node_id": "node_98",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166198685e9
+            "inserted_at": 1780520166.198685
           },
           "node_94": {
             "is_active": true,
             "node_id": "node_94",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166166095e9
+            "inserted_at": 1780520166.166095
           },
           "node_108": {
             "is_active": true,
             "node_id": "node_108",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520166264025e9
+            "inserted_at": 1780520166.264025
           },
           "node_46": {
             "is_active": true,
             "node_id": "node_46",
             "_type": "NodeRef",
             "lobe_id": "science",
-            "inserted_at": 1.780520165860368e9
+            "inserted_at": 1780520165.860368
           }
         },
         "drop": {},
@@ -7855,7 +7913,7 @@
       }
     },
     {
-      "created_at": 1.780520165550949e9,
+      "created_at": 1780520165.550949,
       "lobe_id": "language",
       "chunks": {
         "nodes": {
@@ -7864,35 +7922,35 @@
             "node_id": "node_17",
             "_type": "NodeRef",
             "lobe_id": "language",
-            "inserted_at": 1.780520165670735e9
+            "inserted_at": 1780520165.670735
           },
           "node_131": {
             "is_active": true,
             "node_id": "node_131",
             "_type": "NodeRef",
             "lobe_id": "language",
-            "inserted_at": 1.780520166440764e9
+            "inserted_at": 1780520166.440764
           },
           "node_132": {
             "is_active": true,
             "node_id": "node_132",
             "_type": "NodeRef",
             "lobe_id": "language",
-            "inserted_at": 1.780520166440787e9
+            "inserted_at": 1780520166.440787
           },
           "node_130": {
             "is_active": true,
             "node_id": "node_130",
             "_type": "NodeRef",
             "lobe_id": "language",
-            "inserted_at": 1.780520166440733e9
+            "inserted_at": 1780520166.440733
           },
           "node_28": {
             "is_active": true,
             "node_id": "node_28",
             "_type": "NodeRef",
             "lobe_id": "language",
-            "inserted_at": 1.780520165733151e9
+            "inserted_at": 1780520165.733151
           }
         },
         "drop": {},
@@ -7902,7 +7960,7 @@
       }
     },
     {
-      "created_at": 1.780520165550941e9,
+      "created_at": 1780520165.550941,
       "lobe_id": "survival",
       "chunks": {
         "nodes": {
@@ -7911,245 +7969,245 @@
             "node_id": "node_75",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165966014e9
+            "inserted_at": 1780520165.966014
           },
           "node_66": {
             "is_active": true,
             "node_id": "node_66",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165943857e9
+            "inserted_at": 1780520165.943857
           },
           "node_70": {
             "is_active": true,
             "node_id": "node_70",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165965803e9
+            "inserted_at": 1780520165.965803
           },
           "node_71": {
             "is_active": true,
             "node_id": "node_71",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165965847e9
+            "inserted_at": 1780520165.965847
           },
           "node_89": {
             "is_active": true,
             "node_id": "node_89",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165990051e9
+            "inserted_at": 1780520165.990051
           },
           "node_124": {
             "is_active": true,
             "node_id": "node_124",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166396245e9
+            "inserted_at": 1780520166.396245
           },
           "node_74": {
             "is_active": true,
             "node_id": "node_74",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165965989e9
+            "inserted_at": 1780520165.965989
           },
           "node_125": {
             "is_active": true,
             "node_id": "node_125",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166396254e9
+            "inserted_at": 1780520166.396254
           },
           "node_21": {
             "is_active": true,
             "node_id": "node_21",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165716415e9
+            "inserted_at": 1780520165.716415
           },
           "node_123": {
             "is_active": true,
             "node_id": "node_123",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.78052016639622e9
+            "inserted_at": 1780520166.39622
           },
           "node_14": {
             "is_active": true,
             "node_id": "node_14",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165670698e9
+            "inserted_at": 1780520165.670698
           },
           "node_68": {
             "is_active": true,
             "node_id": "node_68",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165943918e9
+            "inserted_at": 1780520165.943918
           },
           "node_96": {
             "is_active": true,
             "node_id": "node_96",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166166136e9
+            "inserted_at": 1780520166.166136
           },
           "node_73": {
             "is_active": true,
             "node_id": "node_73",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165965903e9
+            "inserted_at": 1780520165.965903
           },
           "node_103": {
             "is_active": true,
             "node_id": "node_103",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166231396e9
+            "inserted_at": 1780520166.231396
           },
           "node_30": {
             "is_active": true,
             "node_id": "node_30",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165749519e9
+            "inserted_at": 1780520165.749519
           },
           "node_69": {
             "is_active": true,
             "node_id": "node_69",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165943948e9
+            "inserted_at": 1780520165.943948
           },
           "node_95": {
             "is_active": true,
             "node_id": "node_95",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166166111e9
+            "inserted_at": 1780520166.166111
           },
           "node_48": {
             "is_active": true,
             "node_id": "node_48",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165860429e9
+            "inserted_at": 1780520165.860429
           },
           "node_61": {
             "is_active": true,
             "node_id": "node_61",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165895338e9
+            "inserted_at": 1780520165.895338
           },
           "node_27": {
             "is_active": true,
             "node_id": "node_27",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.78052016573314e9
+            "inserted_at": 1780520165.73314
           },
           "node_72": {
             "is_active": true,
             "node_id": "node_72",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165965877e9
+            "inserted_at": 1780520165.965877
           },
           "node_100": {
             "is_active": true,
             "node_id": "node_100",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166198735e9
+            "inserted_at": 1780520166.198735
           },
           "node_104": {
             "is_active": true,
             "node_id": "node_104",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166231429e9
+            "inserted_at": 1780520166.231429
           },
           "node_67": {
             "is_active": true,
             "node_id": "node_67",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165943894e9
+            "inserted_at": 1780520165.943894
           },
           "node_77": {
             "is_active": true,
             "node_id": "node_77",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165966058e9
+            "inserted_at": 1780520165.966058
           },
           "node_110": {
             "is_active": true,
             "node_id": "node_110",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520166264077e9
+            "inserted_at": 1780520166.264077
           },
           "node_65": {
             "is_active": true,
             "node_id": "node_65",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165938568e9
+            "inserted_at": 1780520165.938568
           },
           "node_101": {
             "is_active": true,
             "node_id": "node_101",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.78052016619875e9
+            "inserted_at": 1780520166.19875
           },
           "node_76": {
             "is_active": true,
             "node_id": "node_76",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165966036e9
+            "inserted_at": 1780520165.966036
           },
           "node_29": {
             "is_active": true,
             "node_id": "node_29",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165749486e9
+            "inserted_at": 1780520165.749486
           },
           "node_62": {
             "is_active": true,
             "node_id": "node_62",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165895358e9
+            "inserted_at": 1780520165.895358
           },
           "node_31": {
             "is_active": true,
             "node_id": "node_31",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165749535e9
+            "inserted_at": 1780520165.749535
           },
           "node_13": {
             "is_active": true,
             "node_id": "node_13",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165670686e9
+            "inserted_at": 1780520165.670686
           },
           "node_12": {
             "is_active": true,
             "node_id": "node_12",
             "_type": "NodeRef",
             "lobe_id": "survival",
-            "inserted_at": 1.780520165670672e9
+            "inserted_at": 1780520165.670672
           }
         },
         "drop": {},
@@ -8278,7 +8336,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -7.6e-5,
+          "last_wobble": -7.6e-05,
           "value": -0.025638,
           "jitter_eligible": true
         },
@@ -8293,7 +8351,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -8.3e-5,
+          "last_wobble": -8.3e-05,
           "value": 0.020019,
           "jitter_eligible": true
         },
@@ -8323,7 +8381,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 6.9e-5,
+          "last_wobble": 6.9e-05,
           "value": 0.037344,
           "jitter_eligible": true
         },
@@ -8383,7 +8441,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 6.6e-5,
+          "last_wobble": 6.6e-05,
           "value": -0.002192,
           "jitter_eligible": true
         },
@@ -8408,7 +8466,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 8.9e-5,
+          "last_wobble": 8.9e-05,
           "value": -0.004128,
           "jitter_eligible": true
         },
@@ -8443,12 +8501,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -9.6e-5,
+          "last_wobble": -9.6e-05,
           "value": -0.007038,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.3e-5,
+          "last_wobble": -5.3e-05,
           "value": -0.007511,
           "jitter_eligible": true
         },
@@ -8463,7 +8521,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 5.0e-5,
+          "last_wobble": 5e-05,
           "value": 0.001772,
           "jitter_eligible": true
         },
@@ -8483,7 +8541,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 2.0e-6,
+          "last_wobble": 2e-06,
           "value": -0.026449,
           "jitter_eligible": true
         },
@@ -8503,12 +8561,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -2.0e-5,
+          "last_wobble": -2e-05,
           "value": 0.00077,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 2.5e-5,
+          "last_wobble": 2.5e-05,
           "value": 0.001577,
           "jitter_eligible": true
         },
@@ -8523,7 +8581,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 9.8e-5,
+          "last_wobble": 9.8e-05,
           "value": -0.005244,
           "jitter_eligible": true
         },
@@ -8538,12 +8596,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -1.5e-5,
+          "last_wobble": -1.5e-05,
           "value": 0.006129,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 7.7e-5,
+          "last_wobble": 7.7e-05,
           "value": -0.009056,
           "jitter_eligible": true
         },
@@ -8593,22 +8651,22 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -4.0e-6,
+          "last_wobble": -4e-06,
           "value": -0.001053,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.3e-5,
+          "last_wobble": -5.3e-05,
           "value": -0.01855,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 9.9e-5,
+          "last_wobble": 9.9e-05,
           "value": 0.015334,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -4.0e-6,
+          "last_wobble": -4e-06,
           "value": 0.01045,
           "jitter_eligible": true
         },
@@ -8648,7 +8706,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 3.6e-5,
+          "last_wobble": 3.6e-05,
           "value": 0.005926,
           "jitter_eligible": true
         },
@@ -8663,12 +8721,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 2.6e-5,
+          "last_wobble": 2.6e-05,
           "value": 0.005535,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.0e-6,
+          "last_wobble": -5e-06,
           "value": -0.002535,
           "jitter_eligible": true
         },
@@ -8688,7 +8746,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 4.6e-5,
+          "last_wobble": 4.6e-05,
           "value": 0.034384,
           "jitter_eligible": true
         },
@@ -8703,7 +8761,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 5.5e-5,
+          "last_wobble": 5.5e-05,
           "value": -0.010475,
           "jitter_eligible": true
         },
@@ -8733,17 +8791,17 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -3.5e-5,
+          "last_wobble": -3.5e-05,
           "value": -0.007027,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -1.1e-5,
+          "last_wobble": -1.1e-05,
           "value": 0.001921,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -7.0e-6,
+          "last_wobble": -7e-06,
           "value": 0.000869,
           "jitter_eligible": true
         },
@@ -8763,7 +8821,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 4.8e-5,
+          "last_wobble": 4.8e-05,
           "value": 0.044661,
           "jitter_eligible": true
         },
@@ -8788,7 +8846,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 8.1e-5,
+          "last_wobble": 8.1e-05,
           "value": 0.012856,
           "jitter_eligible": true
         },
@@ -8828,7 +8886,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -9.7e-5,
+          "last_wobble": -9.7e-05,
           "value": -0.009275,
           "jitter_eligible": true
         },
@@ -8843,7 +8901,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -3.9e-5,
+          "last_wobble": -3.9e-05,
           "value": 0.007118,
           "jitter_eligible": true
         },
@@ -8853,22 +8911,22 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -3.0e-5,
+          "last_wobble": -3e-05,
           "value": 0.001306,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -1.2e-5,
+          "last_wobble": -1.2e-05,
           "value": 0.000991,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -4.7e-5,
+          "last_wobble": -4.7e-05,
           "value": -0.006291,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 3.8e-5,
+          "last_wobble": 3.8e-05,
           "value": -0.021014,
           "jitter_eligible": true
         },
@@ -8903,7 +8961,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 2.2e-5,
+          "last_wobble": 2.2e-05,
           "value": -0.002131,
           "jitter_eligible": true
         },
@@ -8943,7 +9001,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.6e-5,
+          "last_wobble": -5.6e-05,
           "value": -0.01284,
           "jitter_eligible": true
         },
@@ -8988,7 +9046,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -6.4e-5,
+          "last_wobble": -6.4e-05,
           "value": 0.003386,
           "jitter_eligible": true
         },
@@ -9023,12 +9081,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 8.2e-5,
+          "last_wobble": 8.2e-05,
           "value": 0.027222,
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.9e-5,
+          "last_wobble": -5.9e-05,
           "value": -0.002068,
           "jitter_eligible": true
         },
@@ -9038,7 +9096,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 4.1e-5,
+          "last_wobble": 4.1e-05,
           "value": -0.003958,
           "jitter_eligible": true
         },
@@ -9058,12 +9116,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 6.3e-5,
+          "last_wobble": 6.3e-05,
           "value": 0.030593,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 3.3e-5,
+          "last_wobble": 3.3e-05,
           "value": -0.007984,
           "jitter_eligible": true
         },
@@ -9123,12 +9181,12 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.7e-5,
+          "last_wobble": -5.7e-05,
           "value": 0.006882,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 7.4e-5,
+          "last_wobble": 7.4e-05,
           "value": -0.021861,
           "jitter_eligible": true
         },
@@ -9163,7 +9221,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -8.0e-5,
+          "last_wobble": -8e-05,
           "value": -0.033381,
           "jitter_eligible": true
         },
@@ -9183,7 +9241,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 2.5e-5,
+          "last_wobble": 2.5e-05,
           "value": 0.003613,
           "jitter_eligible": true
         },
@@ -9225,17 +9283,17 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -5.7e-5,
+          "last_wobble": -5.7e-05,
           "value": 0.012172,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 3.0e-5,
+          "last_wobble": 3e-05,
           "value": 0.001998,
           "jitter_eligible": true
         },
         {
-          "last_wobble": 4.3e-5,
+          "last_wobble": 4.3e-05,
           "value": 0.035431,
           "jitter_eligible": true
         },
@@ -9260,7 +9318,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -8.0e-5,
+          "last_wobble": -8e-05,
           "value": -0.005733,
           "jitter_eligible": true
         },
@@ -9275,7 +9333,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 4.2e-5,
+          "last_wobble": 4.2e-05,
           "value": 0.003897,
           "jitter_eligible": true
         },
@@ -9315,7 +9373,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -1.2e-5,
+          "last_wobble": -1.2e-05,
           "value": -0.02641,
           "jitter_eligible": true
         },
@@ -9330,7 +9388,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": 1.6e-5,
+          "last_wobble": 1.6e-05,
           "value": -0.001264,
           "jitter_eligible": true
         },
@@ -9340,7 +9398,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -9.7e-5,
+          "last_wobble": -9.7e-05,
           "value": -0.020745,
           "jitter_eligible": true
         },
@@ -9407,7 +9465,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -2.7e-5,
+          "last_wobble": -2.7e-05,
           "value": -0.01231,
           "jitter_eligible": true
         },
@@ -9427,7 +9485,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -4.9e-5,
+          "last_wobble": -4.9e-05,
           "value": 0.002617,
           "jitter_eligible": true
         },
@@ -9452,7 +9510,7 @@
           "jitter_eligible": true
         },
         {
-          "last_wobble": -8.0e-6,
+          "last_wobble": -8e-06,
           "value": 0.000575,
           "jitter_eligible": true
         }
@@ -9819,223 +9877,223 @@
           "directive_quality": 0.5001,
           "vote_hash": "2748288796427980189",
           "input_hash": "15536981989258706869",
-          "timestamp": 1.780520188031e9
+          "timestamp": 1780520188.031
         },
         {
           "directive_quality": 0.5003,
           "vote_hash": "6471374287033690983",
           "input_hash": "4618980852843723903",
-          "timestamp": 1.780520189818e9
+          "timestamp": 1780520189.818
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "16068290965310874704",
           "input_hash": "15697182741860768281",
-          "timestamp": 1.780520190153e9
+          "timestamp": 1780520190.153
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "3597821476910798339",
           "input_hash": "13871620708936040718",
-          "timestamp": 1.78052019171e9
+          "timestamp": 1780520191.71
         },
         {
           "directive_quality": 0.4994,
           "vote_hash": "14289482257369959961",
           "input_hash": "8433017975978329809",
-          "timestamp": 1.78052019234e9
+          "timestamp": 1780520192.34
         },
         {
           "directive_quality": 0.5004,
           "vote_hash": "1473471690187902961",
           "input_hash": "6309905157892178229",
-          "timestamp": 1.780520193003e9
+          "timestamp": 1780520193.003
         },
         {
           "directive_quality": 0.5003,
           "vote_hash": "4914232021667624445",
           "input_hash": "16436897889853766104",
-          "timestamp": 1.78052019396e9
+          "timestamp": 1780520193.96
         },
         {
           "directive_quality": 0.5007,
           "vote_hash": "7530922988497307119",
           "input_hash": "17820675327537027347",
-          "timestamp": 1.780520194591e9
+          "timestamp": 1780520194.591
         },
         {
           "directive_quality": 0.5002,
           "vote_hash": "16480870709665885924",
           "input_hash": "11703781759921082287",
-          "timestamp": 1.780520195825e9
+          "timestamp": 1780520195.825
         },
         {
           "directive_quality": 0.5001,
           "vote_hash": "14629118286370741140",
           "input_hash": "14338043212500662167",
-          "timestamp": 1.78052019706e9
+          "timestamp": 1780520197.06
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "2981633168202948103",
           "input_hash": "5874888290866413443",
-          "timestamp": 1.780520197994e9
+          "timestamp": 1780520197.994
         },
         {
           "directive_quality": 0.5003,
           "vote_hash": "16155778491729854329",
           "input_hash": "4777885724224497921",
-          "timestamp": 1.780520198323e9
+          "timestamp": 1780520198.323
         },
         {
           "directive_quality": 0.5002,
           "vote_hash": "2326531823412244015",
           "input_hash": "5401346309490313364",
-          "timestamp": 1.780520199258e9
+          "timestamp": 1780520199.258
         },
         {
           "directive_quality": 0.5036,
           "vote_hash": "18290053057987123459",
           "input_hash": "13558467961050053534",
-          "timestamp": 1.780520200544e9
+          "timestamp": 1780520200.544
         },
         {
           "directive_quality": 0.5033,
           "vote_hash": "10737285648442486048",
           "input_hash": "1397714026703616025",
-          "timestamp": 1.78052020118e9
+          "timestamp": 1780520201.18
         },
         {
           "directive_quality": 0.5034,
           "vote_hash": "6723115781892630481",
           "input_hash": "1432372734346789089",
-          "timestamp": 1.780520202421e9
+          "timestamp": 1780520202.421
         },
         {
           "directive_quality": 0.5002,
           "vote_hash": "1704151025806603278",
           "input_hash": "9337624646704433902",
-          "timestamp": 1.780520203054e9
+          "timestamp": 1780520203.054
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "9110877055676346489",
           "input_hash": "408031513669678764",
-          "timestamp": 1.780520203696e9
+          "timestamp": 1780520203.696
         },
         {
           "directive_quality": 0.4995,
           "vote_hash": "8540484137645512680",
           "input_hash": "4989638994213228409",
-          "timestamp": 1.780520204436e9
+          "timestamp": 1780520204.436
         },
         {
           "directive_quality": 0.5001,
           "vote_hash": "16549978188372819851",
           "input_hash": "17981386874318134425",
-          "timestamp": 1.780520205078e9
+          "timestamp": 1780520205.078
         },
         {
           "directive_quality": 0.5001,
           "vote_hash": "5362239578115990794",
           "input_hash": "14763058864398756239",
-          "timestamp": 1.780520206318e9
+          "timestamp": 1780520206.318
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "14592442074842507181",
           "input_hash": "16678557788558941728",
-          "timestamp": 1.780520207864e9
+          "timestamp": 1780520207.864
         },
         {
           "directive_quality": 0.5002,
           "vote_hash": "7326826307401238978",
           "input_hash": "13034704066907632313",
-          "timestamp": 1.780520209404e9
+          "timestamp": 1780520209.404
         },
         {
           "directive_quality": 0.5006,
           "vote_hash": "9383150560742613197",
           "input_hash": "16472448729226344948",
-          "timestamp": 1.780520209741e9
+          "timestamp": 1780520209.741
         },
         {
           "directive_quality": 0.5003,
           "vote_hash": "16877276037067002177",
           "input_hash": "16540585175377914813",
-          "timestamp": 1.780520211003e9
+          "timestamp": 1780520211.003
         },
         {
           "directive_quality": 0.5004,
           "vote_hash": "8434947780556359022",
           "input_hash": "10217495327560710882",
-          "timestamp": 1.780520211946e9
+          "timestamp": 1780520211.946
         },
         {
           "directive_quality": 0.5004,
           "vote_hash": "1115175425641358700",
           "input_hash": "15417066940172205560",
-          "timestamp": 1.780520212288e9
+          "timestamp": 1780520212.288
         },
         {
           "directive_quality": 0.5002,
           "vote_hash": "5383749954013378172",
           "input_hash": "7987985938961801620",
-          "timestamp": 1.780520213537e9
+          "timestamp": 1780520213.537
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "3404438506484958268",
           "input_hash": "5449896263217349434",
-          "timestamp": 1.780520214015e9
+          "timestamp": 1780520214.015
         },
         {
           "directive_quality": 0.5012,
           "vote_hash": "17380864612434920077",
           "input_hash": "68110583840627699",
-          "timestamp": 1.780520214356e9
+          "timestamp": 1780520214.356
         },
         {
           "directive_quality": 0.5015,
           "vote_hash": "8636478788711032747",
           "input_hash": "103265553152664603",
-          "timestamp": 1.780520214702e9
+          "timestamp": 1780520214.702
         },
         {
           "directive_quality": 0.5001,
           "vote_hash": "9732971128290421385",
           "input_hash": "10691685422311976246",
-          "timestamp": 1.780520215218e9
+          "timestamp": 1780520215.218
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "14882889397483071167",
           "input_hash": "4852952245470961170",
-          "timestamp": 1.78052021679e9
+          "timestamp": 1780520216.79
         },
         {
           "directive_quality": 0.5005,
           "vote_hash": "12161652786471205947",
           "input_hash": "1628194456649213166",
-          "timestamp": 1.780520217135e9
+          "timestamp": 1780520217.135
         },
         {
           "directive_quality": 0.5001,
           "vote_hash": "12928575058780172559",
           "input_hash": "6547821615144887533",
-          "timestamp": 1.780520218384e9
+          "timestamp": 1780520218.384
         },
         {
           "directive_quality": 0.5015,
           "vote_hash": "4627852359993197493",
           "input_hash": "14957134273483825882",
-          "timestamp": 1.780520218731e9
+          "timestamp": 1780520218.731
         },
         {
           "directive_quality": 0.5003,
           "vote_hash": "15019904643963548010",
           "input_hash": "6630426864218552293",
-          "timestamp": 1.780520219376e9
+          "timestamp": 1780520219.376
         }
       ],
       "total_correlations": 37
@@ -10043,7 +10101,7 @@
     "observation_threshold": 5,
     "_meta": {
       "format": "ephemeral-mlp-v1.5",
-      "saved_at": 1.780520224032321e9,
+      "saved_at": 1780520224.032321,
       "version": "1.5"
     },
     "hippocampal_warrant_active": true,
@@ -10057,7 +10115,7 @@
   "lobes": [
     {
       "name": "emotions",
-      "created_at": 1.780520165550871e9,
+      "created_at": 1780520165.550871,
       "fire_count": 0,
       "node_cap": 80,
       "id": "emotions",
@@ -10087,8 +10145,8 @@
       "subject": "feelings happiness sadness anger fear love comfort peace"
     },
     {
-      "name": "math",
-      "created_at": 1.78052016555093e9,
+      "name": "mathematics",
+      "created_at": 1780520165.55093,
       "fire_count": 0,
       "node_cap": 80,
       "id": "math",
@@ -10122,8 +10180,8 @@
       "subject": "numbers arithmetic calculation equations formulas algebra"
     },
     {
-      "name": "default",
-      "created_at": 1.780520164775192e9,
+      "name": "general",
+      "created_at": 1780520164.775192,
       "fire_count": 0,
       "node_cap": 20000,
       "id": "default",
@@ -10143,7 +10201,7 @@
     },
     {
       "name": "time",
-      "created_at": 1.78052016555092e9,
+      "created_at": 1780520165.55092,
       "fire_count": 0,
       "node_cap": 60,
       "id": "time",
@@ -10170,7 +10228,7 @@
     },
     {
       "name": "social",
-      "created_at": 1.780520165550953e9,
+      "created_at": 1780520165.550953,
       "fire_count": 0,
       "node_cap": 60,
       "id": "social",
@@ -10203,7 +10261,7 @@
     },
     {
       "name": "science",
-      "created_at": 1.780520165545691e9,
+      "created_at": 1780520165.545691,
       "fire_count": 0,
       "node_cap": 100,
       "id": "science",
@@ -10244,7 +10302,7 @@
     },
     {
       "name": "language",
-      "created_at": 1.780520165550946e9,
+      "created_at": 1780520165.550946,
       "fire_count": 0,
       "node_cap": 60,
       "id": "language",
@@ -10265,7 +10323,7 @@
     },
     {
       "name": "survival",
-      "created_at": 1.780520165550939e9,
+      "created_at": 1780520165.550939,
       "fire_count": 0,
       "node_cap": 100,
       "id": "survival",
@@ -10345,7 +10403,7 @@
     "fire_count_decay_interval": 50
   },
   "id_counters": {
-    "node_id_counter": 133,
+    "node_id_counter": 153,
     "msg_id_counter": 81
   },
   "immune_system": {
@@ -10359,7 +10417,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166598051e9,
+          "created_at": 1780520166.598051,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10372,7 +10430,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166598047e9,
+          "created_at": 1780520166.598047,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10387,7 +10445,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166598056e9,
+          "created_at": 1780520166.598056,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10402,7 +10460,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166598066e9,
+          "created_at": 1780520166.598066,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10417,7 +10475,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.78052016659807e9,
+          "created_at": 1780520166.59807,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10432,7 +10490,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166597972e9,
+          "created_at": 1780520166.597972,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10445,7 +10503,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.78052016659804e9,
+          "created_at": 1780520166.59804,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10460,7 +10518,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166598073e9,
+          "created_at": 1780520166.598073,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10475,7 +10533,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.78052016659806e9,
+          "created_at": 1780520166.59806,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10488,7 +10546,7 @@
         {
           "is_grave": false,
           "fired_this_cycle": false,
-          "created_at": 1.780520166598063e9,
+          "created_at": 1780520166.598063,
           "strength_delta_this_cycle": 0.0,
           "grave_reason": "",
           "gained_this_cycle": false,
@@ -10516,8 +10574,13 @@
   },
   "_meta": {
     "format": "grugbot420-specimen-v2.11",
-    "saved_at": 1.780520224032329e9,
-    "version": "2.11"
+    "saved_at": 1781716329.294788,
+    "version": "2.11",
+    "description": "Comprehensive specimen v758 augmented with inverse_table, actions, autogrowth, conj/doAction sigils, lobe names, polarity demos, and additional knowledge nodes",
+    "node_count": 153,
+    "lobes_named": true,
+    "inverse_table_entries": 8,
+    "action_count": 13
   },
   "nodes": [
     {
@@ -10545,7 +10608,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165716396e9,
+      "ledger_last_cleared": 1780520165.716396,
       "pattern": "why do we feel sad",
       "action_packet": "explain^1",
       "is_unlinkable": false,
@@ -10596,7 +10659,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895373e9,
+      "ledger_last_cleared": 1780520165.895373,
       "pattern": "morning afternoon",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10639,7 +10702,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966011e9,
+      "ledger_last_cleared": 1780520165.966011,
       "pattern": "lean against tree",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10677,7 +10740,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166440762e9,
+      "ledger_last_cleared": 1780520166.440762,
       "pattern": "explain &word",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10716,7 +10779,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165990049e9,
+      "ledger_last_cleared": 1780520165.990049,
       "pattern": "alert and explain water danger",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10754,7 +10817,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166396203e9,
+      "ledger_last_cleared": 1780520166.396203,
       "pattern": "&danger poison",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -10784,7 +10847,7 @@
       },
       "is_antimatch_node": true,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166283286e9,
+      "ledger_last_cleared": 1780520166.283286,
       "pattern": "error mistake bug",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -10818,7 +10881,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165733105e9,
+      "ledger_last_cleared": 1780520165.733105,
       "pattern": "define atom",
       "action_packet": "define^1",
       "is_unlinkable": false,
@@ -10869,7 +10932,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166231442e9,
+      "ledger_last_cleared": 1780520166.231442,
       "pattern": "person feelings",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10915,7 +10978,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670697e9,
+      "ledger_last_cleared": 1780520165.670697,
       "pattern": "water is essential",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10958,7 +11021,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165943915e9,
+      "ledger_last_cleared": 1780520165.943915,
       "pattern": "blow gently",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -10996,7 +11059,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165965901e9,
+      "ledger_last_cleared": 1780520165.965901,
       "pattern": "filter through cloth",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11030,7 +11093,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166352324e9,
+      "ledger_last_cleared": 1780520166.352324,
       "pattern": "&season spring",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11072,7 +11135,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165749517e9,
+      "ledger_last_cleared": 1780520165.749517,
       "pattern": "deep water is dangerous",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -11106,7 +11169,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520164775342e9,
+      "ledger_last_cleared": 1780520164.775342,
       "pattern": "think ponder reason calculate",
       "action_packet": "reason[dont guess, dont hallucinate]^4 | analyze[dont assume]^3 | ponder^1",
       "is_unlinkable": false,
@@ -11148,7 +11211,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795362e9,
+      "ledger_last_cleared": 1780520165.795362,
       "pattern": "20 minus 8",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11184,7 +11247,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670637e9,
+      "ledger_last_cleared": 1780520165.670637,
       "pattern": "happiness feels good",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11239,7 +11302,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860427e9,
+      "ledger_last_cleared": 1780520165.860427,
       "pattern": "hunger causes hunting",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11279,7 +11342,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966169e9,
+      "ledger_last_cleared": 1780520165.966169,
       "pattern": "verify the solution",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11324,7 +11387,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860484e9,
+      "ledger_last_cleared": 1780520165.860484,
       "pattern": "sharing strengthens community",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11370,7 +11433,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166166108e9,
+      "ledger_last_cleared": 1780520166.166108,
       "pattern": "hunger foraging",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11419,7 +11482,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166198732e9,
+      "ledger_last_cleared": 1780520166.198732,
       "pattern": "fire hearth",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11469,7 +11532,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166264057e9,
+      "ledger_last_cleared": 1780520166.264057,
       "pattern": "joy warmth",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11510,7 +11573,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165943891e9,
+      "ledger_last_cleared": 1780520165.943891,
       "pattern": "strike spark",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11552,7 +11615,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795292e9,
+      "ledger_last_cleared": 1780520165.795292,
       "pattern": "7 plus 8",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11597,7 +11660,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860448e9,
+      "ledger_last_cleared": 1780520165.860448,
       "pattern": "love comforts sadness",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11636,7 +11699,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966057e9,
+      "ledger_last_cleared": 1780520165.966057,
       "pattern": "seal gaps with moss",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11673,7 +11736,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966288e9,
+      "ledger_last_cleared": 1780520165.966288,
       "pattern": "be reliable",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11714,7 +11777,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670599e9,
+      "ledger_last_cleared": 1780520165.670599,
       "pattern": "atoms are small",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11750,7 +11813,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670707e9,
+      "ledger_last_cleared": 1780520165.670707,
       "pattern": "friendship brings joy",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11792,7 +11855,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165935582e9,
+      "ledger_last_cleared": 1780520165.935582,
       "pattern": "gather dry wood",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11838,7 +11901,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166231477e9,
+      "ledger_last_cleared": 1780520166.231477,
       "pattern": "clan elders",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -11874,7 +11937,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165733116e9,
+      "ledger_last_cleared": 1780520165.733116,
       "pattern": "define addition",
       "action_packet": "define^1",
       "is_unlinkable": false,
@@ -11908,7 +11971,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165733065e9,
+      "ledger_last_cleared": 1780520165.733065,
       "pattern": "define gravity",
       "action_packet": "define^1",
       "is_unlinkable": false,
@@ -11946,7 +12009,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165767082e9,
+      "ledger_last_cleared": 1780520165.767082,
       "pattern": "i am scared",
       "action_packet": "comfort^1",
       "is_unlinkable": false,
@@ -11988,7 +12051,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966147e9,
+      "ledger_last_cleared": 1780520165.966147,
       "pattern": "apply inverse operations",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12025,7 +12088,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016599003e9,
+      "ledger_last_cleared": 1780520165.99003,
       "pattern": "comfort and explain sadness",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12066,7 +12129,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166128629e9,
+      "ledger_last_cleared": 1780520166.128629,
       "pattern": "system status report",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12113,7 +12176,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166166093e9,
+      "ledger_last_cleared": 1780520166.166093,
       "pattern": "cold freezing",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12164,7 +12227,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166264011e9,
+      "ledger_last_cleared": 1780520166.264011,
       "pattern": "fire star",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12218,7 +12281,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166327029e9,
+      "ledger_last_cleared": 1780520166.327029,
       "pattern": "warrior battle",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12256,7 +12319,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016566534e9,
+      "ledger_last_cleared": 1780520165.66534,
       "pattern": "fire burns wood",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12294,7 +12357,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670657e9,
+      "ledger_last_cleared": 1780520165.670657,
       "pattern": "sadness feels heavy",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12347,7 +12410,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860467e9,
+      "ledger_last_cleared": 1780520165.860467,
       "pattern": "fear precedes courage",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12394,7 +12457,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895268e9,
+      "ledger_last_cleared": 1780520165.895268,
       "pattern": "dusk night",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12443,7 +12506,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895251e9,
+      "ledger_last_cleared": 1780520165.895251,
       "pattern": "day dusk",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12484,7 +12547,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165943837e9,
+      "ledger_last_cleared": 1780520165.943837,
       "pattern": "arrange kindling",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12518,7 +12581,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016635237e9,
+      "ledger_last_cleared": 1780520166.35237,
       "pattern": "&season autumn",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12552,7 +12615,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166396252e9,
+      "ledger_last_cleared": 1780520166.396252,
       "pattern": "&danger hazard",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -12588,7 +12651,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670722e9,
+      "ledger_last_cleared": 1780520165.670722,
       "pattern": "cooperation builds trust",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12632,7 +12695,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795209e9,
+      "ledger_last_cleared": 1780520165.795209,
       "pattern": "3 times 4",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12668,7 +12731,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165710908e9,
+      "ledger_last_cleared": 1780520165.710908,
       "pattern": "why does fire burn",
       "action_packet": "explain^1",
       "is_unlinkable": false,
@@ -12721,7 +12784,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166231461e9,
+      "ledger_last_cleared": 1780520166.231461,
       "pattern": "atom electrons",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12773,7 +12836,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166418823e9,
+      "ledger_last_cleared": 1780520166.418823,
       "pattern": "what is &n plus &n",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12826,7 +12889,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166418914e9,
+      "ledger_last_cleared": 1780520166.418914,
       "pattern": "what is &n divided by &n",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12875,7 +12938,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860503e9,
+      "ledger_last_cleared": 1780520165.860503,
       "pattern": "trust enables cooperation",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12924,7 +12987,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166231382e9,
+      "ledger_last_cleared": 1780520166.231382,
       "pattern": "tree branches",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -12975,7 +13038,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166326963e9,
+      "ledger_last_cleared": 1780520166.326963,
       "pattern": "person music",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13023,7 +13086,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795387e9,
+      "ledger_last_cleared": 1780520165.795387,
       "pattern": "100 divided by 10",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13069,7 +13132,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166166077e9,
+      "ledger_last_cleared": 1780520166.166077,
       "pattern": "rain flooding",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13113,7 +13176,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795239e9,
+      "ledger_last_cleared": 1780520165.795239,
       "pattern": "10 minus 3",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13149,7 +13212,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670625e9,
+      "ledger_last_cleared": 1780520165.670625,
       "pattern": "earth orbits the sun",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13196,7 +13259,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895319e9,
+      "ledger_last_cleared": 1780520165.895319,
       "pattern": "autumn winter",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13238,7 +13301,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966098e9,
+      "ledger_last_cleared": 1780520165.966098,
       "pattern": "identify the unknown",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13279,7 +13342,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966034e9,
+      "ledger_last_cleared": 1780520165.966034,
       "pattern": "cover with leaves",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13316,7 +13379,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670513e9,
+      "ledger_last_cleared": 1780520165.670513,
       "pattern": "water flows downhill",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13364,7 +13427,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166418872e9,
+      "ledger_last_cleared": 1780520166.418872,
       "pattern": "what is &n times &n",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13414,7 +13477,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860358e9,
+      "ledger_last_cleared": 1780520165.860358,
       "pattern": "water extinguishes fire",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13468,7 +13531,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166166028e9,
+      "ledger_last_cleared": 1780520166.166028,
       "pattern": "heat evaporation",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13507,7 +13570,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670733e9,
+      "ledger_last_cleared": 1780520165.670733,
       "pattern": "words carry meaning",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13547,7 +13610,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165965843e9,
+      "ledger_last_cleared": 1780520165.965843,
       "pattern": "dig near roots",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13591,7 +13654,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165989991e9,
+      "ledger_last_cleared": 1780520165.989991,
       "pattern": "describe and explain fire",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13639,7 +13702,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166134057e9,
+      "ledger_last_cleared": 1780520166.134057,
       "pattern": "element properties carbon",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13680,7 +13743,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165749546e9,
+      "ledger_last_cleared": 1780520165.749546,
       "pattern": "betrayal is dangerous",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -13714,7 +13777,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165733128e9,
+      "ledger_last_cleared": 1780520165.733128,
       "pattern": "define happiness",
       "action_packet": "define^1",
       "is_unlinkable": false,
@@ -13762,7 +13825,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166327014e9,
+      "ledger_last_cleared": 1780520166.327014,
       "pattern": "child mother",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13812,7 +13875,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895211e9,
+      "ledger_last_cleared": 1780520165.895211,
       "pattern": "present future",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13862,7 +13925,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166198718e9,
+      "ledger_last_cleared": 1780520166.198718,
       "pattern": "roots ground",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13910,7 +13973,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166166149e9,
+      "ledger_last_cleared": 1780520166.166149,
       "pattern": "betrayal isolation",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13950,7 +14013,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165943946e9,
+      "ledger_last_cleared": 1780520165.943946,
       "pattern": "add larger sticks",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -13984,7 +14047,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165733148e9,
+      "ledger_last_cleared": 1780520165.733148,
       "pattern": "define synonym",
       "action_packet": "define^1",
       "is_unlinkable": false,
@@ -14019,7 +14082,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165767043e9,
+      "ledger_last_cleared": 1780520165.767043,
       "pattern": "i feel sad",
       "action_packet": "comfort^1",
       "is_unlinkable": false,
@@ -14070,7 +14133,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895336e9,
+      "ledger_last_cleared": 1780520165.895336,
       "pattern": "planting harvest",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14120,7 +14183,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016589516e9,
+      "ledger_last_cleared": 1780520165.89516,
       "pattern": "past present",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14165,7 +14228,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165965874e9,
+      "ledger_last_cleared": 1780520165.965874,
       "pattern": "collect dew at dawn",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14200,7 +14263,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165767097e9,
+      "ledger_last_cleared": 1780520165.767097,
       "pattern": "i feel lonely",
       "action_packet": "comfort^1",
       "is_unlinkable": false,
@@ -14251,7 +14314,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166264075e9,
+      "ledger_last_cleared": 1780520166.264075,
       "pattern": "cave shelter",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14290,7 +14353,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166440717e9,
+      "ledger_last_cleared": 1780520166.440717,
       "pattern": "define &word",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14338,7 +14401,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895303e9,
+      "ledger_last_cleared": 1780520165.895303,
       "pattern": "summer autumn",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14372,7 +14435,7 @@
       },
       "is_antimatch_node": true,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016628323e9,
+      "ledger_last_cleared": 1780520166.28323,
       "pattern": "wrong bad incorrect",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -14419,7 +14482,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895233e9,
+      "ledger_last_cleared": 1780520165.895233,
       "pattern": "dawn day",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14451,7 +14514,7 @@
       },
       "is_antimatch_node": true,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166283271e9,
+      "ledger_last_cleared": 1780520166.283271,
       "pattern": "fake false nonsense",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -14481,7 +14544,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520164775316e9,
+      "ledger_last_cleared": 1780520164.775316,
       "pattern": "hello hi greeting mornin",
       "action_packet": "greet[dont frown, dont insult]^3 | welcome[dont be rude]^2 | smile^1",
       "is_unlinkable": false,
@@ -14522,7 +14585,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016567055e9,
+      "ledger_last_cleared": 1780520165.67055,
       "pattern": "sky is blue",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14569,7 +14632,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895355e9,
+      "ledger_last_cleared": 1780520165.895355,
       "pattern": "hunting feasting",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14618,7 +14681,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166198671e9,
+      "ledger_last_cleared": 1780520166.198671,
       "pattern": "clouds sky",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14665,7 +14728,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166440785e9,
+      "ledger_last_cleared": 1780520166.440785,
       "pattern": "what is &word",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14701,7 +14764,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670685e9,
+      "ledger_last_cleared": 1780520165.670685,
       "pattern": "food gives energy",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14737,7 +14800,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016635236e9,
+      "ledger_last_cleared": 1780520166.35236,
       "pattern": "&season summer",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14786,7 +14849,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520164778172e9,
+      "ledger_last_cleared": 1780520164.778172,
       "pattern": "grug hits rock and makes fire",
       "action_packet": "analyze[dont panic]^5 | ponder^2",
       "is_unlinkable": false,
@@ -14829,7 +14892,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966227e9,
+      "ledger_last_cleared": 1780520165.966227,
       "pattern": "share something",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14870,7 +14933,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165965782e9,
+      "ledger_last_cleared": 1780520165.965782,
       "pattern": "look for green plants",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14904,7 +14967,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166396242e9,
+      "ledger_last_cleared": 1780520166.396242,
       "pattern": "&danger venom",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -14945,7 +15008,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165965986e9,
+      "ledger_last_cleared": 1780520165.965986,
       "pattern": "find sturdy branches",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -14983,7 +15046,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165670611e9,
+      "ledger_last_cleared": 1780520165.670611,
       "pattern": "light travels fast",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15019,7 +15082,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165716413e9,
+      "ledger_last_cleared": 1780520165.716413,
       "pattern": "how does shelter work",
       "action_packet": "explain^1",
       "is_unlinkable": false,
@@ -15064,7 +15127,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795136e9,
+      "ledger_last_cleared": 1780520165.795136,
       "pattern": "2 plus 2",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15110,7 +15173,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166264092e9,
+      "ledger_last_cleared": 1780520166.264092,
       "pattern": "family roots",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15158,7 +15221,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165854797e9,
+      "ledger_last_cleared": 1780520165.854797,
       "pattern": "fire burns wood",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15210,7 +15273,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166327045e9,
+      "ledger_last_cleared": 1780520166.327045,
       "pattern": "friend companion",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15260,7 +15323,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166418892e9,
+      "ledger_last_cleared": 1780520166.418892,
       "pattern": "what is &n minus &n",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15306,7 +15369,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795316e9,
+      "ledger_last_cleared": 1780520165.795316,
       "pattern": "9 times 6",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15351,7 +15414,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165860403e9,
+      "ledger_last_cleared": 1780520165.860403,
       "pattern": "earth orbits sun",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15399,7 +15462,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165895285e9,
+      "ledger_last_cleared": 1780520165.895285,
       "pattern": "spring summer",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15452,7 +15515,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166166134e9,
+      "ledger_last_cleared": 1780520166.166134,
       "pattern": "darkness fire making",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15491,7 +15554,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166352378e9,
+      "ledger_last_cleared": 1780520166.352378,
       "pattern": "&season winter",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15530,7 +15593,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165716429e9,
+      "ledger_last_cleared": 1780520165.716429,
       "pattern": "why do we need friends",
       "action_packet": "explain^1",
       "is_unlinkable": false,
@@ -15570,7 +15633,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966123e9,
+      "ledger_last_cleared": 1780520165.966123,
       "pattern": "isolate the variable",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15604,7 +15667,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165733138e9,
+      "ledger_last_cleared": 1780520165.733138,
       "pattern": "define shelter",
       "action_packet": "define^1",
       "is_unlinkable": false,
@@ -15654,7 +15717,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016589539e9,
+      "ledger_last_cleared": 1780520165.89539,
       "pattern": "winter spring",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15704,7 +15767,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166198761e9,
+      "ledger_last_cleared": 1780520166.198761,
       "pattern": "people village",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15745,7 +15808,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966247e9,
+      "ledger_last_cleared": 1780520165.966247,
       "pattern": "listen carefully",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15792,7 +15855,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166231427e9,
+      "ledger_last_cleared": 1780520166.231427,
       "pattern": "river water",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15837,7 +15900,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966267e9,
+      "ledger_last_cleared": 1780520165.966267,
       "pattern": "offer help",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15880,7 +15943,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016571635e9,
+      "ledger_last_cleared": 1780520165.71635,
       "pattern": "why is the sky blue",
       "action_packet": "explain^1",
       "is_unlinkable": false,
@@ -15919,7 +15982,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016567058e9,
+      "ledger_last_cleared": 1780520165.67058,
       "pattern": "gravity pulls objects",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -15961,7 +16024,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165966206e9,
+      "ledger_last_cleared": 1780520165.966206,
       "pattern": "approach with smile",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -16007,7 +16070,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520166198748e9,
+      "ledger_last_cleared": 1780520166.198748,
       "pattern": "fish river",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -16050,7 +16113,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165749475e9,
+      "ledger_last_cleared": 1780520165.749475,
       "pattern": "fire is dangerous",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -16094,7 +16157,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165749533e9,
+      "ledger_last_cleared": 1780520165.749533,
       "pattern": "wild animals are dangerous",
       "action_packet": "alert^1",
       "is_unlinkable": false,
@@ -16129,7 +16192,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165767109e9,
+      "ledger_last_cleared": 1780520165.767109,
       "pattern": "i miss someone",
       "action_packet": "comfort^1",
       "is_unlinkable": false,
@@ -16175,7 +16238,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.780520165795268e9,
+      "ledger_last_cleared": 1780520165.795268,
       "pattern": "15 divided by 5",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -16212,7 +16275,7 @@
       },
       "is_antimatch_node": false,
       "neighbor_ids": [],
-      "ledger_last_cleared": 1.78052016567067e9,
+      "ledger_last_cleared": 1780520165.67067,
       "pattern": "shelter protects from cold",
       "action_packet": "reason^1",
       "is_unlinkable": false,
@@ -16223,6 +16286,831 @@
       "strength": 4.5,
       "response_times": [
         1.241933822631836
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.6394,
+        0.025,
+        0.275,
+        0.2232,
+        0.7365
+      ],
+      "hopfield_key": "3136015424516354163",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "multi",
+        "system_prompt": "Multi-clause reasoning voice",
+        "sigil_pattern": true,
+        "answer_mode": "multi",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2944655,
+      "pattern": "&conj",
+      "action_packet": "reason^2 | explain^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_133",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 8.0,
+      "response_times": [
+        1.1767,
+        1.3922,
+        0.5869
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.4219,
+        0.0298,
+        0.2186,
+        0.5054,
+        0.0265
+      ],
+      "hopfield_key": "4846894707191880290",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "multi",
+        "system_prompt": "Two-clause comparison and conjunction reasoning",
+        "sigil_pattern": true,
+        "answer_mode": "multi",
+        "frame_hints": [
+          "comparative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2944946,
+      "pattern": "&conj &word and &word",
+      "action_packet": "explain^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_134",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 7.5,
+      "response_times": [
+        0.6988,
+        1.1499,
+        1.0449
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.2204,
+        0.5893,
+        0.8094,
+        0.0065,
+        0.8058
+      ],
+      "hopfield_key": "4419708990784647083",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "imperative",
+        "system_prompt": "Action execution voice - verb-driven action scripting",
+        "sigil_pattern": true,
+        "answer_mode": "doaction",
+        "frame_hints": [
+          "imperative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2945101,
+      "pattern": "&doAction &word &n",
+      "action_packet": "alert^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_135",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 9.0,
+      "response_times": [
+        1.1981,
+        0.8403,
+        0.6555
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.9572,
+        0.3366,
+        0.0927,
+        0.0967,
+        0.8475
+      ],
+      "hopfield_key": "4884787184896994034",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "imperative",
+        "system_prompt": "Action resolution voice - template-driven action with rest args",
+        "sigil_pattern": true,
+        "answer_mode": "doaction",
+        "frame_hints": [
+          "imperative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.294525,
+      "pattern": "&doAction &rest",
+      "action_packet": "explain^1 | describe^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_136",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 9.0,
+      "response_times": [
+        1.1037,
+        1.3071,
+        1.2297
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.5362,
+        0.9731,
+        0.3785,
+        0.552,
+        0.8294
+      ],
+      "hopfield_key": "956313251746092322",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "terse",
+        "noun_anchors": [
+          "arithmetic"
+        ],
+        "system_prompt": "Arithmetic reasoning voice - multi-operation",
+        "sigil_pattern": true,
+        "answer_mode": "math",
+        "frame_hints": [
+          "imperative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2945392,
+      "pattern": "&n &op &n &op &n",
+      "action_packet": "reason^2",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_137",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 9.0,
+      "response_times": [
+        1.1185,
+        1.3617,
+        1.0774
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.7046,
+        0.0458,
+        0.2279,
+        0.2894,
+        0.0798
+      ],
+      "hopfield_key": "343813380652835341",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "confident",
+        "system_prompt": "Positive polarity gate demo - context fire 1.0x - confident enthusiastic voice",
+        "frame_hints": [
+          "affirmative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.294552,
+      "pattern": "polarity positive demonstration affirm confirm agree endorse",
+      "action_packet": "comfort^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_138",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 6.0,
+      "response_times": [
+        0.7328,
+        0.601,
+        0.778
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.6357,
+        0.3648,
+        0.3702,
+        0.2095,
+        0.267
+      ],
+      "hopfield_key": "5339587416493286138",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "reflective",
+        "system_prompt": "Neutral polarity gate demo - context attenuate 0.7x - measured hedging voice",
+        "frame_hints": [
+          "reflective",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2945685,
+      "pattern": "polarity neutral demonstration consider ponder reflect muse",
+      "action_packet": "ponder^2 | ponder^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_139",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 4.5,
+      "response_times": [
+        1.4367,
+        1.148,
+        1.1091
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.1711,
+        0.7291,
+        0.1634,
+        0.3795,
+        0.9895
+      ],
+      "hopfield_key": "5794520494343157225",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "cautious",
+        "system_prompt": "Negative polarity gate demo - context suppress 0.3x - cautious guarded voice",
+        "frame_hints": [
+          "cautious",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2945857,
+      "pattern": "polarity negative demonstration deny refuse reject suppress",
+      "action_packet": "alert^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_140",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 2.5,
+      "response_times": [
+        1.14,
+        1.0569,
+        1.1846
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.8429,
+        0.776,
+        0.229,
+        0.0321,
+        0.3155
+      ],
+      "hopfield_key": "6337858436137675389",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Scientific analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2946,
+      "pattern": "photosynthesis converts sunlight into energy",
+      "action_packet": "explain^2 | describe^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_141",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 7.0,
+      "response_times": [
+        0.7677,
+        0.711,
+        1.4429
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.8764,
+        0.3147,
+        0.6554,
+        0.3956,
+        0.9145
+      ],
+      "hopfield_key": "4654725973378010814",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Scientific analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.294611,
+      "pattern": "DNA stores genetic information in cells",
+      "action_packet": "explain^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_142",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 7.0,
+      "response_times": [
+        0.9589,
+        0.7649,
+        0.7466
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.5614,
+        0.2627,
+        0.5846,
+        0.8978,
+        0.3994
+      ],
+      "hopfield_key": "1447910665019783696",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Scientific analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.294622,
+      "pattern": "thermodynamics studies heat energy entropy",
+      "action_packet": "explain^1 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_143",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 6.0,
+      "response_times": [
+        0.7193,
+        1.4975,
+        1.0095
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.0909,
+        0.0471,
+        0.1096,
+        0.6274,
+        0.7921
+      ],
+      "hopfield_key": "7374456322068160704",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Scientific analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2946346,
+      "pattern": "quantum mechanics studies subatomic particles",
+      "action_packet": "explain^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_144",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 6.5,
+      "response_times": [
+        0.9222,
+        0.5635,
+        0.8816
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.9961,
+        0.5291,
+        0.9711,
+        0.8608,
+        0.0115
+      ],
+      "hopfield_key": "8928482892087201521",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Scientific analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2946475,
+      "pattern": "evolution shapes species through natural selection",
+      "action_packet": "explain^2 | describe^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_145",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 7.5,
+      "response_times": [
+        1.2207,
+        1.1817,
+        1.037
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.2668,
+        0.641,
+        0.1116,
+        0.4348,
+        0.4537
+      ],
+      "hopfield_key": "3953751482575129583",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "alert",
+        "system_prompt": "Survival analysis engine active",
+        "answer_mode": "alert",
+        "frame_hints": [
+          "imperative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2946587,
+      "pattern": "find clean water source",
+      "action_packet": "alert^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_146",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 5.0,
+      "response_times": [
+        1.4538,
+        1.3759,
+        0.7634
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.5006,
+        0.1787,
+        0.9126,
+        0.8705,
+        0.2984
+      ],
+      "hopfield_key": "5315827604654492154",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "alert",
+        "system_prompt": "Survival analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "imperative",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2946699,
+      "pattern": "build shelter from branches",
+      "action_packet": "explain^1 | alert^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_147",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 4.5,
+      "response_times": [
+        1.1389,
+        1.109,
+        0.6528
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.7625,
+        0.5394,
+        0.7786,
+        0.5304,
+        0.0006
+      ],
+      "hopfield_key": "5151680477641425105",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "comfort",
+        "system_prompt": "Social reasoning engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2946863,
+      "pattern": "cooperation builds stronger communities",
+      "action_packet": "comfort^2 | explain^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_148",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 5.5,
+      "response_times": [
+        0.8242,
+        0.5195,
+        1.4291
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.8787,
+        0.8317,
+        0.3075,
+        0.0579,
+        0.878
+      ],
+      "hopfield_key": "247140890809861941",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "comfort",
+        "system_prompt": "Social reasoning engine active",
+        "answer_mode": "comfort",
+        "frame_hints": [
+          "empathetic",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2947001,
+      "pattern": "empathy helps understand others feelings",
+      "action_packet": "comfort^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_149",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 5.0,
+      "response_times": [
+        1.4469,
+        0.5857,
+        0.986
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.0692,
+        0.7606,
+        0.7658,
+        0.1284,
+        0.4753
+      ],
+      "hopfield_key": "4531810761692631588",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Linguistic analysis engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.294712,
+      "pattern": "grammar structures language through syntax",
+      "action_packet": "explain^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_150",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 5.0,
+      "response_times": [
+        1.0498,
+        0.7651,
+        1.3724
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.4231,
+        0.2118,
+        0.5393,
+        0.7299,
+        0.2012
+      ],
+      "hopfield_key": "8369958207449022541",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Arithmetic reasoning engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2947226,
+      "pattern": "calculus studies change through derivatives",
+      "action_packet": "explain^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_151",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 6.0,
+      "response_times": [
+        0.8117,
+        1.4951,
+        1.1499
+      ],
+      "throttle": 1.0
+    },
+    {
+      "is_grave": false,
+      "grave_reason": "",
+      "drop_table": [],
+      "signal": [
+        0.4381,
+        0.5176,
+        0.121,
+        0.2247,
+        0.3381
+      ],
+      "hopfield_key": "1810824173974309809",
+      "relational_patterns": [],
+      "max_neighbors": 8,
+      "json_data": {
+        "voice_register": "explanatory",
+        "system_prompt": "Arithmetic reasoning engine active",
+        "answer_mode": "explain",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
+      },
+      "is_antimatch_node": false,
+      "neighbor_ids": [],
+      "ledger_last_cleared": 1781716329.2947335,
+      "pattern": "geometry examines shapes angles areas",
+      "action_packet": "explain^2 | reason^1",
+      "is_unlinkable": false,
+      "is_image_node": false,
+      "id": "node_152",
+      "required_relations": [],
+      "relation_weights": {},
+      "strength": 5.5,
+      "response_times": [
+        1.0883,
+        0.7301,
+        0.7202
       ],
       "throttle": 1.0
     }
@@ -16461,5 +17349,698 @@
     "total_entries": 59
   },
   "morph_cooldowns": {},
-  "attachments": []
+  "attachments": [],
+  "actions": [
+    {
+      "trigger_verb": "say",
+      "action_type": "dynamic",
+      "template": "REPEAT(RESOLVE({{target}}), {{count}})",
+      "description": "Say something N times. RESOLVE first so 'say the date 2 times' works too."
+    },
+    {
+      "trigger_verb": "repeat",
+      "action_type": "dynamic",
+      "template": "REPEAT(RESOLVE({{target}}), {{count}})",
+      "description": "Repeat something N times. Synonym for SAY."
+    },
+    {
+      "trigger_verb": "count",
+      "action_type": "dynamic",
+      "template": "COUNT_TO({{count}})",
+      "description": "Count from 1 to N."
+    },
+    {
+      "trigger_verb": "check",
+      "action_type": "dynamic",
+      "template": "SAY(RESOLVE({{target}}))",
+      "description": "Check something - resolve and report."
+    },
+    {
+      "trigger_verb": "tell",
+      "action_type": "dynamic",
+      "template": "SAY(RESOLVE({{target}}))",
+      "description": "Tell about something - resolve and report."
+    },
+    {
+      "trigger_verb": "remind",
+      "action_type": "conditional",
+      "template": "IF(HAS({{target}}), SAY(RESOLVE({{target}})), SAY(I don't recall that))",
+      "description": "Remind about something if known."
+    },
+    {
+      "trigger_verb": "confirm",
+      "action_type": "conditional",
+      "template": "IF(HAS({{target}}), SAY(Yes confirmed), SAY(Not confirmed))",
+      "description": "Confirm something."
+    },
+    {
+      "trigger_verb": "verify",
+      "action_type": "conditional",
+      "template": "IF(EQUALS({{target}}, yes), SAY(Confirmed!), SAY(Not confirmed))",
+      "description": "Verify something."
+    },
+    {
+      "trigger_verb": "search",
+      "action_type": "dynamic",
+      "template": "SAY(RESOLVE({{target}}))",
+      "description": "Search for something."
+    },
+    {
+      "trigger_verb": "compare",
+      "action_type": "conditional",
+      "template": "IF(GT({{target}}, 5), SAY(That is big), SAY(That is small))",
+      "description": "Compare values."
+    },
+    {
+      "trigger_verb": "summarize",
+      "action_type": "static",
+      "template": "SUMMARY({{rest}})",
+      "description": "Summarize a topic."
+    },
+    {
+      "trigger_verb": "describe",
+      "action_type": "static",
+      "template": "DESCRIPTION({{rest}})",
+      "description": "Describe something."
+    },
+    {
+      "trigger_verb": "evaluate",
+      "action_type": "static",
+      "template": "EVALUATION({{rest}})",
+      "description": "Evaluate something."
+    }
+  ],
+  "inverse_table": {
+    "entries": {
+      "n": {
+        "sigil_name": "n",
+        "magnet_mode": "pseudononlinear",
+        "concretes": {
+          "2": {
+            "token": "2",
+            "observation_count": 5,
+            "accumulated_weight": 5.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "3": {
+            "token": "3",
+            "observation_count": 4,
+            "accumulated_weight": 4.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "4": {
+            "token": "4",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "5": {
+            "token": "5",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "7": {
+            "token": "7",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "8": {
+            "token": "8",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "9": {
+            "token": "9",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "10": {
+            "token": "10",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "15": {
+            "token": "15",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": false,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "20": {
+            "token": "20",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": false,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "100": {
+            "token": "100",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": false,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          }
+        },
+        "cluster_density": 0.45,
+        "last_routed_growth_type": "none",
+        "total_observations": 26,
+        "user_directive_count": 0,
+        "lobe_hint": "math"
+      },
+      "op": {
+        "sigil_name": "op",
+        "magnet_mode": "pseudononlinear",
+        "concretes": {
+          "plus": {
+            "token": "plus",
+            "observation_count": 6,
+            "accumulated_weight": 6.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "minus": {
+            "token": "minus",
+            "observation_count": 4,
+            "accumulated_weight": 4.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "times": {
+            "token": "times",
+            "observation_count": 5,
+            "accumulated_weight": 5.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "divided": {
+            "token": "divided",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          }
+        },
+        "cluster_density": 0.55,
+        "last_routed_growth_type": "none",
+        "total_observations": 18,
+        "user_directive_count": 0,
+        "lobe_hint": "math"
+      },
+      "word": {
+        "sigil_name": "word",
+        "magnet_mode": "pseudononlinear",
+        "concretes": {
+          "gravity": {
+            "token": "gravity",
+            "observation_count": 4,
+            "accumulated_weight": 4.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "atom": {
+            "token": "atom",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "fire": {
+            "token": "fire",
+            "observation_count": 6,
+            "accumulated_weight": 6.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "water": {
+            "token": "water",
+            "observation_count": 5,
+            "accumulated_weight": 5.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "shelter": {
+            "token": "shelter",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": false,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          }
+        },
+        "cluster_density": 0.3,
+        "last_routed_growth_type": "none",
+        "total_observations": 20,
+        "user_directive_count": 0,
+        "lobe_hint": "language"
+      },
+      "conj": {
+        "sigil_name": "conj",
+        "magnet_mode": "linear",
+        "concretes": {
+          "and": {
+            "token": "and",
+            "observation_count": 8,
+            "accumulated_weight": 8.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "or": {
+            "token": "or",
+            "observation_count": 4,
+            "accumulated_weight": 4.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "but": {
+            "token": "but",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": false,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          }
+        },
+        "cluster_density": 0.4,
+        "last_routed_growth_type": "none",
+        "total_observations": 14,
+        "user_directive_count": 0,
+        "lobe_hint": "language"
+      },
+      "doAction": {
+        "sigil_name": "doAction",
+        "magnet_mode": "linear",
+        "concretes": {
+          "say": {
+            "token": "say",
+            "observation_count": 5,
+            "accumulated_weight": 5.0,
+            "is_user_directive": true,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "repeat": {
+            "token": "repeat",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": true,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "count": {
+            "token": "count",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": true,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "check": {
+            "token": "check",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "tell": {
+            "token": "tell",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          }
+        },
+        "cluster_density": 0.35,
+        "last_routed_growth_type": "none",
+        "total_observations": 15,
+        "user_directive_count": 5,
+        "lobe_hint": "language"
+      },
+      "noun": {
+        "sigil_name": "noun",
+        "magnet_mode": "pseudononlinear",
+        "concretes": {
+          "gravity": {
+            "token": "gravity",
+            "observation_count": 3,
+            "accumulated_weight": 3.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "atom": {
+            "token": "atom",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          },
+          "fire": {
+            "token": "fire",
+            "observation_count": 4,
+            "accumulated_weight": 4.0,
+            "is_user_directive": false,
+            "first_seen": 1780520000.0,
+            "last_seen": 1780520200.0
+          }
+        },
+        "cluster_density": 0.25,
+        "last_routed_growth_type": "none",
+        "total_observations": 9,
+        "user_directive_count": 0,
+        "lobe_hint": "language"
+      },
+      "danger": {
+        "sigil_name": "danger",
+        "magnet_mode": "linear",
+        "concretes": {
+          "poison": {
+            "token": "poison",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "hazard": {
+            "token": "hazard",
+            "observation_count": 2,
+            "accumulated_weight": 2.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "venom": {
+            "token": "venom",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          }
+        },
+        "cluster_density": 0.2,
+        "last_routed_growth_type": "none",
+        "total_observations": 5,
+        "user_directive_count": 3,
+        "lobe_hint": "survival"
+      },
+      "season": {
+        "sigil_name": "season",
+        "magnet_mode": "linear",
+        "concretes": {
+          "spring": {
+            "token": "spring",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "summer": {
+            "token": "summer",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "autumn": {
+            "token": "autumn",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          },
+          "winter": {
+            "token": "winter",
+            "observation_count": 1,
+            "accumulated_weight": 1.0,
+            "is_user_directive": true,
+            "first_seen": 1780520100.0,
+            "last_seen": 1780520100.0
+          }
+        },
+        "cluster_density": 0.15,
+        "last_routed_growth_type": "none",
+        "total_observations": 4,
+        "user_directive_count": 4,
+        "lobe_hint": "time"
+      }
+    },
+    "last_decay": 1781716329.2947752
+  },
+  "autogrowth_evidence": [
+    {
+      "token": "gravity",
+      "lobe_hint": "science",
+      "observation_count": 4,
+      "accumulated_weight": 4.0,
+      "first_seen": 1780520000.0,
+      "last_seen": 1780520200.0
+    },
+    {
+      "token": "fire",
+      "lobe_hint": "science",
+      "observation_count": 6,
+      "accumulated_weight": 6.0,
+      "first_seen": 1780520000.0,
+      "last_seen": 1780520200.0
+    },
+    {
+      "token": "atom",
+      "lobe_hint": "science",
+      "observation_count": 3,
+      "accumulated_weight": 3.0,
+      "first_seen": 1780520000.0,
+      "last_seen": 1780520200.0
+    },
+    {
+      "token": "water",
+      "lobe_hint": "survival",
+      "observation_count": 5,
+      "accumulated_weight": 5.0,
+      "first_seen": 1780520000.0,
+      "last_seen": 1780520200.0
+    }
+  ],
+  "autogrowth_co_occur": [
+    {
+      "token_a": "gravity",
+      "token_b": "atom",
+      "co_count": 2,
+      "lobe_hint": "science"
+    },
+    {
+      "token_a": "fire",
+      "token_b": "water",
+      "co_count": 3,
+      "lobe_hint": "science"
+    },
+    {
+      "token_a": "shelter",
+      "token_b": "water",
+      "co_count": 1,
+      "lobe_hint": "survival"
+    }
+  ],
+  "autolink_evidence": [
+    {
+      "node_a": "node_23",
+      "node_b": "node_6",
+      "co_fire_count": 3,
+      "last_co_fire": 1780520200.0
+    },
+    {
+      "node_a": "node_45",
+      "node_b": "node_46",
+      "co_fire_count": 2,
+      "last_co_fire": 1780520200.0
+    },
+    {
+      "node_a": "node_127",
+      "node_b": "node_126",
+      "co_fire_count": 4,
+      "last_co_fire": 1780520200.0
+    }
+  ],
+  "coherence_config": {
+    "weight": 0.0,
+    "depth": 2,
+    "decay": 0.095,
+    "recency_window": 60.0
+  },
+  "flashcards": {},
+  "curiosity": {
+    "accumulator": 0.0,
+    "last_quench": 0.0,
+    "gaps": []
+  },
+  "concept_classes": {
+    "agreement": [
+      "accept",
+      "affirm",
+      "agree",
+      "concur",
+      "confirm",
+      "consent",
+      "endorse",
+      "validate"
+    ],
+    "biology": [
+      "cell",
+      "dna",
+      "ecosystem",
+      "evolution",
+      "gene",
+      "habitat",
+      "mutation",
+      "organism",
+      "photosynthesis",
+      "species"
+    ],
+    "chemistry": [
+      "atom",
+      "bond",
+      "compound",
+      "element",
+      "molecule",
+      "reaction",
+      "substance"
+    ],
+    "communication": [
+      "articulate",
+      "communicate",
+      "convey",
+      "declare",
+      "express",
+      "say",
+      "speak",
+      "state",
+      "tell"
+    ],
+    "emotion": [
+      "anger",
+      "fear",
+      "happiness",
+      "joy",
+      "love",
+      "sadness",
+      "surprise",
+      "trust"
+    ],
+    "math": [
+      "add",
+      "calculate",
+      "compute",
+      "count",
+      "divide",
+      "equation",
+      "formula",
+      "multiply",
+      "number",
+      "subtract"
+    ],
+    "physics": [
+      "energy",
+      "force",
+      "gravity",
+      "heat",
+      "mass",
+      "motion",
+      "quantum",
+      "thermodynamics",
+      "velocity",
+      "wave"
+    ],
+    "survival": [
+      "build",
+      "danger",
+      "fire",
+      "food",
+      "gather",
+      "hunt",
+      "protect",
+      "shelter",
+      "water"
+    ]
+  },
+  "concept_inhibitions": [],
+  "subconscious": {
+    "mature_traces": [
+      {
+        "pattern": "fire burns",
+        "strength": 0.8,
+        "last_activated": 1780520200.0
+      },
+      {
+        "pattern": "gravity pulls",
+        "strength": 0.6,
+        "last_activated": 1780520200.0
+      },
+      {
+        "pattern": "water essential",
+        "strength": 0.7,
+        "last_activated": 1780520200.0
+      }
+    ],
+    "novel_traces": [],
+    "decay_rate": 0.99
+  },
+  "crystalize": {
+    "entries": {}
+  },
+  "groups": {},
+  "resolve_conflict_mode": "latest",
+  "tonal_buildup": {
+    "accumulated": 0.0,
+    "last_reset": 1781716329.294787,
+    "threshold": 5.0
+  },
+  "chatter_swap_cooldowns": {},
+  "time_orientation_config": {
+    "orientation": "present",
+    "weight": 0.5
+  },
+  "scanner_config": {
+    "threshold": 0.3,
+    "max_depth": 3
+  }
 }

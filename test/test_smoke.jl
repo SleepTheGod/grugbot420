@@ -5,6 +5,27 @@
 # ==============================================================================
 
 using JSON, Distributions, Random
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 
 println("\n" * "="^60)
 println("GRUG SMOKE TEST SUITE")
@@ -313,15 +334,15 @@ println("\n[12] STOCHASTIC AIML RULES")
 
 # Add a rule with 100% fire probability
 add_orchestration_rule!("Always fire: {MISSION}")
-@assert length(AIML_DROP_TABLE) >= 1 "FAIL: Rule not added!"
-@assert AIML_DROP_TABLE[end].fire_probability == 1.0 "FAIL: Default prob should be 1.0!"
-println("  ✓ Default rule fire_probability = $(AIML_DROP_TABLE[end].fire_probability)")
+@assert length(ORCHESTRATION_RULES) >= 1 "FAIL: Rule not added!"
+@assert ORCHESTRATION_RULES[end].fire_probability == 1.0 "FAIL: Default prob should be 1.0!"
+println("  ✓ Default rule fire_probability = $(ORCHESTRATION_RULES[end].fire_probability)")
 
 # Add a rule with explicit 50% probability
 add_orchestration_rule!("Sometimes fire: {PRIMARY_ACTION} [prob=0.5]")
-@assert AIML_DROP_TABLE[end].fire_probability == 0.5 "FAIL: Prob should be 0.5!"
-@assert !contains(AIML_DROP_TABLE[end].text, "[prob=") "FAIL: Prob suffix should be stripped from rule text!"
-println("  ✓ Stochastic rule fire_probability = $(AIML_DROP_TABLE[end].fire_probability), text stripped cleanly")
+@assert ORCHESTRATION_RULES[end].fire_probability == 0.5 "FAIL: Prob should be 0.5!"
+@assert !contains(ORCHESTRATION_RULES[end].text, "[prob=") "FAIL: Prob suffix should be stripped from rule text!"
+println("  ✓ Stochastic rule fire_probability = $(ORCHESTRATION_RULES[end].fire_probability), text stripped cleanly")
 
 # Bad prob should throw
 try

@@ -6,6 +6,27 @@
 # ==============================================================================
 
 using Test
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 using JSON
 using Random
 using Distributions
@@ -166,12 +187,12 @@ end
 println("  ✓ All $(length(expected_tags)) AIML tags registered in ALLOWED_RULE_TAGS")
 
 # Add and retrieve a rule using new tags
-empty!(AIML_DROP_TABLE)
+empty!(ORCHESTRATION_RULES)
 result1 = add_orchestration_rule!("Certainty: {VOTE_CERTAINTY}. Alternatives: {TIED_ALTERNATIVES} [prob=0.9]")
 result2 = add_orchestration_rule!("Primary: {PRIMARY_ACTION}. Mission: {MISSION} [prob=1.0]")
-@assert length(AIML_DROP_TABLE) == 2 "FAIL: Expected 2 rules, got $(length(AIML_DROP_TABLE))!"
-@assert AIML_DROP_TABLE[1].fire_probability == 0.9 "FAIL: Rule 1 prob should be 0.9!"
-@assert AIML_DROP_TABLE[2].fire_probability == 1.0 "FAIL: Rule 2 prob should be 1.0!"
+@assert length(ORCHESTRATION_RULES) == 2 "FAIL: Expected 2 rules, got $(length(ORCHESTRATION_RULES))!"
+@assert ORCHESTRATION_RULES[1].fire_probability == 0.9 "FAIL: Rule 1 prob should be 0.9!"
+@assert ORCHESTRATION_RULES[2].fire_probability == 1.0 "FAIL: Rule 2 prob should be 1.0!"
 println("  ✓ Rules with {VOTE_CERTAINTY} and {TIED_ALTERNATIVES} added and stored correctly")
 
 # Confirm fake tag still rejected
@@ -406,14 +427,14 @@ println("  ✓ EyeSystem arousal reset to 0.0")
 # ==============================================================================
 println("\n[19] STOCHASTIC RULE FIRE PROBABILITY")
 
-empty!(AIML_DROP_TABLE)
+empty!(ORCHESTRATION_RULES)
 
 # Prob=1.0 rule must ALWAYS fire
 add_orchestration_rule!("Always fires [prob=1.0]")
 # GRUG: Use Ref to avoid Julia top-level soft scope issue.
 _fires_ref = Ref(0)
 for _ in 1:50
-    if rand() <= AIML_DROP_TABLE[1].fire_probability
+    if rand() <= ORCHESTRATION_RULES[1].fire_probability
         _fires_ref[] += 1
     end
 end
@@ -425,7 +446,7 @@ add_orchestration_rule!("Never fires [prob=0.0]")
 # GRUG: Use Ref to avoid Julia top-level soft scope issue.
 _never_ref = Ref(0)
 for _ in 1:50
-    if rand() <= AIML_DROP_TABLE[2].fire_probability
+    if rand() <= ORCHESTRATION_RULES[2].fire_probability
         _never_ref[] += 1
     end
 end
@@ -434,7 +455,7 @@ println("  ✓ prob=0.0 rule fires 0/50 times")
 
 # Prob=0.5 rule fires roughly half
 add_orchestration_rule!("Half fires [prob=0.5]")
-half_fires = sum(rand() <= AIML_DROP_TABLE[3].fire_probability for _ in 1:500)
+half_fires = sum(rand() <= ORCHESTRATION_RULES[3].fire_probability for _ in 1:500)
 @assert 150 < half_fires < 350 "FAIL: prob=0.5 rule fired $half_fires/500 — suspicious!"
 println("  ✓ prob=0.5 rule fires $(half_fires)/500 times (expected ~250)")
 

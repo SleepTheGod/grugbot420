@@ -8,6 +8,30 @@ if !isdefined(@__MODULE__, :CoinFlipHeader)
 end
 
 # GRUG: LobeOrchestrator — averages-curve lobe selection (replaces the
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 # v7.18 hard mute gate). engine.jl references LobeOrchestrator inside
 # scan_and_expand, so this must be in scope BEFORE engine.jl is included.
 # Guard against double-include for the package-level path.
@@ -166,6 +190,13 @@ end
 # this, every AutoGrowth/AutoLinker call in process_mission/idle/save silently
 # fails with UndefVarError (swallowed by try/catch) — i.e. auto-learning is DEAD.
 # AutoGrowth must load before AutoLinker (AutoLinker uses its co-occurrence map).
+# GRUG v8.2: InverseSigil must load BEFORE AutoGrowth (AutoGrowth uses ..InverseSigil).
+# InverseSigil needs SigilRegistry (it uses ..SigilRegistry), which is loaded
+# inside engine.jl above — so it's already in scope by this point.
+if !isdefined(@__MODULE__, :InverseSigil)
+    include("InverseSigil.jl")
+    using .InverseSigil
+end
 if !isdefined(@__MODULE__, :AutoGrowth)
     include("AutoGrowth.jl")
     using .AutoGrowth
@@ -203,12 +234,8 @@ if !isdefined(@__MODULE__, :RelationalJitter)
     using .RelationalJitter
 end
 
-# GRUG: AIMLNodeSystem needed for aiml_system save/load.
-# When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
-if !isdefined(@__MODULE__, :AIMLNodeSystem)
-    include("AIMLNodeSystem.jl")
-    using .AIMLNodeSystem
-end
+# GRUG: AIMLNodeSystem removed in v8.12 — scaffold tracking layer had no output actuator.
+# The stochastic rule board (ORCHESTRATION_RULES, formerly AIML_DROP_TABLE) remains.
 
 # GRUG: TonalJudge needed for tonal_judge_knobs save/load.
 # When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
@@ -443,8 +470,8 @@ const MESSAGE_HISTORY_LOCK = ReentrantLock()  # GRUG: Lock for phagy forensics r
 # (interaction scripts, REPLs, tests) can read the actual response text
 # instead of scraping stdout or the one-line digest stored in history.
 # Written by process_mission at the scaffold-print site. Read-only for callers.
-const _LAST_AIML_OUTPUT      = Ref("")
-const _LAST_AIML_OUTPUT_LOCK = ReentrantLock()
+const _LAST_VOICE_OUTPUT      = Ref("")
+const _LAST_VOICE_OUTPUT_LOCK = ReentrantLock()
 const _LAST_FIRED_NODE       = Ref("")
 const _LAST_PRIMARY_ACTION   = Ref("")
 const _LAST_CONFIDENCE       = Ref(0.0)
@@ -764,14 +791,14 @@ function add_message_to_history!(role::String, text::String, pinned::Bool=false)
 end
 
 # ==============================================================================
-# DYNAMIC AIML DROP TABLE & MAGIC WORD TEMPLATES
+# DYNAMIC ORCHESTRATION RULES & MAGIC WORD TEMPLATES
 # ==============================================================================
-# GRUG: AIML_DROP_TABLE, StochasticRule, ALLOWED_RULE_TAGS, and add_orchestration_rule!
+# GRUG: ORCHESTRATION_RULES, StochasticRule, ALLOWED_RULE_TAGS, and add_orchestration_rule!
 # are defined in Engine.jl so they are available to both Main.jl and the test runner.
 # Nothing to re-define here. Grug just uses them directly!
 
 # ==============================================================================
-# EPHEMERAL AIML ORCHESTRATOR
+# EPHEMERAL VOICE ORCHESTRATOR
 # ==============================================================================
 
 """
@@ -895,6 +922,116 @@ function _relational_overlap(mission_triples::Vector, msg_triples::Vector)::Floa
     uni = length(union(a, b))
     return uni == 0 ? 0.0 : inter / uni
 end
+
+# ==============================================================================
+# INVERSE SIGIL DIRECTIVE PARSER
+# ==============================================================================
+
+"""
+    _parse_lobe_qualified_answer(text::String) -> Vector{NamedTuple}
+
+GRUG v8.2: Parse lobe-prefixed answers from user text.
+  "science: gravity is an attractive force" → (lobe_id="...", lobe_name="science", content="gravity is an attractive force")
+
+Syntax: `lobename: content` — the prefix declares WHERE the node grows.
+The content semantics determine WHAT type of node (voter, AIML, sigil, petty).
+
+Returns vector of (lobe_id, lobe_name, content) NamedTuples.
+Only matches lobe names that exist in the LobeRegistry.
+"""
+function _parse_lobe_qualified_answer(text::String)::Vector{NamedTuple}
+    results = NamedTuple[]
+    if !isdefined(@__MODULE__, :Lobe)
+        return results
+    end
+    # GRUG: Match "lobename: some text here" — lobe prefix is a single word
+    # followed by colon and space, then the answer content.
+    # Pattern captures: (1) lobe name, (2) answer text
+    for m in eachmatch(r"([a-zA-Z_]\w*)\s*:\s+([^\n]+)", text)
+        lobe_name = m.captures[1]
+        content   = strip(m.captures[2])
+        if isempty(content); continue; end
+        # GRUG: Resolve lobe name → lobe_id. Only known lobes are valid.
+        lobe_rec = try
+            Lobe.get_lobe_by_name(String(lobe_name))
+        catch _
+            nothing
+        end
+        if lobe_rec !== nothing
+            push!(results, (lobe_id = lobe_rec.id, lobe_name = lobe_name, content = content))
+        end
+    end
+    return results
+end
+
+"""
+    _parse_inverse_sigil_directives(text::String) -> Vector{Tuple{String, String, Symbol, String}}
+
+GRUG v8.2: Parse user directives of the form:
+  - "X is a &noun"   -> ("noun", "X", :macro, "")
+  - "X is a &verb"   -> ("noun", "X", :macro, "")  [if &verb exists]
+  - "X is a &n"      -> ("n", "X", :lambda, "")
+  - "teach &noun X"  -> ("noun", "X", :macro, "")
+  - "&noun is X"     -> ("noun", "X", :macro, "")
+  - "science: X is a &noun" -> ("noun", "X", :macro, "science")
+
+Returns vector of (sigil_name, token, sigil_class, lobe_hint) quads.
+Only matches sigils that exist in _ENGINE_SIGIL_TABLE.
+lobe_hint is from the lobe-qualified prefix "science: ..." or "" if none.
+"""
+function _parse_inverse_sigil_directives(text::String)::Vector{Tuple{String, String, Symbol, String}}
+    results = Tuple{String, String, Symbol, String}[]
+    if !isdefined(@__MODULE__, :InverseSigil) || !isdefined(@__MODULE__, :_ENGINE_SIGIL_TABLE)
+        return results
+    end
+    # GRUG: Known sigil->class mapping from the engine sigil table.
+    _known_sigils = Dict{String, Symbol}()
+    try
+        for (name, entry) in _ENGINE_SIGIL_TABLE.entries
+            _known_sigils[name] = entry.class
+        end
+    catch _
+        return results
+    end
+    # GRUG v8.2: Detect lobe prefix from the text (e.g. "science: ...")
+    _lobe_hint = ""
+    for m in eachmatch(r"([a-zA-Z_]\w*)\s*:\s+", text)
+        _candidate = m.captures[1]
+        _lobe_rec = try Lobe.get_lobe_by_name(String(_candidate)) catch _ nothing end
+        if _lobe_rec !== nothing
+            _lobe_hint = _candidate
+            break   # use first lobe prefix found
+        end
+    end
+
+    # Pattern 1: "X is a &Y" or "X is &Y"
+    # e.g. "quantum is a &noun" -> sigil=noun, token=quantum
+    for m in eachmatch(r"(\w+)\s+is\s+(?:a\s+)?&([a-zA-Z_]+)", text)
+        token = m.captures[1]
+        sig_name = m.captures[2]
+        if haskey(_known_sigils, sig_name)
+            push!(results, (sig_name, token, _known_sigils[sig_name], _lobe_hint))
+        end
+    end
+    # Pattern 2: "teach &Y X" or "teach &Y: X"
+    for m in eachmatch(r"teach\s+&([a-zA-Z_]+)[\s:]+(\w+)", text)
+        sig_name = m.captures[1]
+        token = m.captures[2]
+        if haskey(_known_sigils, sig_name)
+            push!(results, (sig_name, token, _known_sigils[sig_name], _lobe_hint))
+        end
+    end
+    # Pattern 3: "&Y is X" or "&Y: X"
+    for m in eachmatch(r"&([a-zA-Z_]+)\s+(?:is\s+|:\s+)(\w+)", text)
+        sig_name = m.captures[1]
+        token = m.captures[2]
+        if haskey(_known_sigils, sig_name)
+            push!(results, (sig_name, token, _known_sigils[sig_name], _lobe_hint))
+        end
+    end
+    return results
+end
+
 
 """
 score_message_relevance(msg, user_tokens, user_triples)::Float64
@@ -1150,7 +1287,7 @@ function auto_tune_intensity_threshold(unpinned::Vector{ChatMessage})::Tuple{Flo
 end
 
 """
-extract_aiml_memory_context() -> NamedTuple{(:pinned, :fresh, :full, :threshold_note, :fresh_count, :pinned_count)}
+extract_voice_memory_context() -> NamedTuple{(:pinned, :fresh, :full, :threshold_note, :fresh_count, :pinned_count)}
 
 GRUG v7.13: Chief Orchestrator reads the memory wall with a two-stage
 Fresh Memory gate:
@@ -1186,7 +1323,7 @@ This layer scales: threshold tuning is a single O(N) pass per binary-
 search step (≤12 steps), then the coinflip only touches ≤~MAX survivors,
 never all N stored messages. NO SILENT FAILURES.
 """
-function extract_aiml_memory_context()
+function extract_voice_memory_context()
     total_msgs = length(MESSAGE_HISTORY)
     if total_msgs == 0
         empty_block = "Memory Cave: [EMPTY]"
@@ -1361,13 +1498,14 @@ end
 
 # GRUG DOC 3.9: SUPERPOSITION ORCHESTRATOR!
 """
-ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})
+ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})
 
 GRUG: Superposition orchestrator. Finds heaviest rocks (max confidence) for "Sure"
 basket, coinflips smaller rocks into "Unsure" basket. Builds AIML payload and
 fires the generative engine. Throws on empty votes — NO SILENT FAILURES.
 """
-function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tuple{String, Vector{Vote}, Vector{Vote}}
+function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tuple{String, Vector{Vote}, Vector{Vote}}
+# REMINDER: ANTIMATCH REMOVED. SIGILS IN TRIPLES. HOPFIELD REMOVED.
     if isempty(votes)
         error("!!! FATAL: Orchestrator failed: Cave empty! Received zero votes! Cannot build fire! !!!")
     end
@@ -1718,7 +1856,9 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})::Tupl
 
         while true
             entry = HippocampalModulator.next_pending!(action_log)
-            isnothing(entry) && break
+            if isnothing(entry)
+                break
+            end
 
             # GRUG v7.47: Additive entries (non-winner unsure votes) have
             # empty sure_votes. They still need to produce output — use the
@@ -1824,13 +1964,13 @@ end
 # ==============================================================================
 
 """
-generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, context)
+synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, context)
 
 GRUG: Build text sandwich for the JIT Generative Builder and synthesize
 the dynamic response. Assembles system prompt, mission, vote context, and
 memory into a single payload. Throws on missing context keys — NO SILENT FAILURES.
 """
-function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::Vector{Vote}, unsure_votes::Vector{Vote}, all_votes::Vector{Vote}, context::Dict)
+function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes::Vector{Vote}, unsure_votes::Vector{Vote}, all_votes::Vector{Vote}, context::Dict)
     if !haskey(context, "system_prompt")
         error("!!! FATAL: Node dictionary missing 'system_prompt'! Grug confused! !!!")
     end
@@ -1869,7 +2009,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     end
     neg_str       = isempty(primary_vote.negatives) ? "None" : join(primary_vote.negatives, ", ")
 
-    memory_ctx = extract_aiml_memory_context()
+    memory_ctx = extract_voice_memory_context()
     lobe_str  = extract_lobe_aware_context(all_votes)
 
     sure_str   = join([v.action for v in sure_votes], ", ")
@@ -1984,7 +2124,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     evaluated_rules = String[]
     try
-        for rule in lock(_DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end
+        for rule in lock(_DROP_TABLE_LOCK) do; copy(ORCHESTRATION_RULES) end
             # Parse a leading [action_name "..."] tag, if present.
             # Pattern: optional whitespace, '[', action_name (word chars +
             # hyphen/underscore), at least one space, then a quote. This is
@@ -2071,6 +2211,52 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         return join(items[1:end-1], ", ") * ", and " * items[end]
     end
 
+    # GRUG v7.61: _GRUG_VOICE_EXCLUDED_SYNONYMS — verb synonym aliases
+    # that are valid for INPUT MATCHING (so "adore" maps to "love" in
+    # node selection) but are WRONG REGISTER for grug's OUTPUT voice.
+    # When _pick_synonym collects candidates from SemanticVerbs._SYNONYM_MAP
+    # (Case A: word is canonical → collect aliases), it must NOT pick
+    # these elevated-register aliases as replacements. "love" → "adore"
+    # in the output makes grug sound like a poet, not a caveman.
+    # "burn" → "ignite" makes grug sound like a chemistry textbook.
+    # The mapping still works for INPUT: user says "adore" → system
+    # matches "love" node. But the output always stays "love".
+    # GRUG v7.61: _grug_voice_excluded_synonyms — verb synonym aliases
+    # that are valid for INPUT MATCHING (so "adore" maps to "love" in
+    # node selection) but are WRONG REGISTER for grug's OUTPUT voice.
+    # When _pick_synonym collects candidates from SemanticVerbs._SYNONYM_MAP
+    # (Case A: word is canonical → collect aliases), it must NOT pick
+    # these elevated-register aliases as replacements. "love" → "adore"
+    # in the output makes grug sound like a poet, not a caveman.
+    # "burn" → "ignite" makes grug sound like a chemistry textbook.
+    # The mapping still works for INPUT: user says "adore" → system
+    # matches "love" node. But the output always stays "love".
+    # Note: not const because Julia doesn't allow const in local scope.
+    _grug_voice_excluded_synonyms = Set([
+        "adore",        # too romantic/elevated → canonical "love"
+        "combust",      # scientific register → canonical "burn"
+        "ignite",       # scientific register → canonical "burn"
+        "collaborate",  # corporate register → canonical "cooperate"
+        "consider",     # philosophical register → canonical "think"
+        "console",      # elevated emotional → canonical "comfort"
+        "construct",    # technical register → canonical "build"
+        "distribute",   # formal register → canonical "share"
+        "generate",     # technical register → canonical "create"
+        "produce",      # formal/technical → canonical "cause"
+        "rely upon",    # formal phrase → canonical "trust"
+        "sense",        # slightly elevated → canonical "feel"
+        "understand",   # slightly elevated → canonical "know"
+        "stream",       # poetic register → canonical "flow"
+        "experience",   # philosophical register → canonical "feel"
+        "dread",        # literary register → canonical "fear"
+        "ponder",       # philosophical register → canonical "think"
+        "track",        # slightly elevated → canonical "hunt"
+        "assemble",     # technical register → canonical "build"
+        "forage",       # slightly elevated → canonical "gather"
+        "guard",        # slightly elevated → canonical "protect"
+        "collect",      # slightly formal → canonical "gather"
+    ])
+
     # -------------------------------------------------------------------
     # GRUG v7.16: _pick_synonym — given a word, return either a random
     # synonym from Thesaurus.SYNONYM_SEED_MAP OR the original word,
@@ -2080,6 +2266,9 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     #   (c) Required relations — if the original word is in the winning
     #       node's required_relations, we MUST keep it (synonyms would
     #       break the required-relation contract)
+    #   (d) Grug voice register (v7.61) — elevated-register verb aliases
+    #       are excluded from the candidate pool so "love" never becomes
+    #       "adore" and "burn" never becomes "ignite" in output.
     #
     # NO SILENT FAILURES: if every candidate is inhibited AND the
     # original word is also inhibited AND is required, we @warn and
@@ -2089,6 +2278,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # -------------------------------------------------------------------
     function _pick_synonym(word::String, drop_table::Vector{String},
                             required_relations::Vector{String})::String
+# REMINDER: required_relations may use sigils (&n is_greater_than &n) — not fixed string comparisons.
         clean = lowercase(strip(word))
         is_required = clean in required_relations
 
@@ -2139,13 +2329,20 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         unique!(candidates)
 
         # Filter out inhibited words (both negative-thesaurus and
-        # per-node drop_table).
+        # per-node drop_table), AND elevated-register verb aliases
+        # that don't fit grug's output voice (v7.61).
         allowed = filter(candidates) do c
             c_clean = lowercase(strip(c))
             if InputQueue.is_inhibited(String(c_clean))
                 return false
             end
             if c_clean in drop_table
+                return false
+            end
+            # GRUG v7.61: Exclude elevated-register verb synonyms from
+            # output. These are valid for input matching but wrong voice
+            # for grug's speech. "love" should never become "adore".
+            if c_clean in _grug_voice_excluded_synonyms
                 return false
             end
             return true
@@ -2160,19 +2357,19 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             return word
         end
 
-        # GRUG v7.21c-2: SWAP_RATE probabilistic gate.
-        # Prior versions returned `rand(allowed)` unconditionally — that swapped
-        # EVERY swappable token in every reply, producing word-salad like
-        # "Subsist polite, brief" / "Construct tribemate" / "delete" for "clear".
-        # Natural prose has continuity: most words should land as written, with
-        # occasional fresh variants. Default 0.25 means ~3 of every 4 swappable
-        # tokens stay original; ~1 in 4 picks a synonym. Env-overridable for
-        # tests or operator tuning.
+        # GRUG v8.11: raised default from 0.15 to 0.35. The thesaurus swap
+        # is the default anti-stale mechanism — it should not need to be
+        # "activated". At 0.15, mechanical claims (from patterns, noun_anchors
+        # fallback, etc.) were nearly static, repeating the same wording every
+        # time the same node won. 0.35 means ~1 in 3 swappable tokens gets a
+        # fresh synonym, giving natural variation while preserving meaning.
+        # Stochastic pick means two cycles on the same prompt roll different
+        # synonyms. Env-overridable for operator tuning.
         swap_rate = try
             r = parse(Float64, get(ENV, "GRUG_THESAURUS_SWAP_RATE", "0.35"))
             (r < 0.0 || r > 1.0) ? 0.35 : r
         catch
-            0.25
+            0.35
         end
         if rand() > swap_rate
             return word
@@ -2196,10 +2393,14 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # -------------------------------------------------------------------
     function _light_thesaurus_touch(sentence::String, drop_table::Vector{String},
                                      required_relations::Vector{String})::String
-        # GRUG v7.38: bumped default from 0.15 to 0.30. Domain-specific
-        # words now have synonyms but the old 0.15 rate barely changed anything.
-        # 0.30 means ~1 in 3 eligible words gets swapped, producing visible
-        # but not chaotic variation.
+# REMINDER: required_relations may use sigils (&n is_greater_than &n) — not fixed string comparisons.
+        # GRUG v8.11: raised default from 0.10 to 0.30. The thesaurus is the
+        # primary anti-stale lever at orchestration time — it MUST fire often
+        # enough to prevent verbatim repetition across turns. v7.41 dropped
+        # this to 0.10 after removing wrong-register synonyms, but that made
+        # voice_body responses nearly static. 0.30 means ~1 in 3 eligible
+        # words gets a fresh synonym — enough to keep output alive without
+        # garbling. Env-overridable for operator tuning.
         light_rate = try
             r = parse(Float64, get(ENV, "GRUG_LIGHT_TOUCH_RATE", "0.30"))
             (r < 0.0 || r > 1.0) ? 0.30 : r
@@ -2252,13 +2453,360 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     end
 
     # -------------------------------------------------------------------
-    # GRUG v7.16: _swap_words_in — route every whitespace-token of a
+    # GRUG v8.2: _hippocampal_touch — moderate synonym variation for
+    # hippocampal_answer voice_body claims. The user teaches grug an
+    # answer, and when that node fires, grug should NOT parrot the
+    # exact answer verbatim — it should rephrase using the thesaurus
+    # while preserving meaning. This is the middle ground between
+    # _light_thesaurus_touch (too conservative — 10%, 2+ syns) and
+    # _swap_words_in (too aggressive — hits every token).
+    #
+    # Rate: GRUG_HIPPOCAMPAL_TOUCH_RATE (default 0.45). Nearly half
+    # of eligible words get a synonym swap, giving clear rephrasing
+    # without word-salad. Only words with 1+ synonym in the seed map
+    # are eligible (lower threshold than light touch's 2+ gate, since
+    # hippocampal answers often use domain words with limited but
+    # valid synonyms). Inhibited words and drop_table entries are
+    # still protected. Case preservation follows the same rules.
+    # -------------------------------------------------------------------
+    function _hippocampal_touch(sentence::String, drop_table::Vector{String},
+                                required_relations::Vector{String})::String
+        hipp_rate = try
+            r = parse(Float64, get(ENV, "GRUG_HIPPOCAMPAL_TOUCH_RATE", "0.45"))
+            (r < 0.0 || r > 1.0) ? 0.45 : r
+        catch
+            0.45
+        end
+        tokens = split(String(sentence))
+        out = String[]
+        for tok in tokens
+            m_tok = match(r"^([^a-zA-Z]*)([a-zA-Z]+)([^a-zA-Z]*)$", String(tok))
+            if m_tok === nothing
+                push!(out, String(tok))
+                continue
+            end
+            prefix, core, suffix = String(m_tok.captures[1]), String(m_tok.captures[2]), String(m_tok.captures[3])
+            clean = lowercase(core)
+            # Skip: required relations, inhibited words, drop_table
+            clean in required_relations && (push!(out, String(tok)); continue)
+            InputQueue.is_inhibited(clean) && (push!(out, String(tok)); continue)
+            clean in drop_table && (push!(out, String(tok)); continue)
+            # GRUG v8.2: Lower threshold — 1+ synonym is enough.
+            # Hippocampal answers often use domain words with limited
+            # but valid alternatives (e.g. "oxygen" has 0, "breathe"
+            # has "inhale/exhale/respire"). The 2+ gate from light
+            # touch was blocking most swaps on answer content.
+            n_syns = haskey(Thesaurus.SYNONYM_SEED_MAP, clean) ? length(Thesaurus.SYNONYM_SEED_MAP[clean]) : 0
+            if n_syns < 1
+                push!(out, String(tok))  # no alternatives at all — keep original
+                continue
+            end
+            # Probabilistic swap at hipp_rate
+            if rand() > hipp_rate
+                push!(out, String(tok))
+                continue
+            end
+            # Pick a synonym (filtered by inhibition/drop_table)
+            candidates = collect(Thesaurus.SYNONYM_SEED_MAP[clean])
+            allowed = filter(c -> !InputQueue.is_inhibited(c) && !(c in drop_table), candidates)
+            if isempty(allowed)
+                push!(out, String(tok))
+                continue
+            end
+            picked = rand(allowed)
+            # Preserve capitalization
+            if startswith(core, uppercase(first(core)))
+                picked = uppercase(first(picked)) * picked[2:end]
+            end
+            push!(out, "$(prefix)$(picked)$(suffix)")
+        end
+        join(out, " ")
+    end
+
+    # -------------------------------------------------------------------
+    # GRUG v8.12: _vote_word_swap — targeted synonym replacement for
+    # locked-in vote words. Instead of scanning every token with a swap
+    # rate (the old _light_thesaurus_touch / _hippocampal_touch approach),
+    # this function:
+    #   1. Tokenizes the claim text (the locked-in answer from the vote)
+    #   2. Identifies which words actually HAVE thesaurus entries
+    #   3. Filters out inhibited words, drop_table entries, required relations
+    #   4. Picks N random words from the eligible pool (those with synonyms)
+    #   5. Replaces each picked word with a random synonym (100% synonymity)
+    #
+    # For single words thesaurus is a 100% synonymity match — "big" → "large",
+    # "also" → "moreover" — always valid. No swap rate needed. Just pick
+    # words that CAN be replaced and replace them.
+    #
+    # GRUG_VOTE_SWAP_COUNT (default 3): how many words to pick & swap.
+    # If the claim has fewer eligible words than this, swap all of them.
+    # -------------------------------------------------------------------
+    function _vote_word_swap(sentence::String, drop_table::Vector{String},
+                             required_relations::Vector{String};
+                             max_swaps::Int = 0)::String
+        # GRUG v8.12: _vote_word_swap — targeted synonym replacement for
+        # locked-in vote answers. Picks eligible words that HAVE thesaurus
+        # entries and replaces them with 100% synonymous matches.
+        #
+        # Dynamic swap budget (v8.13):
+        #   - If max_swaps > 0, use that (explicit override, e.g. relational triples)
+        #   - Otherwise: swap ~40-50% of eligible words, minimum 3, max 8.
+        #     This keeps answers lively without mangling them.
+        #     Old fixed count of 3 was too stiff for longer answers.
+
+        tokens = split(String(sentence))
+
+        # ── Step 1: Identify which token positions are eligible for swap ──
+        # A token is eligible if:
+        #   - It contains alphabetic characters (we can parse it)
+        #   - Its lowercase form has entries in the thesaurus seed map
+        #   - It's NOT in the drop_table (node-specific protected words)
+        #   - It's NOT inhibited (system-level protected words)
+        #   - It's NOT a required relation (must stay for coherence)
+        #   - It has at least one ALLOWED synonym (after inhibition/drop filtering)
+        eligible_indices = Int[]
+        eligible_synonyms = Dict{Int, Vector{String}}()  # idx → allowed synonym list
+        for (j, tok) in enumerate(tokens)
+            m_tok = match(r"^([^a-zA-Z]*)([a-zA-Z]+)([^a-zA-Z]*)$", String(tok))
+            m_tok === nothing && continue
+            core = String(m_tok.captures[2])
+            clean = lowercase(core)
+            # Skip protected words
+            if clean in required_relations
+                continue
+            end
+            if InputQueue.is_inhibited(clean)
+                continue
+            end
+            if clean in drop_table
+                continue
+            end
+            # Must have thesaurus entries
+            if !haskey(Thesaurus.SYNONYM_SEED_MAP, clean)
+                continue
+            end
+            candidates = collect(Thesaurus.SYNONYM_SEED_MAP[clean])
+            allowed = filter(c -> !InputQueue.is_inhibited(c) && !(c in drop_table), candidates)
+            if isempty(allowed)
+                continue
+            end
+            push!(eligible_indices, j)
+            eligible_synonyms[j] = allowed
+        end
+
+        # ── Step 2: Determine swap budget dynamically ──
+        if isempty(eligible_indices)
+            return String(sentence)  # nothing to swap
+        end
+        n_eligible = length(eligible_indices)
+        if max_swaps > 0
+            n_pick = min(max_swaps, n_eligible)
+        else
+            # Dynamic: ~45% of eligible words, clamped to [3, 8]
+            # Common sense — short answers get min 3, long answers cap at 8
+            # to avoid sounding like a thesaurus explosion.
+            raw = round(Int, n_eligible * 0.45)
+            n_pick = clamp(raw, 3, 8)
+            # If fewer than 3 eligible, just swap all of them
+            if n_eligible <= 3
+                n_pick = n_eligible
+            end
+        end
+
+        picked_indices = n_eligible <= n_pick ?
+            eligible_indices :  # swap all eligible
+            sort(sample(eligible_indices, n_pick; replace=false))  # random subset, keep order
+
+        # ── Step 3: Replace picked words with random synonyms ──
+        out_tokens = collect(String.(tokens))
+        for idx in picked_indices
+            tok = out_tokens[idx]
+            m_tok = match(r"^([^a-zA-Z]*)([a-zA-Z]+)([^a-zA-Z]*)$", tok)
+            m_tok === nothing && continue
+            prefix, core, suffix = String(m_tok.captures[1]), String(m_tok.captures[2]), String(m_tok.captures[3])
+            picked = rand(eligible_synonyms[idx])
+            # Preserve capitalization
+            if !isempty(core) && isuppercase(first(core))
+                picked = uppercase(first(picked)) * picked[nextind(picked, 1):end]
+            end
+            out_tokens[idx] = "$(prefix)$(picked)$(suffix)"
+        end
+        result = join(out_tokens, " ")
+        return result
+    end
+
+    # -------------------------------------------------------------------
+    # GRUG v8.3: _hippocampal_rephrase — structural rephrasing engine
+    # for hippocampal_answer voice_body claims. Goes beyond synonym swap
+    # by rearranging sentence structure when thesaurus coverage is sparse.
+    #
+    # Applies 0-2 of these transforms (picked randomly, never all):
+    #   1. CLAUSE SHUFFLE — when claim has 2+ sentences, reorder them
+    #   2. HEDGE INSERT — prepend a grug-voice hedge ("basically",
+    #      "in short", "the way of it is") before a sentence
+    #   3. CONNECTOR SWAP — replace "and" with "moreover"/"also",
+    #      replace "because" with "since"/"for"
+    #   4. TRIM TAIL — remove the last sentence if 3+ sentences exist
+    #      and the tail is a short topic clause (Grug speak of X.)
+    #
+    # Each transform is applied with probability REPHRASE_RATE (0.60).
+    # At most 2 transforms fire per call to avoid word salad.
+    # -------------------------------------------------------------------
+    function _hippocampal_rephrase(sentence::String)::String
+        rephrase_rate = try
+            r = parse(Float64, get(ENV, "GRUG_REPHRASE_RATE", "0.60"))
+            (r < 0.0 || r > 1.0) ? 0.60 : r
+        catch
+            0.60
+        end
+
+        # Split into sentences (rough: split on ". " or period at end)
+        raw_sentences = split(sentence, r"\.\s+")
+        sentences = String[]
+        for s in raw_sentences
+            s_clean = strip(String(s))
+            isempty(s_clean) && continue
+            # Re-add period if it was consumed by split
+            if !endswith(s_clean, ".") && !endswith(s_clean, "!") && !endswith(s_clean, "?")
+                s_clean *= "."
+            end
+            push!(sentences, s_clean)
+        end
+
+        n_sent = length(sentences)
+        if n_sent < 1
+            return sentence
+        end
+
+        # Pick which transforms to apply (0-2)
+        transforms = String[]
+        for t_name in ["clause_shuffle", "hedge_insert", "connector_swap", "trim_tail", "content_reframe"]
+            rand() < rephrase_rate && push!(transforms, t_name)
+        end
+        # GRUG v8.6: Cap at 2 transforms for multi-sentence, 1 for single-sentence
+        # (single-sentence content is fragile — too many transforms garble it)
+        max_transforms = n_sent >= 2 ? 2 : 1
+        if length(transforms) > max_transforms
+            transforms = transforms[1:max_transforms]
+        end
+
+        result = copy(sentences)
+
+        for t in transforms
+            if t == "clause_shuffle" && n_sent >= 2
+                # Don't shuffle if only 2 sentences and one is a topic clause
+                # GRUG v8.7: Fixed topic clause regex — matches ALL prepositions
+                # (speak OF, think ON, name [none], warn OF, sit WITH, turn TO)
+                topic_idx = findfirst(s -> occursin(r"^Grug (speak of|think on|name |warn of|sit with|turn to|talk of)", s), result)
+                if topic_idx !== nothing && length(result) <= 2
+                    continue  # skip: shuffling a claim + topic clause is wrong
+                end
+                # Shuffle non-topic sentences among themselves
+                non_topic = findall(s -> !occursin(r"^Grug (speak of|think on|name |warn of|sit with|turn to|talk of)", s), result)
+                if length(non_topic) >= 2
+                    shuffled = result[non_topic]
+                    shuffle_n = min(length(shuffled), length(non_topic))
+                    for i in 1:shuffle_n
+                        result[non_topic[i]] = shuffled[shuffle_n - i + 1]
+                    end
+                end
+
+            elseif t == "hedge_insert" && n_sent >= 1
+                # Pick a non-topic sentence to prepend a hedge to
+                non_topic = findall(s -> !occursin(r"^Grug (speak of|think on|name |warn of|sit with|turn to|talk of)", s), result)
+                if !isempty(non_topic)
+                    idx = rand(non_topic)
+                    hedge = rand(_REPHRASE_HEDGES)
+                    # Lowercase the first letter after the hedge
+                    orig = result[idx]
+                    if length(orig) > 1
+                        result[idx] = "$(hedge), $(lowercase(orig[1:1]))$(orig[2:end])"
+                    end
+                end
+
+            elseif t == "connector_swap"
+                # Swap connectors in a random non-topic sentence
+                non_topic = findall(s -> !occursin(r"^Grug (speak of|think on|name |warn of|sit with|turn to|talk of)", s), result)
+                if !isempty(non_topic)
+                    idx = rand(non_topic)
+                    for (conn, alts) in _REPHRASE_CONNECTOR_SWAPS
+                        if occursin(" $(conn) ", lowercase(result[idx]))
+                            alt = rand(alts)
+                            # Replace first occurrence (case-insensitive, preserve case)
+                            result[idx] = replace(result[idx],
+                                Regex(" $(conn) ", "i") => " $(alt) ", count=1)
+                            break
+                        end
+                    end
+                end
+
+            elseif t == "trim_tail" && n_sent >= 3
+                # Remove the last sentence if it's a short topic clause
+                last_s = result[end]
+                if length(last_s) < 40 && occursin(r"^Grug (speak of|think on|name |warn of|sit with|turn to|talk of)", last_s)
+                    pop!(result)
+                end
+
+            # GRUG v8.6: content_reframe — for single-sentence /answer content
+            # that has no synonyms and no connectors to swap. Restructures
+            # "X is Y" into a different frame that preserves meaning but
+            # breaks verbatim matching. Only fires for short single-sentence
+            # claims (the common /answer pattern).
+            elseif t == "content_reframe" && n_sent <= 2
+                # Find a non-topic sentence to reframe
+                non_topic = findall(s -> !occursin(r"^Grug (speak of|think on|name |warn of|sit with|turn to|talk of)", s), result)
+                if !isempty(non_topic)
+                    idx = rand(non_topic)
+                    orig = result[idx]
+                    # Try multiple reframing patterns
+                    reframed = false
+                    # Pattern 1: "X is Y" → "When it comes to X, Y"
+                    m_is = match(r"^([A-Z][^ ]+) is (.+)$", orig)
+                    if m_is !== nothing && rand() < 0.5
+                        subj = String(m_is.captures[1])
+                        pred = String(m_is.captures[2])
+                        result[idx] = "When it comes to $(lowercase(subj)), it is $(pred)"
+                        reframed = true
+                    end
+                    # Pattern 2: "X are Y" → "As for X, Y"
+                    if !reframed
+                        m_are = match(r"^([A-Z][^ ]+) are (.+)$", orig)
+                        if m_are !== nothing && rand() < 0.5
+                            subj = String(m_are.captures[1])
+                            pred = String(m_are.captures[2])
+                            result[idx] = "As for $(lowercase(subj)), they are $(pred)"
+                            reframed = true
+                        end
+                    end
+                    # Pattern 3: "X verb Y" → "The thing about X is that it verb Y"
+                    if !reframed
+                        m_sv = match(r"^([A-Z][^ ]+) (converts|combines|flows|burns|appears|arises|pulls|holds|carries|breathes|creates|destroys|warms|devours|shapes|scatters|sustains|reveals|connects|transforms|produces|generates|requires|demands) (.+)$", orig)
+                        if m_sv !== nothing
+                            subj = String(m_sv.captures[1])
+                            verb = String(m_sv.captures[2])
+                            rest = String(m_sv.captures[3])
+                            result[idx] = "The thing about $(lowercase(subj)) is that it $(verb) $(rest)"
+                            reframed = true
+                        end
+                    end
+                    # Pattern 4: Generic prefix reframe if nothing else matched
+                    if !reframed && length(orig) > 20
+                        frame = rand(["What matters here is that", "The heart of it is", "At its core,", "Simply put,"])
+                        result[idx] = "$(frame) $(lowercase(orig[1:1]))$(orig[2:end])"
+                    end
+                end
+            end
+        end
+
+        join(result, " ")
+    end
     # sentence through _pick_synonym and rejoin. Preserves the original
     # token's case via a simple heuristic: if the original starts with
     # uppercase, capitalize the synonym.
     # -------------------------------------------------------------------
     function _swap_words_in(sentence::String, drop_table::Vector{String},
                              required_relations::Vector{String})::String
+# REMINDER: required_relations may use sigils (&n is_greater_than &n) — not fixed string comparisons.
         # GRUG v7.16-FIX: Julia's `split` with a regex DOES NOT return
         # the separators as tokens (unlike Python's re.split with a
         # capturing group). So we split on whitespace, keep only the
@@ -2268,7 +2816,8 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         # single-space-separated by convention).
         tokens = split(sentence)  # splits on any whitespace, drops empties
         out_tokens = String[]
-        for tok in tokens
+        for j in 1:length(tokens)
+            tok = tokens[j]
             # Strip trailing punctuation for the lookup but re-attach
             # after. This lets "causes," still be recognised as "causes".
             m = match(r"^([\w][\w'-]*)(.*)$", String(tok))
@@ -2278,7 +2827,23 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             end
             core = String(m.captures[1])
             tail = m.captures[2] === nothing ? "" : String(m.captures[2])
-            picked = _pick_synonym(core, drop_table, required_relations)
+            # GRUG v8.10: Protect compound modifiers — don't thesaurus-swap
+            # a word that forms a compound adjective with the next word.
+            # E.g., "hard won" → "difficult won" is grammatically wrong;
+            # "hard" in "hard won" should stay. Check if next token looks
+            # like a past participle (ends in -ed, -en, -wn, -ne).
+            _is_compound_mod = false
+            if j < length(tokens)
+                _next_tok = String(tokens[j + 1])
+                _next_m = match(r"^([\w][\w'-]*)(.*)$", _next_tok)
+                if _next_m !== nothing
+                    _next_core = lowercase(String(_next_m.captures[1]))
+                    if occursin(r"(?:ed|en|wn|ne|ing|er)$", _next_core) && length(_next_core) > 3
+                        _is_compound_mod = true
+                    end
+                end
+            end
+            picked = _is_compound_mod ? core : _pick_synonym(core, drop_table, required_relations)
             # Case match: if original core was capitalised, capitalise picked.
             if !isempty(core) && isuppercase(first(core)) && !isempty(picked)
                 picked = uppercase(first(picked)) *
@@ -2401,6 +2966,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     node_noun_anchors        = String[]        # nouns this node's prose is "about"
     node_companion_node_pref = String[]        # preferred companion-frame node ids
     node_voice_variants      = String[]        # GRUG v7.36: alternative voice bodies for claim variety
+    node_growth_source       = ""              # GRUG v8.2: hippocampal_answer / hippocampal_anti_answer
     if winning_node !== nothing
         node_pattern     = winning_node.pattern
         node_drop_table  = [lowercase(strip(w)) for w in winning_node.drop_table]
@@ -2438,6 +3004,12 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             else
                 String[]
             end
+        end
+        # GRUG v8.2: growth_source — identifies hippocampal_answer nodes
+        # so the claim construction can apply heavier thesaurus variation
+        # instead of parroting the taught answer verbatim.
+        node_growth_source = let raw = get(winning_node.json_data, "growth_source", "")
+            raw isa AbstractString ? lowercase(strip(String(raw))) : ""
         end
         # ─── v7.25 HARD CONFIG WARNINGS ───────────────────────────────────
         # These are NOT optional. If the winning node is missing critical
@@ -2512,13 +3084,18 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # don't repeat the same variant within a few cycles. When voice_variants
     # is empty (most nodes), behavior is identical to v7.35 — the system_prompt
     # body is the only option.
-    sp_parts = split(system_prompt, ".")
-    voice_first_local = strip(get(sp_parts, 1, ""))
+    # GRUG v8.3: COHERENCE FIX — protect decimal numbers in system_prompt
+    # before splitting on ".". "1.618" was being split into "1" and "618",
+    # destroying the voice_body. Replace digit.digit patterns with a
+    # sentinel before split, then restore after.
+    _sp_safe = replace(system_prompt, r"(\d)\.(\d)" => s"\1\x00DOT\x00\2")
+    sp_parts = split(_sp_safe, ".")
+    voice_first_local = strip(replace(String(get(sp_parts, 1, "")), "\x00DOT\x00" => "."))
     voice_body_pieces = String[]
     for i in 2:length(sp_parts)
-        s = strip(sp_parts[i])
+        s = strip(replace(String(sp_parts[i]), "\x00DOT\x00" => "."))
         isempty(s) && continue
-        push!(voice_body_pieces, String(s))
+        push!(voice_body_pieces, s)
     end
     voice_body_default = isempty(voice_body_pieces) ? "" : join(voice_body_pieces, ". ") * "."
 
@@ -2550,7 +3127,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     # Read the most recent TonalJudge verdict. nothing is fine — we just
     # don't have a frame opinion this cycle and fall back to the action
     # path. This keeps the change non-fatal for any caller that bypasses
-    # the predictor (e.g. ephemeral_aiml_orchestrator on synthetic input).
+    # the predictor (e.g. ephemeral_voice_orchestrator on synthetic input).
     judged_frame_label = ""
     judged_frame_test_inject = false
     try
@@ -2682,18 +3259,60 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     # --- CLAIM construction (Fix A) ------------------------------------
     # GRUG v7.21c-2: Priority order with prose-action as top-priority:
-    #   0. primary_vote.action  (NEW — when seed slots ARE answer-prose,
+    #   0a. action_compute_reply  (NEW — dynamic sigil action computed a result)
+    #   0b. arithmetic_reply      (existing — basic arithmetic computed a result)
+    #   1. primary_vote.action  (when seed slots ARE answer-prose,
     #                            the picked slot IS the answer. The action
     #                            field carries the prose verbatim. Detection
     #                            heuristic: action has ≥2 word tokens AND
     #                            length ≥ 8 chars. Verbs like "greet" /
     #                            "flee" / "explain" stay sub-threshold.)
-    #   1. system_prompt body   (the seeded grug-voice answer, c-1)
-    #   2. node_pattern         (legacy v7.16 fallback)
-    #   3. noun_anchors[1]      (c-1, wraps a single noun in its PPT-shape)
-    #   4. mission-quoted fallback (last resort)
+    #   2. system_prompt body   (the seeded grug-voice answer, c-1)
+    #   3. node_pattern         (legacy v7.16 fallback)
+    #   4. noun_anchors[1]      (c-1, wraps a single noun in its PPT-shape)
+    #   5. mission-quoted fallback (last resort)
     action_str = String(primary_vote.action)
     action_is_prose = length(split(action_str)) >= 2 && length(action_str) >= 8
+
+    # =================================================================
+    # GRUG Stage 2b: DYNAMIC ACTION COMPUTATION — if the winning node has
+    # an action_callback registered, compute the answer from sigil bindings.
+    # This is the DYNAMIC answer: one sigil node computes infinite instances.
+    # Factorial of 5? Computed. Factorial of 7? Computed. One node.
+    # Priority 0a — above arithmetic_reply because action sigils are
+    # more specific than generic arithmetic (they carry named procedures).
+    # =================================================================
+    action_compute_result = nothing
+    action_compute_reply = ""
+    try
+        _winning_node = lock(NODE_LOCK) do
+            get(NODE_MAP, primary_vote.node_id, nothing)
+        end
+        if _winning_node !== nothing
+            _action_cb = get(_winning_node.json_data, "action_callback", "")
+            if !isempty(_action_cb)
+                # GRUG: Get the bindings for this node's group.
+                _mp_group = getfield(primary_vote, :multipart_group)
+                _group_bindings = !isempty(_mp_group) ? get_multipart_bindings(_mp_group) : SigilPromoter.SigilBinding[]
+                _act_bindings = if !isempty(_mp_group)
+                    _group_bindings
+                else
+                    current_promotion_bindings()
+                end
+                if !isempty(_act_bindings)
+                    action_compute_result = ActionEngine.compute_action(String(_action_cb), _act_bindings)
+                    if action_compute_result.error === nothing
+                        action_compute_reply = ActionEngine.format_action_reply(action_compute_result)
+                        @info "[MAIN Stage 2b] Action computed: $(action_compute_result.expression) = $(action_compute_result.answer_str)"
+                    else
+                        @warn "[MAIN Stage 2b] Action computation failed: $(action_compute_result.error)"
+                    end
+                end
+            end
+        end
+    catch e
+        @warn "[MAIN Stage 2b] Action engine error (non-fatal, falling back to normal claim): $e"
+    end
 
     # =================================================================
     # GRUG Stage 2: ARITHMETIC COMPUTATION — if sigils captured math
@@ -2730,6 +3349,13 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
             # SINGLETON: no multipart_group, use global ref which holds
             # the (only) scan's bindings.
             current_promotion_bindings()
+        end
+        # GRUG: Feed sigil bindings into InverseSigil growth magnet.
+        # Every observed binding (sigil→concrete) enriches the inverse index.
+        try
+            InverseSigil.add_concretes_from_bindings!(bindings)
+        catch e
+            @warn "[MAIN Stage 2] InverseSigil binding feed failed (non-fatal): $e"
         end
         _math_bindings_present = ArithmeticEngine.has_math_bindings(bindings)
         if _math_bindings_present
@@ -2775,7 +3401,53 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
            properly. YOU NEED MATH TO WIN WHEN MATH IS ASKED FOR, OR NO CAN DO."""
     end
 
-    claim_raw = if !isempty(arithmetic_reply)
+    # GRUG v7.41-coherence: TOPIC ANCHOR INJECTION into voice_body CLAIM.
+    # PROBLEM: When voice_body is the claim (priority 2), it's generic
+    # self-referential prose like "Grug sit by the fire and think. What
+    # Grug knows, Grug can say." — with ZERO connection to the actual
+    # query topic. The user asks "what is water" and gets back a generic
+    # "Grug sit by the fire and think" with no mention of water.
+    # noun_anchors (priority 3) DO have the topic, but voice_body beats
+    # them in the priority chain, so they never appear.
+    #
+    # FIX: When voice_body wins as claim_raw AND noun_anchors are present,
+    # append a topic clause that ties the generic voice to the specific
+    # subject. This produces: "Grug sit by the fire and think. What Grug
+    # knows, Grug can say. Words come out straight when the mind is clear.
+    # Grug speak of water." instead of just the generic prose alone.
+    #
+    # The topic clause uses the node's primary action + noun_anchors,
+    # keeping grug-voice register. It's short (one sentence) so the
+    # voice_body prose still dominates the claim.
+    _topic_clause = ""
+    if !isempty(voice_body) && !isempty(node_noun_anchors)
+        # GRUG v8.3: Convert underscores to spaces in topic noun —
+        # "golden_ratio" should read as "golden ratio" in the topic clause.
+        _topic_noun = replace(node_noun_anchors[1], "_" => " ")
+        _topic_action_word = lowercase(strip(split(action_str, "^")[1]))
+        if _topic_action_word in ["explain", "describe", "teach"]
+            _topic_clause = " Grug speak of $(_topic_noun)."
+        elseif _topic_action_word in ["define", "name"]
+            _topic_clause = " Grug name $(_topic_noun)."
+        elseif _topic_action_word in ["reason", "think", "ponder", "calculate"]
+            _topic_clause = " Grug think on $(_topic_noun)."
+        elseif _topic_action_word in ["alert", "warn"]
+            _topic_clause = " Grug warn of $(_topic_noun)."
+        elseif _topic_action_word in ["comfort", "reassure"]
+            _topic_clause = " Grug sit with $(_topic_noun)."
+        elseif _topic_action_word in ["greet", "welcome"]
+            _topic_clause = ""  # greeting doesn't need topic
+        else
+            _topic_clause = " Grug turn to $(_topic_noun)."
+        end
+    end
+
+    claim_raw = if !isempty(action_compute_reply)
+        # GRUG v7.61: DYNAMIC ACTION WINS. The computed answer IS the claim.
+        # Priority 0a — above arithmetic (action sigils are more specific).
+        # "factorial of 5 is 120" — not "5 factorial" or meta-commentary.
+        action_compute_reply
+    elseif !isempty(arithmetic_reply)
         # GRUG: ARITHMETIC WINS. The computed answer IS the claim.
         # Priority 0 — above everything else. When math is present,
         # the answer is the math, not the node pattern or voice body.
@@ -2783,7 +3455,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     elseif action_is_prose
         action_str                                # NEW v7.21c-2 top priority
     elseif !isempty(voice_body)
-        voice_body
+        voice_body * _topic_clause
     elseif !isempty(node_noun_anchors)
         # v7.24-coherence-fix BUG #1: prefer noun_anchors OVER raw
         # node_pattern. The pattern is the matcher key, not speech —
@@ -2811,37 +3483,61 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
     else
         "the mission \"$mission\" touches unseeded territory"
     end
-    # GRUB v7.21c-2: After synonym swap, run the phrase-reorder layer so
-    # multi-clause prose-actions ("hot rock that bites and dances") don't
-    # always speak in the same comma-order across cycles. Single-clause
-    # claims pass through unchanged (reorder fires only on ≥2 segments).
+    # GRUG v8.12: Anti-repetition strategy for voice_body claims.
+    # voice_variants (above) provide the primary variety — different authored
+    # prose for the same knowledge. When a variant is picked, it's already fresh.
+    # But we also apply a TWO-LAYER anti-stale pipeline:
+    #   Layer 1: _vote_word_swap — pick N random words from the locked-in
+    #            answer that HAVE thesaurus entries, replace with 100%
+    #            synonymous matches. For single words thesaurus is a 100%
+    #            synonymity match ("big"→"large", "also"→"moreover"). No
+    #            per-token scan, no swap rate — just targeted replacement
+    #            of words we KNOW can be swapped.
+    #   Layer 2: _hippocampal_rephrase — structural transforms (connector swap,
+    #            hedge insert, clause shuffle, trim tail, content_reframe).
+    #            When domain-critical words have no synonyms, structural
+    #            transforms still differentiate the output across turns.
     #
-    # GRUG v7.36: REVISED anti-repetition strategy for voice_body.
-    # v7.24-BUG7 was too aggressive — protecting authored prose from ALL
-    # variation means the same node always says the exact same thing. This
-    # is the #1 source of perceived repetition in grug's output.
+    # Old approach (v7.36→v8.11) scanned every token with a swap rate
+    # (_light_thesaurus_touch at 30%, _hippocampal_touch at 45%). This was
+    # wasteful — most tokens don't have synonyms. The new approach only
+    # touches words it CAN replace, which is both more effective (no wasted
+    # coinflips on ineligible words) and more natural (synonym replacements
+    # are guaranteed to be valid since the word was selected BECAUSE it has
+    # a thesaurus entry).
     #
-    # NEW approach (v7.36): voice_variants (above) provide the primary
-    # variety — different authored prose for the same knowledge. When a
-    # variant is picked, it's already fresh. But we also apply a LIGHT
-    # thesaurus touch to the chosen voice_body: only words with rich
-    # synonym sets (3+ alternatives) are eligible for swap, at a very low
-    # rate (GRUG_LIGHT_TOUCH_RATE, default 0.30). This means "broadband"
-    # might become "wideband" but "the" stays "the". The author's sentence
-    # structure, voice, and emphasis are preserved — only individual words
-    # with good alternatives get subtle variation.
-    #
-    # When claim_raw came from voice_body_default (no variant picked),
-    # the light touch prevents word-for-word repetition. When it came
-    # from a voice_variant, the variant is already different prose, so
-    # the light touch adds even more micro-variation on top.
-    #
-    # Mechanical claims (from patterns, noun_anchors, etc.) still get
+    # Mechanical claims (from patterns, noun_anchors fallback, etc.) still get
     # the full _swap_words_in + _reorder_clauses treatment.
+    _claim_is_voice_body = !isempty(voice_body_default) && (
+        claim_raw == voice_body_default ||
+        (!isempty(node_voice_variants) && claim_raw in node_voice_variants) ||
+        (!isempty(_topic_clause) && startswith(String(claim_raw), voice_body_default))
+    )
+    # DEBUG: trace pipeline routing
+    # GRUG v8.2: Hippocampal answer nodes should NOT parrot the taught
+    # answer verbatim. When the winning node's growth_source is
+    # "hippocampal_answer" or "hippocampal_anti_answer", use the
+    # moderate _hippocampal_touch (45% swap, 1+ syn threshold) instead
+    # of _light_thesaurus_touch (10% swap, 2+ syn threshold). This
+    # gives meaningful rephrasing — "breathing draws oxygen" might
+    # become "inhaling pulls oxygen" — same knowledge, fresh voice.
+    # (Regular voice_body also gets rephrase now, but via the lighter
+    # _light_thesaurus_touch at 30% rate + structural transforms.)
     claim = if judged_frame_test_inject
         String(claim_raw)
-    elseif claim_raw == voice_body_default || (!isempty(node_voice_variants) && claim_raw in node_voice_variants)
-        _light_thesaurus_touch(String(claim_raw), node_drop_table, node_required)
+    elseif _claim_is_voice_body
+        # GRUG v8.12: Two-layer anti-stale pipeline for ALL voice_body claims.
+        #   Layer 1: _vote_word_swap — pick N random words that HAVE thesaurus
+        #            entries and replace with 100% synonymous matches.
+        #            No per-token scan, no swap rate — just targeted replacement
+        #            of words we know can be swapped. For single words thesaurus
+        #            is a 100% synonymity match ("big" → "large", "also" → "moreover").
+        #   Layer 2: _hippocampal_rephrase — structural transforms (connector swap,
+        #            hedge insert, clause shuffle, trim tail, content_reframe).
+        #            When domain-critical words (fire, cave, forest) have no synonyms,
+        #            structural transforms still differentiate output across turns.
+        _touched = _vote_word_swap(String(claim_raw), node_drop_table, node_required)
+        _hippocampal_rephrase(_touched)
     else
         claim = _swap_words_in(String(claim_raw), node_drop_table, node_required)
         _reorder_clauses(claim)  # mechanical claim: variety is fine
@@ -2890,11 +3586,76 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
                         (t_obj  in pat_tokens || t_obj  in act_tokens ? 1 : 0) +
                         (t_rel  in pat_tokens || t_rel  in act_tokens ? 1 : 0)
         triple_is_circular = overlap_count >= 2
-        if !triple_is_circular
-            rel_swapped  = _pick_synonym(String(t.relation), node_drop_table, node_required)
-            subj_swapped = _swap_words_in(String(t.subject),  node_drop_table, node_required)
-            obj_swapped  = _swap_words_in(String(t.object),   node_drop_table, node_required)
-            push!(support_pieces, " $(rand(_TRIPLE_PREFIX_POOL)) $subj_swapped $rel_swapped $obj_swapped.")
+        # GRUG v7.60-coherence: INPUT-RELEVANCE GATE for triple injection.
+        # A triple that shares ZERO tokens with the user's input is tangential
+        # and should not appear in the support section. E.g., "fungus grows
+        # forest floor" is irrelevant when the user asks "what is water".
+        # The triple must share at least one non-stopword token with the input
+        # to qualify. This prevents random knowledge from polluting the reply.
+        _input_tokens = Set(split(lowercase(mission)))
+        _triple_tokens = Set([t_subj, t_obj, t_rel])
+        _stopwords_triple = Set(["the","a","an","is","are","was","were","be","been",
+                                  "have","has","had","do","does","did","will","would",
+                                  "could","should","may","might","shall","can","to",
+                                  "of","in","for","on","with","at","by","from","as",
+                                  "into","through","during","before","after","above",
+                                  "below","between","out","off","over","under","again",
+                                  "further","then","once","and","but","or","nor","not",
+                                  "so","yet","both","either","neither","each","every",
+                                  "all","any","few","more","most","other","some","such",
+                                  "no","only","own","same","than","too","very","just",
+                                  "because","if","when","where","how","what","which",
+                                  "who","whom","this","that","these","those","it","its"])
+        _input_content = setdiff(_input_tokens, _stopwords_triple)
+        _triple_content = setdiff(_triple_tokens, _stopwords_triple)
+        _triple_relevant = !isempty(intersect(_input_content, _triple_content))
+        if !triple_is_circular && _triple_relevant
+            # v7.38: Dereference any surviving sigil tokens in triple
+            # fields before they leak into conversational output.
+            _sigil_deref = Dict("&n"=>"number","&op"=>"operation","&word"=>"word",
+                                "&doAction"=>"action","&rest"=>"rest",
+                                "&temporal"=>"time","&causal"=>"cause",
+                                "&emotional"=>"feeling","&spatial"=>"place",
+                                "&similarity"=>"likeness","&possessive"=>"possession")
+            _raw_subj = String(t.subject)
+            _raw_rel  = String(t.relation)
+            _raw_obj  = String(t.object)
+            for (_sk, _sv) in _sigil_deref
+                _raw_subj = replace(_raw_subj, _sk => _sv)
+                _raw_rel  = replace(_raw_rel,  _sk => _sv)
+                _raw_obj  = replace(_raw_obj,  _sk => _sv)
+            end
+            # Fallback: any remaining &token → strip & and add " concept"
+            _raw_subj = replace(_raw_subj, r"&(\w+)" => s"\1 concept")
+            _raw_rel  = replace(_raw_rel,  r"&(\w+)" => s"\1 concept")
+            _raw_obj  = replace(_raw_obj,  r"&(\w+)" => s"\1 concept")
+            rel_swapped  = _pick_synonym(_raw_rel, node_drop_table, node_required)
+            subj_swapped = _vote_word_swap(_raw_subj,  node_drop_table, node_required; max_swaps=1)
+            obj_swapped  = _vote_word_swap(_raw_obj,   node_drop_table, node_required; max_swaps=1)
+            # GRUG v8.3: COHERENCE FIX — convert underscores to spaces in triple
+            # words before they enter the output. "appears_blue_from" reads as
+            # machine notation, not natural language. "appears blue from" is
+            # readable. This must happen AFTER synonym/thesaurus processing so
+            # the underscored form is still available for lookup.
+            subj_swapped = replace(subj_swapped, "_" => " ")
+            rel_swapped  = replace(rel_swapped,  "_" => " ")
+            obj_swapped  = replace(obj_swapped,  "_" => " ")
+            # GRUG v8.3: COHERENCE FIX — when connector is support-first
+            # (e.g. "{SUPPORT}, so {CLAIM}"), the triple appears BEFORE the
+            # claim in the output. Using a bold prefix like "The bridge:" right
+            # after the frame's "Here is the picture:" reads as garbled — two
+            # headers in a row. For support-first connectors, use a softer
+            # mid-sentence prefix instead.
+            _connector_is_support_first = occursin("{SUPPORT}", first(split(connector, "{CLAIM}")))
+            if _connector_is_support_first
+                # v8.3: No trailing punctuation — the connector template already
+                # provides the linking text (e.g. ", so " or " — "). Adding a
+                # trailing comma here creates double-comma artifacts like
+                # "earth supports life,, so".
+                push!(support_pieces, " $(subj_swapped) $rel_swapped $obj_swapped")
+            else
+                push!(support_pieces, " $(rand(_TRIPLE_PREFIX_POOL)) $subj_swapped $rel_swapped $obj_swapped.")
+            end
         else
             # v7.25: Check if ALL triples for this node are circular echoes.
             # If so, the operator seeded pattern-keyword triples that carry
@@ -2921,46 +3682,16 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         end
     end
 
-    # (b) Sure companion → supporting claim. Only if we have at least
-    # one tied alternative AND it gives us NEW prose (not a re-statement
-    # of the primary's pattern). v7.21b-3d: prefer the companion's
-    # system_prompt body too, falling back to its pattern only if no
-    # body is available — this keeps companion clauses from echoing
-    # trigger-tokens like "i feel" / "why" the way they did in v7.16.
-    if !isempty(tied_alternatives)
-        # GRUG v7.21c-1: If the winning node declared `companion_node_pref`,
-        # prefer the first alt whose node_id appears in that list. Falls
-        # back to the legacy "first tied alternative" heuristic when none
-        # match (or when no preference list is configured).
-        companion = tied_alternatives[1]
-        if !isempty(node_companion_node_pref)
-            for alt in tied_alternatives
-                if alt.node_id in node_companion_node_pref
-                    companion = alt
-                    break
-                end
-            end
-        end
-        comp_node = lock(() -> get(NODE_MAP, companion.node_id, nothing), NODE_LOCK)
-        if comp_node !== nothing
-            comp_sp = String(get(comp_node.json_data, "system_prompt", ""))
-            comp_parts = split(comp_sp, ".")
-            comp_body_pieces = String[]
-            for i in 2:length(comp_parts)
-                s = strip(comp_parts[i])
-                isempty(s) && continue
-                push!(comp_body_pieces, String(s))
-            end
-            comp_body = isempty(comp_body_pieces) ? "" : join(comp_body_pieces, ". ") * "."
-
-            comp_text = !isempty(comp_body) ? comp_body : String(comp_node.pattern)
-
-            if !isempty(comp_text) && comp_text != node_pattern && comp_text != claim_raw
-                comp_claim = _swap_words_in(comp_text, node_drop_table, node_required)
-                push!(support_pieces, " $(rand(_COMPANION_PREFIX_POOL)) $comp_claim.")
-            end
-        end
-    end
+    # (b) Sure companion → DISABLED in v7.39. All nodes fire regardless
+    # of companion status, so injecting a "companion" node's voice_body
+    # into the SUPPORT section is pointless — it just adds off-topic prose
+    # that gets synonym-swapped into garbage ("mind is drop", "Inferno
+    # sits near hearth", "virtuous noise"). The primary node's own
+    # voice_body + relational triples carry all the signal. Companion
+    # injection was the #1 source of off-topic decoherence.
+    #
+    # Code retained but gated off — re-enable only if companion nodes
+    # become selective (not all-fire).
 
     # (c) UNSURE hedge: honest about alternative frames still on the table.
     if !isempty(unsure_votes) && vote_certainty == "UNSURE"
@@ -3054,6 +3785,18 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
         core_reply = replace(core_reply, r"\.\s*\." => ".")
         # "., " → ". " (period-comma from claim-period + comma-connector)
         core_reply = replace(core_reply, r"\.,\s+" => ". ")
+        # GRUG v8.3: COHERENCE FIX — ". and " artifact. When claim ends
+        # with a period and the connector is ", and {SUPPORT}", the output
+        # reads as "...identity. and  It connects like this:..." which is
+        # garbled. The period before "and" breaks the sentence flow. Replace
+        # with ". Moreover, " or just remove the "and" and capitalize.
+        core_reply = replace(core_reply, r"\.\s+and\s+" => ". Moreover, ")
+        # v8.3: Also fix ". because " — same problem: claim ends with period,
+        # support-first connector inserts "because" producing garbled prose like
+        # "Grug turn to fear. because The thread is: ..."
+        core_reply = replace(core_reply, r"\.\s+because\s+" => ". For this reason, ")
+        # Also handle period-double-space from claim + connector assembly
+        core_reply = replace(core_reply, r"  +" => " ")
     end
 
     # Lobe tag: pull just the first active lobe name from lobe_str.
@@ -3113,7 +3856,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     conversational_reply = "$voice_prefix$core_reply$pinned_citation$lobe_tag"
 
-    # GRUG PERF FIX: Removed sleep(0.3) here. generate_aiml_payload is called
+    # GRUG PERF FIX: Removed sleep(0.3) here. synthesize_voice_reply is called
     # once PER FIRED NODE — with a 95-node specimen that's 40-60 calls per turn,
     # so a 0.3s sleep added 12-19s of pure dead wait to every response. The
     # "don't burn CPU" rationale was never real (the synthesis itself is <1ms).
@@ -3121,7 +3864,7 @@ function generate_aiml_payload(mission::String, primary_vote::Vote, sure_votes::
 
     # =====================================================================
     # Assemble the payload: conversational reply first, debug telemetry
-    # below a clear separator. extract_aiml_memory_context() now stores
+    # below a clear separator. extract_voice_memory_context() now stores
     # a compact digest of this cycle (v7.14), so the stats dump is NOT
     # re-ingested next cycle — it is purely for /status and operators.
     # =====================================================================
@@ -3316,9 +4059,9 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
     mission_display = length(mission_text) > 80 ? mission_text[1:77] * "..." : mission_text
     question_text = replace(skeleton, "{MISSION}" => mission_display)
 
-    # GRUG: Pull recent memory context (same as generate_aiml_payload).
+    # GRUG: Pull recent memory context (same as synthesize_voice_reply).
     # The question is more coherent when it knows what was just discussed.
-    memory_ctx = extract_aiml_memory_context()
+    memory_ctx = extract_voice_memory_context()
     memory_hint = ""
     if !isempty(memory_ctx.pinned) || !isempty(memory_ctx.full)
         # GRUG: Don't dump the whole memory — just a hint that we have context.
@@ -3376,13 +4119,14 @@ end
 # Syntax: /answer [@lobe_id] [:mode] <content>
 #
 # Modes:
-#   :reason   — default. Single reason^1 node. "I reason about what I was taught."
-#   :explain  — single explain^1 node. "I explain what I was taught."
-#   :define   — single define^1 node (explain family). "I define what I was taught."
-#   :alert    — single alert^1 node. "I warn about what I was taught."
-#   :comfort  — single comfort^1 node. "I acknowledge what I was taught."
+#   :reason   — default. Single reason^1 node. Voice falls to noun_anchors.
+#   :explain  — single explain^1 node. Voice falls to noun_anchors.
+#   :define   — single define^1 node. Voice falls to noun_anchors.
+#   :alert    — single alert^1 node. Voice falls to noun_anchors.
+#   :comfort  — single comfort^1 node. Voice falls to noun_anchors.
 #   :math     — single reason^1 node with arithmetic-ready metadata.
 #              Voice "terse", noun_anchors for math terms, imperative frame.
+#              Voice falls to noun_anchors (no body — arithmetic_reply wins at priority 0).
 #   :multi    — pipe-delimited multi-node: "part1 | part2 | part3"
 #              Each part becomes a separate node, all in the same lobe.
 #              Nodes auto-linked into a group.
@@ -3410,12 +4154,12 @@ const _VALID_ANSWER_MODES = [
 
 # GRUG: Map answer mode → action family name + system_prompt voice.
 const _ANSWER_MODE_CONFIG = Dict{String, Dict{String, Any}}(
-    "reason"  => Dict("action" => "reason^1",  "voice" => "plain",       "frame" => ["plain", "exploratory"],   "prompt" => "Grug. I learned this from a question. I reason about what I was taught."),
-    "explain" => Dict("action" => "explain^1", "voice" => "explanatory", "frame" => ["exploratory", "plain"],   "prompt" => "Grug. I learned this from a question. I explain what I was taught clearly."),
-    "define"  => Dict("action" => "define^1",  "voice" => "terse",       "frame" => ["imperative", "plain"],    "prompt" => "Grug. I learned this from a question. I define what I was taught precisely."),
-    "alert"   => Dict("action" => "alert^1",   "voice" => "terse",       "frame" => ["imperative", "terse"],    "prompt" => "Grug. I learned this from a question. I warn about what I was told to watch for."),
-    "comfort" => Dict("action" => "comfort^1", "voice" => "warm",        "frame" => ["warm", "de-escalating"],  "prompt" => "Grug. I learned this from a question. I acknowledge what I was taught with care."),
-    "math"    => Dict("action" => "reason^1",  "voice" => "terse",       "frame" => ["imperative", "plain"],    "prompt" => "Grug. I compute. I give answers. Numbers are my language. I reason about mathematical truths I was taught."),
+    "reason"  => Dict("action" => "reason^1",  "voice" => "plain",       "frame" => ["plain", "exploratory"],   "prompt" => "Grug."),
+    "explain" => Dict("action" => "explain^1", "voice" => "explanatory", "frame" => ["exploratory", "plain"],   "prompt" => "Grug."),
+    "define"  => Dict("action" => "define^1",  "voice" => "plain",       "frame" => ["plain", "exploratory"],    "prompt" => "Grug."),
+    "alert"   => Dict("action" => "alert^1",   "voice" => "terse",       "frame" => ["imperative", "terse"],    "prompt" => "Grug."),
+    "comfort" => Dict("action" => "comfort^1", "voice" => "warm",        "frame" => ["warm", "de-escalating"],  "prompt" => "Grug."),
+    "math"    => Dict("action" => "reason^1",  "voice" => "terse",       "frame" => ["imperative", "plain"],    "prompt" => "Grug."),
     "multi"   => Dict(),   # handled specially — multi-node
     "relate"  => Dict(),   # handled specially — triple-seeded
     "time"    => Dict(),   # handled specially — time-node (auto &temporal)
@@ -3474,6 +4218,36 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
     nid = create_node(lowercase(strip(pattern_text)), action_packet, ans_data, String[];
                       is_antimatch_node=is_antimatch)
 
+    # GRUG v8.7: SUPERSEDE AUTO-GROWN DUPLICATES
+    # When a hippocampal answer node is created (explicit /answer teaching),
+    # any existing auto-grown nodes with the same pattern are inferior placeholders.
+    # Grave them so the explicitly-taught knowledge always wins the vote.
+    # This fixes the bug where "One more rock for Grug's wall of knowing" won
+    # over the actual taught content for /answer recall.
+    _pat_key = lowercase(strip(pattern_text))
+    if !is_antimatch && haskey(ans_data, "growth_source") &&
+       startswith(ans_data["growth_source"], "hippocampal_")
+        lock(NODE_LOCK) do
+            for (other_id, other_node) in NODE_MAP
+                other_id == nid && continue
+                other_node.is_grave && continue
+                if lowercase(strip(other_node.pattern)) == _pat_key
+                    # Check if the other node is auto-grown (inferior)
+                    other_jd = other_node.json_data
+                    if other_jd !== nothing
+                        other_src = get(other_jd, "growth_source",
+                                        get(other_jd, "autogrowth_source", ""))
+                        if other_src != "" && !startswith(other_src, "hippocampal_")
+                            other_node.is_grave = true
+                            other_node.grave_reason = "superseded_by_hippocampal_answer"
+                            println("[MAIN] ⚰  Node '$other_id' (pattern='$(_pat_key)') graved: superseded by hippocampal answer node '$nid'")
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     if !isnothing(target_lobe)
         try
             # GRUG BUG-010: Graved nodes don't eat cap space — pass alive count
@@ -3510,16 +4284,29 @@ GRUG: Build the base json_data dict for an answer node. Includes hippocampal
 metadata, strain tracking, and mode-appropriate voice config.
 """
 function _base_answer_data(mode::String; pending_ask_text::String="",
-                           is_anti::Bool=false)::Dict{String,Any}
+                           is_anti::Bool=false,
+                           answer_content::String="")::Dict{String,Any}
     cfg = get(_ANSWER_MODE_CONFIG, mode, _ANSWER_MODE_CONFIG["reason"])
     source_tag = is_anti ? "hippocampal_anti_answer" : "hippocampal_answer"
+
+    # GRUG v7.55: COHERENCE FIX — embed answer content into system_prompt
+    # so it becomes the voice_body (claim) when the node fires.
+    # Pattern: "Grug. {answer_content}." → voice_prefix = "Grug", voice_body = answer content.
+    # When answer_content is empty (pre-seeded nodes / legacy), falls back to mode prompt.
+    # This makes /answer recall indistinguishable from normal knowledge responses.
+    base_prompt = get(cfg, "prompt", "Grug.")
+    if !isempty(answer_content)
+        sys_prompt = "Grug. $(answer_content)."
+    else
+        sys_prompt = base_prompt
+    end
 
     data = Dict{String,Any}(
         "growth_source"      => source_tag,
         "hippocampal_born"   => string(round(time(), digits=3)),
         "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
         "answer_mode"        => mode,
-        "system_prompt"      => get(cfg, "prompt", "Grug. I learned this from a question. I reason about what I was taught."),
+        "system_prompt"      => sys_prompt,
         "voice_register"     => get(cfg, "voice", "plain"),
         "frame_hints"        => get(cfg, "frame", ["plain", "exploratory"]),
     )
@@ -4108,14 +4895,14 @@ function _auto_group_latch(node_id::String)::Union{String, Nothing}
 end
 
 # GRUG: Family of brain actions. Command must take all vote states now!
-reason_family = ["reason", "analyze", "ponder", "calculate"]
+reason_family = ["reason", "analyze", "ponder", "calculate", "reflect"]
 for act in reason_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
         if mission == "boom"
             error("!!! FATAL: Grug triggered intentional crash to test safety nets !!!")
         end
         node.json_data["last_reason"] = mission
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
         
         # GRUG: If relations match well, node stay hot. Else, cool down fast.
         rel_strength = length(primary_vote.user_triples) > 0 ? 2.0 : 0.5
@@ -4128,7 +4915,7 @@ end
 greet_family = ["greet", "welcome", "smile", "laugh"]
 for act in greet_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
         reset_throttle!(node, 0.5)
         return generated_text
     end
@@ -4139,7 +4926,7 @@ survival_family = ["flee", "hide", "fight"]
 for act in survival_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
         # Give survival actions a unique payload if we want, or use the standard one
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
 
         # GRUG: Survival means danger! Keep the node throttle HOT!
         reset_throttle!(node, 1.0)
@@ -4152,7 +4939,7 @@ end
 explain_family = ["explain", "clarify", "describe", "define", "elaborate"]
 for act in explain_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
 
         # GRUG: Explanations are cold logical work. Medium throttle.
         reset_throttle!(node, 0.7)
@@ -4165,7 +4952,7 @@ end
 empathy_family = ["comfort", "support", "validate", "acknowledge", "reassure"]
 for act in empathy_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
 
         # GRUG: Emotional support - warm and open throttle.
         reset_throttle!(node, 0.5)
@@ -4178,7 +4965,7 @@ end
 warning_family = ["alert", "warn", "caution", "notify", "flag"]
 for act in warning_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
 
         # GRUG: Warnings are urgent! Keep throttle HOT like survival!
         reset_throttle!(node, 1.0)
@@ -4197,7 +4984,7 @@ end
 ask_family = ["inquire", "ask", "question", "wonder"]
 for act in ask_family
     COMMANDS[act] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
-        generated_text = generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+        generated_text = synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
 
         # GRUG: Questions are exploratory — medium throttle, not urgent.
         reset_throttle!(node, 0.5)
@@ -4361,6 +5148,10 @@ Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
          : /lobes                              (list all lobes + node counts)
          : /tableStatus <lobe_id>              (show hash table chunks for a lobe)
          : /tableMatch <lobe_id> <chunk> <pat> (pattern-activate entries in chunk)
+InvSigil : /inverseStatus                     (show inverse table summary)
+         : /inverseDetail <sigil_name>        (show detailed entry for one sigil)
+         : /setLobeHint <sigil_name> <lobe>   (set lobe hint on inverse entry)
+         : /clearLobeHint <sigil_name>         (clear lobe hint on inverse entry)
 Thesaurus: /thesaurus <word1> | <word2>        (compare words/concepts dimensionally)
          : /thesaurus <w1> | <w2> :: <ctx1> :: <ctx2>  (with context lists)
 NegThes  : /negativeThesaurus add|remove|list|check|flush
@@ -4408,9 +5199,7 @@ const HELP_MSG = """
 ║                             snap back) to escape local       ║
 ║                             minima for one mission           ║
 ║  /wrong                     Penalize last contributors    ║
-║  /aimlRight                 Reward AIML contributors     ║
  │  /right                     Reward last contributors         │
-║  /aimlWrong                 Penalize AIML contributors   ║
 ║  /explicit <cmd> [<id>] <t> Force a specific command+node    ║
 ║  /grow <json>               Plant nodes from JSON packet     ║
 ║  /addRule <rule>            Add stochastic orchestration rule║
@@ -4458,15 +5247,12 @@ const HELP_MSG = """
 ║  /tableStatus <lobe_id>     Show hash table chunk sizes      ║
 ║  /tableMatch <l> <c> <pat>  Pattern-activate table entries   ║
 ║                                                              ║
-║  AIML NODE SYSTEM                                            ║
-║  /aimlStatus                 Show AIML tribe status          ║
-║  /aimlList <lobe_id>         List AIML nodes in lobe         ║
-║  /aimlAdd <l> <id> <tmpl>    Add AIML node to lobe           ║
-║  /aimlRemove <l> <id>        Remove AIML node from lobe      ║
-║  /aimlRight                  Reward AIML contributors    ║
-║  /aimlWrong                  Penalize AIML contributors  ║
-║  /aimlCycle                  Show current cycle info         ║
-║  /aimlPhagy                  Run phagy sweep on AIML graves  ║
+║  INVERSESIGIL (inverse evidence table diagnostics)          ║
+║  /inverseStatus              Show inverse table summary     ║
+║  /inverseDetail <sigil_name> Show detailed entry for sigil  ║
+║  /setLobeHint <sigil> <lobe> Set lobe hint on inverse entry ║
+║  /clearLobeHint <sigil>      Clear lobe hint on entry       ║
+║                                                              ║
 ║                                                              ║
 ║  EPHEMERAL MLP                                               ║
 ║  /mlpStatus                   Show MLP brain status            ║
@@ -4590,7 +5376,7 @@ const HELP_MSG = """
 ║  Gated: /grow /lobeGrow /addRule /pin /addVerb              ║
 ║         /addRelationClass /addSynonym /addSeedSynonym        ║
 ║         /addRelRelation /addAntiMatch /newLobe /nameLobe     ║
-║         /connectLobes                                        ║
+║         /connectLobes /setLobeHint                           ║
 ║         /loadSpecimen /nodeAttach /imgnodeAttach            ║
 ║  Exempt: /mission and all read-only commands                ║
 ║                                                              ║
@@ -4616,7 +5402,7 @@ const _RECENT_PREAMBLES_MAX = 20
 
 # GRUG v7.32: Anti-repetition — skeleton pools, claim connectors, helpers.
 # All lifted to module scope so they can be tested externally and aren't
-# re-allocated on every generate_aiml_payload() call.
+# re-allocated on every synthesize_voice_reply() call.
 
 const _CLAIM_CONNECTORS = [
     "{CLAIM}.{SUPPORT}",           # classic period (most common, baseline)
@@ -4812,15 +5598,28 @@ const _TRIPLE_PREFIX_POOL = [
     "The bridge:",
 ]
 const _COMPANION_PREFIX_POOL = [
-    "A companion frame:",
-    "From another angle:",
-    "A second voice adds:",
-    "Also in view:",
-    "The other side:",
-    "Alongside this:",
-    "Another node chimes in:",
-    "Seen differently:",
+    "Also,",
+    "What's more,",
+    "And also,",
+    "Moreover,",
+    "Beyond that,",
+    "Likewise,",
+    "In the same vein,",
+    "Similarly,",
 ]
+
+# GRUG v8.3: Rephrase engine constants for _hippocampal_rephrase
+const _REPHRASE_HEDGES = [
+    "basically", "in short", "the way of it is",
+    "in grug's words", "put simply", "the gist is",
+    "the short of it is", "here is the thing",
+]
+const _REPHRASE_CONNECTOR_SWAPS = Dict{String, Vector{String}}(
+    "and"      => ["moreover", "also", "furthermore"],
+    "because"  => ["since", "for", "as"],
+    "but"      => ["yet", "however", "still"],
+    "so"       => ["thus", "therefore", "hence"],
+)
 
 # GRUG v7.33: META-COGNITION — reflection & adaptive picking.
 # Grug watches its own output. The loop: emit → observe → reflect → adjust.
@@ -5020,9 +5819,48 @@ Handles both text missions and image-binary missions.
 Measures response time and records it on the winning nodes for big-O ledger.
 """
 function process_mission(mission_text::String)
+# REMINDER: ANTIMATCH REMOVED. SIGILS IN TRIPLES. HOPFIELD REMOVED.
     if strip(mission_text) == ""
         error("!!! FATAL: process_mission got empty mission text! !!!")
     end
+    # GRUG: InverseSigil user directive pre-scan.
+    # Detects patterns like "X is a &noun" or "X is a &verb" or "teach &noun X"
+    # and feeds them into the inverse sigil table as user directives,
+    # which bypass the pseudononlinear dead zone.
+    try
+        _inv_directives = _parse_inverse_sigil_directives(mission_text)
+        if !isempty(_inv_directives)
+            for (_sig_name, _token, _sig_class, _sig_lobe_hint) in _inv_directives
+                InverseSigil.user_add_concrete!(_sig_name, _token; sigil_class=_sig_class,
+                                                 lobe_hint=_sig_lobe_hint)
+            end
+            @info "[MAIN] InverseSigil: $(length(_inv_directives)) user directive(s) registered"
+        end
+    catch e
+        @warn "[MAIN] InverseSigil directive pre-scan failed (non-fatal): $e"
+    end
+
+    # GRUG v8.2: Lobe-qualified answer pre-scan.
+    # Detects "science: gravity is an attractive force" → lobe_hint + content.
+    # The prefix declares WHERE the node grows, the content semantics determine WHAT.
+    _active_lobe_hint = ""   # GRUG: First lobe hint detected, passed to evidence accumulator
+    try
+        _lobe_answers = _parse_lobe_qualified_answer(mission_text)
+        if !isempty(_lobe_answers)
+            _active_lobe_hint = _lobe_answers[1].lobe_name   # use first answer's lobe
+            for la in _lobe_answers
+                # GRUG: Set lobe_hint on any inverse entries whose sigils already
+                # have concretes matching content tokens. This is targeted, not broadcast.
+                _content_tokens = split(lowercase(strip(la.content)), r"[\s_]+")
+                filter!(!isempty, _content_tokens)
+                InverseSigil.set_lobe_hints_for_tokens!(_content_tokens, la.lobe_name)
+            end
+            @info "[MAIN] LobeAnswer: $(length(_lobe_answers)) lobe-qualified answer(s) detected, hint=$_active_lobe_hint"
+        end
+    catch e
+        @warn "[MAIN] Lobe-qualified answer pre-scan failed (non-fatal): $e"
+    end
+
 
     # GRUG v8.1-coherence-fix: Clear per-group binding stash at the start
     # of each mission cycle so stale bindings from previous cycles don't
@@ -5032,10 +5870,8 @@ function process_mission(mission_text::String)
     clear_multipart_scoped_text!()
 
     # GRUG: Start a new AIML cycle. Resets all per-cycle bookkeeping flags on every
-    # AIML node so /aimlRight and /aimlWrong can see only explicit orchestration
     # contributors from THIS cycle. Mere voting/firing is not reinforcement.
     # Must run BEFORE any AIML voting/firing so cycle memory is clean at the start.
-    AIMLNodeSystem.begin_cycle!()
 
     add_message_to_history!("User", mission_text, false)
     
@@ -5263,8 +6099,13 @@ function process_mission(mission_text::String)
             # conventions. Each sub-subject typically produces one chunk.
             for chk in sub_chunks
                 if !isempty(chk.text)
-                    stash_multipart_scoped_text!("mp_$(chk.chunk_index)", chk.text)
-                    stash_multipart_scoped_text!("chk_$(chk.chunk_index)", chk.text)
+                    # GRUG v8.4: Use COMPOSITE keys only for chunk stashing.
+                    # Before this fix, both mp_1 and mp_2 would stash under
+                    # "mp_1" and "chk_1" (since chunk_index resets per sub-subject),
+                    # causing mp_2's text to overwrite mp_1's text. Now we only
+                    # stash under composite keys that include the multipart group
+                    # prefix, e.g. "mp_1_chk_1", "mp_2_chk_1".
+                    stash_multipart_scoped_text!("$(sub.multipart_group)_chk_$(chk.chunk_index)", chk.text)
                 end
             end
             sub_task_name, sub_task = VoteOrchestrator.dispatch_task_with_timeout(
@@ -5322,10 +6163,43 @@ function process_mission(mission_text::String)
          for (id, conf, antimatch, u_trips, n_trips, ichunks) in specimens]
     end
 
+    # GRUG v8.2-coherence-fix: PROPAGATE SINGLETON BINDINGS TO CHUNK-DERIVED GROUPS.
+    # When a singleton (non-compound) input is chunked by InputDecomposer, the
+    # scan_and_expand call stashes bindings under group="" (which get_multipart_bindings
+    # skips). But cast_vote_chunked derives multipart_group from input_chunks (e.g.
+    # "mp_1"), and synthesize_voice_reply then looks up get_multipart_bindings("mp_1")
+    # which returns EMPTY. This is why "no math bindings this cycle" appears even
+    # though _GLOBAL_PROMOTION_BINDINGS is correctly populated.
+    # FIX: After the singleton scan, copy the global bindings into each chunk-derived
+    # group ID so that synthesize_voice_reply's per-group lookup succeeds.
+    if !is_compound_input
+        _singleton_bindings = current_promotion_bindings()
+        _singleton_rewritten = current_promotion_rewritten()
+        _singleton_raw = current_promotion_raw()
+        if !isempty(_singleton_bindings)
+            # Collect unique chunk-derived group IDs from singleton specimens
+            _chunk_groups = Set{String}()
+            for (id, conf, antimatch, u_trips, n_trips, ichunks, mp_group, mp_role) in all_specimens
+                if !isempty(ichunks)
+                    push!(_chunk_groups, "mp_$(ichunks[1])")
+                end
+            end
+            for _cg in _chunk_groups
+                stash_multipart_bindings!(_cg, _singleton_bindings,
+                                          something(_singleton_rewritten, ""),
+                                          something(_singleton_raw, ""))
+            end
+            if !isempty(_chunk_groups)
+                println("   [BINDING-PROP] Singleton bindings propagated to chunk groups: $(join(_chunk_groups, ","))")
+            end
+        end
+    end
+
+
     # GRUG: LOBE FIRING COMPLETE → emit DONE to the orchestrator layer.
     # This is the explicit boundary requested by the architecture spec:
     # "once a lobe is finished firing everything then it sends DONE to the
-    # orchestrator layer". The orchestrator (ephemeral_aiml_orchestrator)
+    # orchestrator layer". The orchestrator (ephemeral_voice_orchestrator)
     # will only run after DONE is received.
     try
         # GRUG: _LAST_FIRE_COUNTER is declared in engine.jl, which is included
@@ -5438,6 +6312,7 @@ function process_mission(mission_text::String)
                     evaluate_dialectics_fn    = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
                     node_map                  = NODE_MAP,
                     node_lock                 = NODE_LOCK,
+                    lobe_hint                 = _active_lobe_hint,
                 )
 
                 # GRUG: Also try to grow from this evidence immediately.
@@ -5457,11 +6332,11 @@ function process_mission(mission_text::String)
                     end,
                     thesaurus_gate_filter      = Thesaurus.synonym_lookup,
                     thesaurus_word_similarity  = Thesaurus.word_similarity,
+                    thesaurus_synonym_lookup   = Thesaurus.synonym_lookup,
                     add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
                     register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
                     register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
-                    stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
-                        AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+                    stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) -> nothing,  # GRUG: AIMLNodeSystem removed — no-op
                     group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
                         find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
                     link_to_group_member_fn    = link_to_group_member,
@@ -5501,10 +6376,10 @@ function process_mission(mission_text::String)
         end
 
         ask_output = generate_ask_question(mission_text; reason="empty_cave")
-        println("\n🤖 AIML Ask Question:\n$ask_output")
+        println("\n🤖 Voice Ask Question:\n$ask_output")
         try
-            lock(_LAST_AIML_OUTPUT_LOCK) do
-                _LAST_AIML_OUTPUT[]    = ask_output
+            lock(_LAST_VOICE_OUTPUT_LOCK) do
+                _LAST_VOICE_OUTPUT[]    = ask_output
                 _LAST_FIRED_NODE[]     = ""
                 _LAST_PRIMARY_ACTION[] = "ask"
                 _LAST_CONFIDENCE[]     = 0.0
@@ -5523,7 +6398,7 @@ function process_mission(mission_text::String)
     #   3. Apply the same zero-mean RelationalJitter used everywhere else so
     #      the stochastic character of the cave stays aligned across layers.
     #   4. Clamp to [FLOOR, CAP].
-    # Downstream, extract_aiml_memory_context() coinflips unpinned messages
+    # Downstream, extract_voice_memory_context() coinflips unpinned messages
     # biased by intensity instead of blindly grabbing the last N. Irrelevant
     # chatter decays and drops out; relevant history rises and sticks.
     # Wrapped: the refresh must never abort the mission. If anything inside
@@ -5552,7 +6427,12 @@ function process_mission(mission_text::String)
             # Vote as the old cast_vote — zero behavioral change for simple inputs.
             for (id, conf, is_antimatch, u_trips, n_trips, ichunks, mp_group, mp_role) in all_specimens
                 if !isempty(ichunks)
-                    push!(out, cast_vote_chunked(id, conf, is_antimatch, u_trips, n_trips, ichunks))
+                    # GRUG v8.4: Pass mp_group explicitly to cast_vote_chunked.
+                    # Without this, both sub-subjects with chunk 1 get "mp_1"
+                    # and merge into one group. The explicit mp_group preserves
+                    # the decomposer's mp_1/mp_2 distinction.
+                    push!(out, cast_vote_chunked(id, conf, is_antimatch, u_trips, n_trips, ichunks;
+                                                 multipart_group=mp_group))
                 else
                     push!(out, cast_vote_with_group(id, conf, is_antimatch, u_trips, n_trips, mp_group, mp_role))
                 end
@@ -5577,7 +6457,7 @@ function process_mission(mission_text::String)
     println("--> $(length(cast_votes)) valid votes passed gate... compiling JIT superposition...")
 
     # GRUG v8.1-coherence-fix: CALL score_lobes() so that lobe_alignment is
-    # actually populated before ephemeral_aiml_orchestrator runs.
+    # actually populated before ephemeral_voice_orchestrator runs.
     # Without this, get_last_state() always returns empty winner/passthrough,
     # so lobe_alignment is 0.0 for every vote — meaning emotional/survival
     # lobes with high raw confidence can outvote math lobe even on math inputs.
@@ -5611,7 +6491,7 @@ function process_mission(mission_text::String)
                 stash_multipart_lobe_state!(grp, grp_ls, grp_lw, grp_lp)
                 println("   [LOBE-ORCH] Group '$grp' Winner=$grp_lw  Passthrough=$(join(grp_lp, ","))  Scored=$(length(grp_ls)) lobes")
             end
-            # Restore global state so ephemeral_aiml_orchestrator's initial
+            # Restore global state so ephemeral_voice_orchestrator's initial
             # get_last_state() call still gets the global picture for the
             # common case (singleton votes, votes without a group).
             LobeOrchestrator.set_last_state!(_ls, _lw, _lp)
@@ -5629,7 +6509,7 @@ function process_mission(mission_text::String)
     # GRUG: Bumped timeout from 20s → 60s for large specimens (95+ nodes).
     # 20s was fine for small specimens but large ones need more orchestrator time.
     orch_task_name, orch_task = VoteOrchestrator.dispatch_task_with_timeout(
-        () -> ephemeral_aiml_orchestrator(mission_text, cast_votes),
+        () -> ephemeral_voice_orchestrator(mission_text, cast_votes),
         "aiml_orchestrator",
         60.0;
         context = "run_mission.orchestrator"
@@ -6078,14 +6958,14 @@ function process_mission(mission_text::String)
     catch e
         @error "[MAIN] Vigilance dispatch FAILED (non-fatal, scaffold unmodified): $e"
     end
-    println("\n🤖 AIML Output Scaffold:\n$output")
+    println("\n🤖 Voice Output Scaffold:\n$output")
 
     # GRUG: Capture the actual spoken output + winning-vote metadata so
     # external harnesses can read the real response (not the stdout scrape
     # or the one-line history digest). Non-fatal: never breaks the cycle.
     try
-        lock(_LAST_AIML_OUTPUT_LOCK) do
-            _LAST_AIML_OUTPUT[] = output
+        lock(_LAST_VOICE_OUTPUT_LOCK) do
+            _LAST_VOICE_OUTPUT[] = output
             if !isempty(contributing_votes)
                 _win = contributing_votes[1]
                 _LAST_FIRED_NODE[]     = _win.node_id
@@ -6221,6 +7101,7 @@ function process_mission(mission_text::String)
                 evaluate_dialectics_fn     = (triples; kwargs...) -> evaluate_relational_dialectics(triples; kwargs...),
                 node_map                   = NODE_MAP,
                 node_lock                  = NODE_LOCK,
+                lobe_hint                  = _active_lobe_hint,
             )
 
             # ── MAYBE GROW FROM EVIDENCE ──
@@ -6240,11 +7121,11 @@ function process_mission(mission_text::String)
                 end,
                 thesaurus_gate_filter      = Thesaurus.synonym_lookup,
                 thesaurus_word_similarity  = Thesaurus.word_similarity,
+                thesaurus_synonym_lookup   = Thesaurus.synonym_lookup,
                 add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
                 register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
                 register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
-                stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
-                    AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+                stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) -> nothing,  # GRUG: AIMLNodeSystem removed — no-op
                 group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
                     find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
                 link_to_group_member_fn    = link_to_group_member,
@@ -6326,6 +7207,43 @@ function process_mission(mission_text::String)
                 end
             catch e
                 @warn "[MAIN] PettyLearner failed (non-fatal): $e"
+            end
+
+            # ── GRUG: INVERSE SIGIL PETTY DISPATCH ──────────────────────────
+            # GRUG: InverseSigil growth magnet may have routed petty growth
+            # (sigil lexicon, thesaurus pair, governance data) that needs
+            # instant dispatch outside the evidence coinflip pipeline.
+            try
+                _inv_routes = InverseSigil.get_all_routes(;
+                    sigil_table_entries = _ENGINE_SIGIL_TABLE.entries)
+                for _inv_route in _inv_routes
+                    if _inv_route.target == :petty
+                        _inv_result = InverseSigil.dispatch_petty!(_inv_route;
+                            register_sigil_fn = (name, exps) -> begin
+                                # GRUG: Register expansion entries into sigil table.
+                                for ex in exps
+                                    try
+                                        SigilRegistry.register!(
+                                            _ENGINE_SIGIL_TABLE, name,
+                                            :lambda, :word;
+                                            expansion=[ex],
+                                            provenance="inverse_sigil_petty")
+                                    catch _
+                                    end
+                                end
+                                true
+                            end,
+                            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                            add_lobe_whitelist_fn = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
+                            sigil_table = _ENGINE_SIGIL_TABLE,
+                        )
+                        if !isempty(_inv_result)
+                            println("[INVSIGIL] ⚡ Petty dispatch: $_inv_result")
+                        end
+                    end
+                end
+            catch e
+                @warn "[MAIN] InverseSigil petty dispatch failed (non-fatal): $e"
             end
 
             # ── GRUG v10: CURIOSITY OVERFLOW CHECK ──────────────────────
@@ -6583,7 +7501,7 @@ Use .json extension for plain JSON (cross-platform, no gzip needed) or .gz for c
 Captures ALL mutable state across all modules:
   - nodes       (full Node struct: strengths, patterns, neighbors, graves, etc.)
   - hopfield    (HOPFIELD_CACHE + hit counts)
-  - rules       (AIML_DROP_TABLE stochastic rules)
+  - rules       (ORCHESTRATION_RULES stochastic rules)
   - messages    (up to 10k message history with pin flags)
   - lobes       (LOBE_REGISTRY: fire/inhibit counts, connections, node assignments, whitelists)
   - lobe_tables (LOBE_TABLE_REGISTRY: all chunks with NodeRef objects)
@@ -6707,11 +7625,11 @@ function save_specimen_to_file!(filepath::String)::String
     end
     specimen["hopfield_cache"] = hopfield_entries
 
-    # ── 3. RULES (AIML_DROP_TABLE) ────────────────────────────────────────
+    # ── 3. RULES (ORCHESTRATION_RULES) ────────────────────────────────────────
     # GRUG: r.text and r.fire_probability are the actual struct field names.
     # Academic: Previously used r.rule_text / r.fire_prob which would cause a
     # Julia field access error at runtime. Fixed in v2.1.
-    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(_DROP_TABLE_LOCK) do; copy(AIML_DROP_TABLE) end]
+    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(_DROP_TABLE_LOCK) do; copy(ORCHESTRATION_RULES) end]
     specimen["rules"] = rule_list
 
     # ── 4. MESSAGE HISTORY ────────────────────────────────────────────────
@@ -7042,11 +7960,6 @@ function save_specimen_to_file!(filepath::String)::String
     # losing all learned safe signatures and audit history.
     specimen["immune_system"] = ImmuneSystem.serialize_immune_state()
 
-    # ─── 19. AIML NODE SYSTEM STATE ─────────────────────────────────────────────────────
-    # GRUG: Save AIML registry + population caps + cycle counter.
-    # Academic: Without this, all AIML executive nodes are lost on reload —
-    # the specimen forgets its learned AIML patterns and tribal structure.
-    specimen["aiml_system"] = AIMLNodeSystem.serialize_aiml_state()
 
     # ── 20. SIGIL TABLE (engine-level) ──────────────────────────────────────
     # GRUG: Serialize the engine's SigilTable so specimen-merged &noun lexicons
@@ -7514,6 +8427,18 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize autogrowth evidence: $e"
     end
 
+    # ── 39b. INVERSE SIGIL TABLE ──────────────────────────────────────
+    # GRUG v8.2: Save the inverse sigil table (concretes, lobe hints, magnet data).
+    # This is the growth magnet — losing it means all concrete→shape mappings
+    # reset to zero, which kills magnet routing until re-observed.
+    try
+        specimen["inverse_table"] = InverseSigil.get_table_snapshot()
+        _inv_count = length(specimen["inverse_table"]["entries"])
+        println("  🧲  InverseSigil table saved ($_inv_count entries)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize inverse sigil table: $e"
+    end
+
     # ── 39c. AUTOLINKER LINK EVIDENCE ───────────────────────────────────
     # GRUG: Save the link evidence accumulator so the auto-linker picks up
     # where it left off on reload. Link evidence is expensive to accumulate
@@ -7773,19 +8698,13 @@ function save_specimen_to_file!(filepath::String)::String
     push!(lines, "  🕐  Temporal coherence : $(length(tcl_list))")
     push!(lines, "  ⏳  Time orientation   : $(try get(specimen["time_orientation_config"], "global_orientation", "none") catch _ "none" end) (oriented nodes: $(try length(get(specimen["time_orientation_config"], "time_node_index", Dict())) catch _ 0 end))")
     push!(lines, "  ⏳  Morph cooldowns    : $(length(cooldown_data))")
-    # GRUG: Show AIML stats if aiml_system was saved
     # GRUG 7.12-FIX: serialize_aiml_state()["registry"] is a
     # Dict{String, Vector{Dict}} where each value IS the list of node dicts
-    # (see AIMLNodeSystem.serialize_aiml_state §registry_data[lobe_id] =
     # nodes_list). The previous version tried get(v, "nodes", []) which
     # threw MethodError(get, (<Vector{Dict}>, "nodes", ...)) because `get`
     # on a Vector expects an Int index, not a String. Count directly.
     # NO SILENT FAILURE: if the schema ever regresses to a nested dict
     # shape, length() on a Dict still returns the node count sensibly.
-    _aiml_data = get(specimen, "aiml_system", Dict())
-    _aiml_registry = get(_aiml_data, "registry", Dict())
-    _aiml_total_nodes = isempty(_aiml_registry) ? 0 : sum(length(v) for v in values(_aiml_registry))
-    push!(lines, "  🤖  AIML nodes       : $(_aiml_total_nodes)")
     push!(lines, "  🪄  Sigil entries    : $(length(sigil_list))")
     push!(lines, "  ⚙️  Automaton rules  : $(length(automaton_list))")
     push!(lines, "  🗳  Contributor votes : $(length(vote_list))")
@@ -7921,7 +8840,7 @@ function load_specimen_from_file!(filepath::String)::String
                         "verb_registry", "thesaurus_seeds", "inhibitions",
                         "arousal", "eye_state", "id_counters", "last_voters", "brainstem",
                         "bridges", "attachments",      # GRUG v8.0: bridges (bidirectional) + attachments (backward compat)
-                        "trajectory", "temporal_coherence", "morph_cooldowns", "immune_system", "aiml_system", "_meta",
+                        "trajectory", "temporal_coherence", "morph_cooldowns", "immune_system", "_meta",
                         "chatter_groups", "chatter_cooldowns",
                         "sigil_table", "automaton_rules", "last_contributor_votes", "node_to_group_idx", "tonal_judge_knobs",
                         "ephemeral_mlp", "mlp_observer_store", "mlp_cached_phi",
@@ -7939,7 +8858,13 @@ function load_specimen_from_file!(filepath::String)::String
                         "coherence_config",
                         "autogrowth_evidence", "autogrowth_co_occur",
                         "autolink_evidence",
-                        "flashcards", "curiosity", "_comments"])
+                        "inverse_table",
+                        "flashcards", "curiosity", "_comments",
+                        "actions", "concept_classes", "concept_inhibitions",
+                        "crystalize", "groups", "resolve_conflict_mode",
+                        "sigils", "subconscious", "tonal_buildup",
+                        "chatter_swap_cooldowns",
+                        "aiml_system"])  # GRUG v8.12: aiml_system allowed for backward-compat (silently skipped during load)
     for key in keys(specimen)
         if !(key in allowed_keys)
             push!(validation_errors, "Unknown top-level key '$key'")
@@ -7955,7 +8880,7 @@ function load_specimen_from_file!(filepath::String)::String
 
     # GRUG: Type checks for critical dict sections
     for k in ["node_to_lobe_idx", "verb_registry", "thesaurus_seeds", "arousal", "eye_state", "id_counters", "brainstem",
-             "trajectory", "morph_cooldowns", "immune_system", "aiml_system", "_meta",
+             "trajectory", "morph_cooldowns", "immune_system", "_meta",
              "phase_accumulator", "decomposer_config",
              "vigilance_config", "injector_stats", "relational_jitter_config",
              "brainstem_config", "engine_config", "lobe_orchestrator_knobs",
@@ -8007,11 +8932,9 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # Wipe AIML rules
-    lock(_DROP_TABLE_LOCK) do; empty!(AIML_DROP_TABLE) end
+    lock(_DROP_TABLE_LOCK) do; empty!(ORCHESTRATION_RULES) end
 
-    # GRUG: Wipe AIML node tribes. All lobe registrations, populations, cycle state.
     # A brain transplant must clear executive memory too, not just cave nodes.
-    AIMLNodeSystem.reset_all!()
 
     # Wipe message history
     empty!(MESSAGE_HISTORY)
@@ -8109,6 +9032,11 @@ function load_specimen_from_file!(filepath::String)::String
     for entry in SigilRegistry.default_registry().entries
         _ENGINE_SIGIL_TABLE.entries[entry.first] = entry.second
     end
+
+    # Wipe InverseSigil table back to empty (v8.2)
+    # GRUG: Specimen reload means old concrete clusters are stale.
+    # The new specimen's bindings will repopulate the inverse table naturally.
+    InverseSigil.reset_inverse_table!()
 
     # Wipe ephemeral automaton registry
     lock(EphemeralAutomaton._AUTOMATON_REGISTRY_LOCK) do
@@ -8235,15 +9163,35 @@ function load_specimen_from_file!(filepath::String)::String
 
     # ── 4.3 THESAURUS SEEDS ──────────────────────────────────────────────
     n_thesaurus = 0
+    # GRUG v8.14: Rebuild built-in seed map FIRST. The wipe above cleared
+    # everything including the _SEED_SYNONYMS_RAW entries loaded at module
+    # init time. Without this, specimen load destroys the built-in thesaurus
+    # (connectors, common verbs, auxiliaries, etc.) and only the specimen's
+    # saved subset survives — which was captured BEFORE v8.13 added the
+    # connector/verb entries. This was the root cause of _vote_word_swap
+    # producing zero swaps: the thesaurus was empty after load.
+    lock(Thesaurus.SEED_MAP_LOCK) do
+        Thesaurus._build_seed_map!()
+    end
     if haskey(specimen, "thesaurus_seeds") && _is_dict_like(specimen["thesaurus_seeds"])
         lock(Thesaurus.SEED_MAP_LOCK) do
             for (word, syns) in specimen["thesaurus_seeds"]
-                Thesaurus.SYNONYM_SEED_MAP[String(word)] = Set{String}(String.(syns))
+                w = String(word)
+                incoming = Set{String}(String.(syns))
+                # GRUG v8.13: MERGE instead of replace. Built-in entries are
+                # curated (source of truth). Specimen entries supplement but
+                # never overwrite. This prevents stale specimen synonyms
+                # (e.g. "like"→"enjoy") from clobbering better built-in ones.
+                if haskey(Thesaurus.SYNONYM_SEED_MAP, w)
+                    union!(Thesaurus.SYNONYM_SEED_MAP[w], incoming)
+                else
+                    Thesaurus.SYNONYM_SEED_MAP[w] = incoming
+                end
                 n_thesaurus += 1
             end
         end
         counts["thesaurus_words"] = n_thesaurus
-        println("  🔤 Thesaurus restored ($n_thesaurus words)")
+        println("  🖤 Thesaurus restored ($n_thesaurus words, merged)")
     end
 
     # ── 4.4 LOBES ────────────────────────────────────────────────────────
@@ -8462,7 +9410,7 @@ function load_specimen_from_file!(filepath::String)::String
             try
                 rtext = String(rentry["text"])
                 rprob = Float64(get(rentry, "prob", 1.0))
-                push!(lock(_DROP_TABLE_LOCK) do; AIML_DROP_TABLE end, StochasticRule(rtext, rprob))
+                push!(lock(_DROP_TABLE_LOCK) do; ORCHESTRATION_RULES end, StochasticRule(rtext, rprob))
                 n_rules += 1
             catch e
                 error("!!! FATAL: /loadSpecimen failed to restore rule: $e !!!")
@@ -8903,16 +9851,13 @@ function load_specimen_from_file!(filepath::String)::String
     end
 
     # ─── 4.19 AIML NODE SYSTEM STATE ─────────────────────────────────────────────────
-    # GRUG: Restore AIML registry + population caps + cycle counter.
-    # Academic: Without this, all AIML executive nodes are lost on reload.
-    if haskey(specimen, "aiml_system") && _is_dict_like(specimen["aiml_system"])
-        AIMLNodeSystem.deserialize_aiml_state!(specimen["aiml_system"])
-        n_aiml_lobes = length(AIMLNodeSystem.get_registered_lobes())
-        registered_lobes = AIMLNodeSystem.get_registered_lobes()
-        n_aiml_nodes = isempty(registered_lobes) ? 0 : sum(AIMLNodeSystem.get_population_size(lid) for lid in registered_lobes)
-        counts["aiml_lobes"] = n_aiml_lobes
-        counts["aiml_nodes"] = n_aiml_nodes
-        println("  🤖 AIML system restored ($n_aiml_nodes nodes across $n_aiml_lobes lobes)")
+    if haskey(specimen, "aiml_system")
+        # GRUG v8.12: AIMLNodeSystem removed — skipping aiml_system restore
+        # GRUG v8.12: AIMLNodeSystem removed — skipping aiml_system restore
+        # (aiml_system key in specimen is ignored gracefully)
+        # n_aiml_lobes and n_aiml_nodes no longer tracked
+
+        # n_aiml_lobes and n_aiml_nodes no longer tracked
     end
 
     # ── 4.20 SIGIL TABLE ────────────────────────────────────────────────────
@@ -9471,6 +10416,21 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  AutoLinker evidence: FAILED to load (starting fresh)")
     end
 
+    # ── GRUG v8.2: INVERSE SIGIL TABLE RESTORE ──────────────────────
+    # GRUG: Restore inverse sigil table (concretes, lobe hints, magnet data).
+    # This was saved as section 39b. Without it, the growth magnet starts
+    # from zero and all concrete→shape mappings are lost until re-observed.
+    try
+        if haskey(specimen, "inverse_table")
+            InverseSigil.load_table_snapshot!(specimen["inverse_table"])
+            _inv_count = length(specimen["inverse_table"]["entries"])
+            println("  🧲  InverseSigil table loaded ($_inv_count entries)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore inverse sigil table: $e"
+        println("  ⚠️  InverseSigil table: FAILED to load (starting fresh)")
+    end
+
     # ── GRUG v10: FLASHCARD RESTORE ──────────────────────────────────
     # GRUG: Restore flashcards from all lobes. Math facts like "3+5=8"
     # should survive reload — they were learned via PettyLearner fast-path.
@@ -9794,11 +10754,54 @@ function load_specimen_from_file!(filepath::String)::String
                 "system_prompt" => "Action execution voice - verb-driven action scripting",
                 "sigil_kind"    => "doaction",
             )
-            create_sigil_node("&doAction &word &n", "say^4 | repeat^3 | count^2 | tell^1", doaction_ctx, String[]; kind = :doaction)
-            create_sigil_node("&doAction &rest", "check^4 | tell^3 | compute^2 | resolve^1", doaction_ctx, String[]; kind = :doaction)
+            create_sigil_node("&doAction &word &n", "describe^4 | calculate^3 | reason^2 | explain^1", doaction_ctx, String[]; kind = :doaction)
+            create_sigil_node("&doAction &rest", "analyze^4 | explain^3 | calculate^2 | reason^1", doaction_ctx, String[]; kind = :doaction)
             println("  ⚡ @sigil:doaction seed nodes created (specimen had none)")
         else
             println("  ⚡ @sigil:doaction nodes already present ($(length(da_ids))), skipping seed")
+        end
+        # GRUG v7.61: Also ensure :action sigil seed nodes exist.
+        # These are DYNAMIC — they compute any instance from bindings, not just one.
+        # One node, infinite answers. The cave compresses.
+        local act_ids = list_sigil_node_ids(:action)
+        if isempty(act_ids)
+            # GRUG: Common math action patterns. Each has an action_callback in json_data
+            # that ActionEngine uses to compute the answer at match time.
+            # Pattern "X of &n" matches "factorial of 5", "square of 7", etc.
+            _action_seeds = [
+                ("factorial of &n",    "factorial",     "calculate^5 | reason^2 | analyze^1"),
+                ("square of &n",       "square",        "calculate^5 | reason^2 | analyze^1"),
+                ("square root of &n",  "square_root",   "calculate^5 | reason^2 | analyze^1"),
+                ("double &n",          "double",        "calculate^5 | reason^2 | analyze^1"),
+                ("half of &n",         "half",          "calculate^5 | reason^2 | analyze^1"),
+                ("cube of &n",         "cube",          "calculate^5 | reason^2 | analyze^1"),
+                ("absolute value of &n", "absolute",    "calculate^5 | reason^2 | analyze^1"),
+                ("reciprocal of &n",   "reciprocal",    "calculate^5 | reason^2 | analyze^1"),
+                ("fibonacci of &n",    "fibonacci",     "calculate^5 | reason^2 | analyze^1"),
+            ]
+            for (pat, cb_name, pkt) in _action_seeds
+                # GRUG: Extract noun_anchors from pattern (non-sigil tokens).
+                pat_tokens = split(pat)
+                pat_anchors = String[]
+                for tok in pat_tokens
+                    if !startswith(tok, "&") && length(tok) >= 2
+                        push!(pat_anchors, tok)
+                    end
+                end
+                act_ctx = Dict{String, Any}(
+                    "action_callback" => cb_name,
+                    "system_prompt"   => "Grug.",  # terse — the computed answer IS the claim
+                    "voice_register"  => "terse",
+                    "frame_hints"     => ["imperative", "terse"],
+                    "is_math_node"    => true,
+                    "sigil_kind"      => "action",
+                    "noun_anchors"    => pat_anchors,  # e.g. ["factorial", "of"] or ["double"]
+                )
+                create_sigil_node(pat, pkt, act_ctx, String[]; kind = :action)
+            end
+            println("  🎯 @sigil:action seed nodes created (specimen had none) — $(length(_action_seeds)) dynamic actions")
+        else
+            println("  🎯 @sigil:action nodes already present ($(length(act_ids))), skipping seed")
         end
     end
 
@@ -9829,7 +10832,6 @@ function load_specimen_from_file!(filepath::String)::String
     push!(lines, "  🚫  Inhibitions      : $(get(counts, "inhibitions", 0))")
     push!(lines, "  🔗  Attachments      : $(get(counts, "attachments", 0))")
     push!(lines, "  ⏳  Time orientation  : $(try get(specimen["time_orientation_config"], "global_orientation", "none") catch _ "none" end)")
-    push!(lines, "  🤖  AIML nodes       : $(get(counts, "aiml_nodes", 0)) ($(get(counts, "aiml_lobes", 0)) lobes)")
     push!(lines, "  👁   Arousal          : $(EyeSystem.get_arousal())")
     push!(lines, "  🔢  ID counters      : node=$(ID_COUNTER[]), msg=$(MSG_ID_COUNTER[])")
     push!(lines, "  ─────────────────────────────────────────────")
@@ -10079,11 +11081,11 @@ function maybe_run_idle()
             end,
             thesaurus_gate_filter      = Thesaurus.synonym_lookup,
             thesaurus_word_similarity  = Thesaurus.word_similarity,
+            thesaurus_synonym_lookup   = Thesaurus.synonym_lookup,
             add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
             register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
             register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
-            stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) ->
-                AIMLNodeSystem.stochastic_aiml_growth!(lobe_id, pattern; data_warrant=data_warrant),
+            stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) -> nothing,  # GRUG: AIMLNodeSystem removed — no-op
             group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
                 find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
             link_to_group_member_fn    = link_to_group_member,
@@ -10129,6 +11131,18 @@ function maybe_run_idle()
         end
     catch e
         println("[IDLE:AUTOGROWTH] !!! ERROR during idle autogrowth: $e !!!")
+    end
+
+    # ── INVERSESIGIL: IDLE-TIME CONCRETE DECAY ──────────────────────────
+    # GRUG v8.2: Concretes that haven't been reinforced by recent bindings
+    # or user directives slowly lose intensity. This prevents stale clusters
+    # from permanently anchoring the growth magnet. Decay is lightweight —
+    # just a linear tick down on all non-user-directive concretes.
+    try
+        InverseSigil.decay_concretes!()
+    catch e
+        # GRUG: Decay is non-fatal. If it fails, concretes just don't decay this cycle.
+        @warn "[IDLE:INVERSESIGIL] Concrete decay failed (non-fatal): $e"
     end
 
     # ── AUTOLINKER: IDLE-TIME EVIDENCE-BASED BRIDGE GROWTH ──────────────
@@ -10674,17 +11688,8 @@ function run_cli()
             # with_brainstorm_jitter scope wrapper around the call.
             m_brainstorm  = match(r"^/brainstorm\s+(.+)"s, line)
             m_wrong       = match(r"^/wrong\s*$",         line)
-            # GRUG: AIML node tribe feedback commands
             m_right       = match(r"^/right\s*$",          line)
-            m_aimlright   = match(r"^/aimlRight\s*$",     line)
-            m_aimlwrong   = match(r"^/aimlWrong\s*$",     line)
             # GRUG: AIML management commands (status, list, add, remove, cycle, phagy)
-            m_aimlstatus  = match(r"^/aimlStatus\s*$",    line)
-            m_aimllist    = match(r"^/aimlList\s+(\S+)\s*$", line)
-            m_aimladd     = match(r"^/aimlAdd\s+(\S+)\s+(\S+)\s+(.+)$", line)
-            m_aimlremove  = match(r"^/aimlRemove\s+(\S+)\s+(\S+)\s*$", line)
-            m_aimlcycle   = match(r"^/aimlCycle\s*$",     line)
-            m_aimlphagy   = match(r"^/aimlPhagy\s*$",     line)
             # GRUG v7.23: Automaton management commands
             m_autolist    = match(r"^/automaton\s+list\s*$",              line)
             m_autoreg     = match(r"^/automaton\s+register\s+(\S+)\s+(\S+)\s+(\d+(?:\.\d+)?)\s*$", line)
@@ -10829,6 +11834,15 @@ function run_cli()
             m_sigillist   = match(r"^/sigil\s+list\s*$",                                    line)
             m_sigiladd    = match(r"^/sigil\s+add\s+(\S+)\s+(\S+)\s+(\S+)(?:\s+(.+))?\s*$", line)
             m_sigilremove = match(r"^/sigil\s+remove\s+(\S+)\s*$",                          line)
+            # GRUG v10: InverseSigil diagnostic & lobe-hint management commands.
+            #   /inverseStatus                    — show inverse table summary (sigils, concretes, lobe hints)
+            #   /inverseDetail <sigil_name>       — show detailed entry for one inverse sigil
+            #   /setLobeHint <sigil_name> <lobe>  — manually set lobe_hint on an inverse entry
+            #   /clearLobeHint <sigil_name>       — clear lobe_hint on an inverse entry
+            m_inverse_status  = match(r"^/inverseStatus\s*$",                                 line)
+            m_inverse_detail  = match(r"^/inverseDetail\s+(\S+)\s*$",                         line)
+            m_setlobehint     = match(r"^/setLobeHint\s+(\S+)\s+(\S+)\s*$",                   line)
+            m_clearlobehint   = match(r"^/clearLobeHint\s+(\S+)\s*$",                         line)
             # GRUG v9: CoherenceField command levers — expose implicit computations.
             #   /coherence                          — show field value Φ + status
             #   /coherenceGradient <node_id>        — show ΔΦ for candidate node
@@ -10976,128 +11990,6 @@ elseif !isnothing(m_right)
                     EphemeralMLP.register_right_feedback!()
                 catch e
                     @error "[MAIN] /right EphemeralMLP feedback FAILED (non-fatal): $e"
-                end
-
-            elseif !isnothing(m_aimlright)
-                # GRUG BUG-011: /aimlRight - user says AIML executive layer did good this cycle.
-                # Rewards only AIML nodes with explicit orchestration contribution this cycle.
-                # Mere voting/firing is ignored; eligible contributors still need the coinflip.
-                result = AIMLNodeSystem.apply_aiml_right!()
-                if result["total_contributors"] == 0
-                    println("⚠  /aimlRight: No AIML orchestration contributors this cycle. Did output orchestration mark contributors?")
-                else
-                    println("✅  /aimlRight applied lock-in-only. $(length(result["rewarded"])) rewarded, $(length(result["coinflip_missed"])) missed coinflip, $(length(result["grave_skipped"])) grave skipped.")
-                end
-
-            elseif !isnothing(m_aimlwrong)
-                # GRUG BUG-011: /aimlWrong - user says AIML executive layer did bad this cycle.
-                # Penalizes only AIML nodes with explicit orchestration contribution this cycle.
-                # No use-gain overcompensation exists because fire/use no longer changes strength.
-                result = AIMLNodeSystem.apply_aiml_wrong!()
-                if result["total_contributors"] == 0
-                    println("⚠  /aimlWrong: No AIML orchestration contributors this cycle. Did output orchestration mark contributors?")
-                else
-                    newly_graved = length(result["newly_graved"])
-                    println("❌  /aimlWrong applied lock-in-only. $(length(result["penalized"])) penalized, $(length(result["spared"])) spared by coinflip, $newly_graved newly graved, $(length(result["grave_skipped"])) grave skipped.")
-                end
-
-            elseif !isnothing(m_aimlstatus)
-                # GRUG: /aimlStatus - show AIML tribe status across all lobes.
-                # GRUG: Gives overview of population, caps, and grave count.
-                # GRUG 7.12-FIX: get_aiml_status_summary() returns a preformatted
-                # String (see AIMLNodeSystem.jl §get_aiml_status_summary). The
-                # previous version indexed it as a Dict which threw
-                # MethodError(getindex, (<String>, "total_lobes"), ...) for every
-                # /aimlStatus call. NO SILENT FAILURE: we now print the string
-                # directly inside the status banner.
-                summary = AIMLNodeSystem.get_aiml_status_summary()
-                println("\n╔════════════════════════════════════════════════════════════╗")
-                println("║                    🤖 AIML TRIBE STATUS                      ║")
-                println("╠════════════════════════════════════════════════════════════╣")
-                println(summary)
-                println("╚════════════════════════════════════════════════════════════╝")
-
-            elseif !isnothing(m_aimllist)
-                # GRUG: /aimlList <lobe_id> - list all AIML nodes in a specific lobe.
-                # GRUG: Shows node IDs, strengths, and grave status.
-                lobe_id = m_aimllist.captures[1]
-                nodes = AIMLNodeSystem.list_aiml_nodes(String(lobe_id))
-                if isempty(nodes)
-                    println("⚠  /aimlList: No AIML nodes found in lobe '$lobe_id'. Is it registered?")
-                else
-                    println("\n╔══════════════════════════════════════════════════════════════╗")
-                    println("║           🤖 AIML NODES IN LOBE: $lobe_id")
-                    println("╠══════════════════════════════════════════════════════════════╣")
-                    for node in nodes
-                        grave_marker = node.is_grave ? "💀 GRAVE" : "✅ ALIVE"
-                        println("  📍 $(node.id)")
-                        println("     Strength: $(round(node.strength, digits=2)) $grave_marker")
-                        if node.is_grave
-                            println("     Reason: $(node.grave_reason)")
-                        end
-                        println("     Template: $(node.template[1:min(50, length(node.template))])...")
-                    end
-                    println("╚══════════════════════════════════════════════════════════════╝")
-                end
-
-            elseif !isnothing(m_aimladd)
-                # GRUG: /aimlAdd <lobe_id> <node_id> <template> - add new AIML node.
-                # GRUG: Creates a new AIML executive node in the specified lobe.
-                # GRUG: Will error if lobe not registered or population cap exceeded.
-                lobe_id = String(m_aimladd.captures[1])
-                node_id = String(m_aimladd.captures[2])
-                template = String(m_aimladd.captures[3])
-                try
-                    node = AIMLNodeSystem.add_aiml_node!(lobe_id, node_id, template)
-                    println("✅  /aimlAdd: Created AIML node '$node_id' in lobe '$lobe_id' with strength $(node.strength)")
-                catch e
-                    if e isa AIMLNodeSystem.AIMLNodeError
-                        println("❌  /aimlAdd failed: $(e.message) [$(e.context)]")
-                    else
-                        println("❌  /aimlAdd failed: $e")
-                    end
-                end
-
-            elseif !isnothing(m_aimlremove)
-                # GRUG: /aimlRemove <lobe_id> <node_id> - remove AIML node from lobe.
-                # GRUG: Permanently deletes the node. No recovery. Grug not joke.
-                lobe_id = String(m_aimlremove.captures[1])
-                node_id = String(m_aimlremove.captures[2])
-                if AIMLNodeSystem.has_aiml_node(lobe_id, node_id)
-                    AIMLNodeSystem.remove_aiml_node!(lobe_id, node_id)
-                    println("✅  /aimlRemove: Removed AIML node '$node_id' from lobe '$lobe_id'")
-                else
-                    println("⚠  /aimlRemove: Node '$node_id' not found in lobe '$lobe_id'")
-                end
-
-            elseif !isnothing(m_aimlcycle)
-                # GRUG: /aimlCycle - show current cycle info for AIML system.
-                # GRUG: Displays cycle counter and explains cycle-based mechanics.
-                cycle = AIMLNodeSystem.current_cycle()
-                println("\n╔══════════════════════════════════════════════════════════════╗")
-                println("║                    🔄 AIML CYCLE INFO                         ║")
-                println("╠══════════════════════════════════════════════════════════════╣")
-                println("  Current Cycle    : $cycle")
-                println("  ─────────────────────────────────────────────────────────────")
-                println("  Cycle Mechanics:")
-                println("  • /aimlRight rewards explicit orchestration contributors only")
-                println("  • /aimlWrong penalizes explicit orchestration contributors only")
-                println("  • Mere AIML voting/firing never changes strength")
-                println("  • Eligible contributors still change strength only by coinflip")
-                println("  • Cycle counter increments with /mission calls")
-                println("╚══════════════════════════════════════════════════════════════╝")
-
-            elseif !isnothing(m_aimlphagy)
-                # GRUG: /aimlPhagy - run phagy sweep on AIML graves.
-                # GRUG: Removes grave nodes from registry (cleanup operation).
-                # GRUG v7.34: FIX — aiml_phagy_sweep!() returns a Dict, not an Int.
-                # The old code did `removed_count > 0` which threw MethodError(isless, (Dict, 0)).
-                phagy_result = AIMLNodeSystem.aiml_phagy_sweep!()
-                removed_count = get(phagy_result, "pruned_count", 0)
-                if removed_count > 0
-                    println("🧹  /aimlPhagy: Cleaned up $removed_count grave node(s) from AIML registry")
-                else
-                    println("✨  /aimlPhagy: No graves to clean. AIML registry already pristine!")
                 end
 
             elseif !isnothing(m_autolist)
@@ -11294,8 +12186,8 @@ elseif !isnothing(m_right)
                 println("--> Grug forcing command override for [$id]...")
                 override_vote = cast_explicit_vote(String(cmd), String(id))
                 
-                output = ephemeral_aiml_orchestrator(String(mission_text), [override_vote])
-                println("\n🤖 AIML [Targeted Override]:\n$output")
+                output = ephemeral_voice_orchestrator(String(mission_text), [override_vote])
+                println("\n🤖 Voice [Targeted Override]:\n$output")
                 # GRUG v7.14: Same digest policy as run_mission — store a
                 # compact one-liner, not the full scaffold, to stop
                 # Fresh Memory recursion.
@@ -11475,8 +12367,6 @@ elseif !isnothing(m_right)
                 println("  Chatter running : $(cs.is_running)")
                 println("  Input queue     : $(cs.queue_depth) pending")
                 println("  Sessions run    : $(cs.sessions_run)")
-                println("║  AIML NODE TRIBES                                ║")
-                println(AIMLNodeSystem.get_aiml_status_summary())
                 mlp = EphemeralMLP.get_mlp_status()
                 _mlp_t = get(mlp, "total_transforms", 0)
                 _mlp_sig = get(mlp, "sigmoid_activations", 0)
@@ -11786,7 +12676,7 @@ elseif !isnothing(m_right)
                                 # --- :json — raw JSON passthrough to grow_nodes_from_packet ---
                                 try
                                     new_ids = grow_nodes_from_packet(ans_content; target_lobe=target_lobe_ans,
-                                                                     default_system_prompt="Grug. I learned this from a question. I reason about what I was taught.")
+                                                                     default_system_prompt="Grug.")
                                     println("🧠 Answer [:json]: planted $(length(new_ids)) node(s) into lobe '$(isnothing(target_lobe_ans) ? "-" : target_lobe_ans)' [$(join(new_ids, ", "))] | $strain_msg$resolve_msg")
                                 catch e
                                     println("!!! ERROR in /answer :json: $e !!!")
@@ -11800,12 +12690,12 @@ elseif !isnothing(m_right)
                                 else
                                     multi_ids = String[]
                                     for (action_pkt, part_text) in parts
-                                        part_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                        part_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text, answer_content=part_text)
                                         # GRUG: Override action-specific voice if the part has a custom action
                                         action_name = split(action_pkt, '^')[1]
                                         if haskey(_ANSWER_MODE_CONFIG, action_name) && !isempty(_ANSWER_MODE_CONFIG[action_name])
                                             cfg = _ANSWER_MODE_CONFIG[action_name]
-                                            part_data["system_prompt"] = cfg["prompt"]
+                                            # v7.55: Don't override system_prompt with mode prompt — answer_content is already embedded
                                             part_data["voice_register"] = cfg["voice"]
                                             part_data["frame_hints"] = cfg["frame"]
                                         end
@@ -11871,7 +12761,7 @@ elseif !isnothing(m_right)
                                     end
 
                                     # GRUG: Pattern is the subject, but node carries relational metadata.
-                                    relate_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                    relate_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text, answer_content="$(lowercase(subj)) $(rel_for_triple) $(lowercase(obj))")
                                     relate_data["answer_mode"] = "relate"
                                     relate_data["noun_anchors"] = [lowercase(subj), lowercase(obj)]
                                     relate_data["required_relations"] = [rel_for_triple]
@@ -11881,7 +12771,7 @@ elseif !isnothing(m_right)
                                         "relation"  => rel_for_triple,
                                         "object"    => lowercase(obj),
                                     )
-                                    relate_data["system_prompt"] = "Grug. I learned this from a question. I know that $(lowercase(subj)) $(rel_for_triple) $(lowercase(obj)). I reason about this relationship."
+                                    # v7.55: system_prompt already set by _base_answer_data with answer_content
                                     relate_data["voice_register"] = "plain"
                                     relate_data["frame_hints"] = ["plain", "exploratory"]
                                     # GRUG v7.53: Fan-out for relate — primary + shadow nodes from subject pattern.
@@ -11938,7 +12828,7 @@ elseif !isnothing(m_right)
                                     rel_for_triple = "&temporal"
                                     rel_for_display = SigilRegistry.expand_relation_sigil(_ENGINE_SIGIL_TABLE, "temporal")
 
-                                    time_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                    time_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text, answer_content="$(lowercase(subj)) $(rel_for_triple) $(lowercase(obj))")
                                     time_data["answer_mode"] = "time"
                                     time_data["time_node"] = true
                                     # GRUG v8.1: Store orientation in json_data so it survives
@@ -11958,7 +12848,7 @@ elseif !isnothing(m_right)
                                         "relation"  => rel_for_triple,
                                         "object"    => lowercase(obj),
                                     )
-                                    time_data["system_prompt"] = "Grug. I learned this from a question about time. I know that $(lowercase(subj)) $(rel_for_triple) $(lowercase(obj)). I reason about temporal relationships.$(isempty(time_orient) ? "" : " My temporal orientation is $(time_orient) — I reason about the $(time_orient == "past" ? "what has already happened" : time_orient == "present" ? "what is happening right now" : "what may come next").")"
+                                    # v7.55: system_prompt already set by _base_answer_data with answer_content
                                     time_data["voice_register"] = "plain"
                                     time_data["frame_hints"] = ["plain", "exploratory"]
                                     # GRUG v7.53: Fan-out for time — primary + shadow nodes.
@@ -11978,11 +12868,11 @@ elseif !isnothing(m_right)
                                 else
                                     proc_ids = String[]
                                     for (i, step_text) in enumerate(proc_steps)
-                                        step_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text)
+                                        step_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text, answer_content=step_text)
                                         step_data["answer_mode"] = "proc"
                                         step_data["proc_step"] = i
                                         step_data["proc_total"] = length(proc_steps)
-                                        step_data["system_prompt"] = "Grug. I learned this procedure from a question. Step $i of $(length(proc_steps)). I explain what to do."
+                                        # v7.55: system_prompt already has answer_content embedded via _base_answer_data
                                         step_data["voice_register"] = "plain"
                                         step_data["frame_hints"] = ["imperative", "plain"]
                                         nid, lobe_tag = _create_answer_node(step_text, "reason^1", step_data, target_lobe_ans; skip_auto_latch=true)
@@ -12022,7 +12912,7 @@ elseif !isnothing(m_right)
 
                             elseif ans_mode == "math"
                                 # --- :math — arithmetic-ready node ---
-                                math_data = _base_answer_data("math"; pending_ask_text=pending_ask_text)
+                                math_data = _base_answer_data("math"; pending_ask_text=pending_ask_text, answer_content=ans_content)
                                 # GRUG: Extract noun_anchors from math content — numbers, operators, variables.
                                 math_tokens = split(lowercase(ans_content))
                                 math_anchors = String[]
@@ -12043,11 +12933,95 @@ elseif !isnothing(m_right)
                                 shadow_msg = !isempty(shadow_ids) ? " +$(length(shadow_ids)) shadows [$(join(shadow_ids, ", "))]" : ""
                                 println("🧠 Answer [:math]: id=$nid pattern='$(lowercase(ans_content))'$lobe_tag$anchor_msg$shadow_msg | $strain_msg$resolve_msg")
 
+                            elseif ans_mode == "action"
+                                # --- :action — dynamic sigil action node ---
+                                # GRUG v7.61: Action sigils can do ANYTHING. Instead of
+                                # creating a static answer node for one instance (like
+                                # "factorial of 6 is 720"), create a DYNAMIC sigil node
+                                # with an action_callback that computes ANY instance.
+                                # Format: /answer @mathematics :action <callback_name> <sigil_pattern>
+                                # Example: /answer @mathematics :action factorial factorial of &n
+                                # Example: /answer @mathematics :action square square of &n
+                                # The callback must be registered in ActionEngine.ACTION_CALLBACKS.
+                                # The pattern uses sigil holes (&n, &word) so it matches any input.
+                                # When the node fires, ActionEngine computes the answer from bindings.
+                                action_parts = split(ans_content; limit=2)
+                                if length(action_parts) < 2
+                                    println("!!! FATAL: /answer :action needs '<callback_name> <sigil_pattern>'. Example: /answer @mathematics :action factorial factorial of &n !!!")
+                                    println("   Available callbacks: $(join(ActionEngine.list_action_callbacks(), ", "))")
+                                else
+                                    action_cb_name = lowercase(strip(String(action_parts[1])))
+                                    action_pattern = lowercase(strip(String(action_parts[2])))
+
+                                    # GRUG: Validate callback exists
+                                    if !ActionEngine.has_action_callback(action_cb_name)
+                                        println("!!! FATAL: /answer :action callback '$action_cb_name' not registered. Available: $(join(ActionEngine.list_action_callbacks(), ", ")) !!!")
+                                        println("   Register custom callbacks with /addAction <name> <pattern> or use built-in: factorial, square, square_root, double, half, negate, cube, absolute, reciprocal, fibonacci")
+                                    else
+                                        # GRUG: Create a SIGIL NODE with action_callback in data.
+                                        # This is a procedural node — node_type=:sigil, NOCHAT, singleton.
+                                        # Pattern is the sigil template (e.g. "factorial of &n").
+                                        # When it matches, ActionEngine runs the callback with bindings.
+                                        action_data = Dict{String,Any}(
+                                            "growth_source"      => "hippocampal_answer",
+                                            "hippocampal_born"   => string(round(time(), digits=3)),
+                                            "strain_at_creation" => round(EphemeralMLP.get_strain_energy(); digits=3),
+                                            "answer_mode"        => "action",
+                                            "action_callback"    => action_cb_name,
+                                            "system_prompt"      => "Grug.",  # terse — the computed answer IS the claim
+                                            "voice_register"     => "terse",
+                                            "frame_hints"        => ["imperative", "terse"],
+                                            "is_math_node"       => true,
+                                        )
+                                        if !isempty(pending_ask_text)
+                                            action_data["resolved_ask"] = pending_ask_text
+                                        end
+
+                                        # GRUG: Extract noun_anchors from the pattern (non-sigil tokens).
+                                        pat_tokens = split(action_pattern)
+                                        pat_anchors = String[]
+                                        for tok in pat_tokens
+                                            if !startswith(tok, "&") && length(tok) >= 2
+                                                push!(pat_anchors, tok)
+                                            end
+                                        end
+                                        if !isempty(pat_anchors)
+                                            action_data["noun_anchors"] = pat_anchors
+                                        end
+
+                                        # GRUG: Create as a sigil node (NOCHAT, singleton, no group)
+                                        nid = create_sigil_node(
+                                            action_pattern,
+                                            "calculate^5 | reason^2 | analyze^1",  # action-oriented packet
+                                            action_data,
+                                            String[];
+                                            kind = :math,
+                                        )
+
+                                        # GRUG: Assign to target lobe
+                                        lobe_tag = ""
+                                        if !isnothing(target_lobe_ans)
+                                            try
+                                                alive = count_alive_nodes_in_lobe(target_lobe_ans)
+                                                Lobe.add_node_to_lobe!(target_lobe_ans, nid; alive_count=alive)
+                                            catch e
+                                                @warn "[MAIN] /answer :action: failed to assign node $nid to lobe '$target_lobe_ans': $e"
+                                            end
+                                        end
+                                        lobe_tag = let l = Lobe.find_lobe_for_node(nid)
+                                            isnothing(l) ? " (no lobe)" : " (lobe: $l)"
+                                        end
+
+                                        println("⚡ Answer [:action]: id=$nid callback='$action_cb_name' pattern='$action_pattern'$lobe_tag | $strain_msg$resolve_msg")
+                                        println("   This node computes ANY $(action_cb_name) dynamically — not just one instance!")
+                                    end
+                                end
+
                             else
                                 # --- :reason, :explain, :define, :alert, :comfort — typed cluster ---
                                 cfg = _ANSWER_MODE_CONFIG[ans_mode]
                                 action_pkt = cfg["action"]
-                                typed_data = _base_answer_data(ans_mode; pending_ask_text=pending_ask_text)
+                                typed_data = _base_answer_data(ans_mode; pending_ask_text=pending_ask_text, answer_content=ans_content)
                                 # GRUG v7.53: Fan-out — primary + shadow nodes for broader activation.
                                 nid, shadow_ids, lobe_tag = _plant_answer_cluster(ans_content, action_pkt, typed_data, target_lobe_ans, ans_mode)
                                 shadow_msg = !isempty(shadow_ids) ? " +$(length(shadow_ids)) shadows [$(join(shadow_ids, ", "))]" : ""
@@ -12240,12 +13214,8 @@ elseif !isnothing(m_right)
                     println("⛔ /newLobe blocked by immune system.")
                 else
                     Lobe.create_lobe!(lobe_id_new, lobe_subject)
-                    # GRUG: Every new lobe automatically gets an AIML tribe registered.
-                    # Cap = floor(LOBE_NODE_CAP / 3) — executive layer bounded to 1/3 parent.
-                    # This is NOT optional: lobe without AIML registration means /aimlRight
-                    # and /aimlWrong will silently skip it. Register now, always, loudly.
-                    aiml_cap = AIMLNodeSystem.register_lobe!(lobe_id_new, Lobe.LOBE_NODE_CAP)
-                    println("\U0001f9e0 Lobe '$(lobe_id_new)' created for subject: '$(lobe_subject)'. Cap: $(Lobe.LOBE_NODE_CAP) nodes. AIML tribe registered (cap=$aiml_cap).")
+                    # GRUG: AIMLNodeSystem removed — no more lobe registration for scaffold tribe
+                    println("\U0001f9e0 Lobe '$(lobe_id_new)' created for subject: '$(lobe_subject)'. Cap: $(Lobe.LOBE_NODE_CAP) nodes.")
                 end
 
             elseif !isnothing(m_namelobe)
@@ -13329,6 +14299,43 @@ elseif !isnothing(m_right)
                 end
 
 
+            # ── GRUG v10: InverseSigil diagnostic & lobe-hint commands ────────
+            elseif !isnothing(m_inverse_status)
+                # /inverseStatus — show inverse table summary
+                println(InverseSigil.get_table_status())
+
+            elseif !isnothing(m_inverse_detail)
+                # /inverseDetail <sigil_name> — detailed view of one inverse entry
+                _inv_sig = String(m_inverse_detail.captures[1])
+                println(InverseSigil.get_entry_detail(_inv_sig))
+
+            elseif !isnothing(m_setlobehint)
+                # /setLobeHint <sigil_name> <lobe_name> — manually set lobe_hint
+                _sh_sig  = String(m_setlobehint.captures[1])
+                _sh_lobe = String(m_setlobehint.captures[2])
+                # GRUG: IMMUNE GATE — lobe hint is stored structure on inverse entry
+                if !immune_gate("/setLobeHint", _sh_sig * " " * _sh_lobe; is_critical=false)
+                    println("⛔ /setLobeHint blocked by immune system.")
+                else
+                    try
+                        InverseSigil.set_lobe_hint!(_sh_sig, _sh_lobe)
+                        println("🏷  Inverse entry '&$_sh_sig' lobe_hint set to '$_sh_lobe'.")
+                    catch e
+                        println("⚠  /setLobeHint error: $e")
+                    end
+                end
+
+            elseif !isnothing(m_clearlobehint)
+                # /clearLobeHint <sigil_name> — clear lobe_hint on an inverse entry
+                _ch_sig = String(m_clearlobehint.captures[1])
+                try
+                    InverseSigil.clear_lobe_hint!(_ch_sig)
+                    println("🧹 Inverse entry '&$_ch_sig' lobe_hint cleared.")
+                catch e
+                    println("⚠  /clearLobeHint error: $e")
+                end
+
+
             # ── GRUG v9: CoherenceField command levers ──────────────────────────
             # These expose the implicit coherence field Φ and gradient ΔΦ that
             # the system already computes internally. Weight=0.0 (off) by default
@@ -13700,7 +14707,7 @@ end
 #                       strength, neighbors, graves, drop_table, response_times,
 #                       hopfield_key, relational_patterns, etc.)
 #   2. hopfield_cache — familiar input fast-path cache + hit counts
-#   3. rules          — AIML_DROP_TABLE stochastic orchestration rules
+#   3. rules          — ORCHESTRATION_RULES stochastic orchestration rules
 #   4. message_history— up to 10k ChatMessage entries with pin flags
 #   5. lobes          — LOBE_REGISTRY (subject, node_ids, connections, fire/inhibit)
 #   6. node_to_lobe_idx — NODE_TO_LOBE_IDX reverse index

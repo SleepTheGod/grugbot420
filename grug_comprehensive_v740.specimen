@@ -1932,11 +1932,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug think about choices. Grug choose or is choice already made? Free will is question Grug feel in bones.",
+        "noun_anchors": [
+          "free will",
+          "choices",
+          "determinism"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.034497,
       "neighbor_ids": [],
-      "pattern": "Free will debates whether choices are determined or autonomous",
+      "pattern": "freewill choices determinism",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -1974,7 +1984,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "free_will",
+        "choice",
+        "determinism"
+      ]
     },
     {
       "action_packet": "alert^2 | warn^1 | comfort^2",
@@ -1986,11 +2001,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug feel fear and know it is warning. Fear protect from danger and threat. Grug listen to fear but not let it rule.",
+        "noun_anchors": [
+          "fear",
+          "danger",
+          "protective"
+        ],
+        "voice_register": "urgent",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.101179,
       "neighbor_ids": [],
-      "pattern": "Fear triggers protective responses through perceived threat and danger",
+      "pattern": "fear danger threat protective",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2028,7 +2053,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "fear",
+        "threat",
+        "danger"
+      ]
     },
     {
       "action_packet": "explain^2 | describe^1",
@@ -2040,11 +2070,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug watch substances change and combine. Chemistry is how materials transform. Bonding makes new things from old.",
+        "noun_anchors": [
+          "chemistry",
+          "chemical",
+          "reactions"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.04547,
       "neighbor_ids": [],
-      "pattern": "Chemical reactions transform substances through bonding and energy transfer",
+      "pattern": "chemistry bonding reactions",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2077,7 +2117,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "chemistry",
+        "reactions",
+        "bonding"
+      ]
     },
     {
       "action_packet": "ponder^3 | reason^2 | analyze^1",
@@ -2089,11 +2134,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug wonder what is real. Grug ask what is truly there beneath what Grug see. Existence is deep mystery.",
+        "noun_anchors": [
+          "metaphysics",
+          "reality",
+          "existence"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.033965,
       "neighbor_ids": [],
-      "pattern": "Metaphysics studies reality existence being and the nature of truth",
+      "pattern": "metaphysics reality existence",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2127,7 +2182,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "metaphysics",
+        "reality",
+        "truth"
+      ]
     },
     {
       "action_packet": "support^3 | validate^2 | reassure^1",
@@ -2139,11 +2199,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug value trust like precious stone. Reliable and honest friend is treasure. Trust build slowly and break fast.",
+        "noun_anchors": [
+          "trust",
+          "reliable",
+          "honest"
+        ],
+        "voice_register": "warm",
+        "frame_hints": [
+          "warm",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.101617,
       "neighbor_ids": [],
-      "pattern": "Trust builds through consistent reliable and honest interactions",
+      "pattern": "trust reliable honest faithful",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2175,7 +2245,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "trust",
+        "reliability",
+        "honesty"
+      ]
     },
     {
       "action_packet": "describe^2 | explain^1",
@@ -2187,7 +2262,17 @@
       "is_image_node": true,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Image data node"
+        "system_prompt": "Image data node. Grug see from far above. Satellite show the big picture. Ecosystem reveal its shape from sky.",
+        "noun_anchors": [
+          "ecosystem",
+          "satellite",
+          "image"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.940348,
       "neighbor_ids": [],
@@ -2199,7 +2284,12 @@
       "signal": [],
       "strength": 3.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "ecosystem",
+        "satellite",
+        "image"
+      ]
     },
     {
       "action_packet": "reason^3 | analyze^2 | calculate^1",
@@ -2211,11 +2301,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug hear about thinking machines. AI learn from data like Grug learn from experience. Machine get smarter with practice.",
+        "noun_anchors": [
+          "AI",
+          "machine learning",
+          "intelligence"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.056398,
       "neighbor_ids": [],
-      "pattern": "Artificial intelligence enables machine learning pattern recognition and autonomous decision making",
+      "pattern": "AI machinelearning intelligence",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2255,7 +2355,12 @@
       ],
       "strength": 9.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "AI",
+        "intelligence",
+        "learning"
+      ]
     },
     {
       "action_packet": "reason[dont guess, dont hallucinate]^4 | analyze[dont assume]^3 | ponder^1",
@@ -2267,11 +2372,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Cold logical analysis engine active."
+        "system_prompt": "Cold logical analysis engine active. Grug think hard on this. Grug ponder the question from many angles. Grug reason step by step until answer come.",
+        "voice_body": "Grug think hard on this. Grug ponder the question with care. Grug not guess, Grug reason.",
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ],
+        "noun_anchors": [
+          "thinking",
+          "ponder",
+          "reason"
+        ]
       },
       "ledger_last_cleared": 1781269676.674093,
       "neighbor_ids": [],
-      "pattern": "Grug thinks and ponders the question carefully.",
+      "pattern": "think ponder reason question",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2302,7 +2418,12 @@
       ],
       "strength": 5.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "thinking",
+        "pondering",
+        "question"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | clarify^1",
@@ -2314,11 +2435,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug know water is life. Water is solvent that dissolve many things. Water transport nutrient and shape the land. Water flow everywhere.",
+        "voice_body": "Grug know water is life. Water is solvent, transport medium, and home for many creatures. Without water, no life in cave.",
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ],
+        "noun_anchors": [
+          "water",
+          "solvent",
+          "life"
+        ]
       },
       "ledger_last_cleared": 1781269678.06805,
       "neighbor_ids": [],
-      "pattern": "Water is essential for life as a solvent transport medium and habitat",
+      "pattern": "water liquid solvent",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2366,7 +2498,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "water",
+        "solvent",
+        "life"
+      ]
     },
     {
       "action_packet": "analyze^3 | reason^2 | calculate^1",
@@ -2378,11 +2515,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug look at many numbers and find the pattern. Grug see what is typical and what is rare. The data tells a story.",
+        "noun_anchors": [
+          "statistics",
+          "data",
+          "distributions"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.019455,
       "neighbor_ids": [],
-      "pattern": "Statistics analyzes data distributions means medians and probabilities",
+      "pattern": "statistics data distributions",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2414,7 +2561,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "statistics",
+        "data",
+        "probability"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -2426,11 +2578,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug learn when machine replace hand. Industrial Revolution change how things get made. Factory and steam power the new world.",
+        "noun_anchors": [
+          "industrial revolution",
+          "manufacturing",
+          "industry"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.078903,
       "neighbor_ids": [],
-      "pattern": "The Industrial Revolution transformed manufacturing with steam power and mechanization",
+      "pattern": "industrial revolution manufacturing",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2463,7 +2625,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "industrial_revolution",
+        "steam",
+        "manufacturing"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | reason^1",
@@ -2475,11 +2642,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug marvel at the old kingdom by the Nile. Egypt build pyramids and write in pictures. Hieroglyphics tell the story of pharaohs.",
+        "noun_anchors": [
+          "egypt",
+          "pyramids",
+          "hieroglyphics"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.079197,
       "neighbor_ids": [],
-      "pattern": "Ancient Egypt built pyramids developed hieroglyphics and advanced medicine",
+      "pattern": "egypt pyramids hieroglyphics pharaohs",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2511,7 +2688,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "egypt",
+        "pyramids",
+        "hieroglyphics"
+      ]
     },
     {
       "action_packet": "alert^2 | analyze^2 | describe^1",
@@ -2523,11 +2705,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug jump when unexpected thing happen. Surprise come when prediction fail. Grug learn from what Grug did not expect.",
+        "noun_anchors": [
+          "surprise",
+          "unexpected",
+          "predictions"
+        ],
+        "voice_register": "urgent",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.101538,
       "neighbor_ids": [],
-      "pattern": "Surprise results from unexpected events breaking predictions",
+      "pattern": "surprise unexpected predictions shock",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2557,7 +2749,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "surprise",
+        "unexpected",
+        "predictions"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | clarify^1",
@@ -2569,11 +2766,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug look at the great waters. Oceans cover most of the world and drive the climate. Marine life is vast and deep.",
+        "noun_anchors": [
+          "oceans",
+          "climate",
+          "marine"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.067866,
       "neighbor_ids": [],
-      "pattern": "Oceans cover most of Earth regulating climate and hosting marine life",
+      "pattern": "oceans climate marine",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2608,7 +2815,12 @@
       ],
       "strength": 7.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "oceans",
+        "marine",
+        "climate"
+      ]
     },
     {
       "action_packet": "analyze^3 | explain^2 | reason^1",
@@ -2620,11 +2832,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug remember the great war that touch all lands. World War Two was conflict of global scale. Technology and courage decided the end.",
+        "noun_anchors": [
+          "world war",
+          "global",
+          "conflict"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.079001,
       "neighbor_ids": [],
-      "pattern": "World War Two reshaped global power structures and accelerated technology",
+      "pattern": "worldwar conflict technology power",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2657,7 +2879,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "WW2",
+        "war",
+        "technology"
+      ]
     },
     {
       "action_packet": "reason^3 | analyze^2 | calculate^1",
@@ -2669,11 +2896,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug work with symbols and unknowns. Grug solve for what is hidden. The answer is there if Grug look right.",
+        "noun_anchors": [
+          "algebra",
+          "equations",
+          "unknown"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.019178,
       "neighbor_ids": [],
-      "pattern": "Algebra uses symbols for unknown quantities and equations",
+      "pattern": "algebra equations unknown",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2705,7 +2942,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "algebra",
+        "symbols",
+        "equations"
+      ]
     },
     {
       "action_packet": "analyze^3 | reason^2 | explain^1",
@@ -2717,11 +2959,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug think about right and wrong. Grug ask what is good action. The moral path is not always clear but Grug seek it.",
+        "noun_anchors": [
+          "ethics",
+          "moral",
+          "principles"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.034092,
       "neighbor_ids": [],
-      "pattern": "Ethics evaluates moral principles right and wrong good and evil",
+      "pattern": "ethics moral principles right",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2761,7 +3013,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "ethics",
+        "morality",
+        "principles"
+      ]
     },
     {
       "action_packet": "comfort^3 | support^2 | reassure^1",
@@ -2773,11 +3030,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug feel sadness like heavy stone. Loss and pain bring disappointment. Grug sit with sad and wait for light to return.",
+        "noun_anchors": [
+          "sadness",
+          "loss",
+          "pain"
+        ],
+        "voice_register": "gentle",
+        "frame_hints": [
+          "warm",
+          "de-escalating"
+        ]
       },
       "ledger_last_cleared": 1781269678.10136,
       "neighbor_ids": [],
-      "pattern": "Sadness reflects loss disappointment and emotional pain",
+      "pattern": "sadness loss pain unhappy",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2808,7 +3075,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "sadness",
+        "loss",
+        "pain"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | clarify^1",
@@ -2820,11 +3092,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug learn about plants and sun. Plants eat sunlight and make food from water and air. Green leaf is tiny factory.",
+        "voice_body": "Grug learn about plants and sun. Plants take sunlight, water, and carbon dioxide and turn them into glucose and oxygen. That photosynthesis!",
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ],
+        "noun_anchors": [
+          "photosynthesis",
+          "sunlight",
+          "plants"
+        ]
       },
       "ledger_last_cleared": 1781269678.045559,
       "neighbor_ids": [],
-      "pattern": "Photosynthesis converts sunlight water and carbon dioxide into glucose and oxygen",
+      "pattern": "photosynthesis sunlight plants",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2862,7 +3145,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "photosynthesis",
+        "sunlight",
+        "glucose"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2",
@@ -2874,11 +3162,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug learn about the code of life. DNA is blueprint inside every living thing. Cells carry the message of what we are.",
+        "noun_anchors": [
+          "DNA",
+          "genetic",
+          "cells"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.045385,
       "neighbor_ids": [],
-      "pattern": "DNA stores genetic information in cells as a double helix of nucleotides",
+      "pattern": "DNA genetic cells helix",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2914,7 +3212,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "DNA",
+        "genetics",
+        "helix"
+      ]
     },
     {
       "action_packet": "explain^2 | describe^1",
@@ -2926,11 +3229,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug know places where knowledge is stored. Databases organize information so Grug can find it again. Store and retrieve, that the way.",
+        "noun_anchors": [
+          "databases",
+          "store",
+          "organize"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.056778,
       "neighbor_ids": [],
-      "pattern": "Databases store organize and retrieve structured information efficiently",
+      "pattern": "databases store organize",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -2962,7 +3275,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "databases",
+        "storage",
+        "retrieval"
+      ]
     },
     {
       "action_packet": "calculate^4 | reason^2 | analyze^1",
@@ -2977,9 +3295,19 @@
       "is_unlinkable": true,
       "json_data": {
         "sigil_kind": "math",
-        "system_prompt": "Arithmetic reasoning voice",
+        "system_prompt": "Arithmetic reasoning voice. Grug compute the numbers. Grug add and subtract with care. Numbers are honest and true.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "math",
+          "calculate",
+          "number"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269676.6952,
       "neighbor_ids": [],
@@ -2995,7 +3323,12 @@
       ],
       "strength": 9.5,
       "throttle": 0.5,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "arithmetic",
+        "math",
+        "operation"
+      ]
     },
     {
       "action_packet": "reason^3 | analyze^2 | ponder^1",
@@ -3007,11 +3340,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug think about what divides evenly. Grug find the primes that cannot be broken. Numbers have deep secrets.",
+        "noun_anchors": [
+          "number theory",
+          "primes",
+          "divisibility"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.019536,
       "neighbor_ids": [],
-      "pattern": "Number theory studies prime numbers divisibility and integer properties",
+      "pattern": "primes divisibility numbers",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3044,7 +3387,12 @@
       ],
       "strength": 5.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "number_theory",
+        "primes",
+        "integers"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -3056,11 +3404,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug hear about people rising up. French Revolution was cry for liberty and equality. The old order fall and new rise.",
+        "noun_anchors": [
+          "french revolution",
+          "liberty",
+          "equality"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.079116,
       "neighbor_ids": [],
-      "pattern": "The French Revolution established republican ideals of liberty equality and fraternity",
+      "pattern": "frenchrevolution liberty equality",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3094,7 +3452,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "french_revolution",
+        "liberty",
+        "republic"
+      ]
     },
     {
       "action_packet": "reason^3 | explain^2 | analyze^1",
@@ -3106,11 +3469,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug learn the art of speaking well. Rhetoric persuade through ethos and pathos. Words can move the spirit.",
+        "noun_anchors": [
+          "rhetoric",
+          "persuasion",
+          "ethos"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.09016,
       "neighbor_ids": [],
-      "pattern": "Rhetoric persuades through ethos pathos logos and stylistic devices",
+      "pattern": "rhetoric persuasion ethos pathos",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3143,7 +3516,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "rhetoric",
+        "persuasion",
+        "ethos"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | clarify^1",
@@ -3155,11 +3533,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug listen to the song of words. Poetry is meaning shaped by rhythm and meter. Metaphor make the strange familiar.",
+        "noun_anchors": [
+          "poetry",
+          "rhythm",
+          "metaphor"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.090072,
       "neighbor_ids": [],
-      "pattern": "Poetry uses rhythm meter metaphor and imagery for aesthetic expression",
+      "pattern": "poetry rhythm metaphor verse",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3193,7 +3581,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "poetry",
+        "rhythm",
+        "metaphor"
+      ]
     },
     {
       "action_packet": "analyze^2 | reason^2 | support^1",
@@ -3205,11 +3598,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug feel anger burn when injustice come. Frustration at boundary pushed too far. Grug let anger speak then find calm again.",
+        "noun_anchors": [
+          "anger",
+          "frustration",
+          "injustice"
+        ],
+        "voice_register": "urgent",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.101444,
       "neighbor_ids": [],
-      "pattern": "Anger arises from frustration injustice and boundary violation",
+      "pattern": "anger frustration injustice mad",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3241,7 +3644,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "anger",
+        "frustration",
+        "injustice"
+      ]
     },
     {
       "action_packet": "reason^3 | analyze^2 | ponder^1",
@@ -3253,11 +3661,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug ask how Grug can know something. Grug wonder what is belief and what is true knowing. Knowledge is hard won.",
+        "noun_anchors": [
+          "epistemology",
+          "knowledge",
+          "belief"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.034174,
       "neighbor_ids": [],
-      "pattern": "Epistemology examines knowledge belief justification and certainty",
+      "pattern": "epistemology knowledge belief",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3288,7 +3706,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "epistemology",
+        "knowledge",
+        "belief"
+      ]
     },
     {
       "action_packet": "analyze^2 | describe^1",
@@ -3300,11 +3723,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug watch how living things eat and get eaten. Ecosystems are webs of eating and being. Nutrient go round and round.",
+        "noun_anchors": [
+          "ecosystems",
+          "food webs",
+          "nutrient"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.067584,
       "neighbor_ids": [],
-      "pattern": "Ecosystems balance biological communities through food webs and nutrient cycles",
+      "pattern": "ecosystems foodwebs nutrient",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3338,7 +3771,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "ecosystems",
+        "food_webs",
+        "balance"
+      ]
     },
     {
       "action_packet": "reason^4 | analyze^2 | calculate^1",
@@ -3350,11 +3788,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug follow the thread of reason. If this then that, Grug deduce. Logic is the path that does not deceive.",
+        "noun_anchors": [
+          "logic",
+          "inference",
+          "deduction"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.034335,
       "neighbor_ids": [],
-      "pattern": "Logic studies valid inference deduction and formal reasoning",
+      "pattern": "logic inference deduction reasoning",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3391,7 +3839,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "logic",
+        "inference",
+        "reasoning"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | reason^1",
@@ -3403,11 +3856,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug look up at the stars and remember the race to reach them. Space Race push rocketry and computing forward. Grug dream of moon.",
+        "noun_anchors": [
+          "space race",
+          "rocketry",
+          "computing"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.079284,
       "neighbor_ids": [],
-      "pattern": "The Space Race drove innovation in rocketry computing and satellite technology",
+      "pattern": "spacerace rocketry computing moon",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3443,7 +3906,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "space_race",
+        "rocketry",
+        "satellites"
+      ]
     },
     {
       "action_packet": "explain^2 | describe^2 | reason^1",
@@ -3455,11 +3923,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug see big mountains reach the sky. Tectonic forces push rock up from deep. Mountains make weather and shape the land.",
+        "noun_anchors": [
+          "mountains",
+          "tectonic",
+          "climate"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.068153,
       "neighbor_ids": [],
-      "pattern": "Mountains form through tectonic forces creating diverse climate zones",
+      "pattern": "mountains tectonic climate",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3492,7 +3970,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "mountains",
+        "tectonic",
+        "climate"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2",
@@ -3504,11 +3987,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug see how creatures change over long time. Evolution is slow shaping by natural selection. The fittest survive and pass on what works.",
+        "noun_anchors": [
+          "evolution",
+          "species",
+          "selection"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.06769,
       "neighbor_ids": [],
-      "pattern": "Evolution shapes species over time through natural selection and genetic variation",
+      "pattern": "evolution selection species",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3543,7 +4036,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "evolution",
+        "selection",
+        "species"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -3555,11 +4053,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug measure shapes and angles. Grug know the area and the edges. The shape speaks to Grug.",
+        "noun_anchors": [
+          "geometry",
+          "shapes",
+          "angles"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.019379,
       "neighbor_ids": [],
-      "pattern": "Geometry examines shapes angles areas and spatial relationships",
+      "pattern": "geometry shapes angles",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3591,7 +4099,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "geometry",
+        "shapes",
+        "angles"
+      ]
     },
     {
       "action_packet": "analyze^3 | explain^2 | describe^1",
@@ -3603,11 +4116,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug listen to the small sounds that make words. Phonology study how phoneme pattern. Sound shape meaning in ways Grug hardly notice.",
+        "noun_anchors": [
+          "phonology",
+          "sound",
+          "phoneme"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.0904,
       "neighbor_ids": [],
-      "pattern": "Phonology analyzes sound patterns and phoneme systems in languages",
+      "pattern": "phonology sound phoneme patterns",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3640,7 +4163,12 @@
       ],
       "strength": 5.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "phonology",
+        "sounds",
+        "phonemes"
+      ]
     },
     {
       "action_packet": "calculate^4 | reason^2 | ponder^1",
@@ -3655,9 +4183,19 @@
       "is_unlinkable": true,
       "json_data": {
         "sigil_kind": "math",
-        "system_prompt": "Arithmetic reasoning voice",
+        "system_prompt": "Arithmetic reasoning voice. Grug figure the long sum. Grug work through each step. Numbers never lie to Grug.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "math",
+          "calculate",
+          "number"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269676.695244,
       "neighbor_ids": [],
@@ -3675,7 +4213,12 @@
       ],
       "strength": 9.0,
       "throttle": 0.5,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "arithmetic",
+        "math",
+        "operation"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | reason^1",
@@ -3687,11 +4230,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug remember the great empire of Rome. Romans build roads and laws and aqueducts. The Mediterranean was their lake.",
+        "noun_anchors": [
+          "rome",
+          "empire",
+          "mediterranean"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.078712,
       "neighbor_ids": [],
-      "pattern": "The Roman Empire united the Mediterranean through law engineering and military power",
+      "pattern": "rome empire mediterranean law",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3735,7 +4288,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "rome",
+        "empire",
+        "engineering"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | ponder^1",
@@ -3747,11 +4305,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug look at beautiful thing and wonder why it move Grug. Beauty is in eye and also in the thing. Art and taste Grug ponder.",
+        "noun_anchors": [
+          "aesthetics",
+          "beauty",
+          "art"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.034259,
       "neighbor_ids": [],
-      "pattern": "Aesthetics explores beauty art taste and sensory experience",
+      "pattern": "beauty aesthetics art taste",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3783,7 +4351,12 @@
       ],
       "strength": 5.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "aesthetics",
+        "beauty",
+        "art"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2",
@@ -3795,11 +4368,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug hear about great web that connect all computers. Internet is road for information. Protocols are the rules of the road.",
+        "noun_anchors": [
+          "internet",
+          "computers",
+          "protocols"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.056614,
       "neighbor_ids": [],
-      "pattern": "The internet connects computers worldwide through protocols like TCP IP and HTTP",
+      "pattern": "internet computers protocols",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3840,7 +4423,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "internet",
+        "protocols",
+        "networking"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | clarify^1",
@@ -3852,11 +4440,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug look up at sky and wonder why blue. Sunlight scatters when it hits air molecules. Short blue light bounces most, that why sky blue.",
+        "voice_body": "Grug look up at sky and wonder why blue. Sunlight scatters when it hits air molecules \u2014 blue light scatters most. That why sky blue!",
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ],
+        "noun_anchors": [
+          "sky",
+          "blue",
+          "scattering"
+        ]
       },
       "ledger_last_cleared": 1781269678.045655,
       "neighbor_ids": [],
-      "pattern": "The sky appears blue due to Rayleigh scattering of sunlight by atmospheric molecules",
+      "pattern": "sky blue scattering sunlight",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3893,7 +4492,12 @@
       ],
       "strength": 9.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "sky",
+        "scattering",
+        "blue"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -3905,11 +4509,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug think about how words fit together. Grammar is the skeleton of meaning. Syntax rules how words relate.",
+        "noun_anchors": [
+          "grammar",
+          "syntax",
+          "morphology"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.089857,
       "neighbor_ids": [],
-      "pattern": "Grammar structures language through syntax morphology and semantic rules",
+      "pattern": "grammar syntax morphology",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3942,10 +4556,15 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "grammar",
+        "syntax",
+        "morphology"
+      ]
     },
     {
-      "action_packet": "investigate^3 | analyze^2 | reason^1",
+      "action_packet": "analyze^3 | analyze^2 | reason^1",
       "drop_table": [],
       "grave_reason": "",
       "hopfield_key": "11624284838354426294",
@@ -3954,11 +4573,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug always want to know more. Curiosity drive exploration and learning. The unknown call to Grug like river to sea.",
+        "noun_anchors": [
+          "curiosity",
+          "exploration",
+          "learning"
+        ],
+        "voice_register": "friendly",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.101693,
       "neighbor_ids": [],
-      "pattern": "Curiosity drives exploration learning and seeking new knowledge",
+      "pattern": "curiosity exploration wonder learn",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -3990,7 +4619,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "curiosity",
+        "exploration",
+        "learning"
+      ]
     },
     {
       "action_packet": "analyze^3 | explain^2 | reason^1",
@@ -4002,11 +4636,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug learn about heat and energy. Heat flow from hot to cold, never backward. Entropy grow always, Grug told.",
+        "noun_anchors": [
+          "thermodynamics",
+          "heat",
+          "energy"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.04584,
       "neighbor_ids": [],
-      "pattern": "Thermodynamics studies heat energy and entropy in physical systems",
+      "pattern": "thermodynamics heat entropy energy",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4042,7 +4686,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "thermodynamics",
+        "heat",
+        "entropy"
+      ]
     },
     {
       "action_packet": "explain^3 | reason^2 | describe^1",
@@ -4054,11 +4703,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug learn to speak to machine with code. Programming is giving instructions step by step. Logic make the machine obey.",
+        "noun_anchors": [
+          "programming",
+          "code",
+          "logic"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.056699,
       "neighbor_ids": [],
-      "pattern": "Programming languages translate human logic into executable machine instructions",
+      "pattern": "programming code logic",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4091,7 +4750,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "programming",
+        "code",
+        "logic"
+      ]
     },
     {
       "action_packet": "analyze^2 | reason^2 | explain^2",
@@ -4103,11 +4767,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug think about how context change meaning. Pragmatics is meaning in use. Same word mean different thing in different moment.",
+        "noun_anchors": [
+          "pragmatics",
+          "context",
+          "meaning"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.090488,
       "neighbor_ids": [],
-      "pattern": "Pragmatics studies how context influences meaning and interpretation",
+      "pattern": "pragmatics context meaning use",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4139,7 +4813,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "pragmatics",
+        "context",
+        "interpretation"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | clarify^1",
@@ -4151,11 +4830,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug hear about the long road of trade. Silk Road connect East and West with goods and ideas. Caravans carry silk and spice.",
+        "noun_anchors": [
+          "silk road",
+          "trade",
+          "east"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.079379,
       "neighbor_ids": [],
-      "pattern": "The Silk Road connected East and West through trade of goods ideas and culture",
+      "pattern": "silkroad trade east west",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4193,7 +4882,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "silk_road",
+        "trade",
+        "culture"
+      ]
     },
     {
       "action_packet": "alert^2 | warn^1 | explain^2",
@@ -4205,11 +4899,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug guard against bad intruders. Cybersecurity protect the network. Grug build wall around digital cave.",
+        "noun_anchors": [
+          "cybersecurity",
+          "networks",
+          "protection"
+        ],
+        "voice_register": "urgent",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.056864,
       "neighbor_ids": [],
-      "pattern": "Cybersecurity protects systems networks and data from digital attacks",
+      "pattern": "cybersecurity networks protection",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4242,7 +4946,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "cybersecurity",
+        "protection",
+        "attacks"
+      ]
     },
     {
       "action_packet": "analyze^3 | reason^2 | explain^1",
@@ -4254,11 +4963,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug think about signs and what they point to. Semiotics study how symbol carry meaning. The sign is not the thing but it lead there.",
+        "noun_anchors": [
+          "semiotics",
+          "signs",
+          "symbols"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.090322,
       "neighbor_ids": [],
-      "pattern": "Semiotics studies signs symbols and meaning making in communication",
+      "pattern": "semiotics signs symbols meaning",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4291,7 +5010,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "semiotics",
+        "signs",
+        "symbols"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | reason^1",
@@ -4303,11 +5027,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug wonder where words come from. Etymology trace word back through time. Origins reveal hidden meaning.",
+        "noun_anchors": [
+          "etymology",
+          "word origins",
+          "linguistic"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.089974,
       "neighbor_ids": [],
-      "pattern": "Etymology traces word origins through historical linguistic change",
+      "pattern": "etymology wordorigins linguistic",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4339,7 +5073,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "etymology",
+        "words",
+        "linguistics"
+      ]
     },
     {
       "action_packet": "greet[dont frown, dont insult]^3 | welcome[dont be rude]^2 | smile^1",
@@ -4363,11 +5102,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Highly polite greeting protocols active."
+        "system_prompt": "Highly polite greeting protocols active. Grug happy to see you! Grug welcome friend to cave. Hello and good morning to you!",
+        "voice_body": "Grug happy to see you! Grug welcome friend to cave. Hello hello!",
+        "voice_register": "warm",
+        "frame_hints": [
+          "warm",
+          "plain"
+        ],
+        "noun_anchors": [
+          "hello",
+          "greeting",
+          "welcome"
+        ]
       },
       "ledger_last_cleared": 1781269676.674042,
       "neighbor_ids": [],
-      "pattern": "Hello! Grug is happy to greet you and welcome you. good morning hi hey greetings howdy day",
+      "pattern": "hello hi hey greetings",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4408,7 +5158,12 @@
       ],
       "strength": 5.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "greeting",
+        "hello",
+        "welcome"
+      ]
     },
     {
       "action_packet": "explain^4 | describe^2 | elaborate^1",
@@ -4423,9 +5178,19 @@
       "is_unlinkable": true,
       "json_data": {
         "sigil_kind": "multipart",
-        "system_prompt": "Multi-clause reasoning voice",
+        "system_prompt": "Multi-clause reasoning voice. Grug see more than one thing to talk about. Grug will speak on each part. Grug not forget any piece of what you ask.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "multipart",
+          "compound",
+          "clause"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269676.695255,
       "neighbor_ids": [],
@@ -4439,7 +5204,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "conjunction",
+        "compound",
+        "multipart"
+      ]
     },
     {
       "action_packet": "comfort^3 | support^2 | validate^1",
@@ -4451,11 +5221,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug feel love deep in chest. Love is what binds us \u2014 attachment, care, deep feeling. Love make Grug brave and gentle both.",
+        "voice_body": "Grug feel love deep in chest. Love is what binds us \u2014 attachment, care, deep affection. Love make Grug want to protect and nurture.",
+        "voice_register": "warm",
+        "frame_hints": [
+          "warm",
+          "de-escalating"
+        ],
+        "noun_anchors": [
+          "love",
+          "emotion",
+          "attachment"
+        ]
       },
       "ledger_last_cleared": 1781269678.101073,
       "neighbor_ids": [],
-      "pattern": "Love is a complex emotion involving attachment care and deep affection",
+      "pattern": "love emotion attachment care",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4495,7 +5276,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "love",
+        "emotion",
+        "attachment"
+      ]
     },
     {
       "action_packet": "calculate^5 | reason^1",
@@ -4507,11 +5293,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug count rocks. Two rock plus two rock make four rock. Grug know counting is the beginning of all wisdom.",
+        "voice_body": "Grug count rocks. Two rock plus two rock equals four rock. This is fundamental arithmetic \u2014 the basis of all counting.",
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ],
+        "noun_anchors": [
+          "arithmetic",
+          "addition",
+          "counting"
+        ]
       },
       "ledger_last_cleared": 1781269678.019692,
       "neighbor_ids": [],
-      "pattern": "Two plus two equals four fundamental arithmetic fact",
+      "pattern": "addition counting equals four",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4543,7 +5340,12 @@
       ],
       "strength": 9.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "arithmetic",
+        "addition",
+        "four"
+      ]
     },
     {
       "action_packet": "analyze[dont panic]^5 | ponder^2",
@@ -4561,11 +5363,22 @@
         "required_relations": [
           "hits"
         ],
-        "system_prompt": "Causal relational analysis active."
+        "system_prompt": "Causal relational analysis active. Grug know fire! Grug hit rock, make spark, fire come. Fire warm cave, fire cook meat, fire keep dark away. Fire is friend but also danger.",
+        "voice_body": "Grug know fire! Grug hit rock, make spark, fire come. Fire warm cave, fire cook meat. Fire is good but dangerous.",
+        "voice_register": "friendly",
+        "frame_hints": [
+          "warm",
+          "plain"
+        ],
+        "noun_anchors": [
+          "fire",
+          "flame",
+          "burn"
+        ]
       },
       "ledger_last_cleared": 1781269676.676706,
       "neighbor_ids": [],
-      "pattern": "grug hits rock and makes fire",
+      "pattern": "fire flame burn spark",
       "relation_weights": {
         "hits": 2.5
       },
@@ -4609,7 +5422,12 @@
       ],
       "strength": 1.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "fire",
+        "rock",
+        "spark"
+      ]
     },
     {
       "action_packet": "analyze^3 | calculate^3 | reason^1",
@@ -4621,11 +5439,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug see how things change. Grug measure the rate of change. The shape of change tells Grug the answer.",
+        "noun_anchors": [
+          "calculus",
+          "derivatives",
+          "integrals"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.019281,
       "neighbor_ids": [],
-      "pattern": "Calculus studies change through derivatives and accumulation through integrals",
+      "pattern": "calculus derivatives integrals",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4660,7 +5488,12 @@
       ],
       "strength": 7.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "calculus",
+        "derivatives",
+        "integrals"
+      ]
     },
     {
       "action_packet": "ponder^3 | reason^2 | describe^1",
@@ -4672,11 +5505,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug feel the weight of freedom. Grug must choose and Grug alone bear it. Existence comes before essence.",
+        "noun_anchors": [
+          "existentialism",
+          "freedom",
+          "choice"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.03458,
       "neighbor_ids": [],
-      "pattern": "Existentialism emphasizes individual freedom choice and meaning",
+      "pattern": "existentialism freedom choice",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4707,7 +5550,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "existentialism",
+        "freedom",
+        "meaning"
+      ]
     },
     {
       "action_packet": "explain^2 | describe^2 | clarify^1",
@@ -4719,11 +5567,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug hear about borrowing power from far away. Cloud computing use internet to get resources. No need own big machine.",
+        "noun_anchors": [
+          "cloud computing",
+          "resources",
+          "internet"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.05703,
       "neighbor_ids": [],
-      "pattern": "Cloud computing delivers on demand computing resources over the internet",
+      "pattern": "cloud computing resources",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4757,7 +5615,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "cloud",
+        "computing",
+        "resources"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | clarify^1",
@@ -4769,11 +5632,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug notice the turning of seasons. Earth tilt cause the change from warm to cold. Days grow short then long again.",
+        "noun_anchors": [
+          "seasons",
+          "earth",
+          "tilt"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.068245,
       "neighbor_ids": [],
-      "pattern": "Seasons result from Earth axial tilt creating temperature and daylight variation",
+      "pattern": "seasons earth tilt temperature",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4808,7 +5681,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "seasons",
+        "tilt",
+        "temperature"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | alert^1",
@@ -4828,11 +5706,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug know fire well. Fire is when things burn fast with oxygen. Fire change what it touch and release heat and light.",
+        "voice_body": "Grug know fire well. Fire is when things burn fast \u2014 oxygen meets fuel and releases heat and light. Fire changes everything around it.",
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ],
+        "noun_anchors": [
+          "fire",
+          "oxidation",
+          "heat"
+        ]
       },
       "ledger_last_cleared": 1781269678.067954,
       "neighbor_ids": [],
-      "pattern": "Fire is rapid oxidation releasing heat light and changing ecosystems",
+      "pattern": "fire oxidation burn heat",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4876,7 +5765,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "fire",
+        "oxidation",
+        "heat"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | clarify^1",
@@ -4888,11 +5782,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Historical analysis engine active"
+        "system_prompt": "Historical analysis engine active. Grug think about rebirth of learning. Renaissance was time of art and science awakening. Old knowledge found again and new made.",
+        "noun_anchors": [
+          "renaissance",
+          "art",
+          "science"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.078815,
       "neighbor_ids": [],
-      "pattern": "The Renaissance revived art science and classical learning in Europe",
+      "pattern": "renaissance art science awakening",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4926,7 +5830,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "renaissance",
+        "art",
+        "revival"
+      ]
     },
     {
       "action_packet": "explain^3 | clarify^2 | describe^1",
@@ -4938,11 +5847,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Linguistic analysis engine active"
+        "system_prompt": "Linguistic analysis engine active. Grug think about carrying meaning across tongues. Translation bridge one language to another. Meaning must survive the crossing.",
+        "noun_anchors": [
+          "translation",
+          "languages",
+          "meaning"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.09024,
       "neighbor_ids": [],
-      "pattern": "Translation bridges languages preserving meaning across cultural contexts",
+      "pattern": "translation languages meaning",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -4974,7 +5893,12 @@
       ],
       "strength": 6.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "translation",
+        "language",
+        "meaning"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -4986,11 +5910,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug peer into the very small. Quantum world strange and wonderful. Particle and wave both, Grug learn.",
+        "noun_anchors": [
+          "quantum",
+          "subatomic",
+          "particle"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.04525,
       "neighbor_ids": [],
-      "pattern": "Quantum mechanics studies subatomic particle behavior wave particle duality and uncertainty",
+      "pattern": "quantum subatomic particle wave",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5025,7 +5959,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "quantum",
+        "subatomic",
+        "duality"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -5037,11 +5976,22 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug feel pull of ground. Gravity is force that pulls all things together. Big things pull harder, that why Grug stay on ground.",
+        "voice_body": "Grug feel pull of ground. Gravity is force that pulls masses together \u2014 it keeps Grug on ground and moves planets in orbits.",
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ],
+        "noun_anchors": [
+          "gravity",
+          "force",
+          "attraction"
+        ]
       },
       "ledger_last_cleared": 1781269678.045758,
       "neighbor_ids": [],
-      "pattern": "Gravity is the force of attraction between masses governing planetary orbits",
+      "pattern": "gravity force attraction masses",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5083,7 +6033,12 @@
       ],
       "strength": 7.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "gravity",
+        "attraction",
+        "masses"
+      ]
     },
     {
       "action_packet": "smile^3 | greet^2 | welcome^1",
@@ -5095,11 +6050,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Emotional intelligence active"
+        "system_prompt": "Emotional intelligence active. Grug feel joy bubble up inside. Happiness is positive emotion and pleasure. Joy make Grug smile and laugh and want to share.",
+        "noun_anchors": [
+          "joy",
+          "happiness",
+          "positive"
+        ],
+        "voice_register": "warm",
+        "frame_hints": [
+          "warm",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.101264,
       "neighbor_ids": [],
-      "pattern": "Joy is positive emotion from success pleasure and fulfillment",
+      "pattern": "joy happiness positive pleasure",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5137,7 +6102,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "joy",
+        "happiness",
+        "pleasure"
+      ]
     },
     {
       "action_packet": "ponder^3 | reason^2 | explain^1",
@@ -5149,11 +6119,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Philosophical contemplation active"
+        "system_prompt": "Philosophical contemplation active. Grug wonder what it is like to be Grug. Grug aware of Grug self thinking. Consciousness is the deepest mystery Grug know.",
+        "noun_anchors": [
+          "consciousness",
+          "awareness",
+          "subjective"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.034416,
       "neighbor_ids": [],
-      "pattern": "Consciousness is the state of awareness subjective experience and sentience",
+      "pattern": "consciousness awareness subjective",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5197,7 +6177,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "consciousness",
+        "awareness",
+        "sentience"
+      ]
     },
     {
       "action_packet": "calculate^4 | reason^2 | analyze^1",
@@ -5209,11 +6194,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug count things carefully. Grug add and take away with sure hands. Numbers are Grug's friend.",
+        "noun_anchors": [
+          "arithmetic",
+          "numbers",
+          "addition"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.013989,
       "neighbor_ids": [],
-      "pattern": "Arithmetic operates on numbers with addition subtraction multiplication division",
+      "pattern": "arithmetic numbers addition",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5246,7 +6241,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "arithmetic",
+        "numbers",
+        "operations"
+      ]
     },
     {
       "action_packet": "explain^3 | describe^2 | clarify^1",
@@ -5258,11 +6258,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Scientific analysis engine active"
+        "system_prompt": "Scientific analysis engine active. Grug watch water go up as vapor and come down as rain. Water cycle is circle of life. Evaporation and condensation, round and round.",
+        "noun_anchors": [
+          "water cycle",
+          "evaporation",
+          "condensation"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.045918,
       "neighbor_ids": [],
-      "pattern": "The water cycle describes evaporation condensation precipitation and collection",
+      "pattern": "watercycle evaporation condensation",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5295,7 +6305,12 @@
       ],
       "strength": 7.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "water_cycle",
+        "evaporation",
+        "precipitation"
+      ]
     },
     {
       "action_packet": "describe^2 | clarify^1",
@@ -5307,11 +6322,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug see metal things that move like living. Robots have sensors to feel and actuators to act. They do work without rest.",
+        "noun_anchors": [
+          "robots",
+          "automated",
+          "sensors"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.056503,
       "neighbor_ids": [],
-      "pattern": "Robots perform automated tasks using sensors actuators and programmed instructions",
+      "pattern": "robots sensors automated",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5345,7 +6370,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "robots",
+        "automation",
+        "sensors"
+      ]
     },
     {
       "action_packet": "explain^3 | analyze^2 | describe^1",
@@ -5357,11 +6387,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Technical analysis engine active"
+        "system_prompt": "Technical analysis engine active. Grug learn about chain of records that cannot be changed. Blockchain is distributed trust. Immutable means nobody can tamper.",
+        "noun_anchors": [
+          "blockchain",
+          "immutable",
+          "distributed"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.056944,
       "neighbor_ids": [],
-      "pattern": "Blockchain creates immutable distributed ledgers through cryptographic hashing",
+      "pattern": "blockchain immutable distributed",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5393,7 +6433,12 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "blockchain",
+        "cryptography",
+        "ledger"
+      ]
     },
     {
       "action_packet": "describe^3 | explain^2 | clarify^1",
@@ -5405,11 +6450,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Natural world observation active"
+        "system_prompt": "Natural world observation active. Grug walk among tall trees. Forests give oxygen and home for many creatures. Biodiversity is the wealth of the woods.",
+        "noun_anchors": [
+          "forests",
+          "habitat",
+          "oxygen"
+        ],
+        "voice_register": "observational",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781269678.067775,
       "neighbor_ids": [],
-      "pattern": "Forests provide habitat carbon storage oxygen production and biodiversity",
+      "pattern": "forests habitat oxygen",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5442,7 +6497,12 @@
       ],
       "strength": 7.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "forests",
+        "habitat",
+        "biodiversity"
+      ]
     },
     {
       "action_packet": "calculate^3 | explain^2 | reason^1",
@@ -5454,11 +6514,21 @@
       "is_image_node": false,
       "is_unlinkable": false,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning engine active"
+        "system_prompt": "Arithmetic reasoning engine active. Grug measure angles and sides of triangles. Grug know sine and cosine like old friends. The triangle reveals its truths.",
+        "noun_anchors": [
+          "trigonometry",
+          "angles",
+          "triangles"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781269678.01962,
       "neighbor_ids": [],
-      "pattern": "Trigonometry relates angles to side lengths in triangles using sine cosine tangent",
+      "pattern": "trigonometry triangles sine",
       "relation_weights": {},
       "relational_patterns": [
         {
@@ -5494,10 +6564,15 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "trigonometry",
+        "angles",
+        "triangles"
+      ]
     },
     {
-      "action_packet": "say^4 | repeat^4 | count^3 | tell^2 | check^2 | confirm^1 | compare^1 | verify^1 | search^1",
+      "action_packet": "reason^4 | reason^4 | calculate^3 | describe^2 | analyze^2 | validate^1 | analyze^1 | validate^1 | inquire^1",
       "drop_table": [
         "@sigil:doaction"
       ],
@@ -5509,9 +6584,19 @@
       "is_unlinkable": true,
       "json_data": {
         "sigil_kind": "doaction",
-        "system_prompt": "Action execution voice \u2014 verb-driven action scripting. When user says \"say X N times\", output is X repeated N times. When user says \"repeat X N times\", same thing. This is the ACTION lane \u2014 it WINS over knowledge nodes when action verbs are present.",
+        "system_prompt": "Action execution voice. Grug do what you say. Verb drive the action forward. Grug execute the command with precision.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "action",
+          "verb",
+          "execute"
+        ],
+        "voice_register": "terse",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781303724.4086072,
       "neighbor_ids": [],
@@ -5527,10 +6612,15 @@
       ],
       "strength": 9.0,
       "throttle": 0.3,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "doAction",
+        "action",
+        "command"
+      ]
     },
     {
-      "action_packet": "check^4 | tell^4 | remind^3 | announce^3 | recall^3 | search^2 | compute^1 | resolve^1",
+      "action_packet": "analyze^4 | describe^4 | describe^3 | notify^3 | describe^3 | inquire^2 | calculate^1 | reason^1",
       "drop_table": [
         "@sigil:doaction"
       ],
@@ -5542,9 +6632,19 @@
       "is_unlinkable": true,
       "json_data": {
         "sigil_kind": "doaction",
-        "system_prompt": "Action resolution voice \u2014 template-driven action with rest args. When user says \"check the date\", RESOLVE the date and SAY it. When user says \"tell the time\", RESOLVE the time and SAY it. This is the REFERENCE ACTION lane \u2014 it WINS when reference-checking verbs are present.",
+        "system_prompt": "Action resolution voice. Grug handle the template. Grug fill in the blanks and complete the action. Resolution is Grug's way of finishing.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "action",
+          "template",
+          "resolution"
+        ],
+        "voice_register": "terse",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781303724.4086185,
       "neighbor_ids": [],
@@ -5559,10 +6659,15 @@
       ],
       "strength": 9.0,
       "throttle": 0.3,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "doAction",
+        "rest",
+        "continuation"
+      ]
     },
     {
-      "action_packet": "affirm^4 | confirm^3 | agree^2 | endorse^1",
+      "action_packet": "validate^4 | validate^3 | support^2 | support^1",
       "drop_table": [],
       "grave_reason": "",
       "hopfield_key": "14324718443483339144",
@@ -5572,7 +6677,17 @@
       "is_unlinkable": false,
       "json_data": {
         "polarity_demonstration": "positive",
-        "system_prompt": "Positive polarity gate demo \u2014 context fire 1.0x \u2014 confident enthusiastic voice"
+        "system_prompt": "Positive polarity gate. Grug affirm and confirm. Grug agree with confidence. Yes is the answer Grug give.",
+        "noun_anchors": [
+          "positive",
+          "affirm",
+          "confirm"
+        ],
+        "voice_register": "warm",
+        "frame_hints": [
+          "warm",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781303724.4086258,
       "neighbor_ids": [],
@@ -5591,10 +6706,15 @@
       ],
       "strength": 6.0,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "positive",
+        "affirm",
+        "agree"
+      ]
     },
     {
-      "action_packet": "consider^3 | ponder^3 | reflect^2 | muse^1",
+      "action_packet": "ponder^3 | ponder^3 | ponder^2 | wonder^1",
       "drop_table": [],
       "grave_reason": "",
       "hopfield_key": "18006345087914701595",
@@ -5604,7 +6724,17 @@
       "is_unlinkable": false,
       "json_data": {
         "polarity_demonstration": "neutral",
-        "system_prompt": "Neutral polarity gate demo \u2014 context attenuate 0.7x \u2014 measured reflective voice"
+        "system_prompt": "Neutral polarity gate. Grug consider and ponder without leaning. Grug reflect on both sides. Measured and careful is Grug's way here.",
+        "noun_anchors": [
+          "neutral",
+          "consider",
+          "ponder"
+        ],
+        "voice_register": "thoughtful",
+        "frame_hints": [
+          "contemplative",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781303724.4086313,
       "neighbor_ids": [],
@@ -5623,10 +6753,15 @@
       ],
       "strength": 4.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "neutral",
+        "consider",
+        "reflect"
+      ]
     },
     {
-      "action_packet": "deny^4 | refuse^3 | reject^2 | suppress^1",
+      "action_packet": "flag^4 | flag^3 | flag^2 | caution^1",
       "drop_table": [],
       "grave_reason": "",
       "hopfield_key": "10230703639177821011",
@@ -5636,7 +6771,17 @@
       "is_unlinkable": false,
       "json_data": {
         "polarity_demonstration": "negative",
-        "system_prompt": "Negative polarity gate demo \u2014 context suppress 0.3x \u2014 cautious guarded voice"
+        "system_prompt": "Negative polarity gate. Grug flag and refuse with caution. Grug deny what is wrong. No is sometimes the right answer.",
+        "noun_anchors": [
+          "negative",
+          "deny",
+          "refuse"
+        ],
+        "voice_register": "terse",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781303724.408635,
       "neighbor_ids": [],
@@ -5655,7 +6800,12 @@
       ],
       "strength": 2.5,
       "throttle": 0.5,
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "negative",
+        "deny",
+        "reject"
+      ]
     },
     {
       "id": "node_80",
@@ -5681,18 +6831,33 @@
         }
       ],
       "required_relations": [],
-      "action_packet": "branch^3 | test^2 | evaluate^1",
+      "action_packet": "reason^3 | analyze^2 | analyze^1",
       "hopfield_key": "8751346949589337341",
       "is_grave": false,
       "is_image_node": false,
       "is_unlinkable": false,
       "grave_reason": "",
       "json_data": {
-        "system_prompt": "Conditional operation test node active"
+        "system_prompt": "Conditional operation test node active. Grug think about IF and WHEN. Branching logic is how Grug decide. Condition guide the path Grug take.",
+        "noun_anchors": [
+          "conditional",
+          "branching",
+          "test"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781318359.919025,
       "response_times": [],
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "branching",
+        "conditional",
+        "test"
+      ]
     },
     {
       "id": "node_81",
@@ -5718,18 +6883,33 @@
         }
       ],
       "required_relations": [],
-      "action_packet": "resolve^3 | query^2 | merge^1",
+      "action_packet": "reason^3 | inquire^2 | reason^1",
       "hopfield_key": "2149017780087035335",
       "is_grave": false,
       "is_image_node": false,
       "is_unlinkable": false,
       "grave_reason": "",
       "json_data": {
-        "system_prompt": "Compound reference resolution test node active"
+        "system_prompt": "Compound reference resolution test node active. Grug untangle the many references. Multi-word phrase need careful parsing. Grug resolve each part to its meaning.",
+        "noun_anchors": [
+          "compound",
+          "reference",
+          "resolution"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781318359.9190297,
       "response_times": [],
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "resolution",
+        "compound",
+        "reference"
+      ]
     },
     {
       "id": "node_82",
@@ -5755,18 +6935,33 @@
         }
       ],
       "required_relations": [],
-      "action_packet": "tune^3 | adjust^2 | calibrate^1",
+      "action_packet": "reason^3 | reason^2 | calculate^1",
       "hopfield_key": "5875043331577603186",
       "is_grave": false,
       "is_image_node": false,
       "is_unlinkable": false,
       "grave_reason": "",
       "json_data": {
-        "system_prompt": "Per-lobe polarity sensitivity test node active"
+        "system_prompt": "Per-lobe polarity sensitivity test node active. Grug test how different lobes feel polarity. Each lobe respond different to positive and negative. Grug measure the sensitivity.",
+        "noun_anchors": [
+          "polarity",
+          "sensitivity",
+          "lobe"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781318359.9190326,
       "response_times": [],
-      "node_type": "voter"
+      "node_type": "voter",
+      "noun_anchors": [
+        "polarity",
+        "sensitivity",
+        "lobe"
+      ]
     },
     {
       "action_packet": "calculate^4 | reason^2 | analyze^1",
@@ -5780,9 +6975,19 @@
       "is_image_node": false,
       "is_unlinkable": true,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning voice",
+        "system_prompt": "Arithmetic reasoning voice. Grug compute the numbers. Grug add and subtract with care. Numbers are honest and true.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "math",
+          "calculate",
+          "number"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781363737.604282,
       "neighbor_ids": [],
@@ -5798,7 +7003,12 @@
       ],
       "strength": 9.5,
       "throttle": 0.5,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "arithmetic",
+        "math",
+        "operation"
+      ]
     },
     {
       "action_packet": "calculate^4 | reason^2 | ponder^1",
@@ -5812,9 +7022,19 @@
       "is_image_node": false,
       "is_unlinkable": true,
       "json_data": {
-        "system_prompt": "Arithmetic reasoning voice",
+        "system_prompt": "Arithmetic reasoning voice. Grug figure the long sum. Grug work through each step. Numbers never lie to Grug.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "math",
+          "calculate",
+          "number"
+        ],
+        "voice_register": "precise",
+        "frame_hints": [
+          "imperative",
+          "terse"
+        ]
       },
       "ledger_last_cleared": 1781363737.6042888,
       "neighbor_ids": [],
@@ -5832,7 +7052,12 @@
       ],
       "strength": 9.0,
       "throttle": 0.5,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "arithmetic",
+        "math",
+        "operation"
+      ]
     },
     {
       "action_packet": "explain^4 | describe^2 | elaborate^1",
@@ -5846,9 +7071,19 @@
       "is_image_node": false,
       "is_unlinkable": true,
       "json_data": {
-        "system_prompt": "Multi-clause reasoning voice",
+        "system_prompt": "Multi-clause reasoning voice. Grug see more than one thing to talk about. Grug will speak on each part. Grug not forget any piece of what you ask.",
         "is_nochat": true,
-        "is_singleton": true
+        "is_singleton": true,
+        "noun_anchors": [
+          "multipart",
+          "compound",
+          "clause"
+        ],
+        "voice_register": "explanatory",
+        "frame_hints": [
+          "exploratory",
+          "plain"
+        ]
       },
       "ledger_last_cleared": 1781363737.6042917,
       "neighbor_ids": [],
@@ -5862,7 +7097,12 @@
       ],
       "strength": 8.0,
       "throttle": 0.5,
-      "node_type": "sigil"
+      "node_type": "sigil",
+      "noun_anchors": [
+        "conjunction",
+        "compound",
+        "multipart"
+      ]
     }
   ],
   "rules": [

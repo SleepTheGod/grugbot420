@@ -10,6 +10,27 @@
 # EXCEPT the final run_cli() call by including the component files directly.
 
 if !isdefined(Main, :CoinFlipHeader)
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
     include("../src/stochastichelper.jl")
 end
 using .CoinFlipHeader
@@ -73,7 +94,7 @@ function extract_aiml_memory_context()::String
     return "Deep Memory (Pinned): $pinned_str\nFresh Memory (Recent): $recent_str"
 end
 
-function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})
+function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})
     isempty(votes) && error("!!! FATAL: zero votes !!!")
     strip(mission) == "" && error("!!! FATAL: empty mission !!!")
     max_conf   = maximum(v.confidence for v in votes)
@@ -97,7 +118,7 @@ function ephemeral_aiml_orchestrator(mission::String, votes::Vector{Vote})
     return output, sure_votes, unsure_votes
 end
 
-function generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, all_votes, context)
+function synthesize_voice_reply(mission, primary_vote, sure_votes, unsure_votes, all_votes, context)
     !haskey(context, "system_prompt") && error("!!! FATAL: missing system_prompt !!!")
     system_prompt = context["system_prompt"]
     neg_str       = isempty(primary_vote.negatives) ? "None" : join(primary_vote.negatives, ", ")
@@ -106,7 +127,7 @@ function generate_aiml_payload(mission, primary_vote, sure_votes, unsure_votes, 
     unsure_str    = isempty(unsure_votes) ? "None" : join([v.action for v in unsure_votes], ", ")
 
     evaluated_rules = String[]
-    for rule in AIML_DROP_TABLE
+    for rule in ORCHESTRATION_RULES
         rand() > rule.fire_probability && continue
         processed = rule.text
         processed = replace(processed, "{MISSION}"        => mission)
@@ -174,37 +195,37 @@ for act in ["reason", "analyze", "ponder", "calculate"]
     COMMANDS[act] = (mission, node, pv, sv, uv, av) -> begin
         mission == "boom" && error("!!! intentional crash !!!")
         node.json_data["last_reason"] = mission
-        generate_aiml_payload(mission, pv, sv, uv, av, node.json_data)
+        synthesize_voice_reply(mission, pv, sv, uv, av, node.json_data)
     end
 end
 for act in ["greet", "welcome", "smile", "laugh"]
-    COMMANDS[act] = (mission, node, pv, sv, uv, av) -> generate_aiml_payload(mission, pv, sv, uv, av, node.json_data)
+    COMMANDS[act] = (mission, node, pv, sv, uv, av) -> synthesize_voice_reply(mission, pv, sv, uv, av, node.json_data)
 end
 for act in ["flee", "hide", "fight"]
     COMMANDS[act] = (mission, node, pv, sv, uv, av) -> begin
         reset_throttle!(node, 1.0)
-        generate_aiml_payload(mission, pv, sv, uv, av, node.json_data)
+        synthesize_voice_reply(mission, pv, sv, uv, av, node.json_data)
     end
 end
 # GRUG: explain/clarify/define/describe/elaborate now registered in the warning+empathy+explain blocks below.
 for act in ["warn", "alert", "caution", "notify", "flag"]
     COMMANDS[act] = (mission, node, pv, sv, uv, av) -> begin
         reset_throttle!(node, 1.0)
-        generate_aiml_payload(mission, pv, sv, uv, av, node.json_data)
+        synthesize_voice_reply(mission, pv, sv, uv, av, node.json_data)
     end
 end
 # GRUG: Empathy family — matches Main.jl registration
 for act in ["comfort", "support", "validate", "acknowledge", "reassure"]
     COMMANDS[act] = (mission, node, pv, sv, uv, av) -> begin
         reset_throttle!(node, 0.5)
-        generate_aiml_payload(mission, pv, sv, uv, av, node.json_data)
+        synthesize_voice_reply(mission, pv, sv, uv, av, node.json_data)
     end
 end
 # GRUG: Explain family — matches Main.jl registration
 for act in ["explain", "clarify", "describe", "define", "elaborate"]
     COMMANDS[act] = (mission, node, pv, sv, uv, av) -> begin
         reset_throttle!(node, 0.7)
-        generate_aiml_payload(mission, pv, sv, uv, av, node.json_data)
+        synthesize_voice_reply(mission, pv, sv, uv, av, node.json_data)
     end
 end
 
@@ -244,7 +265,7 @@ function process_mission(mission_text::String)
         push!(cast_votes, cast_vote(id, conf, is_antimatch, u_trips, n_trips))
     end
 
-    output, sure_votes, unsure_votes = ephemeral_aiml_orchestrator(mission_text, cast_votes)
+    output, sure_votes, unsure_votes = ephemeral_voice_orchestrator(mission_text, cast_votes)
     t_elapsed = time() - t_start
 
     # Merge sure and unsure votes - these are the contributors
@@ -391,7 +412,7 @@ add_orchestration_rule!("Memory context: {MEMORY}. [prob=0.4]")
 add_orchestration_rule!("Input '{MISSION}' analyzed. Primary route confirmed: {PRIMARY_ACTION}. [prob=0.85]")
 add_orchestration_rule!("All candidate actions: [{ALL_ACTIONS}]. [prob=0.5]")
 
-println("✅ $(length(AIML_DROP_TABLE)) rules loaded.\n")
+println("✅ $(length(ORCHESTRATION_RULES)) rules loaded.\n")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SYNONYM + VERB REGISTRY SETUP

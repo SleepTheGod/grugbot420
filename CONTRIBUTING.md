@@ -4,6 +4,11 @@ Thanks for your interest in contributing! 🪨
 
 ## Getting Started
 
+
+<!-- ⚠️ ARCHITECTURE REMINDERS ⚠️ -->
+<!-- 1. ANTIMATCH NODES WERE REMOVED — do not reference, implement, or assume they exist -->
+<!-- 2. SIGILS CAN APPEAR IN RELATIONAL TRIPLES — triples are dynamic, not just literal strings -->
+<!-- 3. HOPFIELD CACHING WAS REMOVED — hopfield_key is a dead field for specimen compat only -->
 1. **Fork** the repository
 2. **Clone** your fork: `git clone https://github.com/YOUR_USERNAME/grugbot420.git`
 3. **Install** Julia 1.9+: [julialang.org/downloads](https://julialang.org/downloads/)

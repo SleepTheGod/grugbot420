@@ -4,6 +4,11 @@
 **Version:** v7.24 EphemeralMLP Transformer  
 **Format:** grugbot420-specimen-v2.7
 
+
+<!-- ⚠️ ARCHITECTURE REMINDERS ⚠️ -->
+<!-- 1. ANTIMATCH NODES WERE REMOVED — do not reference, implement, or assume they exist -->
+<!-- 2. SIGILS CAN APPEAR IN RELATIONAL TRIPLES — triples are dynamic, not just literal strings -->
+<!-- 3. HOPFIELD CACHING WAS REMOVED — hopfield_key is a dead field for specimen compat only -->
 ---
 
 ## What Is a Specimen?

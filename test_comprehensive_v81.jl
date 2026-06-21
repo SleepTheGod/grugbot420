@@ -2,6 +2,27 @@
 # test_comprehensive_v81.jl — Full growth & learning systems test
 # Uses same include pattern as working test_arithmetic_fix.jl
 using Pkg; Pkg.instantiate()
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 using Dates
 
 include("src/GrugBot420.jl")
@@ -11,7 +32,7 @@ import .GrugBot420:
     process_mission, load_specimen_from_file!,
     add_message_to_history!, cast_vote, create_node,
     get_node_status_summary, get_bridge_summary,
-    _LAST_AIML_OUTPUT, _LAST_AIML_OUTPUT_LOCK,
+    _LAST_VOICE_OUTPUT, _LAST_VOICE_OUTPUT_LOCK,
     _LAST_FIRED_NODE, _LAST_PRIMARY_ACTION, _LAST_CONFIDENCE,
     NODE_MAP, NODE_LOCK,
     maybe_run_idle, save_specimen_to_file!
@@ -20,7 +41,7 @@ const LOG_PATH = joinpath(@__DIR__, "test_log_v81.md")
 const SPEC_PATH = joinpath(@__DIR__, "comprehensive_specimen_v81.json")
 
 function read_last_output()::String
-    lock(_LAST_AIML_OUTPUT_LOCK) do; _LAST_AIML_OUTPUT[]; end
+    lock(_LAST_VOICE_OUTPUT_LOCK) do; _LAST_VOICE_OUTPUT[]; end
 end
 
 function alive_count()::Int
@@ -46,7 +67,7 @@ function decoherence_flags(output::String)::Vector{String}
 end
 
 function run_mission(text::String)
-    lock(_LAST_AIML_OUTPUT_LOCK) do; _LAST_AIML_OUTPUT[]=""; end
+    lock(_LAST_VOICE_OUTPUT_LOCK) do; _LAST_VOICE_OUTPUT[]=""; end
     t = @elapsed begin; try; process_mission(text); catch e; @warn "err: $e"; end; end
     resp = read_last_output()
     return (resp, t)

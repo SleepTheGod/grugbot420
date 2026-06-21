@@ -4,6 +4,27 @@
 #        (2) lobe alignment via score_lobes integration
 #        (3) correct lobe routing for compound inputs
 using Pkg; Pkg.instantiate()
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 using Dates
 
 include("src/GrugBot420.jl")
@@ -11,7 +32,7 @@ using .GrugBot420
 
 import .GrugBot420:
     process_mission, load_specimen_from_file!,
-    _LAST_AIML_OUTPUT, _LAST_AIML_OUTPUT_LOCK,
+    _LAST_VOICE_OUTPUT, _LAST_VOICE_OUTPUT_LOCK,
     _LAST_FIRED_NODE, _LAST_PRIMARY_ACTION, _LAST_CONFIDENCE,
     NODE_MAP, NODE_LOCK, save_specimen_to_file!,
     current_promotion_bindings, get_multipart_bindings,
@@ -24,7 +45,7 @@ const SPEC_PATH = joinpath(@__DIR__, "comprehensive_specimen_v81.json")
 const LOG_PATH = joinpath(@__DIR__, "test_log_v81.md")
 
 function read_last_output()::String
-    lock(_LAST_AIML_OUTPUT_LOCK) do; _LAST_AIML_OUTPUT[]; end
+    lock(_LAST_VOICE_OUTPUT_LOCK) do; _LAST_VOICE_OUTPUT[]; end
 end
 
 # Track results for MD log
@@ -42,7 +63,7 @@ struct TestResult
 end
 
 function run_test(input::String; expect_math::Bool=false, expect_lobe::String="", label::String="")::TestResult
-    lock(_LAST_AIML_OUTPUT_LOCK) do; _LAST_AIML_OUTPUT[]=""; end
+    lock(_LAST_VOICE_OUTPUT_LOCK) do; _LAST_VOICE_OUTPUT[]=""; end
     try; process_mission(input); catch e; @warn "process_mission error: $e"; end
     resp = read_last_output()
 
@@ -170,8 +191,8 @@ function main()
     println(log_io, "Total: $total | Passed: $passed_count | Failed: $failed_count")
     println(log_io, "")
     println(log_io, "## Fixes Applied")
-    println(log_io, "1. **Per-group binding stash** (engine.jl): `scan_and_expand` now stashes promotion bindings per multipart_group. `generate_aiml_payload` looks up bindings by primary_vote's group_id before falling back to global Ref.")
-    println(log_io, "2. **score_lobes integration** (Main.jl): `score_lobes()` is now called after cast_votes and before `ephemeral_aiml_orchestrator`. This populates `lobe_alignment` for all vote candidates.")
+    println(log_io, "1. **Per-group binding stash** (engine.jl): `scan_and_expand` now stashes promotion bindings per multipart_group. `synthesize_voice_reply` looks up bindings by primary_vote's group_id before falling back to global Ref.")
+    println(log_io, "2. **score_lobes integration** (Main.jl): `score_lobes()` is now called after cast_votes and before `ephemeral_voice_orchestrator`. This populates `lobe_alignment` for all vote candidates.")
     println(log_io, "3. **Per-group lobe scoring** (Main.jl + engine.jl): For multipart inputs, `score_lobes` runs per group so each sub-subject gets its own winner/passthrough lobes. Votes use their group's lobe state for alignment computation.")
     println(log_io, "4. **Per-group peak_dominance** (Main.jl): Peak dominance uses per-group lobe_base_map for multipart votes.")
     println(log_io, "")

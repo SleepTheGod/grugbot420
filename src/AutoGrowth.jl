@@ -55,6 +55,30 @@
 
 module AutoGrowth
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 using Base.Threads: ReentrantLock
 
 # GRUG: Bring in sibling module SigilRegistry for verb→sigil reverse lookup.
@@ -65,6 +89,12 @@ using ..SigilRegistry
 # construct relational_patterns. Without this, UndefVarError(:RelationalTriple)
 # silently kills the relational pattern assignment block.
 import ..RelationalTriple
+
+# GRUG v8.2: Bring in InverseSigil for growth magnet (SOURCE 19).
+# Shape-cluster density is a genuinely new signal that the 18 existing sources
+# don't produce. The magnet clusters uncovered tokens by sigil shape, producing
+# stronger growth signals than treating each token as an unrelated atom.
+using ..InverseSigil
 
 # GRUG: Bring in sibling modules for node creation, sigil registration, etc.
 # These are injected as function kwargs — no `using` needed for the core module.
@@ -209,6 +239,25 @@ const LOBE_WHITELIST_GROWTH_RATE = 0.5
 # write to flashcard instead of growing a node. Flashcard growth is CHEAP.
 const FLASHCARD_GROWTH_RATE = 0.8
 
+# GRUG v8.2: Sigil voter node growth rate. These are NOCHAT, singleton, never
+# in growth groups. They're lighter than AIML but more specialized than match.
+# 0.5 = half the rate of regular match growth. Still cautious.
+const SIGIL_VOTER_GROWTH_RATE = 0.5
+
+# GRUG v8.2: Inverse voter node growth rate. Regular :voter nodes grown via
+# the inverse sigil magnet. These ARE chat-eligible and join groups, but
+# they're grown from shape-cluster evidence (stronger warrant than raw gap).
+# Same rate as regular match — the evidence bonus from the magnet already
+# makes them grow faster; no need to further adjust the coinflip.
+const INVERSE_VOTER_GROWTH_RATE = 1.0
+
+# GRUG v8.2: Concept dedup similarity floor. Before growing ANY node,
+# check if an existing node already covers the same concept. Uses thesaurus
+# synonym_lookup + word_similarity. If any existing pattern scores above
+# this floor, the growth is blocked as a duplicate. 0.7 = if "big" exists,
+# "large" (synonym=0.95) is blocked, but "huge" (sim~0.4) is allowed.
+const CONCEPT_DEDUP_FLOOR = 0.7
+
 # GRUG v10: Curiosity growth rate. When curiosity accumulator overflows,
 # it's very likely a real question should be asked. High rate.
 
@@ -345,6 +394,8 @@ function accumulate_evidence!(;
     evaluate_dialectics_fn::Union{Function,Nothing} = nothing,
     node_map = nothing,
     node_lock = nothing,
+    # GRUG v8.2: Lobe-qualified answer hint from "science: answer" prefix
+    lobe_hint::String = "",
 )
     isempty(strip(user_text)) && return nothing
 
@@ -783,6 +834,49 @@ function accumulate_evidence!(;
     end
 
 
+
+    # ── SOURCE 19: INVERSE SIGIL MAGNET — shape-cluster density ──────────────
+    # GRUG v8.2: The inverse sigil list clusters uncovered tokens by sigil shape.
+    # Instead of treating each uncovered token as an unrelated atom (SOURCE 1),
+    # this groups them: "cat" and "dog" are both concretes under &noun, so they
+    # produce a COMBINED signal stronger than two unrelated atoms would.
+    #
+    # How it works:
+    #   1. Call InverseSigil.feed_evidence!() which scans user text for tokens
+    #      that match sigil shapes and clusters uncovered tokens by shape.
+    #   2. feed_evidence!() returns a list of (pattern, intensity_bonus, source,
+    #      growth_type, route) tuples.
+    #   3. For each tuple, add evidence to the accumulator with the magnet's bonus.
+    #   4. The magnet bonus is STRONGER than plain SOURCE 1 because it reflects
+    #      shape-cluster density — related observations are grouped, not scattered.
+    #   5. Petty growth routes (sigil lexicon entries, verb registrations) are
+    #      dispatched at growth time, not accumulation time.
+    #
+    # This is the KEY insight: the inverse sigil list acts as a GROWTH MAGNET.
+    # More concretes under a sigil shape = stronger pull toward growth.
+    try
+        inv_results = InverseSigil.feed_evidence!(;
+            sigil_table_entries = sigil_table_entries,
+            user_text = user_text,
+            node_patterns = node_patterns,
+            intensity = intensity,
+            lobe_hint = lobe_hint,
+        )
+        if !isempty(inv_results)
+            for result in inv_results
+                # GRUG v8.2: Prefer explicit lobe prefix ("science: answer") over inference
+                _lobe = isempty(result.lobe_hint) ? _infer_lobe_from_token(result.pattern) : result.lobe_hint
+                _add_evidence!(result.pattern, result.intensity_bonus,
+                              result.source, result.growth_type;
+                              lobe_hint = _lobe)
+            end
+        end
+    catch
+        # GRUG: SOURCE 19 is non-fatal. If the inverse sigil magnet fails,
+        # the other 18 sources still work fine.
+    end
+
+
     # ── CURIOSITY ACCUMULATION ─────────────────────────────────────────────
     # GRUG v10: Feed curiosity accumulator. Separate channel that overflows
     # into autonomous questions. Doesn't grow nodes - asks the USER.
@@ -905,6 +999,7 @@ function maybe_grow_from_evidence!(;
     immune_gate_fn = nothing,
     thesaurus_gate_filter::Function,
     thesaurus_word_similarity::Function,
+    thesaurus_synonym_lookup::Union{Function,Nothing} = nothing,  # GRUG v8.2: seed-aware synonym check for concept dedup
     add_lobe_whitelist_fn = nothing,
     register_sigil_fn = nothing,
     register_thesaurus_pair_fn = nothing,
@@ -977,16 +1072,23 @@ function maybe_grow_from_evidence!(;
     #   intensity=12+ → p=0.25   (25% — capped, no higher)
     p_grow = min(best_record.accumulated_intensity / EVIDENCE_SCALE, GROWTH_COINFLIP_CAP)
 
-    # GRUG: Adjust rate by growth type. AIML nodes grow at 1/3 rate.
+    # GRUG: Adjust rate by growth type. AIML nodes now no-op (v8.12).
     # Antimatch nodes at 1/10 rate. These are heavier/riskier.
+    # Sigil voter nodes at 1/2 rate (NOCHAT singleton, specialized).
+    # Inverse voter nodes at full rate (magnet evidence already gives bonus).
     if best_record.growth_type == :aiml
-        p_grow *= AIML_GROWTH_RATE
+        # GRUG v8.12: AIMLNodeSystem removed — :aiml growth is no-op now.
+        # Still consume the growth_type so it doesn't fall through.
     elseif best_record.growth_type == :antimatch
         p_grow *= ANTIMATCH_GROWTH_RATE
     elseif best_record.growth_type == :lobe_whitelist
         p_grow = min(p_grow * LOBE_WHITELIST_GROWTH_RATE, GROWTH_COINFLIP_CAP)
     elseif best_record.growth_type == :flashcard
         p_grow = min(p_grow * FLASHCARD_GROWTH_RATE, GROWTH_COINFLIP_CAP)
+    elseif best_record.growth_type == :sigil_voter_node
+        p_grow *= SIGIL_VOTER_GROWTH_RATE
+    elseif best_record.growth_type == :inverse_voter_node
+        p_grow *= INVERSE_VOTER_GROWTH_RATE
     end
 
     won_coinflip = rand() < p_grow
@@ -1019,6 +1121,43 @@ function maybe_grow_from_evidence!(;
     lobe_hint = best_record.lobe_hint
     new_id = ""
     notes = ""
+
+    # ── GRUG v8.2: CONCEPT DEDUP GUARD ──────────────────────────────────────
+    # Before growing ANY node, check if an existing node already covers the
+    # same concept. The thesaurus knows that "big" and "large" are synonyms,
+    # so if a node for "big" exists, growing another for "large" is a waste.
+    # This guard uses both synonym_lookup (seed-aware, exact synonym matches)
+    # and word_similarity (trigram Jaccard for fuzzy matches).
+    # ─────────────────────────────────────────────────────────────────────────
+    if growth_type in (:match, :time, :antimatch, :sigil_voter_node, :inverse_voter_node)
+        # GRUG v8.2: Use synonym_lookup (seed-aware) for dedup when available.
+        # synonym_lookup catches "big"/"large" (0.95) where word_similarity misses (0.0).
+        # Falls back to word_similarity (trigram Jaccard) when no synonym_lookup provided.
+        _dedup_sim_fn = thesaurus_synonym_lookup !== nothing ? thesaurus_synonym_lookup : thesaurus_word_similarity
+        _dedup_blocked = _is_concept_duplicate(pattern, node_map, node_lock;
+                                                thesaurus_word_similarity = _dedup_sim_fn)
+        if _dedup_blocked
+            stats = AutoGrowthStats(
+                pattern,
+                string(growth_type),
+                best_record.accumulated_intensity,
+                best_record.frequency,
+                p_grow,
+                false,
+                "",
+                lobe_hint,
+                join(best_record.sources, ","),
+                "Concept dedup: '$pattern' already covered by existing node",
+                (time() - t0) * 1000,
+            )
+            _log_growth!(stats)
+            # GRUG: Remove the evidence — it's not a real gap, just a synonym.
+            lock(_EVIDENCE_LOCK) do
+                delete!(_EVIDENCE, best_key)
+            end
+            return stats
+        end
+    end
 
     # ── GRUG v10: MLP RULE HINT INFLUENCE ──────────────────────────
     # When the best evidence has generic growth_type=:match, MLP rules
@@ -1079,19 +1218,10 @@ function maybe_grow_from_evidence!(;
         )
 
     elseif growth_type == :aiml
-        # ── AIML NODE GROWTH ────────────────────────────────────────────
-        if stochastic_aiml_growth_fn !== nothing
-            try
-                result = stochastic_aiml_growth_fn(lobe_hint, pattern;
-                                                   data_warrant=best_record.accumulated_intensity / EVIDENCE_SCALE)
-                new_id = result !== nothing ? string(result.id) : ""
-                notes = "AIML auto-grown in $lobe_hint for '$pattern'"
-            catch e
-                notes = "AIML growth failed: $e"
-            end
-        else
-            notes = "AIML growth: no stochastic_aiml_growth_fn provided"
-        end
+        # ── AIML NODE GROWTH — NO-OP since v8.12 ──────────────────────────
+        # GRUG: AIMLNodeSystem removed in v8.12. The :aiml growth_type is kept
+        # in the enum for specimen backward-compat but does nothing at runtime.
+        notes = "AIML growth: no-op (AIMLNodeSystem removed v8.12)"
 
     elseif growth_type == :sigil
         # ── SIGIL EXPANSION GROWTH ──────────────────────────────────────
@@ -1168,6 +1298,92 @@ function maybe_grow_from_evidence!(;
             notes = "Flashcard growth: invalid pattern format '$pattern'"
         end
 
+    elseif growth_type == :sigil_voter_node
+        # ── SIGIL VOTER NODE GROWTH ──────────────────────────────────────
+        # GRUG v8.2: Grow a :sigil node_type node. NOCHAT, singleton, never
+        # in growth groups. Pattern is the sigil shape identifier.
+        # These nodes represent sigil SHAPES as first-class voting entities.
+        # e.g. &causal → a node whose pattern is "sigil:causal" that votes
+        # whenever causal language is detected, routing to the right response.
+        sig_pattern = startswith(pattern, "sigil:") ? pattern : "sigil:$pattern"
+        sig_action = _infer_action_packet_from_lobe(lobe_hint, lobe_registry;
+                                                      node_map=node_map, node_lock=node_lock)
+        sig_json = Dict{String, Any}(
+            "system_prompt"      => "Sigil anchor for &$pattern. Shape-cluster magnet grew this node.",
+            "lobe_hint"          => lobe_hint,
+            "voice_register"     => "plain",
+            "frame_hints"        => ["basic"],
+            "noun_anchors"       => [pattern],
+            "autogrowth_source"  => "inverse_sigil_magnet",
+            "autogrowth_born"    => string(round(time(), digits=3)),
+            "autogrowth_type"    => "sigil_voter_node",
+            "sigil_anchor"       => pattern,  # which sigil this node represents
+        )
+        try
+            new_id = create_node_fn(
+                sig_pattern,
+                sig_action,
+                sig_json,
+                String[];
+                initial_strength = 1.0,
+                node_type = :sigil,  # GRUG: :sigil = NOCHAT, singleton
+            )
+            if !isempty(new_id)
+                # GRUG: Register into lobe
+                if !isempty(lobe_registry) && haskey(lobe_registry, lobe_hint)
+                    rec = lobe_registry[lobe_hint]
+                    if hasproperty(rec, :node_ids) && !(new_id in rec.node_ids)
+                        push!(rec.node_ids, new_id)
+                    end
+                end
+                notes = "Sigil voter node grown: &$pattern (NOCHAT, singleton) in $lobe_hint"
+            end
+        catch e
+            notes = "Sigil voter node growth failed: $e"
+        end
+
+    elseif growth_type == :inverse_voter_node
+        # ── INVERSE VOTER NODE GROWTH ────────────────────────────────
+        # GRUG v8.2: Grow a regular :voter node from inverse sigil evidence.
+        # These ARE chat-eligible and join groups, unlike sigil voter nodes.
+        # The pattern comes from the magnet's concrete cluster — e.g. if
+        # &noun has concretes ["cat","dog","bird"], the pattern might be
+        # the strongest concrete token or a combined pattern.
+        # Falls through to _grow_node!() with the same logic as :match but
+        # with autogrowth_type tagged as "inverse_voter_node".
+        inv_json_extras = Dict{String, Any}(
+            "autogrowth_source"  => "inverse_sigil_magnet",
+            "autogrowth_type"    => "inverse_voter_node",
+        )
+        new_id, notes = _grow_node!(
+            pattern, :match, lobe_hint;  # use :match for _grow_node! dispatch
+            node_map=node_map, node_lock=node_lock,
+            create_node_fn=create_node_fn,
+            add_to_group_fn=add_to_group_fn,
+            register_group_fn=register_group_fn,
+            group_map=group_map, group_lock=group_lock,
+            lobe_registry=lobe_registry,
+            immune_gate_fn=immune_gate_fn,
+            thesaurus_word_similarity=thesaurus_word_similarity,
+            group_latch_fn=group_latch_fn,
+            link_to_group_member_fn=link_to_group_member_fn,
+            group_avg_strength_fn=group_avg_strength_fn,
+            group_for_fn=group_for_fn,
+            sigil_promote_fn=sigil_promote_fn,
+            extract_triples_fn=extract_triples_fn,
+            evaluate_dialectics_fn=evaluate_dialectics_fn,
+            words_to_signal_fn=words_to_signal_fn,
+            scan_latch_candidates_fn=scan_latch_candidates_fn,
+            user_text=user_text,
+            user_triples_from_evidence=best_record.user_triples,
+            verb_class_of_fn=verb_class_of_fn,
+            sigil_table=sigil_table,
+            extra_json_data=inv_json_extras,  # tag the node with inverse provenance
+        )
+        if !isempty(new_id)
+            notes = "Inverse voter node grown: '$pattern' in $lobe_hint (from sigil magnet)"
+        end
+
     else
         notes = "Unknown growth type: $growth_type"
     end
@@ -1200,6 +1416,98 @@ function maybe_grow_from_evidence!(;
 end
 
 # ==============================================================================
+# CONCEPT DEDUP — prevent growing nodes for concepts already covered
+# ==============================================================================
+# GRUG v8.2: Before growing ANY node, check if an existing alive node already
+# covers the same concept. "big" and "large" are the same idea — the thesaurus
+# knows this via word_similarity (trigram Jaccard) and synonym_lookup (seed-aware).
+# If any existing node's pattern scores above CONCEPT_DEDUP_FLOOR (0.7), the
+# candidate is a duplicate and growth is blocked.
+#
+# This only checks ALIVE nodes (is_grave == false). Dead nodes don't count —
+# they were killed for a reason (poor performance, low strength).
+# ==============================================================================
+
+"""
+    _is_concept_duplicate(pattern, node_map, node_lock; thesaurus_word_similarity) -> Bool
+
+Return `true` if any alive (non-grave) node in `node_map` has a pattern
+similar enough to `pattern` to be considered the same concept.
+
+Similarity is computed via the provided `thesaurus_word_similarity` function.
+When `synonym_lookup` is passed (the preferred option), it catches semantic
+synonyms like "big"/"large" (0.95 seed match) that plain `word_similarity`
+misses (0.0 trigram overlap). Falls back to `word_similarity` (trigram Jaccard)
+when no synonym_lookup is available.
+
+The floor is `CONCEPT_DEDUP_FLOOR` (0.7 by default). Patterns are compared
+word-by-word: if ANY word in the candidate pattern matches any word in an
+existing pattern above the floor, the whole pattern is considered covered.
+
+For single-word patterns (the common case for autogrowth), this is a direct
+similarity check. For multi-word patterns, we check word pairs and take
+the maximum similarity across all pairs.
+"""
+function _is_concept_duplicate(pattern::String, node_map, node_lock;
+                                thesaurus_word_similarity::Function)
+    candidate_words = split(lowercase(strip(pattern)), r"[\s_]+")
+    # GRUG: Filter out empty tokens from split
+    filter!(!isempty, candidate_words)
+
+    # GRUG: Empty pattern = can't be a duplicate of anything
+    if isempty(candidate_words)
+        return false
+    end
+
+    best_score = 0.0
+    best_match = ""
+
+    # GRUG: Thread-safe read of node_map. We only need to read, so a quick
+    # lock lets us snapshot the values without holding the lock too long.
+    all_nodes = lock(node_lock) do
+        collect(values(node_map))
+    end
+
+    for node in all_nodes
+        # GRUG: Skip grave nodes — they're dead and don't represent active concepts
+        if node.is_grave
+            continue
+        end
+
+        existing_words = split(lowercase(strip(node.pattern)), r"[\s_]+")
+        filter!(!isempty, existing_words)
+        if isempty(existing_words)
+            continue
+        end
+
+        # GRUG: Compare every candidate word against every existing word.
+        # Take the MAX similarity across all pairs. If any pair scores above
+        # CONCEPT_DEDUP_FLOOR, the concepts overlap enough to block growth.
+        for cw in candidate_words
+            for ew in existing_words
+                try
+                    sim = thesaurus_word_similarity(cw, ew)
+                    if sim > best_score
+                        best_score = sim
+                        best_match = node.pattern
+                    end
+                    if sim >= CONCEPT_DEDUP_FLOOR
+                        @debug "[AutoGrowth] Concept dedup: '$pattern' blocked by existing '$(node.pattern)' (sim=$(round(sim, digits=3)))"
+                        return true
+                    end
+                catch
+                    # GRUG: word_similarity can throw on empty/weird input — skip it
+                    continue
+                end
+            end
+        end
+    end
+
+    # GRUG: No existing node covers this concept. Safe to grow.
+    return false
+end
+
+# ==============================================================================
 # NODE GROWTH — internal helper for match/time/antimatch node creation
 # ==============================================================================
 
@@ -1215,7 +1523,8 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
                      user_text::String="",
                      user_triples_from_evidence::Vector{Tuple{String,String,String}}=Tuple{String,String,String}[],
                      verb_class_of_fn::Union{Function,Nothing}=nothing,
-                     sigil_table::Union{Any,Nothing}=nothing)
+                     sigil_table::Union{Any,Nothing}=nothing,
+                     extra_json_data::Union{Dict{String,Any},Nothing}=nothing)
     new_id = ""
     notes = ""
 
@@ -1234,6 +1543,14 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
         "autogrowth_born"   => string(round(time(), digits=3)),
         "autogrowth_type"   => string(growth_type),
     )
+
+    # GRUG v8.2: Merge extra_json_data if provided (e.g. inverse voter node provenance).
+    # Caller-supplied keys override defaults — the caller knows best what this node is.
+    if extra_json_data !== nothing
+        for (k, v) in extra_json_data
+            json_data[k] = v
+        end
+    end
 
     # GRUG: Time nodes get extra json_data
     if growth_type == :time
@@ -1692,6 +2009,7 @@ Strategy:
   - This makes autogrown nodes relational-aware from birth
 """
 function _compute_relational_patterns_from_triples(
+# REMINDER: relational_patterns may contain sigil tokens (&n, &op etc) — dynamic evaluation at match time.
     user_triples::Vector{Tuple{String,String,String}},
     pattern::String;
     verb_class_of_fn::Union{Function,Nothing}=nothing,

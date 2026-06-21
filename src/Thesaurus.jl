@@ -5,6 +5,30 @@
 # GRUG say: NEW - gate filter! Give Grug input tokens, get back expanded set for better scan matching.
 
 module Thesaurus
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 
 # ============================================================================
 # CONSTANTS - GRUG like numbers in one place, easy to change later
@@ -79,86 +103,146 @@ const _SEED_SYNONYMS_RAW = [
     ("small",       ["tiny", "little", "miniature", "minute", "compact", "petite"]),
     ("strong",      ["powerful", "mighty", "robust", "sturdy", "tough", "solid"]),
     ("weak",        ["feeble", "frail", "fragile", "delicate", "powerless"]),
-    ("hard",        ["difficult", "tough", "challenging", "arduous", "strenuous"]),
+    ("hard",        ["difficult", "tough", "challenging", "rough", "demanding"]),
     ("easy",        ["simple", "effortless", "straightforward", "trivial", "basic"]),
     ("hot",         ["warm", "scorching", "burning", "fiery", "boiling"]),
     ("cold",        ["cool", "freezing", "icy", "chilly", "frigid"]),
 
     # Actions / verbs
-    ("run",         ["sprint", "dash", "jog", "race", "rush"]),
+    # run removed — "Grug run it" → "Grug dash/sprint it" is wrong-domain for action voice
+    # ("run",         ["sprint", "dash", "jog", "race", "rush"]),
     ("walk",        ["stroll", "march", "stride", "wander", "trek"]),
-    ("look",        ["see", "observe", "watch", "view", "examine", "inspect"]),
-    ("talk",        ["speak", "say", "tell", "chat", "converse", "discuss"]),
-    ("think",       ["consider", "ponder", "reflect", "contemplate", "reason"]),
-    ("make",        ["create", "build", "construct", "produce", "form", "craft"]),
-    ("get",         ["obtain", "acquire", "receive", "gain", "fetch", "retrieve"]),
-    ("give",        ["provide", "supply", "offer", "grant", "deliver", "hand"]),
-    ("find",        ["discover", "locate", "detect", "uncover", "identify"]),
-    ("use",         ["employ", "apply", "utilize", "operate", "leverage"]),
+    # v7.40: removed "see", "observe", "watch" (cross-links with see/watch entries cause
+    # bidirectional explosion — "look" in voice_body swaps to entire see+watch cluster)
+    # Also removed "inspect", "examine" (analytical, not perceptual)
+    ("look",        ["view", "examine", "inspect"]),
+    # talk/say/etc removed — "say" is core grug voice; swapping "say"→"converse"/"chat"
+    # produces decoherent academic tone. Synonyms too formal for voice_body.
+    # ("talk",        ["speak", "say", "tell", "chat", "converse", "discuss"]),
+    # think removed — "think" is core grug voice; "Grug sit and reason/contemplate" 
+    # is academic decoherence. The voice should stay simple.
+    # ("think",       ["consider", "ponder", "reflect", "contemplate", "reason"]),
+    # make removed — "make space" → "fashion space" is wrong-domain decoherence
+    # ("make",        ["create", "build", "craft", "fashion", "shape", "forge"]),
+    # v7.40: removed "retrieve" (cross-link with load), "fetch" (cross-link with load)
+    ("get",         ["obtain", "acquire", "gain"]),
+    # v7.40: removed "bestow" (archaic — "Grug give" → "Grug bestow" is decoherent)
+    ("give",        ["provide", "offer", "grant", "deliver", "hand"]),
+    # v7.40: removed "detect" (techy), "identify" (formal), "uncover" (archaic in voice context)
+    ("find",        ["discover", "locate"]),
+    # v7.40: removed "utilize" (corporate jargon), "leverage" (business jargon),
+    # "employ" (formal for grug voice)
+    ("use",         ["apply", "operate"]),
     ("fix",         ["repair", "mend", "correct", "patch", "restore", "resolve"]),
     ("break",       ["shatter", "crack", "destroy", "damage", "ruin", "fracture"]),
-    ("start",       ["begin", "initiate", "launch", "commence", "trigger"]),
-    ("stop",        ["end", "halt", "cease", "terminate", "finish", "quit"]),
-    ("help",        ["assist", "support", "aid", "serve", "facilitate"]),
+    # v7.40: removed "commence" (overly formal), "embark" (nautical metaphor)
+    ("start",       ["begin", "initiate", "launch"]),
+    ("stop",        ["end", "halt", "cease", "finish", "quit"]),
+    # v7.40: removed "facilitate" (corporate jargon)
+    ("help",        ["assist", "support", "aid", "serve"]),
     ("need",        ["require", "want", "demand", "lack", "desire"]),
-    ("show",        ["display", "present", "reveal", "demonstrate", "exhibit"]),
-    ("know",        ["understand", "grasp", "comprehend", "recognize", "realize"]),
-    ("try",         ["attempt", "endeavor", "strive", "test", "experiment"]),
-    ("move",        ["shift", "transfer", "transport", "relocate", "migrate"]),
+    # v7.40: removed "demonstrate", "illustrate" (academic — "Grug show" → "Grug demonstrate" is formal)
+    ("show",        ["display", "present", "reveal"]),
+    # know removed — "What Grug knows" → "What Grug comprehends" is academic decoherence
+    # ("know",        ["understand", "grasp", "comprehend", "recognize", "realize"]),
+    # v7.40: removed "endeavor" (archaic/formal), "strive" (overly earnest for grug)
+    ("try",         ["attempt", "test", "experiment"]),
+    # v7.40: removed "relocate" (corporate), "migrate" (technical), "transport" (logistics)
+    ("move",        ["shift", "transfer"]),
 
     # Common nouns
-    ("house",       ["home", "dwelling", "residence", "building", "place"]),
+    # v7.40: removed "residence" (too formal), "building" (wrong-domain —
+    # "shelter" in voice_body is survival concept, not real estate)
+    ("house",       ["home", "dwelling", "shelter"]),
     ("car",         ["vehicle", "auto", "automobile", "ride", "truck"]),
     ("food",        ["meal", "dish", "cuisine", "nourishment", "sustenance"]),
-    ("water",       ["liquid", "fluid", "drink", "beverage"]),
+    # water removed — "water" → "beverage"/"fluid" in voice_body is contextually wrong
+    # ("water",       ["liquid", "fluid", "drink", "beverage"]),
     ("money",       ["cash", "currency", "funds", "finance", "capital"]),
     ("job",         ["work", "career", "occupation", "profession", "employment"]),
     ("problem",     ["issue", "challenge", "difficulty", "obstacle", "trouble"]),
-    ("answer",      ["response", "reply", "solution", "result", "outcome"]),
-    ("idea",        ["concept", "notion", "thought", "proposal", "plan"]),
+    # v7.40: removed "outcome", "output", "product" (wrong-domain — "answer" → "output/product"
+    # is tech jargon decoherence in voice_body)
+    ("answer",      ["response", "reply", "solution", "result"]),
+    # v7.40: removed "thought" (bidirectional link: "idea"↔"thought" causes "Grug thought"
+    # → "Grug concept/notion" and back-swaps "thought"→"proposal/plan" — wrong-domain for inner monologue)
+    ("idea",        ["concept", "notion", "proposal", "plan"]),
     ("plan",        ["strategy", "scheme", "approach", "method", "design"]),
     ("error",       ["mistake", "fault", "bug", "flaw", "defect", "failure"]),
     ("data",        ["information", "info", "facts", "records", "stats"]),
     ("test",        ["check", "verify", "validate", "examine", "assess"]),
     ("system",      ["framework", "structure", "platform", "architecture"]),
     ("input",       ["query", "request", "prompt", "signal", "message"]),
-    ("output",      ["result", "response", "reply", "answer", "product"]),
+    # v7.40: removed "answer" (cross-link with answer entry), "product" (wrong-domain —
+    # "output" → "product" is manufacturing jargon), "reply" (cross-link with answer/reply)
+    ("output",      ["result", "response"]),
 
     # Tech / AI adjacent
     ("learn",       ["train", "study", "adapt", "improve", "evolve"]),
     ("predict",     ["forecast", "estimate", "infer", "anticipate", "project"]),
     ("match",       ["fit", "align", "correspond", "map", "pair", "link"]),
-    ("search",      ["find", "scan", "query", "look", "seek", "explore"]),
-    ("connect",     ["link", "join", "wire", "attach", "bind", "associate"]),
-    ("store",       ["save", "persist", "cache", "record", "keep", "archive"]),
-    ("load",        ["read", "fetch", "retrieve", "import", "open"]),
+    ("search",      ["scan", "query", "seek", "explore", "hunt", "probe"]),
+    # v7.40: removed "couple" (wrong-domain romantic connotation), "associate" (academic)
+    ("connect",     ["link", "join", "bind", "unite"]),
+    ("store",       ["save", "cache", "record", "keep", "archive", "stash"]),
+    # v7.40: removed "import" (ambiguous — "import" in programming ≠ "import" as significance),
+    # "retrieve" (cross-link with receive entry)
+    ("load",        ["read", "fetch", "open"]),
+    # v7.40: removed "dispatch", "transmit", "route" (wrong-domain — "forward" in
+    # voice_body is usually preposition "move forward", not verb "forward a message")
     ("send",        ["transmit", "dispatch", "route", "forward", "push"]),
-    ("receive",     ["get", "accept", "collect", "obtain", "pull"]),
-    ("delete",      ["remove", "erase", "purge", "drop", "clear", "wipe"]),
+    # v7.40: removed "get" (cross-link with get entry — bidirectional explosion),
+    # "collect" (cross-link with accumulate), "obtain" (cross-link with get),
+    # "pull" (wrong-domain for "receive")
+    ("receive",     ["accept"]),
+    ("delete",      ["remove", "erase", "purge", "drop", "wipe"]),
 
     # Science domain — bridging lab/research vocabulary
-    ("hypothesis",  ["theory", "conjecture", "assumption", "postulate", "supposition"]),
-    ("experiment",  ["test", "trial", "study", "investigation", "procedure"]),
+    # v7.40: removed "conjecture", "postulate", "supposition" (academic science terms
+    # that would decohere voice_body — "hypothesis" → "postulate" is wrong register)
+    ("hypothesis",  ["theory", "assumption"]),
+    # v7.41: removed "investigation", "procedure" (bureaucratic — "Grug experiment" →
+    # "Grug investigation/procedure" is wrong register)
+    ("experiment",  ["test", "trial", "study"]),
     ("observe",     ["measure", "detect", "monitor", "record", "track"]),
     ("analyze",     ["examine", "study", "evaluate", "assess", "investigate"]),
-    ("energy",      ["power", "force", "charge", "capacity", "potential"]),
+    ("energy",      ["power", "force", "vigor", "vitality", "stamina"]),
     ("matter",      ["substance", "material", "mass", "stuff", "element"]),
     ("evolve",      ["develop", "adapt", "change", "mutate", "transform", "progress"]),
-    ("cause",       ["trigger", "produce", "generate", "induce", "create", "lead"]),
-    ("effect",      ["result", "outcome", "consequence", "impact", "product"]),
+    ("cause",       ["trigger", "produce", "generate", "induce"]),
+    # v7.40: removed "outcome" (cross-link with answer), "product" (cross-link with output),
+    # "consequence" (formal/negative connotation)
+    ("effect",      ["result", "impact"]),
     ("measure",     ["quantify", "gauge", "assess", "calculate", "evaluate"]),
 
     # Philosophy domain — bridging abstract reasoning vocabulary
-    ("truth",       ["fact", "reality", "validity", "actuality", "verity"]),
-    ("knowledge",   ["understanding", "insight", "wisdom", "awareness", "cognition"]),
-    ("belief",      ["conviction", "opinion", "view", "stance", "position", "faith"]),
-    ("logic",       ["reasoning", "rationale", "deduction", "inference", "argument"]),
-    ("exist",       ["be", "live", "occur", "subsist", "persist", "remain"]),
-    ("consciousness", ["awareness", "perception", "sentience", "mindfulness", "cognition"]),
-    ("ethical",     ["moral", "principled", "righteous", "virtuous", "just"]),
-    ("abstract",    ["theoretical", "conceptual", "intangible", "hypothetical", "notional"]),
-    ("argue",       ["debate", "reason", "contend", "assert", "claim", "posit"]),
-    ("question",    ["query", "inquiry", "challenge", "doubt", "interrogate", "probe"]),
+    # v7.40: removed "verity" (archaic/academic — "Grug truth" → "Grug verity" is decoherent)
+    ("truth",       ["certainty", "reality"]),
+    # v7.40: removed "data", "information", "intelligence", "signal" (wrong-domain —
+    # "knowledge" → "data/signal" is tech jargon; "intelligence" is military jargon)
+    ("knowledge",   ["insight", "wisdom", "awareness"]),
+    # v7.41: removed "conviction" (legal/formal), "stance" (debate jargon),
+    # "position" (bureaucratic) — "Grug belief" → "Grug conviction/stance" is wrong register
+    ("belief",      ["opinion", "view", "faith"]),
+    # v7.41: removed "rationale" (academic/corporate), "deduction" (academic logic),
+    # "inference" (academic logic) — "Cold rationale" / "Grug inference" decoheres voice
+    ("logic",       ["reasoning", "argument"]),
+    # v7.40: removed "subsist" (archaic — "Grug exist" → "Grug subsist" is decoherent)
+    ("exist",       ["live", "occur", "remain", "survive"]),
+    # v7.40: removed "cognition" (academic), "sentience" (philosophical jargon),
+    # "mindfulness" (buzzword). "consciousness" → "sentience" in voice_body is wrong register.
+    ("consciousness", ["awareness", "perception"]),
+    # v7.41: removed "principled", "virtuous", "honorable", "upright" (moralistic/elevated —
+    # "Grug ethical" → "Grug virtuous/upright" is sermon register, not grug voice)
+    ("ethical",     ["moral"]),
+    # v7.41: removed "conceptual", "hypothetical" (both academic — no safe synonyms remain)
+    # ("abstract",    ["conceptual", "hypothetical"]),
+    # v7.40: removed "contend", "assert" (formal/legal — "Grug argue" → "Grug contend/assert"
+    # is wrong register for grug voice)
+    ("argue",       ["debate", "claim"]),
+    # v7.40: removed "interrogate" (too formal — "Grug question" → "Grug interrogate" is decoherent)
+    # v7.41: removed "inquiry" (formal/bureaucratic — "Grug question" → "Grug inquiry" is wrong register)
+    ("question",    ["query", "challenge", "doubt", "probe"]),
 
     # ========================================================================
     # GRUG v7.38: DOMAIN EXPANSION — math, survival, emotion, creativity,
@@ -168,124 +252,525 @@ const _SEED_SYNONYMS_RAW = [
     # ========================================================================
 
     # Math / calculus / science domain
-    ("compute",         ["calculate", "reckon", "derive", "determine", "figure", "tally"]),
-    ("derivative",      ["gradient", "rate of change", "slope", "differential", "marginal", "instantaneous change"]),
-    ("integral",        ["antiderivative", "accumulation", "summation", "aggregate", "total"]),
-    ("theorem",         ["proposition", "formula", "principle", "law", "result", "corollary"]),
-    ("calculus",        ["analysis", "differential calculus", "mathematical reasoning"]),
-    ("function",        ["mapping", "transformation", "relation", "curve", "formula"]),
+    # v7.40: removed "derive" (academic math term), "reckon" (archaic/dialect)
+    ("compute",         ["calculate", "determine", "figure", "tally"]),
+    # v7.40: removed multi-word synonyms that garble voice_body
+    # v7.41: removed "differential", "marginal" (academic math — wrong register for grug voice)
+    ("derivative",      ["gradient", "slope"]),
+    # v7.40: removed "antiderivative" (cross-domain math contamination — "total" in
+    # voice_body → "antiderivative" is catastrophic decoherence)
+    # v7.41: removed "accumulation", "summation", "aggregate" (academic math —
+    # "Grug integral" → "Grug accumulation/summation" is wrong register)
+    ("integral",        ["total"]),
+    # v7.41: removed "proposition", "corollary" (academic math — "Grug theorem" →
+    # "Grug proposition/corollary" is wrong register)
+    ("theorem",         ["formula", "principle", "law", "result"]),
+    # v7.40: removed multi-word synonyms that garble voice_body
+    ("calculus",        ["analysis"]),
+    # v7.41: removed "mapping", "transformation" (academic math — "Grug function" →
+    # "Grug mapping/transformation" is wrong register)
+    ("function",        ["relation", "curve", "formula"]),
     ("slope",           ["gradient", "incline", "steepness", "pitch", "tilt"]),
     ("area",            ["region", "zone", "expanse", "surface", "territory"]),
-    ("equation",        ["formula", "expression", "equality", "identity", "relation"]),
-    ("solve",           ["resolve", "work out", "figure out", "crack", "untangle"]),
+    # v7.41: removed "expression", "equality", "identity" (academic math — "Grug equation"
+    # → "Grug identity" or "Grug equality" is wrong-domain for grug voice)
+    ("equation",        ["formula", "relation"]),
+    # v7.40: removed multi-word synonyms ("work out", "figure out") that garble voice_body
+    ("solve",           ["resolve", "crack", "untangle"]),
     ("number",          ["figure", "digit", "value", "quantity", "amount"]),
-    ("triangle",        ["three-sided figure", "trigon", "three-angle"]),
-    ("geometry",        ["spatial reasoning", "shape theory", "topology"]),
-    ("mathematics",     ["math", "calc", "numbers", "quantitative reasoning"]),
+    # v7.40: removed multi-word synonyms that garble voice_body
+    ("triangle",        ["trigon", "three-angle"]),
+    # v7.40: removed multi-word synonyms that garble voice_body
+    # v7.41: removed "topology" (wrong-domain — topology ≠ geometry, and academic math term)
+    # No safe single-word synonyms for geometry that fit grug voice. Commenting out.
+    # ("geometry",        ["topology"]),
+    # v7.40: removed "quantitative reasoning" (multi-word swap garbles voice_body)
+    ("mathematics",     ["math", "calc", "numbers"]),
 
     # Survival / danger / combat domain
-    ("survive",         ["endure", "persist", "outlast", "weather", "withstand"]),
-    ("survival",        ["endurance", "persistence", "preservation", "staying alive"]),
-    ("danger",          ["peril", "hazard", "threat", "jeopardy", "menace", "risk"]),
-    ("flee",            ["escape", "retreat", "withdraw", "bolt", "run", "scram"]),
-    ("hide",            ["conceal", "secrete", "camouflage", "cover", "shroud", "vanish"]),
-    ("concealment",     ["hiding", "stealth", "cover", "camouflage", "secrecy", "disguise"]),
-    ("stealth",         ["secrecy", "quietness", "cover", "concealment", "cunning"]),
+    ("survive",         ["endure", "outlast", "weather", "withstand", "prevail"]),
+    ("survival",        ["endurance", "persistence", "preservation"]),
+    # v7.41: removed "jeopardy", "menace" (legal/elevated — "Grug danger" → "Grug jeopardy/menace"
+    # is wrong register). "peril" is borderline but acceptable in survival context.
+    ("danger",          ["peril", "hazard", "threat", "risk"]),
+    # v7.40: removed "abscond" (archaic/legal — "Grug flee" → "Grug abscond" is wrong register)
+    ("flee",            ["escape", "retreat", "withdraw", "bolt", "scram"]),
+    # v7.40: removed "secrete" (biological/archaic — "Grug hide" → "Grug secrete" is wrong register)
+    ("hide",            ["conceal", "camouflage", "cover", "shroud", "vanish"]),
+    # v7.40: removed "disguise" (cross-domain), "secrecy" (cross-link with stealth)
+    ("concealment",     ["hiding", "stealth", "cover", "camouflage"]),
+    # v7.40: removed "secrecy" (cross-link), "cunning" (wrong connotation — stealth≠cunning)
+    ("stealth",         ["quietness", "cover", "concealment"]),
     ("fight",           ["combat", "battle", "struggle", "clash", "confront", "resist"]),
-    ("courage",         ["bravery", "valor", "gallantry", "nerve", "fortitude", "daring"]),
+    # v7.41: removed "valor", "gallantry" (military/aristocratic — "Grug courage" → "Grug gallantry" is wrong register)
+    ("courage",         ["bravery", "nerve", "fortitude", "daring"]),
     ("defend",          ["protect", "guard", "shield", "safeguard", "secure"]),
     ("alert",           ["warn", "caution", "flag", "notify", "signal"]),
     ("warning",         ["caution", "alert", "advisory", "notice", "heads-up"]),
-    ("caution",         ["care", "wariness", "prudence", "vigilance", "heed"]),
-    ("watch",           ["observe", "monitor", "guard", "keep eyes on", "track"]),
+    # v7.40: removed "prudence" (archaic/formal), "vigilance" (military tone)
+    ("caution",         ["care", "wariness", "heed"]),
+    # v7.40: removed "keep eyes on" (multi-word garble), "observe" (in look cluster already),
+    # and "see"/"look" (cross-link with look entry causes bidirectional explosion)
+    ("watch",           ["monitor", "guard", "track"]),
 
     # Emotion / empathy / mental state domain
-    ("sadness",         ["sorrow", "grief", "melancholy", "anguish", "despair", "heartbreak"]),
+    # v7.41: removed "melancholy", "anguish", "despair", "heartbreak" (elevated/literary —
+    # "Grug sad" → "Grug melancholy/anguish" is wrong register for simple voice)
+    ("sadness",         ["sorrow", "grief"]),
     ("anxiety",         ["worry", "unease", "apprehension", "nervousness", "dread", "tension"]),
-    ("grief",           ["sorrow", "mourning", "anguish", "heartache", "bereavement"]),
-    ("comfort",         ["solace", "reassurance", "consolation", "relief", "support"]),
-    ("validate",        ["affirm", "confirm", "acknowledge", "endorse", "recognize"]),
-    ("feelings",        ["emotions", "sentiments", "reactions", "inner states", "sensations"]),
+    # v7.40: removed "bereavement" (clinical/formal — "Grug grief" → "Grug bereavement" is wrong register)
+    ("grief",           ["sorrow", "mourning", "anguish", "heartache"]),
+    # v7.41: removed "solace", "consolation" (archaic/elevated — "Grug comfort" → "Grug solace" is wrong register)
+    ("comfort",         ["reassurance", "relief", "support"]),
+    # v7.40: removed "endorse" (corporate/political), "acknowledge" (cross-link)
+    ("validate",        ["affirm", "confirm"]),
+    ("feelings",        ["emotions", "sentiments", "reactions", "sensations"]),
     ("pain",            ["suffering", "hurt", "agony", "distress", "ache", "torment"]),
     ("worry",           ["anxiety", "concern", "unease", "apprehension", "fret"]),
     ("breathe",         ["inhale", "exhale", "respire", "pause", "settle"]),
-    ("safe",            ["secure", "protected", "sheltered", "unharmed", "out of danger"]),
-    ("alone",           ["isolated", "lonely", "by oneself", "unaccompanied", "solo"]),
+    # v7.40: removed "out of danger" (multi-word garble)
+    ("safe",            ["secure", "protected", "sheltered", "unharmed"]),
+    # v7.40: removed "by oneself" (multi-word garble), "unaccompanied" (too formal)
+    ("alone",           ["isolated", "lonely", "solo"]),
 
     # Creativity / imagination / expression domain
-    ("imagine",         ["envision", "conceive", "fantasize", "dream", "picture", "visualize"]),
-    ("imagination",     ["creativity", "inventiveness", "vision", "fancy", "originality"]),
-    ("create",          ["craft", "forge", "spawn", "birth", "conjure", "compose"]),
-    ("poetry",          ["verse", "rhyme", "lyricism", "poetics", "meter"]),
-    ("story",           ["tale", "narrative", "account", "chronicle", "yarn"]),
-    ("weave",           ["intertwine", "braid", "spin", "fabricate", "thread", "compose"]),
-    ("beauty",          ["elegance", "grace", "splendor", "magnificence", "wonder"]),
-    ("beautiful",       ["lovely", "gorgeous", "stunning", "exquisite", "radiant"]),
+    # v7.41: removed "envision", "conceive" (elevated/academic — "Grug imagine" →
+    # "Grug envision/conceive" is wrong register for caveman voice)
+    ("imagine",         ["fantasize", "dream", "picture", "visualize"]),
+    # v7.41: removed "inventiveness", "fancy", "originality" (elevated/literary —
+    # "Grug imagination" → "Grug inventiveness/fancy" is wrong register)
+    ("imagination",     ["creativity", "vision"]),
+    # v7.40: removed "spawn", "birth", "conjure" (weird for voice_body — "create" → "spawn"
+    # is gamer-speak; "birth" is biological; "conjure" is magical). Also removed "compose"
+    # (cross-link with write/weave entries). Keep "craft" and "forge" (grug-appropriate).
+    ("create",          ["craft", "forge"]),
+    # v7.41: removed "verse", "lyricism", "poetics", "meter" (academic literary terms —
+    # "Grug poetry" → "Grug lyricism/meter" is wrong register). Keep "rhyme" (grug-appropriate).
+    ("poetry",          ["rhyme"]),
+    # v7.41: removed "chronicle" (literary/archaic — "Grug story" → "Grug chronicle" is wrong register)
+    ("story",           ["tale", "narrative", "account", "yarn"]),
+    # v7.40: removed "fabricate" (has deceptive connotation), "compose" (cross-link with write)
+    ("weave",           ["intertwine", "braid", "spin", "thread"]),
+    # v7.41: removed "splendor", "magnificence" (overly elevated for grug voice)
+    ("beauty",          ["elegance", "grace", "wonder"]),
+    # v7.41: removed "exquisite" (overly elevated for grug voice)
+    ("beautiful",       ["lovely", "gorgeous", "stunning", "radiant"]),
     ("explore",         ["investigate", "probe", "discover", "delve", "chart"]),
     ("wonder",          ["marvel", "awe", "curiosity", "amazement", "fascination"]),
-    ("write",           ["compose", "pen", "draft", "inscribe", "author", "scribe"]),
+    # v7.40: removed "inscribe" (archaic), "scribe" (archaic), "author" (modern jargon),
+    # "compose" (cross-link with create/weave)
+    ("write",           ["pen", "draft"]),
 
     # Philosophy / cognition / abstract domain
-    ("contemplate",     ["ponder", "reflect", "meditate", "muse", "deliberate", "consider"]),
-    ("consciousness",   ["awareness", "sentience", "perception", "mindfulness", "cognition"]),
-    ("meaning",         ["significance", "purpose", "import", "essence", "value"]),
-    ("existence",       ["being", "life", "reality", "presence", "subsistence"]),
-    ("sacred",          ["hallowed", "revered", "sanctified", "divine", "inviolable", "blessed"]),
-    ("permanent",       ["enduring", "everlasting", "eternal", "lasting", "perpetual", "immutable"]),
-    ("truth",           ["fact", "certainty", "verity", "reality", "axiom"]),
-    ("will",            ["volition", "determination", "resolve", "agency", "choice"]),
-    ("determinism",     ["fatalism", "predestination", "inevitability", "necessity"]),
+    # v7.41: removed "deliberate" (formal/legal register), "meditate" (spiritual register),
+    # "muse" (archaic poetic). Keep ponder/reflect/consider (grug-appropriate).
+    ("contemplate",     ["ponder", "reflect", "consider"]),
+    # v7.40: DUPLICATE of line 216 — same entry in philosophy domain. Removed
+    # "sentience", "mindfulness", "cognition" for same reasons. Keep minimal.
+    # ("consciousness",   ["awareness", "sentience", "perception", "mindfulness", "cognition"]),
+    # v7.40: removed "import" (wrong-domain — "meaning" → "import" is ambiguous),
+    # "essence" (cross-link with soul/heart), "significance" (academic)
+    ("meaning",         ["purpose", "value"]),
+    # v7.40: removed "being" (philosophical jargon), "subsistence" (archaic),
+    # "presence" (wrong-domain — "existence" → "presence" is not the same concept)
+    ("existence",       ["life", "reality"]),
+    # v7.40: removed "hallowed", "sanctified", "inviolable" (archaic/religious —
+    # "Grug sacred" → "Grug hallowed/sanctified" is wrong register)
+    # v7.41: removed "revered", "divine", "blessed" (religious/elevated —
+    # "Grug sacred" → "Grug revered/divine" is still wrong register). No safe synonyms remain.
+    # ("sacred",          ["revered", "divine", "blessed"]),
+    # v7.41: removed "everlasting", "eternal", "perpetual", "immutable" (religious/elevated —
+    # "Grug permanent" → "Grug eternal/immutable" is wrong register)
+    ("permanent",       ["enduring", "lasting"]),
+    # v7.40: removed "verity" and "axiom" (archaic/academic decoherence in voice_body)
+    ("truth",           ["certainty", "reality"]),
+    # v7.40: removed "volition" (academic — "Grug will" → "Grug volition" is decoherent)
+    # v7.40: removed "resolve" (cross-link with fix/solve entries — bidirectional explosion),
+    # "agency" (cross-link with agency entry), "determination" (cross-link creates loop)
+    ("will",            ["choice"]),
+    # v7.41: removed — all synonyms are philosophical jargon (fatalism, predestination,
+    # inevitability, necessity) that decohere grug voice when swapped in
+    # ("determinism",     ["fatalism", "predestination", "inevitability", "necessity"]),
     ("choose",          ["select", "decide", "opt", "pick", "determine"]),
     ("choice",          ["decision", "option", "selection", "alternative", "preference"]),
-    ("agency",          ["autonomy", "self-determination", "volition", "sovereignty"]),
+    # v7.40: removed "volition" (archaic), "sovereignty" (political), "self-determination"
+    # (multi-word). "autonomy" is acceptable as single-word synonym for agency.
+    ("agency",          ["autonomy"]),
     ("aware",           ["conscious", "mindful", "alert", "perceptive", "attentive"]),
-    ("awareness",       ["consciousness", "perception", "mindfulness", "cognition", "realization"]),
-    ("feel",            ["experience", "perceive", "sense", "undergo", "emote"]),
+    # v7.40: removed "cognition" (academic), "realization" (cross-domain with realize↔know),
+    # "mindfulness" (buzzword). Also removed "consciousness" cross-link (bidirectional
+    # explosion with consciousness entry)
+    ("awareness",       ["perception"]),
+    ("feel",            ["experience", "sense", "undergo", "intuit", "notice"]),
     ("real",            ["genuine", "actual", "authentic", "true", "concrete"]),
     ("valid",           ["legitimate", "sound", "justified", "warranted", "reasonable"]),
 
     # Time / memory domain
     ("time",            ["moment", "instant", "era", "epoch", "interval"]),
-    ("past",            ["history", "before", "yesterday", "bygone", "antiquity"]),
+    ("past",            ["history", "yesterday", "bygone"]),
     ("memory",          ["recollection", "remembrance", "retention", "recall"]),
-    ("now",             ["presently", "currently", "this moment", "right away"]),
+    ("now",             ["presently", "currently"]),
     ("recall",          ["remember", "recollect", "retrieve", "summon"]),
 
     # Perception / description domain
-    ("see",             ["perceive", "observe", "witness", "behold", "discern"]),
-    ("sunset",          ["dusk", "twilight", "day's end", "evening glow", "sundown"]),
-    ("horizon",         ["skyline", "vista", "distance", "edge of the world"]),
+    # v7.40: removed "behold" (archaic), "discern" (academic), "examine", "inspect"
+    # (these are analytical verbs, not perceptual — "Grug see" → "Grug inspect" is
+    # wrong-domain; also removed "watch" to prevent cross-link with watch entry)
+    ("see",             ["observe", "notice", "view"]),
+    # v7.40: removed multi-word synonyms ("day's end", "evening glow") that garble voice_body
+    ("sunset",          ["dusk", "twilight", "sundown"]),
+    ("horizon",         ["skyline", "vista", "distance"]),
     ("orange",          ["amber", "tangerine", "copper", "flame-colored"]),
     ("purple",          ["violet", "indigo", "lavender", "plum"]),
     ("stretch",         ["extend", "span", "reach", "spread", "span"]),
-    ("beauty",          ["elegance", "splendor", "magnificence", "wonder", "grace"]),
+    # v7.41: duplicate of line 324 — removed. Both had "splendor"/"magnificence" (elevated)
+    # ("beauty",          ["elegance", "splendor", "magnificence", "wonder", "grace"]),
     ("describe",        ["depict", "portray", "characterize", "outline", "render"]),
-    ("capture",         ["seize", "grasp", "encapsulate", "immortalize", "trap"]),
+    # v7.40: removed "encapsulate", "immortalize" (academic/tech — "capture" → "encapsulate"
+    # is programmer-speak; "immortalize" is purple prose)
+    ("capture",         ["seize", "trap"]),
 
     # Misc common specimen vocabulary
-    ("acknowledge",     ["recognize", "affirm", "admit", "concede", "validate"]),
+    # v7.40: removed "concede" (legal/formal), "validate" (cross-link with validate entry)
+    ("acknowledge",     ["affirm", "admit"]),
     ("preserve",        ["conserve", "protect", "maintain", "safeguard", "keep"]),
     ("engage",          ["involve", "commit", "confront", "tackle", "enter"]),
-    ("perhaps",         ["maybe", "possibly", "perhaps", "conceivably", "potentially"]),
-    ("must",            ["shall", "have to", "need to", "are obliged to"]),
-    ("wisdom",          ["insight", "sagacity", "prudence", "judgment", "discernment"]),
+    # v7.40: removed "conceivably" (formal), "potentially" (corporate)
+    ("perhaps",         ["maybe", "possibly"]),
+    # v7.41: removed "shall" (archaic/formal — "Each step shall hold" is wrong register
+    # for grug voice). No safe single-word synonyms remain; commenting out entirely.
+    # ("must",            ["shall"]),
+    # v7.40: removed "sagacity" (archaic), "prudence" (formal), "discernment" (academic)
+    ("wisdom",          ["insight", "judgment"]),
     ("chaos",           ["disorder", "turmoil", "confusion", "entropy", "muddle"]),
-    ("language",        ["tongue", "speech", "expression", "communication", "voice"]),
-    ("soul",            ["spirit", "essence", "heart", "core", "inner self"]),
-    ("capacity",        ["ability", "capability", "potential", "power", "faculty"]),
+    # v7.40: removed "tongue" (archaic — "Grug language" → "Grug tongue" is decoherent),
+    # "communication" (too academic for grug voice)
+    # v7.41: removed "expression" (academic — "Grug language" → "Grug expression" is wrong-domain)
+    ("language",        ["speech", "voice"]),
+    # v7.40: removed "core", "essence" (academic — "Grug heart" → "Grug core/essence"
+    # is wrong-domain decoherence; "heart" as emotion ≠ "core" as center)
+    ("soul",            ["spirit", "heart"]),
+    ("capacity",        ["ability", "capability", "faculty", "competence", "skill"]),
     ("absence",         ["lack", "void", "dearth", "omission", "missing"]),
-    ("despite",         ["notwithstanding", "in spite of", "regardless of", "even with"]),
+    # v7.40: removed "notwithstanding" (archaic/legal — "despite" → "notwithstanding" is wrong register)
+    # Single-entry: "despite" is a preposition with very few safe single-word synonyms
+    # ("notwithstanding" is the only one and it's archaic). Commenting out entirely.
+    # ("despite",         ["notwithstanding"]),
     ("quality",         ["property", "attribute", "characteristic", "trait", "nature"]),
-    ("inverse",         ["reverse", "opposite", "contrary", "reciprocal", "antithesis"]),
-    ("accumulate",      ["gather", "collect", "amass", "build up", "compile"]),
+    # v7.40: removed "contrary", "reciprocal", "antithesis" (academic/math —
+    # "inverse" → "antithesis" is philosophical, "reciprocal" is math jargon)
+    ("inverse",         ["reverse", "opposite"]),
+    ("accumulate",      ["gather", "collect", "amass", "compile"]),
     ("rate",            ["pace", "speed", "frequency", "velocity", "tempo"]),
-    ("change",          ["shift", "transformation", "alteration", "transition", "mutation"]),
+    # v7.41: removed "transformation" (academic — "Grug change" → "Grug transformation" is elevated)
+    ("change",          ["shift", "alteration", "transition", "mutation"]),
     ("measure",         ["gauge", "quantify", "assess", "evaluate", "benchmark"]),
-    ("fact",            ["truth", "certainty", "datum", "reality", "verity"]),
+    # v7.40: removed "verity" (archaic/academic — "fact" → "verity" is decoherent)
+    ("fact",            ["certainty", "datum", "finding"]),
     ("careful",         ["cautious", "wary", "attentive", "prudent", "mindful"]),
     ("justified",       ["warranted", "validated", "excused", "defensible", "reasonable"]),
     ("weakness",        ["frailty", "vulnerability", "deficiency", "flaw", "shortcoming"]),
-    ("information",     ["data", "intelligence", "knowledge", "insight", "signal"]),
+    # v7.40: removed "knowledge" (cross-link with knowledge entry — bidirectional explosion
+    # re-introduces "data"/"signal"/"intelligence" to knowledge cluster), "intelligence"
+    # (military jargon), "signal" (cross-link with input/alert entries)
+    ("information",     ["data", "insight", "facts"]),
+
+    # ========================================================================
+    # GRUG v8.3: HIPPOCAMPAL ANSWER COVERAGE — synonyms for common words
+    # that appear in /answer-taught content. Without these, _hippocampal_touch
+    # has nothing to swap and the answer is parroted verbatim. These are
+    # general-purpose words that survive domain shift — they work in science,
+    # emotion, language, math, and nature answers alike.
+    # ========================================================================
+    # --- Science / Nature answer words ---
+    ("rock",            ["stone", "boulder", "mineral"]),
+    ("shallow",         ["shallow-water", "coastal", "nearshore"]),
+    ("formed",          ["created", "built", "shaped", "produced", "constructed"]),
+    ("structures",      ["formations", "builds", "arrangements", "frameworks"]),
+    ("layered",         ["stratified", "banded", "laminated", "stacked"]),
+    ("luminous",        ["bright", "radiant", "brilliant", "glowing"]),
+    ("galactic",        ["galaxy-scale", "cosmic", "astronomical"]),
+    ("nuclei",          ["cores", "centers", "hearts"]),
+    ("powered",         ["driven", "fueled", "energized", "propelled"]),
+    ("supermassive",    ["gigantic", "immense", "colossal", "enormous"]),
+    ("converts",        ["transforms", "changes", "turns", "transmutes"]),
+    ("sugar",           ["glucose", "sweetener", "carbohydrate"]),
+    ("alcohol",         ["ethanol", "spirits", "liquor"]),
+    ("carbon",          ["element-six", "c-atom", "soot"]),
+    ("dioxide",         ["co2", "dioxide-gas"]),
+    ("yeast",           ["fungus", "leaven", "microbe"]),
+    ("bacteria",        ["microorganism", "germ", "microbe"]),
+    ("oxygen",          ["element-eight", "o2", "breath-gas"]),
+    ("hydrogen",        ["element-one", "h2", "light-gas"]),
+    ("atom",            ["particle", "molecule", "bit-of-matter"]),
+    ("molecule",        ["particle", "compound", "unit"]),
+    ("cell",            ["unit", "compartment", "organism-tiny"]),
+    ("energy",          ["power", "force", "vigor", "vitality"]),
+    ("heat",            ["warmth", "thermal", "fire-emanation"]),
+    ("light",           ["radiance", "illumination", "glow"]),
+    ("combines",        ["joins", "merges", "blends", "unites"]),
+    ("releases",        ["emits", "gives-off", "discharges", "expels"]),
+    # --- Emotion / Psychology answer words ---
+    ("understanding",   ["comprehension", "grasp", "awareness", "insight"]),
+    ("sharing",         ["experiencing", "feeling-with", "communing"]),
+    ("feelings",        ["emotions", "sentiments", "reactions", "sensations"]),
+    ("emotional",       ["affective", "feeling-based", "heart-level"]),
+    ("connection",      ["bond", "link", "tie", "attachment"]),
+    ("person",          ["individual", "being", "soul", "human"]),
+    ("another",         ["other", "fellow", "someone-else"]),
+    ("empathy",         ["compassion", "sympathy", "caring", "fellow-feeling"]),
+    ("approximately",   ["roughly", "about", "around", "nearly"]),
+    ("appears",         ["seems", "looks", "shows-up", "manifests"]),
+    # --- Language / Poetry answer words ---
+    ("poem",            ["verse", "composition", "lyric", "work"]),
+    ("line",            ["verse-line", "row", "stanza-row"]),
+    ("rhyme",           ["sound-match", "echo-end", "poetry"]),
+    ("meter",           ["rhythm", "beat", "measure", "cadence"]),
+    ("scheme",          ["pattern", "plan", "arrangement", "design"]),
+    ("specific",        ["particular", "exact", "precise", "defined"]),
+    # --- Math answer words ---
+    ("ratio",           ["proportion", "fraction", "relationship"]),
+    ("golden",          ["ideal", "perfect", "sublime"]),
+    ("value",           ["figure", "amount", "number", "meaning", "purpose", "digit", "quantity"]),
+    # --- General answer-function words ---
+    ("are",             ["represent", "constitute", "make-up", "form"]),
+    ("is",              ["equals", "represents", "constitutes", "amounts-to"]),
+    ("using",           ["via", "through", "by-means-of", "with"]),
+    ("through",         ["via", "by-way-of", "by-means-of"]),
+    ("into",            ["becoming", "transforming-into", "yielding"]),
+    ("organism",        ["creature", "being", "lifeform"]),
+    ("survival",        ["endurance", "preservation", "persistence"]),
+    ("prey",            ["quarry", "target", "game"]),
+    ("pursuit",         ["hunt", "chase", "quest"]),
+    ("capture",         ["catch", "seizure", "taking"]),
+    ("digest",          ["absorb", "process", "break-down"]),
+    ("applies",         ["uses", "employs", "utilizes"]),
+    ("organized",       ["structured", "arranged", "ordered"]),
+    ("expresses",       ["conveys", "communicates", "shows", "reveals"]),
+    ("scatters",        ["disperses", "spreads", "diffuses"]),
+    ("blue",            ["azure", "cerulean", "sky-colored"]),
+    ("short",           ["brief", "small", "compact"]),
+    ("fast",            ["quick", "rapid", "swift"]),
+
+    # ── v8.13 expansion: high-frequency answer words ──────────────────────
+    # These are the words Grug actually uses in answers. Without them the
+    # thesaurus can only swap ~15% of tokens. With these, we hit ~40-50%.
+
+    # ── Connectors / conjunctions / discourse markers ──
+    ("and",             ["also", "moreover", "furthermore", "additionally", "besides"]),
+    ("but",             ["however", "yet", "nevertheless", "still", "though"]),
+    ("or",              ["alternatively", "else", "otherwise"]),
+    ("not",             ["never", "no", "neither"]),
+    ("because",         ["since", "for", "as", "owing to"]),
+    ("therefore",       ["thus", "hence", "consequently", "so", "accordingly"]),
+    ("however",         ["but", "yet", "nevertheless", "though", "still"]),
+    ("moreover",        ["also", "furthermore", "besides", "additionally", "and"]),
+    ("furthermore",     ["also", "moreover", "besides", "additionally", "and"]),
+    ("also",            ["moreover", "furthermore", "besides", "additionally", "and"]),
+    ("thus",            ["therefore", "hence", "consequently", "so"]),
+    ("yet",             ["but", "however", "nevertheless", "still"]),
+    ("indeed",          ["truly", "certainly", "surely", "actually"]),
+    ("actually",        ["in fact", "really", "truly", "indeed"]),
+    ("really",          ["truly", "actually", "indeed", "genuinely"]),
+    ("certainly",       ["surely", "indeed", "definitely", "undoubtedly"]),
+    ("simply",          ["merely", "just", "only", "barely"]),
+    ("basically",       ["essentially", "fundamentally", "in short", "in essence"]),
+    ("quite",           ["fairly", "rather", "somewhat", "pretty"]),
+    ("rather",          ["quite", "fairly", "somewhat", "instead"]),
+    ("often",           ["frequently", "commonly", "regularly", "many times"]),
+    ("sometimes",       ["occasionally", "at times", "now and then", "periodically"]),
+    ("usually",         ["typically", "normally", "generally", "ordinarily"]),
+    ("perhaps",         ["maybe", "possibly", "potentially", "perchance"]),
+    ("maybe",           ["perhaps", "possibly", "potentially"]),
+
+    # ── Common verbs ──
+    ("make",            ["create", "build", "form", "produce", "craft"]),
+    ("made",            ["created", "built", "formed", "produced", "crafted"]),
+    ("go",              ["move", "proceed", "travel", "advance"]),
+    ("goes",            ["moves", "proceeds", "travels", "advances"]),
+    ("went",            ["moved", "proceeded", "traveled", "advanced"]),
+    ("come",            ["arrive", "approach", "emerge"]),
+    ("came",            ["arrived", "approached", "emerged"]),
+    ("take",            ["grab", "seize", "claim", "accept"]),
+    ("took",            ["grabbed", "seized", "claimed", "accepted"]),
+    ("know",            ["understand", "comprehend", "recognize", "grasp"]),
+    ("knew",            ["understood", "comprehended", "recognized"]),
+    ("think",           ["believe", "consider", "reckon", "suppose"]),
+    ("thought",         ["believed", "considered", "reckoned", "supposed"]),
+    ("say",             ["state", "declare", "express", "mention"]),
+    ("said",            ["stated", "declared", "expressed", "mentioned"]),
+    ("tell",            ["inform", "reveal", "convey", "narrate"]),
+    ("told",            ["informed", "revealed", "conveyed", "narrated"]),
+    ("grow",            ["develop", "expand", "increase", "thrive"]),
+    ("hold",            ["grasp", "grip", "carry", "support"]),
+    ("bring",           ["carry", "deliver", "fetch", "convey"]),
+    ("become",          ["turn into", "transform into", "evolve into"]),
+    ("becomes",         ["turns into", "transforms into", "evolves into"]),
+    ("run",             ["sprint", "race", "dash", "hurry"]),
+    ("play",            ["frolic", "amuse", "entertain"]),
+    ("hear",            ["listen", "detect", "perceive"]),
+    ("heard",           ["listened", "detected", "perceived"]),
+    ("let",             ["allow", "permit", "enable", "leave"]),
+    ("must",            ["have to", "need to", "ought to", "shall"]),
+    ("can",             ["able to", "could", "may", "know how to"]),
+    ("will",            ["shall", "going to", "intend to"]),
+    ("would",           ["could", "might", "may"]),
+    ("should",          ["ought to", "must", "need to"]),
+    ("could",           ["might", "would", "may", "can"]),
+    ("might",           ["could", "may", "would"]),
+    ("may",             ["might", "could", "can"]),
+
+    # ── Auxiliaries / common function words ──
+    ("was",             ["had been", "existed as"]),
+    ("were",            ["had been", "existed as"]),
+    ("has",             ["possesses", "owns", "holds", "contains"]),
+    ("have",            ["possess", "own", "hold", "contain"]),
+    ("had",             ["possessed", "owned", "held", "contained"]),
+    ("does",            ["performs", "executes", "accomplishes"]),
+    ("did",             ["performed", "executed", "accomplished"]),
+    ("do",              ["perform", "execute", "accomplish", "act"]),
+    ("get",             ["obtain", "acquire", "gain", "receive"]),
+    ("got",             ["obtained", "acquired", "gained", "received"]),
+
+    # ── Adjectives / quantifiers ──
+    ("good",            ["great", "fine", "solid", "worthy", "excellent"]),
+    ("bad",             ["poor", "terrible", "awful", "dreadful", "lousy"]),
+    ("great",           ["grand", "mighty", "vast", "immense", "huge"]),
+    ("new",             ["fresh", "novel", "recent", "modern"]),
+    ("old",             ["ancient", "aged", "venerable", "vintage"]),
+    ("long",            ["extended", "lengthy", "prolonged", "vast"]),
+    ("important",       ["significant", "crucial", "vital", "essential", "key"]),
+    ("different",       ["distinct", "diverse", "various", "unlike"]),
+    ("same",            ["identical", "equal", "equivalent", "alike"]),
+    ("possible",        ["feasible", "achievable", "attainable", "potential"]),
+    ("every",           ["each", "all", "any", "every single"]),
+    ("all",             ["every", "each", "the entire", "the whole"]),
+    ("some",            ["certain", "a few", "several", "particular"]),
+    ("many",            ["numerous", "several", "various", "multiple", "countless"]),
+    ("much",            ["a lot", "plenty", "abundantly", "considerably"]),
+    ("very",            ["extremely", "highly", "deeply", "terribly", "remarkably"]),
+    ("still",           ["nevertheless", "yet", "even so", "nonetheless"]),
+    ("never",           ["not ever", "at no time", "never once"]),
+    ("always",          ["forever", "constantly", "perpetually", "invariably", "ever"]),
+    ("already",         ["previously", "by now", "before now"]),
+
+    # ── Prepositions / spatial words ──
+    ("from",            ["out of", "originating from", "derived from"]),
+    ("between",         ["among", "amid", "betwixt"]),
+    ("before",          ["prior to", "ahead of", "preceding"]),
+    ("after",           ["following", "subsequent to", "behind"]),
+    ("during",          ["throughout", "amid", "while", "in the course of"]),
+    ("while",           ["whilst", "during", "as", "even as"]),
+    ("since",           ["because", "as", "ever since", "from the time"]),
+    ("until",           ["till", "up to", "as far as"]),
+    ("above",           ["over", "on top of", "higher than"]),
+    ("below",           ["under", "beneath", "lower than"]),
+    ("under",           ["beneath", "below", "underneath"]),
+    ("over",            ["above", "on top of", "beyond"]),
+    ("among",           ["between", "amid", "amidst"]),
+    ("across",          ["spanning", "traversing", "crossing"]),
+    ("along",           ["beside", "by", "following"]),
+    ("against",         ["opposing", "versus", "counter to"]),
+    ("within",          ["inside", "in", "contained in"]),
+    ("without",         ["lacking", "absent", "devoid of", "minus"]),
+    ("behind",          ["after", "back from", "trailing"]),
+    ("beyond",          ["past", "farther than", "exceeding"]),
+    ("toward",          ["towards", "approaching", "heading for"]),
+    ("towards",         ["toward", "approaching", "heading for"]),
+    ("upon",            ["on", "atop", "on top of"]),
+
+    # ── Common nouns that appear in answers ──
+    ("thing",           ["matter", "object", "item", "entity"]),
+    ("things",          ["matters", "objects", "items", "entities"]),
+    ("way",             ["path", "route", "method", "manner"]),
+    ("hand",            ["paw", "grip", "clasp"]),
+    ("hands",           ["paws", "grips", "clasps"]),
+    ("world",           ["earth", "realm", "domain", "globe"]),
+    ("earth",           ["world", "ground", "soil", "land"]),
+    ("fire",            ["flame", "blaze", "inferno", "conflagration"]),
+    ("water",           ["rain", "moisture", "liquid", "flow"]),
+    ("light",           ["glow", "radiance", "illumination", "brightness"]),
+    ("heat",            ["warmth", "fire", "temperature", "glow"]),
+    ("energy",          ["power", "vigor", "force", "strength"]),
+    ("power",           ["energy", "force", "strength", "might"]),
+    ("force",           ["power", "strength", "energy", "might"]),
+    ("life",            ["living", "existence", "being", "survival"]),
+    ("living",          ["life", "existence", "being", "survival"]),
+    ("cave",            ["den", "lair", "shelter", "dwelling"]),
+    ("people",          ["folk", "humans", "beings", "mortals"]),
+    ("creature",        ["being", "organism", "beast", "lifeform"]),
+    ("creatures",       ["beings", "organisms", "beasts", "lifeforms"]),
+    ("body",            ["form", "frame", "physique", "organism"]),
+    ("mind",            ["brain", "intellect", "thought", "consciousness"]),
+    ("heart",           ["chest", "core", "center", "soul"]),
+    ("time",            ["moment", "era", "period", "age"]),
+    ("moment",          ["time", "instant", "second", "breath"]),
+    ("question",        ["query", "inquiry", "ask"]),
+    ("answer",          ["reply", "response", "rejoinder"]),
+    ("truth",           ["fact", "reality", "certainty"]),
+    ("fact",            ["truth", "reality", "certainty", "datum"]),
+    ("rule",            ["govern", "command", "control", "principle", "decree", "edict"]),
+    ("law",             ["statute", "ordinance", "principle", "decree", "edict"]),
+    ("path",            ["way", "route", "track", "course"]),
+    ("step",            ["stride", "pace", "stage", "phase"]),
+    ("thread",          ["strand", "line", "fiber", "connection"]),
+    ("risk",            ["danger", "hazard", "peril", "threat"]),
+    ("danger",          ["risk", "hazard", "peril", "threat"]),
+    ("strength",        ["power", "force", "might", "vigor"]),
+    ("fear",            ["dread", "terror", "anxiety", "fright"]),
+    ("hope",            ["wish", "desire", "aspiration", "longing"]),
+    ("trust",           ["faith", "belief", "confidence", "reliance"]),
+    ("care",            ["concern", "attention", "regard", "solicitude"]),
+    ("warmth",          ["heat", "affection", "cordiality", "glow"]),
+    ("pain",            ["hurt", "agony", "suffering", "ache"]),
+    ("joy",             ["delight", "bliss", "gladness", "elation"]),
+    ("sorrow",          ["grief", "sadness", "mourning", "woe"]),
+    ("rage",            ["fury", "wrath", "anger", "ire"]),
+    ("calm",            ["peace", "tranquility", "stillness", "serenity"]),
+    ("peace",           ["calm", "tranquility", "stillness", "serenity"]),
+    ("form",            ["shape", "structure", "pattern", "arrangement"]),
+    ("shape",           ["form", "figure", "structure", "outline"]),
+    ("structure",       ["form", "framework", "arrangement", "architecture"]),
+    ("color",           ["hue", "shade", "tint", "tone"]),
+    ("sound",           ["noise", "tone", "echo", "vibration"]),
+    ("voice",           ["speech", "utterance", "expression", "tone"]),
+    ("word",            ["term", "expression", "name", "utterance"]),
+    ("words",           ["terms", "expressions", "names", "utterances"]),
+    ("name",            ["call", "title", "designation", "label"]),
+    ("story",           ["tale", "narrative", "account", "chronicle"]),
+    ("reason",          ["logic", "rationale", "thinking", "motive"]),
+    ("idea",            ["thought", "concept", "notion", "insight"]),
+    ("thought",         ["idea", "concept", "notion", "reflection"]),
+    ("knowledge",       ["understanding", "wisdom", "learning", "insight"]),
+    ("wisdom",          ["knowledge", "insight", "sagacity", "judgment"]),
+    ("science",         ["study", "discipline", "research", "investigation"]),
+    ("nature",          ["wilderness", "environment", "ecosystem", "the wild"]),
+    ("forest",          ["woods", "woodland", "grove", "thicket"]),
+    ("river",           ["stream", "waterway", "current", "flow"]),
+    ("sky",             ["heavens", "firmament", "atmosphere", "above"]),
+    ("ground",          ["earth", "soil", "terrain", "land"]),
+    ("soil",            ["earth", "dirt", "ground", "land"]),
+    ("rock",            ["stone", "boulder", "mineral"]),
+    ("stone",           ["rock", "boulder", "mineral"]),
+    ("sun",             ["star", "daystar", "light source"]),
+    ("moon",            ["luna", "satellite", "night light"]),
+    ("star",            ["sun", "celestial body", "light"]),
+    ("air",             ["atmosphere", "breath", "wind", "breeze"]),
+    ("wind",            ["breeze", "gust", "air", "draft"]),
+    ("rain",            ["downpour", "precipitation", "shower", "drizzle"]),
+    ("tree",            ["timber", "sapling", "oak", "trunk"]),
+    ("ocean",           ["sea", "deep", "abyss", "waters"]),
+    ("sea",             ["ocean", "deep", "waters", "marine"]),
+    ("mountain",        ["peak", "summit", "ridge", "highland"]),
+    ("valley",         ["hollow", "gorge", "dale", "basin"]),
+
+    # ── v8.13 hotfix: cross-pos problematic entries ───────────────────────
+    # "like" as preposition (shaped like...) → "such as" / "akin to"
+    # NOT "enjoy" (that's the verb sense, breaks in prepositional context)
+    ("like",            ["akin to", "similar to", "such as", "resembling"]),
+    ("right",           ["correct", "proper", "fitting", "just", "true"]),
+    ("future",          ["ahead", "what comes", "what lies ahead", "time to come"]),
+    ("gentle",          ["tender", "mild", "soft", "kind", "delicate"]),
 ]
 
 # GRUG: Build bidirectional flat lookup at module load time.

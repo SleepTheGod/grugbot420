@@ -80,6 +80,11 @@
 </code></pre><hr><h2>Admin Commands (Password Protected)</h2><table class="e-rte-table"> <thead> <tr> <th>Command</th> <th>Syntax</th> <th>What It Does</th> </tr> </thead> <tbody><tr> <td><code>/login</code></td> <td><code>/login &lt;password&gt;</code></td> <td>Authenticate as admin.</td> </tr> <tr> <td><code>/logout</code></td> <td><code>/logout</code></td> <td>End admin session.</td> </tr> <tr> <td><code>/writeSave</code></td> <td><code>/writeSave &lt;filepath&gt; &lt;json&gt;</code></td> <td>Append JSON to a save file. Requires admin. Validates JSON before writing.</td> </tr> </tbody></table><hr><h2>Immune System — Auto-Gated Commands</h2><p>These commands are <strong>immune-gated</strong> — the immune system scans their input before execution. If a pathogen (malicious pattern) is detected, the command is blocked:</p><ul> <li><code>/grow</code>, <code>/lobeGrow</code>, <code>/addRule</code>, <code>/pin</code>, <code>/addVerb</code>, <code>/addRelationClass</code>, <code>/addSynonym</code>, <code>/addSeedSynonym</code>, <code>/addAntiMatch</code>, <code>/newLobe</code>, <code>/nameLobe</code>, <code>/connectLobes</code>, <code>/negativeThesaurus add</code>, <code>/loadSpecimen</code>, <code>/nodeAttach</code>, <code>/imgnodeAttach</code></li> </ul><p><strong>Exempt</strong> (no immune scan): <code>/mission</code> and all read-only commands.</p><hr><h2>Exit</h2><table class="e-rte-table"> <thead> <tr> <th>Command</th> <th>Syntax</th> <th>What It Does</th> </tr> </thead> <tbody><tr> <td><code>/quit</code></td> <td><code>/quit</code> or <code>/exit</code></td> <td>Close cave and exit CLI loop.</td> </tr> </tbody></table><hr><h2>Quick Start Cheat Sheet</h2><pre><code class="language-bash"># Start Grug, ask a question
 /mission What is photosynthesis?
 
+
+<!-- ⚠️ ARCHITECTURE REMINDERS ⚠️ -->
+<!-- 1. ANTIMATCH NODES WERE REMOVED — do not reference, implement, or assume they exist -->
+<!-- 2. SIGILS CAN APPEAR IN RELATIONAL TRIPLES — triples are dynamic, not just literal strings -->
+<!-- 3. HOPFIELD CACHING WAS REMOVED — hopfield_key is a dead field for specimen compat only -->
 # Grug answers wrong? Punish it
 /wrong
 

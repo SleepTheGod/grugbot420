@@ -1,0 +1,15 @@
+/loadSpecimen grug_comprehensive_full.specimen
+/mission how does breathing work
+/answer @nature :explain breathing draws oxygen into the lungs and expels carbon dioxide
+/mission how does breathing work
+/mission what is hunting
+/answer @nature :reason hunting is the pursuit and capture of prey for food and survival
+/mission what is hunting
+/mission what is cooking
+/answer @nature :explain cooking applies heat to food to make it safe and easier to digest
+/mission what is cooking
+/mission what is music
+/answer @language :define music is organized sound that expresses emotion and rhythm
+/mission what is music
+/saveSpecimen grug_teach_reask_v2.specimen
+/quit

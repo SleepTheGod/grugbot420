@@ -67,6 +67,30 @@
 
 module SigilPromoter
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 # GRUG: SigilPromoter consumes SigilRegistry. The include is done at the
 # package level; here we just `using` the sibling module.
 using ..SigilRegistry
@@ -368,6 +392,7 @@ IDEMPOTENCY:
     call would on raw input that has the sigils already substituted.
 """
 function promote_input(
+# REMINDER: Promoted sigils end up in relational triples — triples are dynamic.
     table::SigilTable,
     raw::AbstractString,
 )::Tuple{String,Vector{SigilBinding}}
@@ -430,6 +455,27 @@ function promote_input(
         end
 
         lc = lowercase(tok)
+
+        # GRUG: unary-minus peek. "-15" tokenizes as ["-", "15"] because
+        # the tokenizer can't distinguish unary from binary minus. If the
+        # current token is "-" and the PREVIOUS token is NOT a number, and
+        # the NEXT token IS a number, merge them into a signed numeric.
+        # This handles "absolute value of -15" correctly without breaking
+        # "5 - 3" (where the previous token IS a number → binary op).
+        if tok == "-" && i < length(raw_tokens) && (i == 1 || !occursin(NUMBER_TOKEN_REGEX, canonicalize_token(raw_tokens[i-1][1])))
+            next_tok, _next_pos = raw_tokens[i+1]
+            next_can = canonicalize_token(next_tok)
+            if occursin(NUMBER_TOKEN_REGEX, next_can)
+                stripped = lstrip(next_can, ['+', '-'])
+                merged = string("-", stripped)
+                merged_surface = string("-", next_tok)
+                _promote_layer2!(out_tokens, bindings, merged,
+                                 merged_surface, raw_pos,
+                                 promote_lambdas, promote_macros)
+                i += 2
+                continue
+            end
+        end
 
         # GRUG: sign-prefix peek. "negative three" → "-3". Only fires when
         # the next token canonicalizes to a number-word OR is already a

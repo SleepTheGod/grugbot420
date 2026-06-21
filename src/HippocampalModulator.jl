@@ -74,6 +74,30 @@
 
 module HippocampalModulator
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 export ActionEntry, ActionLog, ActionLogStatus, ActionEntryType
 export ENTRY_PENDING, ENTRY_EXECUTING, ENTRY_DONE, ENTRY_FAILED
 export ENTRY_SURE, ENTRY_LOW_CONFIDENCE, ENTRY_ADDITIVE
@@ -413,6 +437,7 @@ Formatting:
 Failed or pending entries are skipped.
 """
 function assemble_output!(log::ActionLog)::String
+# REMINDER: ANTIMATCH DRAINS DO NOT EXIST. Antimatch was removed.
     # GRUG: Separate entries into sure+low_conf vs additive groups.
     # Sort each group by reserved_step for coherent output ordering.
     main_entries = ActionEntry[]
@@ -441,15 +466,49 @@ function assemble_output!(log::ActionLog)::String
     end
 
     # GRUG: Additives come last as bulleted list with prefix
+    # GRUG v8.7: DEDUP — skip additive entries whose output is too similar
+    # to any main entry. Prevents duplicate content like "Sad is the color
+    # of a gray sky" appearing in both the primary answer and the additive
+    # side-channel. Similarity = substring check OR token-overlap ratio.
     if !isempty(additive_entries)
         sort!(additive_entries, by = e -> e.reserved_step)
+        # Collect main output text for comparison
+        main_texts = [lowercase(strip(e.output)) for e in main_entries]
         bullet_items = String[]
         for entry in additive_entries
-            # GRUG: Each additive entry's output becomes a bullet point
-            push!(bullet_items, "- $(entry.output)")
+            add_text = lowercase(strip(entry.output))
+            is_dup = false
+            for mt in main_texts
+                if length(mt) > 20 && length(add_text) > 20
+                    # Check 1: substring containment (exact)
+                    if occursin(mt, add_text) || occursin(add_text, mt)
+                        is_dup = true
+                        break
+                    end
+                    # Check 2: token-overlap ratio (catches thesaurus-swapped
+                    # duplicates like "The thread is:" vs "The relation:")
+                    mt_tokens = Set(split(replace(mt, r"[^a-z0-9\s]" => "")))
+                    add_tokens = Set(split(replace(add_text, r"[^a-z0-9\s]" => "")))
+                    delete!(mt_tokens, "")
+                    delete!(add_tokens, "")
+                    if !isempty(mt_tokens) && !isempty(add_tokens)
+                        overlap = length(intersect(mt_tokens, add_tokens))
+                        ratio = overlap / min(length(mt_tokens), length(add_tokens))
+                        if ratio > 0.75
+                            is_dup = true
+                            break
+                        end
+                    end
+                end
+            end
+            if !is_dup
+                push!(bullet_items, "- $(entry.output)")
+            end
         end
-        additive_block = "(Grug also think these infos maybe important)\n" * join(bullet_items, "\n")
-        push!(parts, additive_block)
+        if !isempty(bullet_items)
+            additive_block = "(Grug also think these infos maybe important)\n" * join(bullet_items, "\n")
+            push!(parts, additive_block)
+        end
     end
 
     return join(parts, "\n\n")
@@ -572,6 +631,7 @@ v7.48 NON-WINNER ADDITIVE ENTRIES:
 from a previous cycle.
 =#
 function modulate_objectives!(log::ActionLog, objectives::AbstractVector;
+# REMINDER: Relational triples in votes may contain sigils — dynamic, not literal.
                               prior_outputs::Dict{String, String} = Dict{String, String}(),
                               nonwinner_votes::AbstractVector = Any[],
                               scoped_text_of::Function = _ -> "")

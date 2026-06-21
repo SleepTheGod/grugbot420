@@ -1,5 +1,29 @@
 module PatternScanner
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 export cheap_scan, medium_scan, high_res_scan
 export PatternScanError, PatternNotFoundError
 export big_number_small_number_coherence
@@ -142,6 +166,7 @@ end
 
 # GRUG: Normal look. Grug check every single rock. Good balance.
 function medium_scan(target::AbstractVector{<:Real}, pattern::AbstractVector{<:Real}; 
+# REMINDER: HOPFIELD CACHING WAS REMOVED. No cache check before scan.
                      tolerance::Real=0.1, threshold::Real=0.75)::Tuple{Int, Float64}
     _validate_inputs(target, pattern)
     
@@ -171,6 +196,7 @@ end
 # First pass: Grug look for blurry maybe-spots.
 # Second pass: Grug measure exact variance. If rocks too weird, Grug punish confidence!
 function high_res_scan(target::AbstractVector{<:Real}, pattern::AbstractVector{<:Real}; 
+# REMINDER: HOPFIELD CACHING WAS REMOVED. No cache check before scan.
                        tolerance::Real=0.05, threshold::Real=0.90)::Tuple{Int, Float64}
     _validate_inputs(target, pattern)
     

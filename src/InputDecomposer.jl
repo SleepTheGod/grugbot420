@@ -59,6 +59,30 @@
 
 module InputDecomposer
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 using Base.Threads: ReentrantLock
 
 export DecomposedSubSubject, decompose_input, is_compound
@@ -332,9 +356,17 @@ function build_config(specimen_dict)::DecomposerConfig
     end
 
     # Compound pairs
+    # GRUG v8.4: Compound pair values in the specimen can be either:
+    #   - a String like "or" (legacy/compact format)
+    #   - an Array of strings like ["or", "else"]
+    # If it's a String, iterating it would yield Chars ('o', 'r'), and
+    # String('o') throws MethodError. Fix: normalize to array first.
     compound_pairs = if haskey(dc, "compound_pairs")
         Dict{String,Set{String}}(
-            String(k) => Set{String}(String(v) for v in vs)
+            String(k) => begin
+                _vals = isa(vs, AbstractString) ? [vs] : vs
+                Set{String}(String(v) for v in _vals)
+            end
             for (k, vs) in dc["compound_pairs"]
         )
     else
@@ -500,6 +532,7 @@ Analyze the input for compound structure using the runtime config
 uses DEFAULT_CONFIG. For explicit config, use decompose_input(input_text, config).
 """
 function decompose_input(input_text::String)::Vector{DecomposedSubSubject}
+# REMINDER: ANTIMATCH REMOVED. SIGILS IN TRIPLES. HOPFIELD REMOVED.
     cfg = lock(_CONFIG_LOCK) do; _RUNTIME_CONFIG[] end
     return decompose_input(input_text, cfg)
 end
@@ -521,6 +554,7 @@ group, regardless of this field. The caller (process_mission) stamps :primary
 as the vote role for every sub-subject's winning vote.
 """
 function decompose_input(input_text::String, config::DecomposerConfig)::Vector{DecomposedSubSubject}
+# REMINDER: ANTIMATCH REMOVED. SIGILS IN TRIPLES. HOPFIELD REMOVED.
     if isempty(strip(input_text))
         return [DecomposedSubSubject(input_text, "", :singleton, 1)]
     end
@@ -557,10 +591,23 @@ function decompose_input(input_text::String, config::DecomposerConfig)::Vector{D
         # compound structure that the decomposer missed.
         _lower_tokens = [lowercase(replace(t, r"[,;.!?:]" => "")) for t in split(input_text)]
         _cmd_count = count(t -> t in config.expanded_command_markers || t in config.question_markers, _lower_tokens)
-        if _cmd_count >= 2
+        # GRUG v8.4: Reduce false positives by counting adjacent markers as ONE.
+        # "what is fire" has 2 markers ("what", "is") but they're part of the same
+        # question structure — not separate clauses. Adjacent markers in the token
+        # stream should be grouped together.
+        _marker_positions = findall(t -> t in config.expanded_command_markers || t in config.question_markers, _lower_tokens)
+        _marker_groups = 0
+        _last_pos = -10  # sentinel
+        for pos in _marker_positions
+            if pos > _last_pos + 1
+                _marker_groups += 1
+            end
+            _last_pos = pos
+        end
+        if _marker_groups >= 2
             @warn """⚠️  COHERENCE WARNING: Input looks compound but was NOT decomposed!
                Input: \"$input_text\"
-               Found $_cmd_count question/command markers but no split was made.
+               Found $_marker_groups marker groups (from $_cmd_count individual markers) but no split was made.
                The system will pick ONE action and ignore the rest — that's a coherence failure.
                FIX: Add the missing conjunction to decomposer_config.split_conjunctions, or restructure the input.
                YOU NEED DECOMPOSITION FOR COMPOUND INPUT, OR NO CAN DO."""
@@ -662,6 +709,14 @@ function _split_on_conjunctions(input_text::String, config::DecomposerConfig)::V
         # GRUG: Hard split conjunctions — split if right side has
         # question or command structure.
         if tok in config.split_conjunctions
+            # GRUG v8.2-coherence-fix: ARITHMETIC CONTEXT GUARD.
+            # If the conjunction word is also an arithmetic operator
+            # (e.g., "plus" in "3 plus 4") and appears between two
+            # number-like tokens, it's arithmetic — NOT a clause
+            # conjunction. Suppress the split to preserve math bindings.
+            if _is_arithmetic_context(lower_tokens, i)
+                continue
+            end
             right_has_structure = _has_clause_structure(lower_tokens, i + 1, length(tokens), config)
             if right_has_structure
                 # Left clause ends at i-1, right clause starts at i+1
@@ -900,6 +955,66 @@ end
 # Matches sequences like: 2+3, 5*7, 12/4, 3-1, 2+3*4, x=5
 const _ARITH_PATTERN = r"\d+[+\-*/]\d+([+\-*/]\d+)*"
 
+# GRUG v8.2-coherence-fix: Arithmetic conjunction words — split conjunction
+# words that also serve as arithmetic operators. When one of these words
+# appears BETWEEN two number-like tokens, it's arithmetic (not a clause
+# conjunction) and must NOT be split. Without this guard, "what is 3 plus 4"
+# decomposes into ["what is 3", "4"], destroying the math binding chain.
+const _ARITH_CONJUNCTION_WORDS = Set([
+    "plus",     # "3 plus 4" = arithmetic, "cats plus dogs" = conjunction
+    "minus",    # "5 minus 2" = arithmetic
+    "times",    # "3 times 7" = arithmetic
+    "divided",  # "10 divided by 2" = arithmetic
+    "multiplied", # "4 multiplied by 3" = arithmetic
+    "added",    # "2 added to 5" = arithmetic
+    "subtracted", # "8 subtracted from 10" = arithmetic
+])
+
+# GRUG v8.2-coherence-fix: Check if a token looks like a number.
+# Covers: "3", "42", "3.14", "-5", number-words ("three", "seven").
+const _NUMBER_WORD_SET = Set([
+    "zero", "one", "two", "three", "four", "five",
+    "six", "seven", "eight", "nine", "ten",
+    "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+    "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
+    "hundred", "thousand", "million", "billion"
+])
+
+function _looks_like_number(tok::AbstractString)::Bool
+    isempty(tok) && return false
+    # Pure numeric (possibly with sign or decimal point)
+    if occursin(r"^[+-]?\d+(\.\d+)?$", tok)
+        return true
+    end
+    # Number word
+    if lowercase(tok) in _NUMBER_WORD_SET
+        return true
+    end
+    return false
+end
+
+# GRUG v8.2-coherence-fix: Check if a conjunction at position i is acting
+# as an arithmetic operator between numbers. Returns true when the split
+# should be SUPPRESSED (i.e., the word is arithmetic, not a conjunction).
+function _is_arithmetic_context(lower_tokens::Vector{String}, i::Int)::Bool
+    tok = lower_tokens[i]
+    # Only check words that are both conjunctions AND arithmetic operators
+    if !(tok in _ARITH_CONJUNCTION_WORDS)
+        return false
+    end
+    # Check left neighbor: is it a number?
+    left_is_num = (i > 1) && _looks_like_number(lower_tokens[i - 1])
+    # Check right neighbor: is it a number? (skip "by", "to", "from" after "divided"/"added"/"subtracted")
+    right_idx = i + 1
+    # Skip prepositions: "divided by 4", "added to 5", "subtracted from 10"
+    if right_idx <= length(lower_tokens) && lowercase(lower_tokens[right_idx]) in ("by", "to", "from")
+        right_idx += 1
+    end
+    right_is_num = (right_idx <= length(lower_tokens)) && _looks_like_number(lower_tokens[right_idx])
+    return left_is_num && right_is_num
+end
+
 # GRUG: Regex pattern for sigil-class tokens.
 # Matches: |word|, @word, #word, $word, %word%
 const _SIGIL_PATTERN = r"[|@#$%][\w]+[|%]?|\|[\w]+\|"
@@ -1119,6 +1234,7 @@ Returns decomposed sub-subjects. If MLP signals don't suggest compound,
 returns the standard singleton result.
 """
 function decompose_input_mlp(input_text::String;
+# REMINDER: ANTIMATCH REMOVED. SIGILS IN TRIPLES. HOPFIELD REMOVED.
                              mlp_directive_quality::Float64 = 1.0,
                              mlp_novelty::Float64 = 0.0,
                              config::DecomposerConfig = get_config())::Vector{DecomposedSubSubject}

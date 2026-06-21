@@ -7,6 +7,27 @@
 # ==============================================================================
 
 using Test
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 using Random
 
 println("\n" * "="^60)
@@ -50,7 +71,7 @@ println("  ✓ Vote structs constructed correctly")
 # ==============================================================================
 println("\n[3] TIE DETECTION LOGIC")
 
-# GRUG: Simulate the tie detection from ephemeral_aiml_orchestrator.
+# GRUG: Simulate the tie detection from ephemeral_voice_orchestrator.
 # sure_votes = votes within 0.05 of max. Ties = same confidence within epsilon.
 sorted_votes = sort([v1, v2, v3, v4, v5]; by = v -> v.confidence, rev = true)
 max_conf = sorted_votes[1].confidence
@@ -190,10 +211,10 @@ println("  ✓ {VOTE_CERTAINTY} registered in ALLOWED_RULE_TAGS")
 println("  ✓ {TIED_ALTERNATIVES} registered in ALLOWED_RULE_TAGS")
 
 # Test rule addition with new tags
-empty!(AIML_DROP_TABLE)
+empty!(ORCHESTRATION_RULES)
 result = add_orchestration_rule!("When {VOTE_CERTAINTY} is UNSURE, consider: {TIED_ALTERNATIVES} [prob=0.8]")
 @assert contains(result, "Rule tied to tree") "FAIL: Rule addition failed!"
-@assert AIML_DROP_TABLE[1].fire_probability == 0.8 "FAIL: Rule fire_probability should be 0.8!"
+@assert ORCHESTRATION_RULES[1].fire_probability == 0.8 "FAIL: Rule fire_probability should be 0.8!"
 println("  ✓ AIML rule with {VOTE_CERTAINTY} and {TIED_ALTERNATIVES} accepted")
 
 # ==============================================================================

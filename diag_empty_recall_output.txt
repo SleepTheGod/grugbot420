@@ -1,0 +1,580 @@
+┌ Warning: The active manifest file has dependencies that were resolved with a different julia version (1.9.4). Unexpected behavior may occur.
+└ @ /workspace/grugbot420/Manifest.toml:0
+┌ Warning: The project dependencies or compat requirements have changed since the manifest was last resolved.
+│ It is recommended to `Pkg.resolve()` or consider `Pkg.update()` if necessary.
+└ @ Pkg.API ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/Pkg/src/API.jl:1322
+  0 dependencies successfully precompiled in 0 seconds. 77 already precompiled.
+WARNING: Imported binding GrugBot420.RelationalTriple was undeclared at import time during import to AutoGrowth.
+┌ Warning: Replacing docs for `Main.GrugBot420.stash_multipart_bindings! :: Tuple{String, Vector{Main.GrugBot420.SigilPromoter.SigilBinding}, String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.clear_multipart_bindings! :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_multipart_bindings :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_multipart_rewritten :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_multipart_raw :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.stash_multipart_lobe_state! :: Tuple{String, Any, String, Vector{String}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.clear_multipart_lobe_states! :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_multipart_lobe_state :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.stash_multipart_scoped_text! :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_multipart_scoped_text :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.clear_multipart_scoped_text! :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.current_promotion_bindings :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.current_promotion_rewritten :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.current_promotion_raw :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.current_time_orientation :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.words_to_signal :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.rewrite_passive_mission :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.extract_relational_triples :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.screen_input_complexity :: Tuple{Vector{Float64}, Vector{Main.GrugBot420.RelationalTriple}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420._bidirectional_cheap_scan :: Tuple{Vector{Float64}, Vector{Float64}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420._effective_scan_mode :: Tuple{Int64, Vector{Float64}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.extract_dynamic_relational_triples :: Tuple{String, Int64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.evaluate_relational_dialectics :: Tuple{Vector{Main.GrugBot420.RelationalTriple}, Vector{Main.GrugBot420.RelationalTriple}, Vector{String}, Dict{String, Float64}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.strength_biased_scan_coinflip :: Tuple{Any}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.hopfield_input_hash :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.hopfield_lookup :: Tuple{UInt64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.hopfield_record! :: Tuple{UInt64, Vector{String}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_nonjitter :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_time_node :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.extract_time_orientation :: Tuple{Vector{Main.GrugBot420.SigilPromoter.SigilBinding}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.has_time_orientation :: Tuple{Vector{Main.GrugBot420.SigilPromoter.SigilBinding}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.time_vote_flags :: Tuple{Dict{String, Any}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.set_nonjitter! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.clear_nonjitter! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.collect_nonjitter_ids :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.jitter_allowed_for :: Tuple{Main.GrugBot420.Node, Float64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_solidified :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.check_solidify_threshold! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.bump_strength! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.penalize_strength! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.mark_node_grave! :: Tuple{Main.GrugBot420.Node, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.mark_node_contributor! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.try_link_nodes! :: Tuple{Main.GrugBot420.Node, Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.find_best_latch_target :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420._token_overlap_similarity :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_chatter_mutated :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.mark_chatter_mutated! :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.next_group_id :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.node_sigil_kind :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.has_sigil_tag :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_nochat :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_singleton :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.register_group! :: Tuple{Main.GrugBot420.Node}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.add_to_group! :: Tuple{Main.GrugBot420.NodeGroup, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.mark_group_grave_slot! :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.group_for :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.group_avg_strength :: Tuple{Main.GrugBot420.NodeGroup}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.compute_grave_shadow :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.refresh_inhibition_tokens! :: Tuple{Main.GrugBot420.NodeGroup}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_inhibited :: Tuple{String, Main.GrugBot420.NodeGroup}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.GroupLatchCandidate :: Union{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.find_group_latch_candidates :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.MITOSIS_PATTERN_SIM_FLOOR :: Union{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420._scan_latch_candidates :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.chatter_cooldown_remaining :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.stamp_chatter! :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_fire_counter :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.unbridge_nodes! :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.confidence_biased_bridge_coinflip :: Tuple{Main.GrugBot420.Node, Float64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.fire_cascades! :: Tuple{String, Int64, Int64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_bridge_summary :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_bridges_for_node :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.crystalize_bridge! :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.decrystalize_bridge! :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420._semantic_truth_score :: Tuple{Any}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.auto_crystalize_sweep! :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.is_bridge_crystalized :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420._sdf_signal_similarity :: Tuple{Vector{Float64}, Vector{Float64}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.attach_image_node! :: Tuple{String, String, Vector{UInt8}, Int64, Int64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.reset_throttle! :: Tuple{Main.GrugBot420.Node, Float64}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.create_node :: Tuple{String, String, Dict, Vector{String}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.create_sigil_node :: Tuple{String, String, Dict, Vector{String}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.list_sigil_node_ids :: Union{Tuple{}, Tuple{Symbol}}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.parse_action_packet :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.select_action :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.cast_vote :: NTuple{5, Any}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.cast_explicit_vote :: Tuple{String, String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.cast_vote_with_group :: Tuple{Any, Any, Any, Any, Any, String, Symbol}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.ensure_action_packet_registered! :: Tuple{AbstractString}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.grow_nodes_from_packet :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.get_node_status_summary :: Tuple{}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.add_orchestration_rule! :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.scan_specimens :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.scan_and_expand :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.bind_sigils :: Tuple{String, Any}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+┌ Warning: Replacing docs for `Main.GrugBot420.count_alive_nodes_in_lobe :: Tuple{String}` in module `Main.GrugBot420`
+└ @ Base.Docs docs/Docs.jl:249
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + 3 boot seeds registered into `default` lobe
+============================================================
+  DIAGNOSTIC: Empty Recall for Fermentation & Sonnet
+============================================================
+
+📦 Loading specimen...
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=269, msg=0)
+  🗳  Last voters restored (0 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (11 classes, 81 verbs, 27 synonyms)
+  🔤 Thesaurus restored (431 words)
+  🧠 Lobes restored (10)
+  📋 Lobe tables restored (10)
+  🌱 Nodes restored (273)
+  ⚡ Hopfield cache restored (0 entries)
+  ⚙️  Rules restored (20)
+  🚫 Inhibitions restored (5)
+  💬 Messages restored (0 total, 0 pinned)
+  👁  Arousal restored (level=0.3)
+  🧬 BrainStem state restored
+  🌉 Bridges restored from v7.x format (2)
+  🔮 Trajectory restored (0 entries)
+  🕐 Temporal coherence restored (0 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 0 ledger entries)
+  🤖 AIML system restored (21 nodes across 9 lobes)
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "&n"), 0x000000000000bf4e)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:9801
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "&op"), 0x000000000000bf4e)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:9801
+┌ Warning: loadSpecimen: skipping bad sigil entry: MethodError(convert, (Vector{Any}, "&doAction"), 0x000000000000bf4e)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:9801
+  ⚙️  Automaton rules restored (2)
+  💎 Phase accumulator: no saved crystal found (fresh hippocampus)
+┌ Warning: [EphemeralMLP] w_input_hidden size mismatch (got 192, expected 1536), using defaults
+└ @ Main.GrugBot420.EphemeralMLP /workspace/grugbot420/src/EphemeralMLP.jl:2885
+┌ Warning: [EphemeralMLP] b_hidden size mismatch (got 16, expected 64), using defaults
+└ @ Main.GrugBot420.EphemeralMLP /workspace/grugbot420/src/EphemeralMLP.jl:2893
+┌ Warning: [EphemeralMLP] w_hidden_output size mismatch (got 16, expected 64), using defaults
+└ @ Main.GrugBot420.EphemeralMLP /workspace/grugbot420/src/EphemeralMLP.jl:2901
+┌ Warning: [EphemeralMLP] w_attention size mismatch (got 32, expected 256), using defaults
+└ @ Main.GrugBot420.EphemeralMLP /workspace/grugbot420/src/EphemeralMLP.jl:2915
+  🧠 EphemeralMLP restored (transforms=0, rules=10)
+  👁  MLP Observer Store: 0 entries, 0 distinct keys (store starts fresh; MLP gate counter restored)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 15 | Compound pairs: 5 leaders | Context: 'and'
+      Question markers: 20 | Command stems: 24 → 95 expanded | Conjugation rules: 24
+  🎲  Relational jitter config loaded (ratio=0.03, coin=0.01, enabled=true)
+  🔢 @sigil:math nodes already present (2), skipping seed
+  🔗 @sigil:multipart nodes already present (1), skipping seed
+  ⚡ @sigil:doaction nodes already present (2), skipping seed
+  🎯 @sigil:action nodes already present (9), skipping seed
+✅ Loaded.
+
+
+============================================================
+  SCENARIO 3: Fermentation
+============================================================
+
+[Step 1] Ask 'what is fermentation' (should get ASK)
+--> Scanning specimens & looking for dialectical relations...
+
+🤖 AIML Ask Question:
+⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I don't have a frame for "what is fermentation" — what is that about?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)
+[CAPTURE-DEBUG-TEST] Raw capture for 'what is fermentation': length=332 isempty=false first100='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I don't have a '
+
+[Step 1 Result]: '⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I don't have a frame for "what is fermentation" — what is that about?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)'
+
+[Step 2] Teach with /answer
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 33 tokens → 35 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(3 parts): [mp_1/primary] "/answer @science :define Fermentation is a metabolic process where microorganisms convert sugars into alcohol, gases," | [mp_2/support] "organic acids under anaerobic conditions. Yeast" | [mp_3/support] "bacteria are common fermentation agents used in brewing, baking, and preserving food."
+
+🤖 AIML Ask Question:
+⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 The cave echoes on "/answer @science :define Fermentation is a metabolic process where microorgan..." and I can't resolve it. Can you tell me what you mean?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)
+[CAPTURE-DEBUG-TEST] Raw capture for '/answer @science :define Fermentation is a metabolic process where microorganisms convert sugars into alcohol, gases, or organic acids under anaerobic conditions. Yeast and bacteria are common fermentation agents used in brewing, baking, and preserving food.': length=419 isempty=false first100='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 The cave echoes'
+
+[Step 2 Result]: '⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 The cave echoes on "/answer @science :define Fermentation is a metabolic process where microorgan..." and I can't resolve it. Can you tell me what you mean?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)'
+
+[Step 3] Re-ask 'what is fermentation' (should recall)
+--> Scanning specimens & looking for dialectical relations...
+[AUTOGROWTH:EMPTY_CAVE] 🌱  Grew inverse_voter_node node for 'fermentation' in default (intensity=75.86, p=0.25)
+
+🤖 AIML Ask Question:
+⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I'm drawing a blank on "what is fermentation". What is it?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)
+[CAPTURE-DEBUG-TEST] Raw capture for 'what is fermentation': length=321 isempty=false first100='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I'm drawing a b'
+
+[Step 3 Result]: '⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I'm drawing a blank on "what is fermentation". What is it?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)'
+✅ Fermentation recall works! Length=321
+
+============================================================
+  SCENARIO 6: Sonnet
+============================================================
+
+[Step 1] Ask 'what is a sonnet' (should get ASK)
+--> Scanning specimens & looking for dialectical relations...
+
+🤖 AIML Ask Question:
+⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I've got nothing for "what is a sonnet". Can you break it down for me?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)
+[CAPTURE-DEBUG-TEST] Raw capture for 'what is a sonnet': length=333 isempty=false first100='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I've got nothin'
+
+[Step 1 Result]: '⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 I've got nothing for "what is a sonnet". Can you break it down for me?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.0)'
+
+[Step 2] Teach with /answer
+--> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(5 parts): [mp_1/primary] "/answer" | [mp_2/support] "@arts" | [mp_3/support] ":explain A sonnet" | [mp_4/support] "is a fourteen-line poem with a specific rhyme scheme, traditionally written in iambic pentameter. The two main types" | [mp_5/support] "are the Petrarchan with an octave and sestet, and the Shakespearean with three quatrains and a couplet."
+--> 2 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=mathematics  Passthrough=  Scored=1 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=mathematics  Passthrough=  Scored=1 lobes
+[ORCHESTRATOR] 🎲  TIE DETECTED! 2 rocks at confidence 0.5. Random winner: node_sigil_1
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] mp_1_chk_1 | votes=1 (sure=1 unsure=0) conf=0.5 step=1 | ENTRY_PENDING scoped="/answer"
+[ORCH-DEBUG] Processing entry seq=1 type=ENTRY_SURE action=calculate
+[ORCH-DEBUG] entry_primary: node_id=node_sigil_0 action=calculate conf=0.5
+[ORCH-DEBUG] entry_node found: pattern='&n &op &n' status=ALIVE
+[ORCH-DEBUG] Calling COMMANDS[calculate] with mission='/answer' node_pattern='&n &op &n'
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:3567
+[ORCH-DEBUG] COMMANDS returned output length=1695 first100='Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest a'
+[ORCH-DEBUG] Entry 1 marked DONE, any_entry_completed=true
+[ORCH-DEBUG] next_pending! returned nothing — no more entries to process
+[ORCH-DEBUG] Assembled output from ActionLog, length=1695
+[ORCH-DEBUG] Orchestrator returning: output_length=1695 all_sure=1 all_unsure=0
+[ENGINE] 🕐  Node node_sigil_0 big-O ledger cleared (24hr reset).
+[ENGINE] 🐢  Node node_sigil_0 slow telemetry only (avg: 13.73s > 5.0s); not graving.
+[ENGINE] 🕐  Node node_sigil_1 big-O ledger cleared (24hr reset).
+[ENGINE] 🐢  Node node_sigil_1 slow telemetry only (avg: 13.73s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=1.0 | quality=0.469 | semantic=0.481 | relevance=0.51 | disambig=0.484 | strain=0.807 | rules=1 | adj=ON
+
+🤖 AIML Output Scaffold:
+Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest and true. Grug think on math.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: '/answer'
+Primary Action: calculate  (conf=0.5, certainty=SURE)
+Sure Actions: [calculate]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_sigil_0
+Lobe Context: [mathematics (41/0 active (derivative | &n &op &n &op &n | count))]
+User Triples: None
+Node Triples: (&n, &op, &n)
+Anti-Match Detected: false
+Evaluated Rules (shaping): [calculate "Grug computes carefully and verifies each arithmetic step before stating the result."] | When asked about math, always calculate first before explaining | When asked about emotions, validate feelings before reasoning | When asked about history, provide chronological context | When multiple clauses exist, address each in order | When asked about water, explain molecular structure and life role | When asked about AI, discuss both technology and ethics | When asked about love, explore emotion and biology together | Stay on topic — do not drift to unrelated subjects | Use simple direct language — Grug speaks plainly not fancy
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=5] (Recent): [User]: what is fermentation (intensity=0.66)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.5, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 mathematics: base=0.5 × top=0.5 = 0.1768 [hard_votes=2]
+Time Orientation: none
+=========================================
+[CAPTURE-DEBUG] At AIML Output Scaffold: output length=1695 isempty=false
+[AUTOGROWTH] 🌱  Grew inverse_voter_node node for 'sonnet' in default (intensity=21.21, p=0.25)
+[CURIOSITY] 🔥  Curiosity overflow! intensity=1.0 → pending ask: "/answer"
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("lifeform" => []), "lifeform"), 0x000000000000bf55)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:7307
+[CAPTURE-DEBUG-TEST] Raw capture for '/answer @arts :explain A sonnet is a fourteen-line poem with a specific rhyme scheme, traditionally written in iambic pentameter. The two main types are the Petrarchan with an octave and sestet, and the Shakespearean with three quatrains and a couplet.': length=1695 isempty=false first100='Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest a'
+
+[Step 2 Result]: 'Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest and true. Grug think on math.'
+
+[Step 3] Re-ask 'what is a sonnet' (should recall)
+--> Scanning specimens & looking for dialectical relations...
+--> 1 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=-  Passthrough=  Scored=1 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=-  Passthrough=  Scored=1 lobes
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] mp_1_chk_1 | votes=1 (sure=1 unsure=0) conf=1.0 step=1 | ENTRY_PENDING
+[ORCH-DEBUG] Processing entry seq=1 type=ENTRY_SURE action=ponder
+[ORCH-DEBUG] entry_primary: node_id=node_270 action=ponder conf=1.0
+[ORCH-DEBUG] entry_node found: pattern='sonnet' status=ALIVE
+[ORCH-DEBUG] Calling COMMANDS[ponder] with mission='what is a sonnet' node_pattern='sonnet'
+[ORCH-DEBUG] COMMANDS returned output length=1647 first100='Thinking it through: One more rock for Grug's wall of knowing. Grug think on sonnet.
+--- DEBUG TELEM'
+[ORCH-DEBUG] Entry 1 marked DONE, any_entry_completed=true
+[ORCH-DEBUG] next_pending! returned nothing — no more entries to process
+[ORCH-DEBUG] Assembled output from ActionLog, length=1647
+[ORCH-DEBUG] Orchestrator returning: output_length=1647 all_sure=1 all_unsure=0
+  🧠 MLP: relu | novelty=1.0 | quality=0.487 | semantic=0.488 | relevance=0.527 | disambig=0.494 | strain=0.801 | rules=1 | adj=ON
+
+🤖 AIML Output Scaffold:
+Thinking it through: One more rock for Grug's wall of knowing. Grug think on sonnet.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is a sonnet'
+Primary Action: ponder  (conf=1.0, certainty=SURE)
+Sure Actions: [ponder]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [carefully, simply]
+Winning Node: node_270
+Lobe Context: [Unassigned nodes - no lobe context]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): [ponder "Grug turns the question over slowly, examining it from every side before speaking."] | When asked about math, always calculate first before explaining | When asked about emotions, validate feelings before reasoning | When asked about history, provide chronological context | When multiple clauses exist, address each in order | When asked about consciousness, explore both philosophy and science | When asked about AI, discuss both technology and ethics | When asked about love, explore emotion and biology together | Stay on topic — do not drift to unrelated subjects | Use simple direct language — Grug speaks plainly not fancy
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=7] (Recent): [User]: what is a sonnet (intensity=1.04) | [User]: what is a sonnet (intensity=1.25)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 -: base=1.0 × top=1.0 = 1.0 [hard_votes=1]
+Time Orientation: none
+=========================================
+[CAPTURE-DEBUG] At AIML Output Scaffold: output length=1647 isempty=false
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("lifeform" => []), "lifeform"), 0x000000000000bf56)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:7307
+[CAPTURE-DEBUG-TEST] Raw capture for 'what is a sonnet': length=1647 isempty=false first100='Thinking it through: One more rock for Grug's wall of knowing. Grug think on sonnet.
+--- DEBUG TELEM'
+
+[Step 3 Result]: 'Thinking it through: One more rock for Grug's wall of knowing. Grug think on sonnet.'
+✅ Sonnet recall works! Length=84
+
+============================================================
+  CONTROL: Stromatolite (known working)
+============================================================
+
+[Step 1] Ask 'what are stromatolites' (should get ASK)
+--> Scanning specimens & looking for dialectical relations...
+
+🤖 AIML Ask Question:
+⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 That lands in silence: "what are stromatolites". What is it?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.801)
+[CAPTURE-DEBUG-TEST] Raw capture for 'what are stromatolites': length=325 isempty=false first100='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 That lands in s'
+
+[Step 1 Result]: '⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
+🤔 That lands in silence: "what are stromatolites". What is it?
+   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=0.801)'
+
+[Step 2] Teach with /answer
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 28 tokens → 30 (+2 synonyms)
+--> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(4 parts): [mp_1/primary] "/answer" | [mp_2/support] "@science" | [mp_3/support] ":define Stromatolites" | [mp_4/support] "are layered sedimentary structures formed by the activity of cyanobacteria. They represent some of the oldest evidence of life on Earth, dating back over 3.5 billion years."
+--> 2 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=mathematics  Passthrough=  Scored=1 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=mathematics  Passthrough=  Scored=1 lobes
+[ORCHESTRATOR] 🎲  TIE DETECTED! 2 rocks at confidence 0.5. Random winner: node_sigil_1
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] mp_1_chk_1 | votes=1 (sure=1 unsure=0) conf=0.5 step=1 | ENTRY_PENDING scoped="/answer"
+[ORCH-DEBUG] Processing entry seq=1 type=ENTRY_SURE action=analyze
+[ORCH-DEBUG] entry_primary: node_id=node_sigil_0 action=analyze conf=0.5
+[ORCH-DEBUG] entry_node found: pattern='&n &op &n' status=ALIVE
+[ORCH-DEBUG] Calling COMMANDS[analyze] with mission='/answer' node_pattern='&n &op &n'
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:3567
+[ORCH-DEBUG] COMMANDS returned output length=1947 first100='Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest a'
+[ORCH-DEBUG] Entry 1 marked DONE, any_entry_completed=true
+[ORCH-DEBUG] next_pending! returned nothing — no more entries to process
+[ORCH-DEBUG] Assembled output from ActionLog, length=1947
+[ORCH-DEBUG] Orchestrator returning: output_length=1947 all_sure=1 all_unsure=0
+[ENGINE] 🐢  Node node_sigil_0 slow telemetry only (avg: 6.89s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_sigil_1 slow telemetry only (avg: 6.89s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=0.5 | quality=0.472 | semantic=0.485 | relevance=0.512 | disambig=0.484 | strain=0.506 | rules=1 | adj=ON
+
+🤖 AIML Output Scaffold:
+Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest and true. Grug turn to math.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: '/answer'
+Primary Action: analyze  (conf=0.5, certainty=SURE)
+Sure Actions: [analyze]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_sigil_0
+Lobe Context: [mathematics (41/0 active (derivative | &n &op &n &op &n | count))]
+User Triples: None
+Node Triples: (&n, &op, &n)
+Anti-Match Detected: false
+Evaluated Rules (shaping): When asked about math, always calculate first before explaining | When asked about emotions, validate feelings before reasoning | When asked about history, provide chronological context | When multiple clauses exist, address each in order | When asked about consciousness, explore both philosophy and science | When asked about water, explain molecular structure and life role | When asked about AI, discuss both technology and ethics | When asked about love, explore emotion and biology together | Stay on topic — do not drift to unrelated subjects | Use simple direct language — Grug speaks plainly not fancy
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.0 eligible=10] (Recent): [User]: what is fermentation (intensity=0.41) | [User]: what is fermentation (intensity=0.41) | [User]: /answer @science :define Stromatolites are layered sedimentary structures formed by the activity of cyanobacteria. They represent some of the oldest evidence of life on Earth, dating back over 3.5 billion years. (intensity=1.29)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.5, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 mathematics: base=0.5 × top=0.5 = 0.1768 [hard_votes=2]
+Time Orientation: none
+=========================================
+[CAPTURE-DEBUG] At AIML Output Scaffold: output length=1947 isempty=false
+[AUTOGROWTH] 🌱  Grew inverse_voter_node node for 'stromatolites' in default (intensity=62.17, p=0.25)
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("lifeform" => []), "lifeform"), 0x000000000000bf59)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:7307
+[CAPTURE-DEBUG-TEST] Raw capture for '/answer @science :define Stromatolites are layered sedimentary structures formed by the activity of cyanobacteria. They represent some of the oldest evidence of life on Earth, dating back over 3.5 billion years.': length=1947 isempty=false first100='Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest a'
+
+[Step 2 Result]: 'Thinking it through: Grug compute the numbers. Grug add and subtract with care. Numbers are honest and true. Grug turn to math.'
+
+[Step 3] Re-ask 'what are stromatolites' (should recall)
+--> Scanning specimens & looking for dialectical relations...
+--> 1 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=-  Passthrough=  Scored=1 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=-  Passthrough=  Scored=1 lobes
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 1 entries]
+  [1] mp_1_chk_1 | votes=1 (sure=1 unsure=0) conf=1.0 step=1 | ENTRY_PENDING
+[ORCH-DEBUG] Processing entry seq=1 type=ENTRY_SURE action=describe
+[ORCH-DEBUG] entry_primary: node_id=node_271 action=describe conf=1.0
+[ORCH-DEBUG] entry_node found: pattern='stromatolites' status=ALIVE
+[ORCH-DEBUG] Calling COMMANDS[describe] with mission='what are stromatolites' node_pattern='stromatolites'
+[ORCH-DEBUG] COMMANDS returned output length=1822 first100='Here is the picture: One more rock for Grug's wall of knowing. Grug speak of stromatolites.
+--- DEBU'
+[ORCH-DEBUG] Entry 1 marked DONE, any_entry_completed=true
+[ORCH-DEBUG] next_pending! returned nothing — no more entries to process
+[ORCH-DEBUG] Assembled output from ActionLog, length=1822
+[ORCH-DEBUG] Orchestrator returning: output_length=1822 all_sure=1 all_unsure=0
+  🧠 MLP: relu | novelty=1.0 | quality=0.496 | semantic=0.482 | relevance=0.533 | disambig=0.503 | strain=0.799 | rules=0 | adj=ON
+
+🤖 AIML Output Scaffold:
+Here is the picture: One more rock for Grug's wall of knowing. Grug speak of stromatolites.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what are stromatolites'
+Primary Action: describe  (conf=1.0, certainty=SURE)
+Sure Actions: [describe]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [carefully, simply]
+Winning Node: node_271
+Lobe Context: [Unassigned nodes - no lobe context]
+User Triples: None
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): [describe "Grug paints a picture with words so the listener can see what Grug sees."] | When asked about math, always calculate first before explaining | When asked about emotions, validate feelings before reasoning | When asked about history, provide chronological context | When multiple clauses exist, address each in order | When asked about consciousness, explore both philosophy and science | When asked about water, explain molecular structure and life role | When asked about AI, discuss both technology and ethics | When asked about love, explore emotion and biology together | Stay on topic — do not drift to unrelated subjects | Use simple direct language — Grug speaks plainly not fancy
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=10] (Recent): [User]: what is a sonnet (intensity=0.58) | [User]: what is a sonnet (intensity=0.71) | [System]: Mission "what is a sonnet" → primary=ponder conf=1.0 node=node_270 (intensity=0.52)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 -: base=1.0 × top=1.0 = 1.0 [hard_votes=1]
+Time Orientation: none
+=========================================
+[CAPTURE-DEBUG] At AIML Output Scaffold: output length=1822 isempty=false
+┌ Warning: [MAIN] AutoLinker failed (non-fatal): MethodError(push!, (Dict("lifeform" => []), "lifeform"), 0x000000000000bf5a)
+└ @ Main.GrugBot420 /workspace/grugbot420/src/Main.jl:7307
+[CAPTURE-DEBUG-TEST] Raw capture for 'what are stromatolites': length=1822 isempty=false first100='Here is the picture: One more rock for Grug's wall of knowing. Grug speak of stromatolites.
+--- DEBU'
+
+[Step 3 Result]: 'Here is the picture: One more rock for Grug's wall of knowing. Grug speak of stromatolites.'
+✅ Stromatolite recall works! Length=91
+
+============================================================
+  DIAGNOSTIC COMPLETE
+============================================================

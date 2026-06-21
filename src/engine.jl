@@ -15,6 +15,30 @@ using JSON
 using Random # GRUG: Need random to roll active node limits and scan modes!
 
 # GRUG: Bring the Pattern Scanner into the cave!
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 # GRUG: Guard against double-include if PatternScanner already loaded by caller (e.g. test runner).
 if !isdefined(@__MODULE__, :PatternScanner)
     include("patternscanner.jl")
@@ -42,12 +66,9 @@ if !isdefined(@__MODULE__, :SemanticVerbs)
     using .SemanticVerbs
 end
 
-# GRUG: Bring the AIML Node System for pattern-based responses.
-# GRUG: Guard against double-include if AIMLNodeSystem already loaded by caller.
-if !isdefined(@__MODULE__, :AIMLNodeSystem)
-    include("AIMLNodeSystem.jl")
-    using .AIMLNodeSystem
-end
+# GRUG: AIMLNodeSystem removed in v8.12 — scaffold tracking layer had no
+# output actuator. The stochastic rule board (ORCHESTRATION_RULES, formerly
+# AIML_DROP_TABLE) remains in this file.
 
 # GRUG: Bring the Action+Tone Predictor (pre-vote arousal tuning and confidence weighting)!
 # GRUG: Guard against double-include if ActionTonePredictor already loaded by caller.
@@ -59,7 +80,7 @@ end
 # GRUG v7.21b-2: TonalJudge — token bag + common-sense judge that picks
 # scaffold frame hints. Sits between predictor and scaffold. b-2 is
 # plumbing-only (judge runs and surfaces [FRAME=...] but does not yet
-# alter generate_aiml_payload — that's b-3).
+# alter synthesize_voice_reply — that's b-3).
 if !isdefined(@__MODULE__, :TonalJudge)
     include("TonalJudge.jl")
     using .TonalJudge
@@ -106,6 +127,17 @@ if !isdefined(@__MODULE__, :ArithmeticEngine)
     using .ArithmeticEngine
 end
 
+# GRUG: ActionEngine — Stage 2b dynamic sigil action evaluator. Reads
+# the node's action_callback from json_data, fetches the registered
+# compute function, and computes the result from sigil bindings. This
+# is the DYNAMIC answer: one sigil node computes infinite instances.
+# Factorial, square root, fibonacci — anything that takes &n and produces
+# an answer. MUST come after SigilPromoter because it does `using ..SigilPromoter`.
+if !isdefined(@__MODULE__, :ActionEngine)
+    include("ActionEngine.jl")
+    using .ActionEngine
+end
+
 # GRUG: InputDecomposer — v7.23 compound-query decomposition. Engine.jl
 # references InputDecomposer.InputChunk in _match_to_chunks signatures, so it
 # MUST be loaded before those function definitions are compiled. Same defensive
@@ -134,7 +166,7 @@ const _ENGINE_SIGIL_TABLE::SigilRegistry.SigilTable = SigilRegistry.default_regi
 
 # GRUG: Promotion bindings handoff. Originally task-local storage, but
 # scan_and_expand runs inside a @spawn'd Task (VoteOrchestrator) while
-# generate_aiml_payload runs in a DIFFERENT @spawn'd Task. Julia task-local
+# synthesize_voice_reply runs in a DIFFERENT @spawn'd Task. Julia task-local
 # storage does NOT propagate across Task boundaries, so the arithmetic
 # engine could never see the bindings — it always got an empty vector.
 #
@@ -151,7 +183,7 @@ const _PROMOTION_REWRITTEN_KEY::Symbol = :grugbot420_sigil_promotion_rewritten
 const _PROMOTION_RAW_KEY::Symbol       = :grugbot420_sigil_promotion_raw
 
 # GRUG v7.24-BUG5: Module-level promotion bindings that survive Task boundaries.
-# scan_and_expand writes these; generate_aiml_payload reads them. The
+# scan_and_expand writes these; synthesize_voice_reply reads them. The
 # task-local path is a dead end because the orchestrator runs in a
 # different @spawn'd Task than the scanner.
 const _GLOBAL_PROMOTION_BINDINGS::Base.RefValue{Vector{SigilPromoter.SigilBinding}} = Ref(SigilPromoter.SigilBinding[])
@@ -162,13 +194,13 @@ const _GLOBAL_PROMOTION_LOCK::ReentrantLock = ReentrantLock()
 # GRUG v8.1-coherence-fix: PER-GROUP BINDING STASH for multipart sub-scans.
 # When a compound input ("what is 2+2 also what is a cat") is decomposed,
 # each sub-subject calls scan_and_expand independently. Each call OVERWRITES
-# _GLOBAL_PROMOTION_BINDINGS, so by the time generate_aiml_payload runs for
+# _GLOBAL_PROMOTION_BINDINGS, so by the time synthesize_voice_reply runs for
 # the math sub-objective, the bindings are from the LAST sub-scan (cat),
 # not the math scan. Result: "Arithmetic: no math bindings this cycle."
 #
 # Fix: stash bindings per multipart_group in this dict. After each sub-scan,
 # the caller stores the bindings under the sub-subject's group_id. Then
-# generate_aiml_payload looks up bindings by the primary_vote's group_id
+# synthesize_voice_reply looks up bindings by the primary_vote's group_id
 # BEFORE falling back to the global Ref. This way each sub-objective gets
 # its own correct bindings.
 const _MULTIPART_GROUP_BINDINGS::Dict{String, Vector{SigilPromoter.SigilBinding}} = Dict{String, Vector{SigilPromoter.SigilBinding}}()
@@ -247,7 +279,7 @@ end
 
 # GRUG v8.1-coherence-fix: PER-GROUP LOBE STATE STASH for multipart sub-scans.
 # score_lobes() determines the winner lobe and passthrough lobes, which
-# ephemeral_aiml_orchestrator reads to compute lobe_alignment per vote.
+# ephemeral_voice_orchestrator reads to compute lobe_alignment per vote.
 # For multipart inputs, each sub-subject may belong to a different lobe
 # (math sub-subject → MathLobe, emotional sub-subject → SocialLobe).
 # A single global score_lobes call picks ONE winner for all votes, which
@@ -303,7 +335,7 @@ end
 # When a compound input ("what is 2+2 also what is a cat") is decomposed,
 # each sub-subject has its own text that should be used as the mission for
 # that sub-objective's AIML payload. Without this, every COMMANDS handler
-# receives the FULL compound input as `mission`, so generate_aiml_payload
+# receives the FULL compound input as `mission`, so synthesize_voice_reply
 # generates a response about the whole input, not just the sub-subject.
 # This is the root cause of "Grug only answers one part" — each entry's
 # AIML call sees the full question and naturally gravitates toward the
@@ -368,6 +400,19 @@ function get_multipart_scoped_text(group_id::String)::String
                 return join(chunk_texts, " and ")
             end
         end
+        # GRUG v8.4: Handle composite multipart+chunk groups like "mp_1_chk_1".
+        # These are created by group_votes_by_chunks when it partitions by
+        # multipart_group first. The format is "{mp_group}_chk_{chunk_indices}".
+        # Look up the multipart group's stashed text (e.g., "mp_1") which was
+        # stashed at decompose time by stash_multipart_scoped_text!.
+        if occursin("_chk_", group_id)
+            # Extract the mp prefix: "mp_1_chk_1" -> "mp_1"
+            mp_prefix = group_id[1:findfirst("_chk_", group_id).start - 1]
+            ct = get(_MULTIPART_GROUP_SCOPED_TEXT, mp_prefix, "")
+            if !isempty(ct)
+                return ct
+            end
+        end
         return ""
     end
 end
@@ -386,7 +431,7 @@ function clear_multipart_scoped_text!()
 end
 
 # GRUG v8.1: Time orientation — same pattern as promotion bindings.
-# scan_and_expand writes; generate_aiml_payload reads across Task boundaries.
+# scan_and_expand writes; synthesize_voice_reply reads across Task boundaries.
 const _TIME_ORIENTATION_KEY::Symbol = :grugbot420_time_orientation
 const _GLOBAL_TIME_ORIENTATION::Base.RefValue{Tuple{String,Dict{String,Any}}} = Ref(("none", Dict{String,Any}()))
 
@@ -511,6 +556,7 @@ end
 # ==============================================================================
 
 struct RelationalTriple
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     subject::String
     relation::String
     object::String
@@ -550,6 +596,7 @@ end
 # Future Grug need better chunker, but for now, we just skip bad boundary rocks safely.
 """
 function extract_relational_triples(input::String)::Vector{RelationalTriple}
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     # GRUG: Step 1 - Normalize synonyms BEFORE any other processing.
     # "triggers" -> "causes", "precede" -> "precedes", etc. User-defined at runtime.
     # This runs on token boundaries so partial words are never corrupted.
@@ -627,12 +674,14 @@ end
 
 """
     screen_input_complexity(signal::Vector{Float64}, triples::Vector{RelationalTriple})::Int
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
 
 Compute the base selective-scan tier for an input screen from signal length and
 relational structure. This is the input-side tier only; `_effective_scan_mode`
 may still downgrade it per node pattern length.
 """
 function screen_input_complexity(signal::Vector{Float64}, triples::Vector{RelationalTriple})::Int
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     len = length(signal)
     len == 0 && error("!!! FATAL: screen_input_complexity got empty signal! Cannot scan empty input! !!!")
 
@@ -731,6 +780,7 @@ end
 
 """
 extract_dynamic_relational_triples(input::String, scan_mode::Int)::Vector{RelationalTriple}
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
 
 GRUG: Dynamic relational extraction for complex inputs (high-res scan mode).
 When scan_mode >= 3 (high-res), this performs more sophisticated extraction:
@@ -747,6 +797,7 @@ falls back to basic extract_relational_triples() for efficiency.
 Throws on empty input - NO SILENT FAILURES.
 """
 function extract_dynamic_relational_triples(input::String, scan_mode::Int)::Vector{RelationalTriple}
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     if strip(input) == ""
         error("!!! FATAL: extract_dynamic_relational_triples got empty input! Cannot extract relations from empty air! !!!")
     end
@@ -866,8 +917,11 @@ end
 """
 function evaluate_relational_dialectics(
     user_triples::Vector{RelationalTriple}, 
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     node_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     required_relations::Vector{String},
+# REMINDER: required_relations may use sigils (&n is_greater_than &n) — not fixed string comparisons.
     relation_weights::Dict{String, Float64}
 )::Tuple{Float64, Bool}
 
@@ -1055,6 +1109,7 @@ const NODE_LATCH_THRESHOLD = 1000
 # ==============================================================================
 
 mutable struct Node
+# REMINDER: hopfield_key is DEAD FIELD (specimen compat only). ANTIMATCH REMOVED. SIGILS IN TRIPLES.
     id::String
     pattern::String
     signal::Vector{Float64}          # GRUG: Number rocks for Pattern Scanner!
@@ -1063,7 +1118,9 @@ mutable struct Node
     drop_table::Vector{String}
     throttle::Float64
     relational_patterns::Vector{RelationalTriple}
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     required_relations::Vector{String}
+# REMINDER: required_relations may use sigils (&n is_greater_than &n) — not fixed string comparisons.
     relation_weights::Dict{String, Float64}
 
     # GRUG NEW: Strength system (apoptosis + stratification)
@@ -1075,6 +1132,7 @@ mutable struct Node
     # GRUG v7.49: Is this node an anti-match node? (pattern-activated confidence drain,
     # never enters vote pool, no strength dynamics, no stage competition)
     is_antimatch_node::Bool
+# ⚠️ REMINDER: ANTIMATCH NODES WERE REMOVED. This field is dead/legacy only.
 
     # GRUG NEW: Neighbor linking (max neighbors rolled per-node 8-16 before UNLINKABLE)
     neighbor_ids::Vector{String}
@@ -1083,6 +1141,7 @@ mutable struct Node
 
     # GRUG NEW: Grave tracking (strength hits 0 OR slow response average)
     is_grave::Bool
+# REMINDER: Grave nodes exist but antimatch does NOT — antimatch was removed.
     grave_reason::String             # GRUG: "STRENGTH_ZERO", "GRAVED-SLOW", or ""
 
     # GRUG NEW: Big-O response time ledger (clears every 24 hours)
@@ -1091,6 +1150,7 @@ mutable struct Node
 
     # GRUG NEW: Hopfield cache key (hash of pattern, used for familiar input lookup)
     hopfield_key::UInt64
+# ⚠️ REMINDER: HOPFIELD CACHING WAS REMOVED. This field is dead — specimen round-trip only.
 
     # GRUG NEW: Contributed to output this cycle (for /right and /wrong feedback)
     fired_this_cycle::Bool           # GRUG: True if node's vote was used by AIML orchestrator
@@ -1130,7 +1190,9 @@ struct Vote
     confidence::Float64
     negatives::Vector{String}
     user_triples::Vector{RelationalTriple}
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     node_triples::Vector{RelationalTriple}
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     antimatch::Bool
     # ---- v7.23 multipart fields (additive, default-safe) ------------------
     # GRUG: empty group_id means "this vote is on its own". Same node may emit
@@ -1157,7 +1219,9 @@ function Vote(node_id::String,
               confidence::Float64,
               negatives::Vector{String},
               user_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
               node_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
               antimatch::Bool)
     return Vote(node_id, action, confidence, negatives,
                 user_triples, node_triples, antimatch,
@@ -1171,7 +1235,9 @@ function Vote(node_id::String,
               confidence::Float64,
               negatives::Vector{String},
               user_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
               node_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
               antimatch::Bool,
               multipart_group::String,
               multipart_role::Symbol)
@@ -1197,6 +1263,20 @@ const HOPFIELD_CACHE_LOCK = ReentrantLock()
 
 # GRUG: Confidence threshold above which a result gets stored in Hopfield cache.
 const HOPFIELD_STORE_THRESHOLD   = 1.5
+
+# GRUG v7.60-confidence-lock: Raw confidence floor for firing a node in
+# scan_specimens. Only nodes whose pattern-match confidence meets this lock
+# enter the voter pool. This prevents low-confidence noise from inflating
+# past the vote threshold via composite scoring bonuses. The lock is applied
+# at scan time, before any bonuses are computed, so it gates on genuine
+# pattern relevance, not post-hoc score engineering.
+# GRUG v7.61: Raised from 0.15 to 0.30. At 0.15, nodes matching only ONE
+# content word (like "shelter work" for "how does fire work") could enter
+# the voter pool with confidence ~0.3 and sometimes win the vote. A 0.30
+# lock requires at least moderate lexical overlap (harmonic mean of both
+# input-coverage and node-coverage ≥ 0.30), which means matching at least
+# half the content words in both directions — sufficient semantic relevance.
+const SCAN_CONFIDENCE_LOCK       = 0.35
 # GRUG: How many times an input must repeat before it's considered "familiar" enough
 # to use the Hopfield cache instead of a full scan.
 const HOPFIELD_HIT_COUNT_MIN     = 2
@@ -1965,6 +2045,7 @@ const GROUP_MAX_OCCUPANCY = 32  # GRUG: Max members per group. New nodes can't j
 const NOCHAT_GRADUATE_MIN_NEIGHBORS = 4  # GRUG v7.39: Min connected members for NOCHAT graduation. Groups with <4 connected members are invisible to ChatterMode to prevent whacky remixes on under-populated groups.
 
 mutable struct NodeGroup
+# REMINDER: hopfield_key is DEAD FIELD (specimen compat only). ANTIMATCH REMOVED. SIGILS IN TRIPLES.
     id::String                       # GRUG: Stable group id ("group_0", "group_1", ...)
     members::Vector{String}          # GRUG: Node ids \u2014 ORDER PRESERVED for cursor walks
     centroid_pattern::String         # GRUG: Pattern of the founding/seed node (similarity anchor)
@@ -2368,16 +2449,14 @@ function compute_grave_shadow(node_id::String;
                               group_map = GROUP_MAP,
                               group_lock = GROUP_LOCK,
                               aiml_tribe = nothing)::Float64
-    # GRUG: Antimatch nodes don't die. No shadows on suppressors.
+    # GRUG v7.60: Antimatch removed. All nodes can cast shadows.
     node = lock(node_lock) do
         get(node_map, node_id, nothing)
     end
     if isnothing(node)
         return 1.0  # vanished node — no opinion
     end
-    if node.is_antimatch_node
-        return 1.0  # suppressors don't die, don't cast shadows
-    end
+    # GRUG v7.60: Antimatch removed. Former antimatch nodes now follow normal shadow rules.
     if node.is_grave
         return 1.0  # already dead — no self-shadow (grave nodes don't vote anyway)
     end
@@ -2457,8 +2536,8 @@ end
 
 # GRUG BUG-011: Per-node-type inhibition buckets. Kept out of NodeGroup's
 # positional constructor to avoid breaking old specimen load paths. Keyed by
-# group id, then by node type (:voter or :time). AIML has its own registry in
-# AIMLNodeSystem because AIML nodes are not NodeGroup members.
+# group id, then by node type (:voter or :time). (AIML nodes were tracked in
+# AIMLNodeSystem, removed v8.12 — they are not NodeGroup members.)
 const GROUP_INHIBITION_BY_TYPE = Dict{String, Dict{Symbol, Set{String}}}()
 
 function _node_inhibition_type(node)::Symbol
@@ -2513,7 +2592,7 @@ function refresh_inhibition_tokens!(
             node = get(node_map, mid, nothing)
             isnothing(node) && continue
             node.is_grave && continue
-            node.is_antimatch_node && continue
+            # GRUG v7.60: antimatch removed, no skip needed
 
             bucket = typed_tokens[_node_inhibition_type(node)]
 
@@ -2784,7 +2863,7 @@ end
 # Candidate score = scan_conf + rel_score + thes_bonus
 # NO VOTE ACTIVATION — candidates are never fired, never enter VoteOrchestrator.
 #
-# Only non-grave, non-UNLINKABLE, non-image, non-antimatch nodes in groups
+# Only non-grave, non-UNLINKABLE, non-image nodes in groups qualify.
 # qualify. Time nodes and match nodes participate. Batch size limited to 1000
 # (same as ACTIVE_FIRE_CAP) to keep scan bounded on large specimens.
 
@@ -2877,7 +2956,7 @@ function _scan_latch_candidates(
     new_action_names = _action_names_from_packet(action_packet)
 
     # GRUG: Step 4 — Scan candidate nodes. Batch-limited.
-    # Collect nodes that are: not grave, not UNLINKABLE, not image, not antimatch,
+    # Collect nodes that are: not grave, not UNLINKABLE, not image,
     # in a group, and (optionally) in the same lobe or connected lobes.
     # GRUG: Three-phase lock strategy to avoid deadlock AND avoid reading
     # NODE_TO_GROUP under the wrong lock. NODE_TO_GROUP is written under
@@ -2895,7 +2974,7 @@ function _scan_latch_candidates(
             node.is_grave && continue
             node.is_unlinkable && continue
             node.is_image_node && continue
-            node.is_antimatch_node && continue
+            # GRUG v7.60: antimatch removed, no skip needed
             push!(nids, node.id)
             length(nids) >= batch_size && break
         end
@@ -3559,7 +3638,12 @@ function fire_cascades!(source_id::String, active_count::Int, active_cap::Int;
             jitter = jitter_allowed_for(partner_ref, br.base_confidence) ?
                      randn() * RELAY_CONF_JITTER_SIGMA :
                      0.0
-            confidence = max(0.1, br.base_confidence + jitter)
+            # GRUG v7.60-confidence-lock: Cascade confidence must also respect
+            # the scan confidence lock. If the jittered confidence falls below
+            # SCAN_CONFIDENCE_LOCK, the cascade node doesn't fire — it has no
+            # genuine pattern relevance to the current input.
+            confidence = br.base_confidence + jitter
+            confidence < SCAN_CONFIDENCE_LOCK && continue
 
             # GRUG: MATCH-BOUNDARY HANDOFF! The seam tokens are the bridge payload.
             # At fire time, if we have an unmatched_tail from the scanner, those
@@ -4191,6 +4275,7 @@ end
 
 """
 create_node(pattern, action_packet, data, drop_table; is_image_node=false, is_antimatch_node=false, initial_strength=1.0)::String
+# ⚠️ REMINDER: ANTIMATCH NODES WERE REMOVED. This field is dead/legacy only.
 
 GRUG: Grow a new node in the cave. Returns the new node's ID.
 If is_image_node=true, pattern is treated as SDF binary data (not text).
@@ -4205,6 +4290,7 @@ function create_node(
     drop_table::Vector{String};
     is_image_node::Bool  = false,
     is_antimatch_node::Bool = false,
+# ⚠️ REMINDER: ANTIMATCH NODES WERE REMOVED. This field is dead/legacy only.
     initial_strength::Float64 = 1.0,
     node_type::Symbol = :voter  # GRUG v7.59: :voter (default) or :sigil (NOCHAT, singleton)
 )::String
@@ -4588,10 +4674,12 @@ function cast_vote(id, conf, antimatch, u_trips, n_trips)
     node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
     isnothing(node) && error("!!! FATAL: Node [$id] vanished before vote! !!!")
 
-    # GRUG v7.49: Anti-match nodes never vote. If one somehow reaches this
-    # path, reject it loudly — it should have been filtered out upstream.
+    # GRUG v7.60: Anti-match nodes are deprecated. If one somehow reaches this
+    # function, silently return an empty vote instead of crashing. Antimatch
+    # concept has been removed — all nodes vote normally based on confidence.
     if node.is_antimatch_node
-        error("!!! FATAL: Anti-match node [$id] reached cast_vote! Anti-match nodes never vote! !!!")
+        @warn "[ENGINE] Antimatch node $id reached cast_vote — deprecated, returning empty vote."
+        return Vote(id, "ponder^1", 0.0, String[], RelationalTriple[], RelationalTriple[], false)
     end
 
     winning_action, negatives = select_action(node.action_packet)
@@ -4639,10 +4727,10 @@ function cast_vote_with_group(id, conf, antimatch, u_trips, n_trips,
     node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
     isnothing(node) && error("!!! FATAL: Node [$id] vanished before vote! !!!")
 
-    # GRUG v7.49: Anti-match nodes never vote. If one somehow reaches this
-    # path, reject it loudly — it should have been filtered out upstream.
+    # GRUG v7.60: Anti-match nodes are deprecated. Silently return empty vote.
     if node.is_antimatch_node
-        error("!!! FATAL: Anti-match node [$id] reached cast_vote_with_group! Anti-match nodes never vote! !!!")
+        @warn "[ENGINE] Antimatch node $id reached cast_vote_with_group — deprecated, returning empty vote."
+        return Vote(id, "ponder^1", 0.0, String[], RelationalTriple[], RelationalTriple[], false, multipart_group, multipart_role, Int[])
     end
 
     winning_action, negatives = select_action(node.action_packet)
@@ -4673,16 +4761,17 @@ group_id = "mp_{first_chunk}" (primary chunk). If no chunks, group_id
 vote within its chunk group — same as the InputDecomposer path.
 =#
 function cast_vote_chunked(id, conf, antimatch, u_trips, n_trips,
-                           input_chunks::Vector{Int})
+                           input_chunks::Vector{Int};
+                           multipart_group::String = "")
     if strip(id) == "" error("!!! FATAL: Need real node ID to cast vote! !!!") end
 
     node = lock(() -> get(NODE_MAP, id, nothing), NODE_LOCK)
     isnothing(node) && error("!!! FATAL: Node [$id] vanished before vote! !!!")
 
-    # GRUG v7.49: Anti-match nodes never vote. If one somehow reaches this
-    # path, reject it loudly — it should have been filtered out upstream.
+    # GRUG v7.60: Anti-match nodes are deprecated. Silently return empty vote.
     if node.is_antimatch_node
-        error("!!! FATAL: Anti-match node [$id] reached cast_vote_chunked! Anti-match nodes never vote! !!!")
+        @warn "[ENGINE] Antimatch node $id reached cast_vote_chunked — deprecated, returning empty vote."
+        return Vote(id, "ponder^1", 0.0, String[], RelationalTriple[], RelationalTriple[], false, "", :singleton, input_chunks)
     end
 
     winning_action, negatives = select_action(node.action_packet)
@@ -4693,10 +4782,17 @@ function cast_vote_chunked(id, conf, antimatch, u_trips, n_trips,
 
     # GRUG BUG-011: Voting/use no longer changes strength. Only lock-in feedback can.
 
-    # GRUG: Derive multipart_group from input_chunks.
-    # Single chunk -> group "mp_{chunk}". Multiple -> group "mp_{first}".
-    # No chunks -> "" (singleton / old behavior).
-    group_id = isempty(input_chunks) ? "" : "mp_$(input_chunks[1])"
+    # GRUG v8.4: multipart_group is now passed explicitly from the caller
+    # (process_mission). The old code derived group_id from input_chunks[1],
+    # which was WRONG for compound input: both sub-subjects have chunk 1
+    # within their own chunk resolution, so both got "mp_1" and merged.
+    # Now: if multipart_group is provided, use it. Otherwise, fall back to
+    # the old chunk-derived derivation for backward compat (singleton path).
+    if !isempty(multipart_group)
+        group_id = multipart_group
+    else
+        group_id = isempty(input_chunks) ? "" : "mp_$(input_chunks[1])"
+    end
 
     return Vote(id, winning_action, conf, negatives, u_trips, n_trips, antimatch,
                 group_id, :primary, input_chunks)
@@ -4874,7 +4970,7 @@ GRUG v7.21c-2: PROSE-SLOT REGISTRY HELPER.
 Walks every slot in an action_packet. For each slot's action_name, if it
 is not already in COMMANDS:
   - If it looks like prose (>=2 words AND >=8 chars), auto-register a
-    passthrough handler that funnels through `generate_aiml_payload`.
+    passthrough handler that funnels through `synthesize_voice_reply`.
   - Otherwise (single short word, looks like a typo): raise a FATAL error
     with the list of valid actions, preserving QoL-2025 BUG-007 behavior.
 
@@ -4893,7 +4989,7 @@ function ensure_action_packet_registered!(action_packet::AbstractString)
         is_prose_slot = (length(split(action_name)) >= 2) && (length(action_name) >= 8)
         if is_prose_slot
             COMMANDS[action_name] = (mission, node, primary_vote, sure_votes, unsure_votes, all_votes) -> begin
-                return Base.invokelatest(generate_aiml_payload, mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
+                return Base.invokelatest(synthesize_voice_reply, mission, primary_vote, sure_votes, unsure_votes, all_votes, node.json_data)
             end
         else
             valid_actions = sort(collect(keys(COMMANDS)))
@@ -5066,18 +5162,9 @@ function grow_nodes_from_packet(json_str::String;
 
                     # GRUG: STOCHASTIC AIML GROWTH — when a main node lands in a
                     # lobe, coinflip ~1/3 to auto-grow an AIML executive node.
-                    # This makes the AIML sub-population grow at approximately
-                    # 1/3 the rate of the main population, stochastically.
-                    # No lockstep. No rigidity. Just moss on the cave wall.
-                    # data_warrant=1.0 because the USER explicitly planted this
-                    # node — their intent IS the data signal. No blind growth.
-                    if isdefined(@__MODULE__, :AIMLNodeSystem)
-                        try
-                            AIMLNodeSystem.stochastic_aiml_growth!(target_lobe, p; data_warrant=1.0)
-                        catch e
-                            @warn "[ENGINE] grow_nodes_from_packet: stochastic AIML growth failed for lobe '$target_lobe': $e"
-                        end
-                    end
+                    # GRUG v8.12: AIMLNodeSystem removed — stochastic AIML growth
+                    # callback is now no-op. The node still gets attached to the
+                    # lobe below; the AIML-specific sub-population tracking is gone.
                 else
                     @warn "[ENGINE] grow_nodes_from_packet: target_lobe '$target_lobe' does not exist; node '$nid' grown into unassigned pool."
                 end
@@ -5135,7 +5222,7 @@ struct StochasticRule
     fire_probability::Float64  # GRUG: [0.0, 1.0] - how often this rule fires
 end
 
-const AIML_DROP_TABLE = StochasticRule[]
+const ORCHESTRATION_RULES = StochasticRule[]
 const _DROP_TABLE_LOCK = ReentrantLock()
 
 # GRUG: Allowed magic word tags. Fake tags are rejected loudly!
@@ -5193,7 +5280,7 @@ function add_orchestration_rule!(rule_input::String)::String
     end
 
     lock(_DROP_TABLE_LOCK) do
-        push!(AIML_DROP_TABLE, StochasticRule(rule_text, fire_prob))
+        push!(ORCHESTRATION_RULES, StochasticRule(rule_text, fire_prob))
     end
     return "Rule tied to tree: [$rule_text] (fire_prob=$(round(fire_prob, digits=2)))"
 end
@@ -5277,48 +5364,175 @@ end
 # ==============================================================================
 
 function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
-    input_tokens = Set(split(lowercase(strip(input_text))))
-    node_tokens = Set(split(lowercase(strip(node.pattern))))
+# GRUG v7.60-coherence: Content-weighted lexical overlap.
+# Function words (what, is, the, a, and, etc.) carry very little semantic
+# signal — they make "what is macroeconomics" match "what is fire" with
+# 66.7% overlap even though the topics are completely unrelated.
+# NEW: Strip function words before computing overlap, so only content
+# words (nouns, verbs, adjectives) drive the match score. A node that
+# shares content words with the input is genuinely relevant; one that
+# only shares function words is not.
+#
+# GRUG v7.61-coherence: GENERIC-CONTENT-WORD DISCOUNT. Some words pass
+# the stopword filter but are still semantically generic — they appear
+# in many different patterns across topics ("work" in "how does fire work",
+# "how does shelter work", "how does grug think"). Matching only on these
+# generic content words produces false positives: "shelter work" beats
+# "fire burn" for "how does fire work" because both share "work". The fix:
+# when the OVERLAP consists ENTIRELY of generic content words (no topic-
+# specific words match), apply a penalty. A node that matches "fire" is
+# genuinely about fire; one that only matches "work" could be about anything.
+    _lex_stopwords = Set(["what","is","the","a","an","are","was","were","be",
+                          "been","have","has","had","do","does","did","will",
+                          "would","could","should","may","might","shall","can",
+                          "to","of","in","for","on","with","at","by","from","as",
+                          "into","through","during","before","after","above",
+                          "below","between","out","off","over","under","again",
+                          "further","then","once","and","but","or","nor","not",
+                          "so","yet","both","either","neither","each","every",
+                          "all","any","few","more","most","other","some","such",
+                          "no","only","own","same","than","too","very","just",
+                          "because","if","when","where","how","which","who",
+                          "whom","this","that","these","those","it","its",
+                          "about","tell","me","does","why","grug"])
+    # GRUG v7.61: Generic content words — pass stopword filter but are
+    # semantically lightweight. Used in many patterns across topics.
+    # When overlap is ENTIRELY these words, the match is structural
+    # not topical, and confidence should be discounted.
+    # NOTE: Words like "love", "think", "fear" are topic words in grug's
+    # world (emotions, cognition) — they are NOT generic here.
+    _generic_content_words = Set(["work","make","go","get","use","find",
+                                   "give","tell","ask","try","leave","call",
+                                   "keep","let","begin","seem","help","show",
+                                   "hear","play","run","move","live","believe",
+                                   "bring","happen","write","provide","sit","stand",
+                                   "lose","pay","meet","include","continue","set",
+                                   "learn","change","lead","watch",
+                                   "follow","stop","create","speak","read","allow",
+                                   "add","spend","grow","open","walk","win","offer",
+                                   "remember","consider",
+                                   "appear","buy","wait",
+                                   "serve","die","send","expect","build","stay","fall",
+                                   "cut","reach","kill","remain","suggest","raise","pass",
+                                   "sell","require","report","decide","pull","develop"])
+    input_tokens_raw = split(lowercase(strip(input_text)))
+    input_tokens = Set(filter(t -> !(t in _lex_stopwords), input_tokens_raw))
+    node_tokens_raw = split(lowercase(strip(node.pattern)))
+    node_tokens = Set(filter(t -> !(t in _lex_stopwords), node_tokens_raw))
     if isempty(input_tokens) || isempty(node_tokens)
         return 0.0
     end
-    overlap = length(intersect(input_tokens, node_tokens))
+    overlap_set = intersect(input_tokens, node_tokens)
+    overlap = length(overlap_set)
     overlap == 0 && return 0.0
-    denom = max(1, min(length(input_tokens), length(node_tokens)))
-    return clamp(overlap / denom, 0.0, 1.0)
+    # GRUG v7.61: GENERIC-ONLY OVERLAP PENALTY. If every word in the overlap
+    # is a generic content word, the match is structural (both patterns use
+    # "work") not topical (both are about fire). Discount by 0.5 so the
+    # harmonic mean is halved. This prevents "shelter work" from matching
+    # "fire work" as strongly as "fire burn" matches "fire work" (via "fire").
+    _all_generic = all(w -> w in _generic_content_words, overlap_set)
+    _generic_penalty = _all_generic ? 0.5 : 1.0
+    # GRUG v7.60-coherence: BIDIRECTIONAL OVERLAP. Use the harmonic mean
+    # of input-coverage and node-coverage so that:
+    #   - A node that covers ALL of the input's content (input_coverage=1.0)
+    #     AND whose content is mostly covered by the input (node_coverage high)
+    #     gets the highest score.
+    #   - A node that covers the input but has lots of extra unrelated content
+    #     (low node_coverage) gets a moderate score.
+    #   - This prevents "find clean water source" (4 content words, only "water"
+    #     matches) from tying with "water" (1 content word, perfect match).
+    # Formula: harmonic_mean(input_coverage, node_coverage)
+    # = 2 * (input_coverage * node_coverage) / (input_coverage + node_coverage)
+    input_coverage = overlap / max(1, length(input_tokens))
+    node_coverage = overlap / max(1, length(node_tokens))
+    harmonic = (input_coverage + node_coverage) > 0 ?
+               2.0 * (input_coverage * node_coverage) / (input_coverage + node_coverage) : 0.0
+    # GRUG v7.61: Apply generic-only overlap penalty. When the overlap
+    # consists entirely of generic content words, the match is not topical.
+    # "shelter work" ↔ "fire work" via "work" is structural, not semantic.
+    return clamp(harmonic * _generic_penalty, 0.0, 1.0)
 end
 
 function _scan_confidence_for_node(input_signal::Vector{Float64}, input_text::String, node::Node, base_mode::Int)::Float64
+# REMINDER: ANTIMATCH NODES REMOVED. Do not add antimatch confidence drain.
+# GRUG v7.60-coherence: LEXICAL GATING. The signal scanner (float-hash)
+# produces near-1.0 confidence for almost every node regardless of semantic
+# relevance, because the signal vectors are poorly differentiated. This
+# caused wrong nodes to win votes: "greece" beat "fire hearth" for "what
+# is fire". The fix: lexical overlap is the PRIMARY confidence source.
+# Signal similarity can BOOST a lexically-matched node but CANNOT create
+# confidence from zero. A node with zero lexical overlap with the input
+# gets zero confidence regardless of signal similarity.
+#
+# GRUG v7.55: DUAL-INPUT LEXICAL OVERLAP. Sigil promotion rewrites "6"
+# to "&n" in the input before scanning, so answer nodes with literal
+# numbers in their pattern ("factorial of 6") lose lexical overlap.
+# Fix: compute overlap against BOTH the promoted input AND the raw
+# (un-promoted) input, and take the max. This way:
+#   - Sigil nodes match the promoted input ("&n &op &n" ↔ "&n &op &n")
+#   - Answer nodes match the raw input ("factorial of 6" ↔ "factorial of 6")
     node.is_image_node && return 0.0
-    isempty(node.signal) && return _lexical_overlap_confidence(input_text, node)
+
+    # GRUG v7.55: DUAL-INPUT — compute overlap against BOTH promoted and raw input.
+    raw_input = lock(_GLOBAL_PROMOTION_LOCK) do; _GLOBAL_PROMOTION_RAW[]; end
+    use_raw = !isempty(raw_input) && raw_input != input_text
+
+    isempty(node.signal) && return max(_lexical_overlap_confidence(input_text, node),
+                                        use_raw ? _lexical_overlap_confidence(raw_input, node) : 0.0)
+
+    lex_conf = _lexical_overlap_confidence(input_text, node)
+
+    # GRUG v7.55: Also compute overlap against the raw (un-promoted) input.
+    # If the raw input has better overlap with this node's pattern, use that.
+    # This is critical for answer nodes that contain literal numbers — the
+    # promoted input replaces numbers with sigil tokens, breaking the match.
+    if use_raw
+        raw_lex_conf = _lexical_overlap_confidence(raw_input, node)
+        lex_conf = max(lex_conf, raw_lex_conf)
+    end
+
+    # GRUG v7.60-coherence: LEXICAL GATE — if the node shares ZERO words
+    # with the input, it has no business firing. Signal similarity alone
+    # is not sufficient because the float-hash vectors are too coarse.
+    lex_conf <= 0.0 && return 0.0
 
     mode = _effective_scan_mode(base_mode, node.signal)
-    conf = 0.0
+    sig_conf = 0.0
     try
         if mode == 1
-            _, conf = _bidirectional_cheap_scan(input_signal, node.signal; threshold=0.1, nonjitter=is_nonjitter(node))
+            _, sig_conf = _bidirectional_cheap_scan(input_signal, node.signal; threshold=0.1, nonjitter=is_nonjitter(node))
         elseif mode == 2
-            _, conf = medium_scan(input_signal, node.signal; threshold=0.1)
+            _, sig_conf = medium_scan(input_signal, node.signal; threshold=0.1)
         else
-            _, conf = high_res_scan(input_signal, node.signal; threshold=0.1)
+            _, sig_conf = high_res_scan(input_signal, node.signal; threshold=0.1)
         end
     catch e
         if e isa PatternNotFoundError || e isa PatternScanError
-            conf = 0.0
+            sig_conf = 0.0
         else
             rethrow(e)
         end
     end
 
-    # PatternScanner cannot match a longer node pattern against a shorter input;
-    # lexical overlap is the compatibility fallback used by old smoke/anti-match
-    # tests and preserves semantic activation for partial user phrases.
-    return max(conf, _lexical_overlap_confidence(input_text, node))
+    # GRUG v7.60-coherence: COMBINED CONFIDENCE. Signal similarity BOOSTS
+    # lexical confidence but cannot override it. The formula:
+    #   combined = lex_conf * (1.0 + 0.3 * sig_conf)
+    # This means:
+    #   - lex_conf=0.5, sig_conf=1.0 → 0.5 * 1.3 = 0.65  (good match, boosted)
+    #   - lex_conf=0.5, sig_conf=0.0 → 0.5 * 1.0 = 0.5  (good match, no boost)
+    #   - lex_conf=0.333, sig_conf=1.0 → 0.333 * 1.3 = 0.433  (partial match)
+    #   - lex_conf=0.0, sig_conf=1.0 → 0.0  (no lexical overlap = no fire)
+    # The signal scanner can add at most 30% bonus on top of lexical overlap,
+    # which preserves lexical relevance as the dominant signal.
+    combined = lex_conf * (1.0 + 0.3 * clamp(sig_conf, 0.0, 1.0))
+    return clamp(combined, 0.0, 1.0)
 end
 
 function _specimen_tuple(id::String, conf::Float64, antimatch::Bool,
                          user_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
                          node_triples::Vector{RelationalTriple},
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
                          input_chunks::Vector{Int}=Int[])
     return (id, conf, antimatch, user_triples, node_triples, input_chunks)
 end
@@ -5331,6 +5545,8 @@ Compatibility scanner used by scan_and_expand. Returns six-tuples:
 BUG-011: scanning/firing is marker-only and never mutates strength.
 """
 function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64, Bool, Vector{RelationalTriple}, Vector{RelationalTriple}, Vector{Int}}}
+# REMINDER: ANTIMATCH NODES REMOVED. No antimatch drain in scan loop. HOPFIELD REMOVED.
+# REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     strip(input) == "" && error("!!! FATAL: scan_specimens got empty input! !!!")
 
     input_signal = words_to_signal(input)
@@ -5351,11 +5567,17 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
         conf = _scan_confidence_for_node(input_signal, input, node, base_mode)
         conf <= 0.0 && continue
 
-        if node.is_antimatch_node
-            # Anti-match nodes fire as drains but do not enter the voter pool.
-            node.fired_this_cycle = true
-            continue
-        end
+        # GRUG v7.60-confidence-lock: Only nodes with genuine high confidence
+        # should fire and vote. Low-confidence noise must be excluded at the
+        # source — the scan stage — not just filtered downstream. This is the
+        # "lock in confidence" gate: a node must have raw pattern-match
+        # confidence >= SCAN_CONFIDENCE_LOCK to even enter the voter pool.
+        # Without this, every node with any activation fires, and composite
+        # scoring can inflate weak matches past the vote threshold.
+        conf < SCAN_CONFIDENCE_LOCK && continue
+
+        # GRUG v7.60-confidence-lock: ANTIMATCH REMOVED. No antimatch bypass.
+        # All non-grave, non-image nodes with conf >= SCAN_CONFIDENCE_LOCK enter voter pool directly.
 
         push!(matched, _specimen_tuple(node.id, Float64(conf), false, user_triples, node.relational_patterns, input_chunk_ids))
         push!(seen, node.id)
@@ -5369,8 +5591,13 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
             drop_id in seen && continue
             drop_node = get(NODE_MAP, drop_id, nothing)
             isnothing(drop_node) && continue
-            (drop_node.is_grave || drop_node.is_antimatch_node) && continue
-            drop_conf = max(0.1, Float64(conf) * 0.8)
+            drop_node.is_grave && continue
+            # GRUG v7.60-confidence-lock: Drop-table co-activation must also
+            # respect the confidence lock. If the parent's conf * 0.8 is below
+            # SCAN_CONFIDENCE_LOCK, the co-activated node doesn't fire — it
+            # has no genuine pattern relevance to the current input.
+            drop_conf = Float64(conf) * 0.8
+            drop_conf < SCAN_CONFIDENCE_LOCK && continue
             push!(matched, _specimen_tuple(drop_id, drop_conf, false, user_triples, drop_node.relational_patterns, input_chunk_ids))
             push!(seen, drop_id)
             drop_node.fired_this_cycle = true
@@ -5385,7 +5612,7 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
             bridge_id in seen && continue
             bridge_node = get(NODE_MAP, bridge_id, nothing)
             isnothing(bridge_node) && continue
-            (bridge_node.is_grave || bridge_node.is_antimatch_node) && continue
+            bridge_node.is_grave && continue
             seam_triples = isempty(strip(seam_text)) ? RelationalTriple[] : extract_relational_triples(seam_text)
             node_triples = vcat(bridge_node.relational_patterns, seam_triples)
             push!(matched, _specimen_tuple(bridge_id, Float64(bridge_conf), false, user_triples, node_triples, input_chunk_ids))
@@ -5413,7 +5640,7 @@ Two layers:
   Layer 1 — thesaurus canonicalization ("two plus two" -> "2 + 2")
   Layer 2 — registry shape promotion   ("2 + 2"        -> "&n &op &n")
 Bindings are stashed in both task-local storage and module-level Refs so
-downstream code (ArithmeticEngine, ATP, generate_aiml_payload) can read them
+downstream code (ArithmeticEngine, ATP, synthesize_voice_reply) can read them
 across Task boundaries. The PROMOTED text is passed to scan_specimens so that
 nodes with &n/&op patterns can match the promoted form.
 """
@@ -5438,7 +5665,7 @@ function scan_and_expand(input::String; chunks=[], multipart_group::String="")
 
     # GRUG v8.1-coherence-fix: ALSO stash per multipart_group if provided.
     # This is the key fix for multipart decoherence: each sub-scan's
-    # bindings are stored under their group_id so generate_aiml_payload
+    # bindings are stored under their group_id so synthesize_voice_reply
     # can look up the correct bindings for each sub-objective.
     stash_multipart_bindings!(multipart_group, promotion_bindings,
                               promoted_text, input)

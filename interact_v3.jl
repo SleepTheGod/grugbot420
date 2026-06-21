@@ -15,6 +15,27 @@
 #      expansion ("fire produces heat", "fire creates heat", "rain causes flood").
 # ============================================================
 ENV["GRUG_NO_AUTOLOAD"] = "1"
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 include("src/Main.jl")
 
 const SPEC = joinpath(@__DIR__, "specimens", "comprehensive_v3_specimen.json")
@@ -22,11 +43,11 @@ println("Loading specimen: $SPEC")
 load_specimen_from_file!(SPEC)
 
 # Suppress the engine's verbose stdout during dispatch so the harness
-# output stays clean. We capture the REAL speech from _LAST_AIML_OUTPUT.
+# output stays clean. We capture the REAL speech from _LAST_VOICE_OUTPUT.
 function run_mission(text::String)
     resp = ""; node = ""; action = ""; conf = 0.0
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        _LAST_AIML_OUTPUT[] = ""
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        _LAST_VOICE_OUTPUT[] = ""
         _LAST_FIRED_NODE[] = ""
         _LAST_PRIMARY_ACTION[] = ""
         _LAST_CONFIDENCE[] = 0.0
@@ -42,8 +63,8 @@ function run_mission(text::String)
     redirect_stdout(orig)
     close(wr)
     close(rd)
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        resp   = _LAST_AIML_OUTPUT[]
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        resp   = _LAST_VOICE_OUTPUT[]
         node   = _LAST_FIRED_NODE[]
         action = _LAST_PRIMARY_ACTION[]
         conf   = _LAST_CONFIDENCE[]
@@ -142,8 +163,8 @@ multipart_specs = [
 multipart_results = []  # (input, resp, node, action, conf, expected, hits, decomp)
 for (inp, expected) in multipart_specs
     # Capture FULL stdout so we can show the decomposer split + merged answer.
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        _LAST_AIML_OUTPUT[] = ""; _LAST_FIRED_NODE[] = ""
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        _LAST_VOICE_OUTPUT[] = ""; _LAST_FIRED_NODE[] = ""
         _LAST_PRIMARY_ACTION[] = ""; _LAST_CONFIDENCE[] = 0.0
     end
     orig = stdout
@@ -156,8 +177,8 @@ for (inp, expected) in multipart_specs
     redirect_stdout(orig); close(wr)
     full = fetch(reader); close(rd)
     resp = ""; node = ""; action = ""; conf = 0.0
-    lock(_LAST_AIML_OUTPUT_LOCK) do
-        resp = _LAST_AIML_OUTPUT[]; node = _LAST_FIRED_NODE[]
+    lock(_LAST_VOICE_OUTPUT_LOCK) do
+        resp = _LAST_VOICE_OUTPUT[]; node = _LAST_FIRED_NODE[]
         action = _LAST_PRIMARY_ACTION[]; conf = _LAST_CONFIDENCE[]
     end
     # Pull the decomposer's compound-detection line from the full transcript.

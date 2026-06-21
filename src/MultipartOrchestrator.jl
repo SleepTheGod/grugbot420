@@ -36,6 +36,30 @@
 
 module MultipartOrchestrator
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 using ..VoteOrchestrator: AIML_CONFIDENCE_THRESHOLD, AIML_TOP_TIER_WINDOW,
                           AIML_SUBTOP_BASE_PROB, AIML_SUBTOP_BONUS_PROB
 
@@ -219,12 +243,74 @@ function group_votes_by_chunks(votes::AbstractVector)
         end
     end
 
+    # GRUG v8.3: COHERENCE FIX — multipart_group BOUNDARY.
+    # Votes from different multipart groups (mp_1, mp_2) must NEVER be
+    # merged by chunk overlap. "what is fire" (mp_1, chunk 1) and
+    # "what is water" (mp_2, chunk 1) both have input_chunks=[1], so
+    # connected-component grouping collapses them into chk_1 = ONE group.
+    # That's wrong: they are independent sub-subjects. Fix: partition
+    # chunked votes by multipart_group FIRST, then run connected-component
+    # grouping WITHIN each partition. Unchunked votes (no multipart_group)
+    # are grouped as before.
+    _mp_partitioned = Dict{String, Vector{eltype(votes)}}()
+    _no_mp_chunked = eltype(votes)[]
+    for v in chunked
+        mg = getfield(v, :multipart_group)
+        if !isempty(mg)
+            push!(get!(_mp_partitioned, mg, eltype(votes)[]), v)
+        else
+            push!(_no_mp_chunked, v)
+        end
+    end
+
     # --- Chunked votes: connected components by chunk overlap ---
+    # (but only within each multipart_group partition)
     chunk_groups = Dict{String, Vector{eltype(votes)}}()
 
     if !isempty(chunked)
-        # Collect the chunk sets for connected-component computation
-        chunk_sets = [Set(getfield(v, :input_chunks)) for v in chunked]
+        # GRUG v8.3: Run connected-component grouping per multipart partition
+        if !isempty(_mp_partitioned)
+            for (mp_gid, mp_votes) in _mp_partitioned
+                chunk_sets = [Set(getfield(v, :input_chunks)) for v in mp_votes]
+                components = _connected_components(chunk_sets)
+                for comp in components
+                    sorted = sort(comp)
+                    # Prepend the multipart group ID to keep groups distinct
+                    gid = "$(mp_gid)_chk_$(join(sorted, "_"))"
+                    chunk_groups[gid] = eltype(votes)[]
+                end
+                for (i, v) in enumerate(mp_votes)
+                    v_chunks = getfield(v, :input_chunks)
+                    assigned = false
+                    for (gid, _) in chunk_groups
+                        if !startswith(gid, mp_gid * "_")
+                            continue
+                        end
+                        gid_chunks_str = gid[length(mp_gid) + 6:end]  # skip "mp_X_chk_"
+                        gid_chunks = Set(parse.(Int, split(gid_chunks_str, "_")))
+                        if !isempty(intersect(Set(v_chunks), gid_chunks))
+                            push!(chunk_groups[gid], v)
+                            assigned = true
+                            break
+                        end
+                    end
+                    if !assigned
+                        sorted = sort(v_chunks)
+                        gid = "$(mp_gid)_chk_$(join(sorted, "_"))"
+                        if !haskey(chunk_groups, gid)
+                            chunk_groups[gid] = eltype(votes)[v]
+                        else
+                            push!(chunk_groups[gid], v)
+                        end
+                    end
+                end
+            end
+        end
+
+        # GRUG v8.3: Also handle chunked votes WITHOUT multipart_group
+        if !isempty(_no_mp_chunked)
+            # Collect the chunk sets for connected-component computation
+        chunk_sets = [Set(getfield(v, :input_chunks)) for v in _no_mp_chunked]
         components = _connected_components(chunk_sets)
 
         # Map each component to a group_id, then assign votes
@@ -234,12 +320,14 @@ function group_votes_by_chunks(votes::AbstractVector)
             chunk_groups[gid] = eltype(votes)[]
         end
 
-        # Assign each chunked vote to its component's group
-        for (i, v) in enumerate(chunked)
+        # Assign each no-mp chunked vote to its component's group
+        for (i, v) in enumerate(_no_mp_chunked)
             v_chunks = getfield(v, :input_chunks)
             # Find which component this vote belongs to
             assigned = false
             for (gid, _) in chunk_groups
+                # Skip mp-prefixed groups (those are from the partition above)
+                startswith(gid, "mp_") && continue
                 # Extract chunk indices from group_id: "chk_1_2_3" -> [1,2,3]
                 gid_chunks = Set(parse.(Int, split(gid[5:end], "_")))
                 # Vote belongs to this group if any of its chunks are in the component
@@ -261,7 +349,8 @@ function group_votes_by_chunks(votes::AbstractVector)
                 end
             end
         end
-    end
+        end  # if !isempty(_no_mp_chunked)
+    end  # if !isempty(chunked)
 
     # --- Unchunked votes: fall back to multipart_group grouping ---
     singletons = eltype(votes)[]
@@ -476,6 +565,7 @@ Throws MultipartError if any group is malformed (zero or >1 :primary, or
 votes with unknown roles). Never silently drops a multipart group.
 """
 function build_objectives(votes::AbstractVector;
+# REMINDER: Votes carry relational triples that may contain sigils (&n, &op). Dynamic eval.
                           threshold::Float64    = AIML_CONFIDENCE_THRESHOLD,
                           top_window::Float64   = AIML_TOP_TIER_WINDOW,
                           strength_of::Function = _ -> 5.0,
@@ -501,7 +591,13 @@ function build_objectives(votes::AbstractVector;
         # builder that handles multi-primary votes from cast_vote_chunked.
         # Legacy multipart groups ("mp_*") use the original builder that
         # expects exactly one :primary from the decomposer.
-        if startswith(gid, "chk_")
+        # GRUG v8.4: Composite groups like "mp_1_chk_1" (multipart + chunk)
+        # also need the chunk builder — cast_vote_chunked stamps all votes
+        # as :primary, so _objective_from_group's "exactly one :primary"
+        # check fails with "got 2" or "got 3". Any group ID containing
+        # "_chk_" is chunk-derived regardless of prefix.
+        _is_chunk_group = startswith(gid, "chk_") || contains(gid, "_chk_")
+        if _is_chunk_group
             push!(out, _objective_from_chunk_group(gid, groups[gid];
                                              threshold = threshold,
                                              top_window = top_window,

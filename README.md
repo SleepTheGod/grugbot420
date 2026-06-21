@@ -5,6 +5,11 @@
 [![Version](https://img.shields.io/badge/version-v8.0-brightgreen.svg)](#whats-new-in-v80)
 
 
+<!-- ⚠️ ARCHITECTURE REMINDERS ⚠️ -->
+<!-- 1. ANTIMATCH NODES WERE REMOVED — do not reference, implement, or assume they exist -->
+<!-- 2. SIGILS CAN APPEAR IN RELATIONAL TRIPLES — triples are dynamic, not just literal strings -->
+<!-- 3. HOPFIELD CACHING WAS REMOVED — hopfield_key is a dead field for specimen compat only -->
+
 A neuromorphic AI engine written in Julia. GrugBot models cognition through competing populations of pattern nodes — not if-else waterfalls, not transformers, not lookup tables. Many rocks compete to be loudest. Loudest rock gets to talk. Sometimes a quiet rock gets lucky (coinflip). That is how Grug think.
 
 ---

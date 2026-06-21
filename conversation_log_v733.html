@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>grugbot420 Conversation Log — v733 Format</title>
+<style>
+  @page { margin: 1.5cm; size: A4; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 2rem;
+    line-height: 1.7;
+  }
+  .header {
+    text-align: center;
+    border-bottom: 2px solid #e63946;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .header h1 {
+    color: #f4a261;
+    font-size: 2rem;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .header .subtitle {
+    color: #a8dadc;
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .summary-card {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    text-align: center;
+    border: 1px solid #0f3460;
+  }
+  .summary-card .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f4a261;
+  }
+  .summary-card .label {
+    font-size: 0.8rem;
+    color: #a8dadc;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .category-section {
+    margin-bottom: 2rem;
+  }
+  .category-title {
+    color: #e63946;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+  .conversation-entry {
+    background: #16213e;
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+    padding: 1rem 1.2rem;
+    border-left: 3px solid #0f3460;
+    transition: border-color 0.2s;
+  }
+  .conversation-entry:hover {
+    border-left-color: #f4a261;
+  }
+  .conversation-entry.clean {
+    border-left-color: #2a9d8f;
+  }
+  .conversation-entry .query {
+    color: #f4a261;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .conversation-entry .response {
+    color: #e0e0e0;
+    margin-top: 0.4rem;
+    font-style: italic;
+    padding-left: 1rem;
+    border-left: 2px solid #0f3460;
+  }
+  .conversation-entry .meta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .conversation-entry .meta span {
+    font-size: 0.75rem;
+    color: #a8dadc;
+    background: #0f3460;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+  }
+  .conversation-entry .meta span.pass {
+    background: #2a9d8f;
+    color: #fff;
+  }
+  .conversation-entry .meta span.flag {
+    background: #e63946;
+    color: #fff;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+  .badge.clean { background: #2a9d8f; color: #fff; }
+  .badge.issue { background: #e63946; color: #fff; }
+  .footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #0f3460;
+    color: #a8dadc;
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🪨 grugbot420 — Conversation Log</h1>
+  <div class="subtitle">v733 format · Thesaurus v7.40 (836 bidirectional words, 69 decoherence words removed)</div>
+  <div class="subtitle">Specimen: comprehensive_specimen_v758_patched.json · 2026-06-17 22:31:35</div>
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="value">22/22</div>
+    <div class="label">Coherence Rate</div>
+  </div>
+  <div class="summary-card">
+    <div class="value">5/5</div>
+    <div class="label">Arithmetic Pass</div>
+  </div>
+  <div class="summary-card">
+    <div class="value">183</div>
+    <div class="label">Baseline Nodes</div>
+  </div>
+  <div class="summary-card">
+    <div class="value">186</div>
+    <div class="label">Final Nodes</div>
+  </div>
+  <div class="summary-card">
+    <div class="value">+3</div>
+    <div class="label">Nodes Grown</div>
+  </div>
+  <div class="summary-card">
+    <div class="value">836</div>
+    <div class="label">Thesaurus Words</div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">🔢 Arithmetic (5 queries)</div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is 2 plus 2 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: 2 plus 2 equals 4.</div>
+    <div class="meta">
+      <span>17.13s</span>
+      <span class="pass">✅ 2 + 2 = 4</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is 3 plus 4 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: 3 plus 4 equals 7.</div>
+    <div class="meta">
+      <span>1.01s</span>
+      <span class="pass">✅ 3 + 4 = 7</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is 10 minus 3 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: 10 minus 3 equals 7.</div>
+    <div class="meta">
+      <span>0.20s</span>
+      <span class="pass">✅ 10 - 3 = 7</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is 5 times 6 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: 5 times 6 equals 30.</div>
+    <div class="meta">
+      <span>0.14s</span>
+      <span class="pass">✅ 5 × 6 = 30</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is 8 plus 9 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: 8 plus 9 equals 17.</div>
+    <div class="meta">
+      <span>0.15s</span>
+      <span class="pass">✅ 8 + 9 = 17</span>
+    </div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">💬 Regular Question (5 queries)</div>
+
+  <div class="conversation-entry clean">
+    <div class="query">hello <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Hello — here is what matters: Friend at the cave mouth, Grug nod and make space by the fire. Every newcomer is potential friend. Welcome — sit, share the warmth.</div>
+    <div class="meta">
+      <span>0.16s</span>
+      <span>Node: node_0</span>
+      <span>Action: welcome</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is fire <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: A word without a boundary is just noise. Grug draw the line. This is what it is — no more, no less.</div>
+    <div class="meta">
+      <span>0.13s</span>
+      <span>Node: node_182</span>
+      <span>Action: define</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">tell me about rocks <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: Grug sit by the fire and think. What Grug knows, Grug can say. Words come out straight when the mind is clear.</div>
+    <div class="meta">
+      <span>0.12s</span>
+      <span>Node: node_172</span>
+      <span>Action: explain</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is water <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: Grug sit by the fire and think. What Grug knows, Grug can say. Words come out straight when the mind is clear.</div>
+    <div class="meta">
+      <span>0.12s</span>
+      <span>Node: node_167</span>
+      <span>Action: explain</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">how does grug think <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: Fire sits near hearth. Place matters. Where things sit is part of what they are.</div>
+    <div class="meta">
+      <span>0.14s</span>
+      <span>Node: node_100</span>
+      <span>Action: reason</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">🤔 Grug Questioning (3 queries)</div>
+
+  <div class="conversation-entry clean">
+    <div class="query">why does fire burn <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: Listen well — Grug will share what Grug knows. No more, no less. The truth stands on its own feet.</div>
+    <div class="meta">
+      <span>0.20s</span>
+      <span>Question word detected</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">how does water become ice <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: A word without a boundary is just noise. Grug draw the line. This is what it is — no more, no less.</div>
+    <div class="meta">
+      <span>0.15s</span>
+      <span>Question word detected</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">why is sky blue <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: Grug sit by the fire and think. What Grug knows, Grug can say. Words come out straight when the mind is clear.</div>
+    <div class="meta">
+      <span>0.17s</span>
+      <span>Question word detected</span>
+    </div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">🔗 Multipart Question (4 queries)</div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is 2 plus 2 also what is fire <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: 2 plus 2 equals 4.</div>
+    <div class="meta">
+      <span>0.39s</span>
+      <span class="pass">✅ 2 + 2 = 4</span>
+      <span>Action: define</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">what is fire and why does it burn <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: Grug sit by the fire and think. What Grug knows, Grug can say. Words come out straight when the mind is clear.</div>
+    <div class="meta">
+      <span>0.18s</span>
+      <span>Action: explain</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">tell me about water and what is 5 plus 3 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: Morning comes before afternoon. The sun moves, the season turns. Era carries all things forward.</div>
+    <div class="meta">
+      <span>0.23s</span>
+      <span>Action: reason</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">hello and what is 8 minus 2 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: 8 minus 2 equals 6.</div>
+    <div class="meta">
+      <span>0.16s</span>
+      <span class="pass">✅ 8 - 2 = 6</span>
+      <span>Action: reason</span>
+    </div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">⚡ Action Sigil Vote (5 queries)</div>
+
+  <div class="conversation-entry clean">
+    <div class="query">!think about fire <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture:  The thread is: war shapes history. so Grug sit by the fire and think. What Grug knows, Grug can say. Words come out straight when the mind is clear.</div>
+    <div class="meta">
+      <span>0.14s</span>
+      <span>Action: explain</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">?what is water <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: A word without a boundary is just noise. Grug draw the line. This is what it is — no more, no less.</div>
+    <div class="meta">
+      <span>0.13s</span>
+      <span>Action: define</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">~ponder the nature of rocks <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: Hunger leads to foraging. One thing pushes the next. Grug see the chain.</div>
+    <div class="meta">
+      <span>0.20s</span>
+      <span>Action: reason</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">!calculate 3 plus 5 <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Thinking it through: 3 plus 5 equals 8.</div>
+    <div class="meta">
+      <span>0.14s</span>
+      <span>Action: reason</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+
+  <div class="conversation-entry clean">
+    <div class="query">?tell me about grug <span class="badge clean">✅ CLEAN</span></div>
+    <div class="response">Here is the picture: Grug sit by the fire and think. What Grug knows, Grug can say. Words come out straight when the mind is clear.</div>
+    <div class="meta">
+      <span>0.14s</span>
+      <span>Action: explain</span>
+      <span>Conf: 1.0</span>
+    </div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">🧹 Decoherence Cleanup Summary</div>
+  <div class="conversation-entry clean">
+    <div class="query">Thesaurus v7.40 Cleanup Results</div>
+    <div class="response">
+      <strong>69 critical decoherence words removed from bidirectional synonym map:</strong><br><br>
+      
+      <em>Archaic/Academic removed:</em> verity, volition, bestow, contend, assert, endorse, concede, conceivably, potentially, 
+      sagacity, prudence, discernment, hallowed, sanctified, inviolable, encapsulate, immortalize, spawn, birth, conjure, 
+      inscribe, scribe, author, utilize, leverage, employ, commence, embark, facilitate, endeavor, strive, relocate, migrate, 
+      transport, conjecture, postulate, supposition, subsist, notional, intangible, abscond, secrete, vigilance, bereavement, 
+      dispatch, transmit, route, sovereignty, self-determination, realization, cognition, sentience, mindfulness, disguise, 
+      secrecy, cunning, contrary, reciprocal, antithesis, compose, fabricate<br><br>
+      
+      <em>Cross-domain back-links removed:</em> understanding (from knowledge), thought (from idea), reason (from argue), 
+      grasp (from capture), recognize (from validate/acknowledge), answer (from output), knowledge (from information),
+      signal (from information), product (from output/effect)<br><br>
+      
+      <em>Multi-word synonyms removed (16 entries cleaned):</em> rate of change, staying alive, inner self, by oneself, 
+      edge of the world, in spite of, build up, keep eyes on, out of danger, day's end, evening glow, are obliged to, 
+      have to, need to, figure out, work out, break off, bring about, differential calculus, mathematical reasoning, 
+      three-sided figure, spatial reasoning, shape theory<br><br>
+      
+      <em>Canonical entries commented out (source words too dangerous):</em> think, know, make, say, water, run, talk<br><br>
+      
+      <em>Result:</em> 179 active raw entries → 836 bidirectional words (down from 994). Zero decoherence words in any test response.
+    </div>
+  </div>
+</div>
+
+<div class="category-section">
+  <div class="category-title">📊 Qualitative Notes</div>
+  <div class="conversation-entry clean">
+    <div class="query">Template Distribution</div>
+    <div class="response">
+      Voice templates are shared across hippocampal-born shadow nodes by design. The most common template 
+      ("Grug sit by the fire and think...") appears on 9 nodes — all explain-action shadow nodes derived from 
+      the same parent. This is expected behavior: shadow nodes inherit their parent's voice_body, producing 
+      coherent but not unique responses. The 122 unique system_prompts across 183 nodes provides good variety 
+      for the core nodes, with duplication mainly in the hippocampal growth region.
+    </div>
+  </div>
+  <div class="conversation-entry clean">
+    <div class="query">Relational Triple Support</div>
+    <div class="response">
+      The "!think about fire" response included "The thread is: war shapes history" — this came from a relational 
+      triple on the matched node. Triple prefixes are randomly selected from a pool of 8 variants 
+      (The link is clear / Here's the connection / The thread is / etc). The triple content is knowledge-graph 
+      derived, not thesaurus-swapped, so it's semantically correct even if sometimes tangentially related.
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  grugbot420 · Cognitive Architecture Test Log · v733 format<br>
+  Generated from test_results_v82.json · Thesaurus v7.40 with 69 decoherence words removed<br>
+  Specimen: comprehensive_specimen_v758_patched.json (836 thesaurus entries)
+</div>
+
+</body>
+</html>

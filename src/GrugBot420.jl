@@ -2,6 +2,30 @@ __precompile__(false)
 
 module GrugBot420
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  ⚠️  ARCHITECTURE REMINDERS — READ THESE OR SUFFER                          ║
+# ║                                                                              ║
+# ║  1. ANTIMATCH NODES WERE REMOVED. They do not exist. Do not reference        ║
+# ║     is_antimatch_node, antimatch scoring, antimatch drains, or any           ║
+# ║     antimatch logic. That entire concept was deprecated and deleted.          ║
+# ║     If you find yourself writing antimatch code, STOP — you are              ║
+# ║     reimplementing a removed feature.                                        ║
+# ║                                                                              ║
+# ║  2. SIGILS CAN AND DO APPEAR IN RELATIONAL TRIPLES. A triple like           ║
+# ║     (&n, is_greater_than, &n) is DYNAMIC — it evaluates at match time        ║
+# ║     with sigil-bound values, NOT a fixed string comparison. Relational       ║
+# ║     triples are not limited to literal words. Any triple field may            ║
+# ║     contain &sigil tokens. Code that consumes triples MUST handle this.      ║
+# ║     Forgetting this means you break arithmetic, comparisons, and             ║
+# ║     any dynamic relational outcome.                                          ║
+# ║                                                                              ║
+# ║  3. HOPFIELD CACHING WAS REMOVED. The hopfield_key field on Node is         ║
+# ║     a DEAD FIELD — it exists only for specimen save/load round-trip           ║
+# ║     compatibility. Do not use it for caching, lookups, or any logic.         ║
+# ║     Pattern scanning does NOT use hopfield caching. It was disabled          ║
+# ║     ages ago. New code must never depend on hopfield_key.                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 # ==============================================================================
 # GrugBot420 — Neuromorphic Cognitive Engine
 # ==============================================================================
@@ -125,6 +149,12 @@ using .ChatterResiduals
 include("SigilRegistry.jl")
 using .SigilRegistry
 
+# GRUG v8.2: InverseSigil must load BEFORE AutoGrowth (AutoGrowth uses ..InverseSigil).
+# InverseSigil needs SigilRegistry (it uses ..SigilRegistry), which is loaded
+# just above. Must also load BEFORE AutoLinker and Main.jl.
+include("InverseSigil.jl")
+using .InverseSigil
+
 # GRUG: AutoGrowth — live conversation evidence accumulation + lazy coinflip
 # growth. Every user message carries evidence of gaps. The system accumulates
 # lazily and grows when enough evidence piles up. All node types + sigils +
@@ -157,18 +187,13 @@ include("FullLobeScanner.jl")
 using .FullLobeScanner
 
 # GRUG: Relational jitter — per-activation zero-mean nudge on scored values
-# and coin thresholds. Must load BEFORE AIMLNodeSystem (AIML strength/delta
-# call sites use jitter_strength/jitter_delta/jitter_coin_threshold) AND
-# BEFORE engine.jl (evaluate_relational_dialectics uses jitter_score/jitter_weight).
+# and coin thresholds. Must load BEFORE engine.jl (evaluate_relational_dialectics
+# uses jitter_score/jitter_weight).
 include("RelationalJitter.jl")
 using .RelationalJitter
 
-# GRUG: AIML node tribes - lobe-specific executive node populations.
-# Must load BEFORE Main.jl so command handlers can reach the API. Ordering
-# matters: Lobe must already exist so AIML knows what parent cap to read
-# when registering a lobe's AIML tribe. Depends on RelationalJitter above.
-include("AIMLNodeSystem.jl")
-using .AIMLNodeSystem
+# GRUG: AIMLNodeSystem removed in v8.12 — scaffold tracking layer had no
+# output actuator. The stochastic rule board (ORCHESTRATION_RULES) remains.
 
 # GRUG: Vote orchestrator — parallel 1000-cap fire + DONE signalling + threshold vote pick.
 # Must load BEFORE engine.jl so engine can call parallel_fire_batches and FireCounter.
