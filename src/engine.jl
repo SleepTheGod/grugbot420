@@ -189,6 +189,13 @@ const _PROMOTION_RAW_KEY::Symbol       = :grugbot420_sigil_promotion_raw
 const _GLOBAL_PROMOTION_BINDINGS::Base.RefValue{Vector{SigilPromoter.SigilBinding}} = Ref(SigilPromoter.SigilBinding[])
 const _GLOBAL_PROMOTION_REWRITTEN::Base.RefValue{String} = Ref("")
 const _GLOBAL_PROMOTION_RAW::Base.RefValue{String} = Ref("")
+# GRUG v8.14: Pre-expansion raw text — the original user input BEFORE thesaurus
+# gate expansion. The expansion appends synonyms which dilute lexical overlap
+# (input_coverage denominator grows but overlap doesn't). By storing the
+# pre-expansion text, _scan_confidence_for_node can compute overlap against
+# BOTH the expanded input AND the original input, taking the max. This mirrors
+# the existing dual-input pattern for sigil promotion (v7.55).
+const _GLOBAL_RAW_PRE_EXPANSION::Base.RefValue{String} = Ref("")
 const _GLOBAL_PROMOTION_LOCK::ReentrantLock = ReentrantLock()
 
 # GRUG v8.1-coherence-fix: PER-GROUP BINDING STASH for multipart sub-scans.
@@ -625,17 +632,22 @@ function extract_relational_triples(input::String)::Vector{RelationalTriple}
             # tell me about fire / tell about fire
             if i + 3 <= length(tokens) && String(tokens[i+1]) == "me" && String(tokens[i+2]) == "about"
                 obj = String(tokens[i+3])
-                !isempty(obj) && push!(triples, RelationalTriple("tell", "about", obj))
+                # GRUG v8.17: Stem the object so "atoms" → "atom" in triples
+                obj_stemmed = Thesaurus.stem_token(obj)
+                !isempty(obj) && push!(triples, RelationalTriple("tell", "about", obj_stemmed != obj ? obj_stemmed : obj))
             elseif i + 2 <= length(tokens) && String(tokens[i+1]) == "about"
                 obj = String(tokens[i+2])
-                !isempty(obj) && push!(triples, RelationalTriple("tell", "about", obj))
+                obj_stemmed = Thesaurus.stem_token(obj)
+                !isempty(obj) && push!(triples, RelationalTriple("tell", "about", obj_stemmed != obj ? obj_stemmed : obj))
             end
         elseif tok == "describe" && i + 1 <= length(tokens)
             obj = String(tokens[i+1])
-            !isempty(obj) && push!(triples, RelationalTriple("describe", "targets", obj))
+            obj_stemmed = Thesaurus.stem_token(obj)
+            !isempty(obj) && push!(triples, RelationalTriple("describe", "targets", obj_stemmed != obj ? obj_stemmed : obj))
         elseif tok == "about" && i > 1 && i < length(tokens) && String(tokens[i-1]) == "what"
             obj = String(tokens[i+1])
-            !isempty(obj) && push!(triples, RelationalTriple("what", "about", obj))
+            obj_stemmed = Thesaurus.stem_token(obj)
+            !isempty(obj) && push!(triples, RelationalTriple("what", "about", obj_stemmed != obj ? obj_stemmed : obj))
         end
     end
 
@@ -654,7 +666,12 @@ function extract_relational_triples(input::String)::Vector{RelationalTriple}
                     
                     # GRUG FIX 2.2: Make sure subject and object are real rocks, not empty wind!
                     if !isempty(subj) && !isempty(obj)
-                        push!(triples, RelationalTriple(subj, tok, obj))
+                        # GRUG v8.17: Stem subjects and objects for relational matching.
+                        # "you are atoms" → (you, be, atom) instead of (you, be, atoms)
+                        # This ensures triples match node patterns and required_relations.
+                        subj_stemmed = Thesaurus.stem_token(subj)
+                        obj_stemmed  = Thesaurus.stem_token(obj)
+                        push!(triples, RelationalTriple(subj_stemmed != subj ? subj_stemmed : subj, tok, obj_stemmed != obj ? obj_stemmed : obj))
                     end
                 end
             end
@@ -861,9 +878,17 @@ function extract_dynamic_relational_triples(input::String, scan_mode::Int)::Vect
                 end
                 object = join(obj_parts, " ")
                 
+                # GRUG v8.17: Stem subjects and objects for relational matching.
+                # "you are atoms" → (you, be, atom) instead of (you, be, atoms).
+                # Compound subjects/objects: stem each part individually then rejoin.
+                # e.g. "large atoms" → "large atom"
+                subj_stemmed = join([Thesaurus.stem_token(String(p)) for p in subj_parts], " ")
+                obj_stemmed_parts = [Thesaurus.stem_token(String(p)) for p in obj_parts]
+                obj_stemmed = join(obj_stemmed_parts, " ")
+                
                 # GRUG: Add triple if valid
-                if !isempty(subject) && !isempty(object)
-                    push!(triples, RelationalTriple(subject, tok, object))
+                if !isempty(subj_stemmed) && !isempty(obj_stemmed)
+                    push!(triples, RelationalTriple(subj_stemmed, tok, obj_stemmed))
                     
                     # GRUG: High-res feature - detect nested relations via "which" clause
                     # e.g., "A causes B which causes C" -> extract (A causes B) and (B causes C)
@@ -873,11 +898,13 @@ function extract_dynamic_relational_triples(input::String, scan_mode::Int)::Vect
                             # Look for verb after "which/that"
                             for k in (which_idx + 1):length(obj_parts)
                                 if obj_parts[k] in all_verbs && k < length(obj_parts)
-                                    nested_obj = join(obj_parts[(k+1):end], " ")
+                                    nested_obj_parts = obj_parts[(k+1):end]
+                                    nested_obj = join([Thesaurus.stem_token(String(p)) for p in nested_obj_parts], " ")
                                     if !isempty(nested_obj)
                                         # Create nested relation: subject of clause verb -> object
                                         # The clause subject is the compound object minus the which/that part
-                                        clause_subj = join(obj_parts[1:(which_idx-1)], " ")
+                                        clause_subj_parts = obj_parts[1:(which_idx-1)]
+                                        clause_subj = join([Thesaurus.stem_token(String(p)) for p in clause_subj_parts], " ")
                                         if !isempty(clause_subj)
                                             push!(triples, RelationalTriple(clause_subj, obj_parts[k], nested_obj))
                                         end
@@ -5382,6 +5409,13 @@ function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
 # when the OVERLAP consists ENTIRELY of generic content words (no topic-
 # specific words match), apply a penalty. A node that matches "fire" is
 # genuinely about fire; one that only matches "work" could be about anything.
+#
+# GRUG v8.17: STEMMED OVERLAP. Before computing overlap, expand both
+# input and pattern tokens with their stemmed forms via Thesaurus.stem_token.
+# This way "atoms" in input produces {"atoms", "atom"} and "atom" in
+# pattern produces {"atom"} — overlap found! Same for verb forms:
+# "running" produces {"running", "run"}, matching "run" in pattern.
+# Both original AND stemmed forms are kept so exact matches still work.
     _lex_stopwords = Set(["what","is","the","a","an","are","was","were","be",
                           "been","have","has","had","do","does","did","will",
                           "would","could","should","may","might","shall","can",
@@ -5415,10 +5449,18 @@ function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
                                    "serve","die","send","expect","build","stay","fall",
                                    "cut","reach","kill","remain","suggest","raise","pass",
                                    "sell","require","report","decide","pull","develop"])
+    # GRUG v8.17: Tokenize, filter stopwords, then expand with stemmed forms.
+    # Each content token gets BOTH its original form and its stem added.
+    # "atoms" → {"atoms", "atom"}, "running" → {"running", "run"}
+    # Sigil tokens (&n, &op, etc.) pass through stem_token unchanged.
     input_tokens_raw = split(lowercase(strip(input_text)))
-    input_tokens = Set(filter(t -> !(t in _lex_stopwords), input_tokens_raw))
+    input_content = filter(t -> !(t in _lex_stopwords), input_tokens_raw)
+    input_tokens = Thesaurus.normalize_tokens(input_content)
+
     node_tokens_raw = split(lowercase(strip(node.pattern)))
-    node_tokens = Set(filter(t -> !(t in _lex_stopwords), node_tokens_raw))
+    node_content = filter(t -> !(t in _lex_stopwords), node_tokens_raw)
+    node_tokens = Thesaurus.normalize_tokens(node_content)
+
     if isempty(input_tokens) || isempty(node_tokens)
         return 0.0
     end
@@ -5430,8 +5472,17 @@ function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
     # "work") not topical (both are about fire). Discount by 0.5 so the
     # harmonic mean is halved. This prevents "shelter work" from matching
     # "fire work" as strongly as "fire burn" matches "fire work" (via "fire").
+    # GRUG v8.17: Check overlap against stemmed forms too — "runs" stems to
+    # "run" which is generic, so check both original and stem.
     _all_generic = all(w -> w in _generic_content_words, overlap_set)
     _generic_penalty = _all_generic ? 0.5 : 1.0
+    # GRUG v8.17: Use the ORIGINAL content token counts (not the expanded
+    # stemmed set) for coverage calculations. This prevents stemmed expansions
+    # from inflating coverage — "atoms" is one content word, not two
+    # ("atoms" + "atom"). The overlap count uses the expanded set (so "atoms"
+    # can match "atom"), but the denominator uses the original content counts.
+    input_content_count = length(collect(input_content))
+    node_content_count = length(collect(node_content))
     # GRUG v7.60-coherence: BIDIRECTIONAL OVERLAP. Use the harmonic mean
     # of input-coverage and node-coverage so that:
     #   - A node that covers ALL of the input's content (input_coverage=1.0)
@@ -5443,8 +5494,8 @@ function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
     #     matches) from tying with "water" (1 content word, perfect match).
     # Formula: harmonic_mean(input_coverage, node_coverage)
     # = 2 * (input_coverage * node_coverage) / (input_coverage + node_coverage)
-    input_coverage = overlap / max(1, length(input_tokens))
-    node_coverage = overlap / max(1, length(node_tokens))
+    input_coverage = overlap / max(1, input_content_count)
+    node_coverage = overlap / max(1, node_content_count)
     harmonic = (input_coverage + node_coverage) > 0 ?
                2.0 * (input_coverage * node_coverage) / (input_coverage + node_coverage) : 0.0
     # GRUG v7.61: Apply generic-only overlap penalty. When the overlap
@@ -5477,8 +5528,23 @@ function _scan_confidence_for_node(input_signal::Vector{Float64}, input_text::St
     raw_input = lock(_GLOBAL_PROMOTION_LOCK) do; _GLOBAL_PROMOTION_RAW[]; end
     use_raw = !isempty(raw_input) && raw_input != input_text
 
+    # GRUG v8.14: TRIPLE-INPUT — also compute overlap against the pre-expansion
+    # raw text (original user input BEFORE thesaurus gate expansion). The
+    # expansion appends synonyms that dilute input_coverage. For example,
+    # "what is fire" → "what is fire constitutes equals blaze flame conflagration
+    # amounts-to" drops input_coverage from 1.0 to 0.143 because the expansion
+    # adds words not in the node's pattern. Taking the max across all three
+    # versions ensures expansion tokens never HURT a match that would succeed
+    # without them. The expansion's purpose is to HELP synonym-matched nodes
+    # (where the node's pattern contains a synonym of the user's word), and
+    # that still works because the expanded text provides higher node_coverage
+    # for those nodes.
+    pre_expansion_input = lock(_GLOBAL_PROMOTION_LOCK) do; _GLOBAL_RAW_PRE_EXPANSION[]; end
+    use_pre_expansion = !isempty(pre_expansion_input) && pre_expansion_input != input_text
+
     isempty(node.signal) && return max(_lexical_overlap_confidence(input_text, node),
-                                        use_raw ? _lexical_overlap_confidence(raw_input, node) : 0.0)
+                                        use_raw ? _lexical_overlap_confidence(raw_input, node) : 0.0,
+                                        use_pre_expansion ? _lexical_overlap_confidence(pre_expansion_input, node) : 0.0)
 
     lex_conf = _lexical_overlap_confidence(input_text, node)
 
@@ -5489,6 +5555,15 @@ function _scan_confidence_for_node(input_signal::Vector{Float64}, input_text::St
     if use_raw
         raw_lex_conf = _lexical_overlap_confidence(raw_input, node)
         lex_conf = max(lex_conf, raw_lex_conf)
+    end
+
+    # GRUG v8.14: Also compute overlap against the pre-expansion input.
+    # If the original (un-expanded) input has better overlap, use that.
+    # This prevents thesaurus expansion from HURTING matches that would
+    # succeed without the expansion.
+    if use_pre_expansion
+        pre_exp_lex_conf = _lexical_overlap_confidence(pre_expansion_input, node)
+        lex_conf = max(lex_conf, pre_exp_lex_conf)
     end
 
     # GRUG v7.60-coherence: LEXICAL GATE — if the node shares ZERO words
@@ -5550,7 +5625,15 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
     strip(input) == "" && error("!!! FATAL: scan_specimens got empty input! !!!")
 
     input_signal = words_to_signal(input)
-    user_triples = extract_dynamic_relational_triples(input, screen_input_complexity(input_signal, RelationalTriple[]))
+    # GRUG v8.16: Extract triples from RAW pre-expansion text, not from thesaurus-expanded text.
+    # The `input` parameter is the promoted (possibly thesaurus-expanded) text. If we extract
+    # triples from "what is love constitutes equals blaze", we get garbage triples like
+    # (is, care, constitutes). The raw user input "what is love" produces clean triples
+    # like (what, is, love). Pattern matching still uses the expanded text (via input_signal),
+    # but relational matching should use the user's actual words.
+    pre_expansion_input = lock(_GLOBAL_PROMOTION_LOCK) do; _GLOBAL_RAW_PRE_EXPANSION[]; end
+    triple_source = (!isempty(pre_expansion_input) && pre_expansion_input != input) ? pre_expansion_input : input
+    user_triples = extract_dynamic_relational_triples(triple_source, screen_input_complexity(input_signal, RelationalTriple[]))
     base_mode = screen_input_complexity(input_signal, user_triples)
     input_chunk_ids = isempty(chunks) ? Int[] : collect(1:length(chunks))
     active_cap = rand(600:1800)
@@ -5575,6 +5658,22 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
         # Without this, every node with any activation fires, and composite
         # scoring can inflate weak matches past the vote threshold.
         conf < SCAN_CONFIDENCE_LOCK && continue
+
+        # GRUG v8.16: SIGIL NODE CONFIDENCE GATE. Sigil pattern nodes
+        # (patterns containing &n, &op, &conj etc.) fire as low-confidence
+        # side-features on non-math questions because the signal scanner
+        # gives them non-zero similarity even with zero lexical overlap.
+        # This is false activation: "what is AI" should NOT produce a
+        # math side-feature. Fix: sigil-pattern nodes need conf >=
+        # SCAN_CONFIDENCE_LOCK + 0.15 (i.e. 0.50) to enter the voter pool.
+        # A genuine math input like "what is 5 plus 3" produces high
+        # lexical overlap with the promoted pattern "&n &op &n" and
+        # easily clears 0.50. A false positive like "what is AI" typically
+        # gets 0.35-0.45 and is now excluded.
+        _is_sigil_pattern = occursin(r"&[a-z]", node.pattern)
+        if _is_sigil_pattern && conf < SCAN_CONFIDENCE_LOCK + 0.15
+            continue
+        end
 
         # GRUG v7.60-confidence-lock: ANTIMATCH REMOVED. No antimatch bypass.
         # All non-grave, non-image nodes with conf >= SCAN_CONFIDENCE_LOCK enter voter pool directly.
