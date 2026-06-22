@@ -205,6 +205,15 @@ const OP_WORD_MAP::Dict{String,String} = Dict(
     "over"        => "/",
     "equals"      => "=",
     "equal"       => "=",
+    # GRUG v8.19: Verb-form operators. "add 12 and 7" must produce &op binding,
+    # not &concept. Without these, the SigilPromoter promotes "add" to &concept
+    # (generic content word), destroying pattern specificity for action sigil nodes.
+    # Adding them here means "add 12 and 7" → "&op &n and &n" with &op=add,
+    # which matches node_sigil_14's updated pattern "&op &n and &n".
+    "add"         => "+",
+    "subtract"    => "-",
+    "multiply"    => "*",
+    "divide"      => "/",
 )
 
 # GRUG: closed set of operator surface forms the :op shape predicate accepts.

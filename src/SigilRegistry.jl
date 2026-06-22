@@ -1009,6 +1009,15 @@ function default_registry()::SigilTable
             !(t in ["is","are","means","refers","represents","defines","denotes","signifies","embodies","constitutes","characterizes"]) &&
             # Not an action verb (let &action catch these)
             !(t in ["explain","describe","tell","define","reason","discuss","elaborate","clarify","illustrate","analyze","interpret","compare","contrast","evaluate","assess","summarize","outline"]) &&
+            # GRUG v8.19: Not a math action keyword (let action sigil nodes match these
+            # as literal tokens in their patterns, not as &concept placeholders).
+            # Without this exclusion, "half" → &concept, "reciprocal" → &concept,
+            # "double" → &concept, etc. — destroying pattern specificity so that
+            # "half of 20" and "reciprocal of 20" both promote to "&concept of &n"
+            # and become indistinguishable. Now they stay as literal tokens and
+            # match their respective node patterns correctly.
+            !(t in ["half","reciprocal","double","square","cube","factorial",
+                    "fibonacci","absolute","negate","negative"]) &&
             # Not a stopword
             !(t in ["the","a","an","was","were","be","been","have","has","had",
                     "do","does","did","will","would","could","should","may",

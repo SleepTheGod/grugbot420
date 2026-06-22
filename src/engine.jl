@@ -5675,6 +5675,22 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
             continue
         end
 
+        # GRUG v8.21: SIGIL PATTERN SPECIFICITY BONUS. When multiple sigil
+        # patterns match an input (e.g., "square of &n" AND "square root of &n"
+        # both match "square root of 49"), the longer pattern is more specific
+        # and should win. Without this bonus, the shorter pattern can have
+        # higher signal similarity and win incorrectly (e.g., "square of &n"
+        # winning over "square root of &n" for "square root of 49" → wrong answer).
+        # Fix: count non-sigil content tokens in the pattern and add a small
+        # bonus per extra content token. This naturally favors longer, more
+        # specific patterns without penalizing short patterns on non-ambiguous inputs.
+        if _is_sigil_pattern
+            _pat_toks = split(lowercase(strip(node.pattern)), r"\s+")
+            _content_toks = [t for t in _pat_toks if !occursin(r"^&[a-z]$", t) && length(t) > 2]
+            _specificity_bonus = length(_content_toks) * 0.04   # 4% per content token
+            conf = min(1.0, conf + _specificity_bonus)
+        end
+
         # GRUG v7.60-confidence-lock: ANTIMATCH REMOVED. No antimatch bypass.
         # All non-grave, non-image nodes with conf >= SCAN_CONFIDENCE_LOCK enter voter pool directly.
 
@@ -5745,19 +5761,49 @@ nodes with &n/&op patterns can match the promoted form.
 """
 function scan_and_expand(input::String; chunks=[], multipart_group::String="")
     # ── STAGE 1.5a — FRONT-DOOR SIGIL PROMOTION ──────────────────────────
+    # GRUG v8.19: PROMOTE THE PRE-EXPANSION TEXT, NOT THE EXPANDED TEXT.
+    # The thesaurus gate appends synonyms to the input before it reaches
+    # scan_and_expand. Promoting the expanded text produces diluted sigil
+    # patterns: "what is 20 divided by 5 constitutes equals blaze" promotes
+    # to "&query &definition &n &op by &n &definition &definition ..." which
+    # has terrible lexical overlap with "&n &op &n". The fix: promote the
+    # ORIGINAL user input (stashed in _GLOBAL_RAW_PRE_EXPANSION) to get
+    # clean sigil bindings, then append expansion tokens as raw literals
+    # for signal matching (not sigil-promoted).
+    pre_exp = lock(_GLOBAL_PROMOTION_LOCK) do; _GLOBAL_RAW_PRE_EXPANSION[]; end
+    promotion_source = (!isempty(pre_exp) && pre_exp != input) ? pre_exp : input
+    # GRUG v8.19 DEBUG: Log promotion source selection
+    @info "[ENGINE v8.19] scan_and_expand: input='$(input[1:min(80,length(input))])' pre_exp='$(pre_exp[1:min(80,length(pre_exp))])' using_promotion_source='$(promotion_source[1:min(80,length(promotion_source))])'"
     promoted_text, promotion_bindings = SigilPromoter.promote_input(
-        _ENGINE_SIGIL_TABLE, input)
+        _ENGINE_SIGIL_TABLE, promotion_source)
+
+    # GRUG v8.19: DO NOT append thesaurus expansion tokens to the promoted
+    # text. Expansion tokens inflate input_content_count in lexical overlap,
+    # which drops the harmonic mean below the 0.50 sigil gate. For example,
+    # "what is 20 divided by 5 constitutes equals blaze" promotes to
+    # "&query &definition &n &op by &n constitutes equals blaze" — the extra
+    # tokens make input_content = {&query, &definition, &n, &op, constitutes,
+    # equals, blaze} = 7 tokens. Overlap with "&n &op &n" = {&n, &op} = 2.
+    # input_coverage = 2/7 = 0.286, harmonic = 2*(0.286*1.0)/(0.286+1.0) =
+    # 0.446, below the 0.50 gate. The expansion tokens are already in the
+    # signal vector (words_to_signal runs on the full input), so they still
+    # contribute to signal similarity for synonym-matched nodes. The promoted
+    # text must stay CLEAN (only sigil-promoted tokens) for lexical overlap
+    # to work correctly with sigil pattern nodes.
 
     # GRUG: Stash promotion results. Each scan_and_expand call OVERWRITES
     # any prior binding so stale state from a previous input never leaks.
     # Write to BOTH task-local storage AND module-level Refs:
     #   - Task-local: backward compat for code in the same task
     #   - Module-level Refs: survive @spawn Task boundaries (BUG-5 fix).
-    task_local_storage(_PROMOTION_RAW_KEY,       input)
+    # GRUG v8.19: _GLOBAL_PROMOTION_RAW should be the ORIGINAL user input
+    # (pre-expansion), not the expanded text, so lexical overlap against
+    # raw input works correctly for sigil nodes.
+    task_local_storage(_PROMOTION_RAW_KEY,       promotion_source)
     task_local_storage(_PROMOTION_REWRITTEN_KEY, promoted_text)
     task_local_storage(_PROMOTION_BINDINGS_KEY,  promotion_bindings)
     lock(_GLOBAL_PROMOTION_LOCK) do
-        _GLOBAL_PROMOTION_RAW[]        = input
+        _GLOBAL_PROMOTION_RAW[]        = promotion_source
         _GLOBAL_PROMOTION_REWRITTEN[]  = promoted_text
         _GLOBAL_PROMOTION_BINDINGS[]   = promotion_bindings
     end

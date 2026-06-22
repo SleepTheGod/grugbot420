@@ -508,4 +508,136 @@ function format_action_reply_with_steps(result::ActionResult)::String
     return "$(result.answer_str). $(steps_prose)"
 end
 
+# --- Helper: extract second &n binding ---
+function _second_number_binding(bindings::Vector{SigilBinding})::Union{Nothing,Number}
+    count_n = 0
+    for b in bindings
+        if b.name == "n"
+            count_n += 1
+            if count_n == 2
+                val = b.value
+                if val isa Number
+                    return val
+                elseif val isa AbstractString
+                    try
+                        s = String(val)
+                        if occursin(r"^[+-]?\d+$", s)
+                            return parse(Int, s)
+                        elseif occursin(r"^[+-]?\d+\.\d+$", s)
+                            return parse(Float64, s)
+                        end
+                    catch
+                        return nothing
+                    end
+                end
+            end
+        end
+    end
+    return nothing
+end
+
+# --- Helper: extract surface form of second &n binding ---
+function _second_number_surface(bindings::Vector{SigilBinding})::String
+    count_n = 0
+    for b in bindings
+        if b.name == "n"
+            count_n += 1
+            if count_n == 2
+                return isempty(b.surface) ? String(b.value) : b.surface
+            end
+        end
+    end
+    return "?"
+end
+
+# ==============================================================================
+# GRUG: BINARY OPERATION CALLBACKS — add_two, subtract_two, divide_two
+# These handle phrasings like "add 12 and 7", "subtract 3 from 10",
+# "divide 20 by 5" where the operator is a literal word (not an &op sigil)
+# and the ArithmeticEngine path can't fire (no &op binding).
+# ==============================================================================
+
+# --- Add two numbers ---
+register_action_callback!("add_two", function(bindings::Vector{SigilBinding})
+    a = _first_number_binding(bindings)
+    b = _second_number_binding(bindings)
+    a_surface = _first_number_surface(bindings)
+    b_surface = _second_number_surface(bindings)
+
+    if a === nothing || b === nothing
+        return ActionResult("add_two", nothing, "", "add($a_surface, $b_surface)",
+            ActionComputationStep[], "need two number bindings")
+    end
+
+    result = a + b
+    answer_str = string(result)
+    if result isa Float64 && result == floor(result) && abs(result) < typemax(Int)
+        answer_str = string(Int(result))
+    end
+
+    reply = "$(a_surface) plus $(b_surface) equals $answer_str"
+    steps = [ActionComputationStep("$(a_surface) + $(b_surface) = $answer_str")]
+
+    return ActionResult("add_two", result, reply, "add($a_surface, $b_surface)",
+        steps, nothing)
+end)
+
+# --- Subtract two numbers (second from first) ---
+register_action_callback!("subtract_two", function(bindings::Vector{SigilBinding})
+    a = _first_number_binding(bindings)
+    b = _second_number_binding(bindings)
+    a_surface = _first_number_surface(bindings)
+    b_surface = _second_number_surface(bindings)
+
+    if a === nothing || b === nothing
+        return ActionResult("subtract_two", nothing, "", "subtract($a_surface, $b_surface)",
+            ActionComputationStep[], "need two number bindings")
+    end
+
+    result = a - b
+    answer_str = string(result)
+    if result isa Float64 && result == floor(result) && abs(result) < typemax(Int)
+        answer_str = string(Int(result))
+    end
+
+    reply = "$(a_surface) minus $(b_surface) equals $answer_str"
+    steps = [ActionComputationStep("$(a_surface) - $(b_surface) = $answer_str")]
+
+    return ActionResult("subtract_two", result, reply, "subtract($a_surface, $b_surface)",
+        steps, nothing)
+end)
+
+# --- Divide two numbers (first by second) ---
+register_action_callback!("divide_two", function(bindings::Vector{SigilBinding})
+    a = _first_number_binding(bindings)
+    b = _second_number_binding(bindings)
+    a_surface = _first_number_surface(bindings)
+    b_surface = _second_number_surface(bindings)
+
+    if a === nothing || b === nothing
+        return ActionResult("divide_two", nothing, "", "divide($a_surface, $b_surface)",
+            ActionComputationStep[], "need two number bindings")
+    end
+
+    if b == 0
+        return ActionResult("divide_two", nothing, "", "divide($a_surface, 0)",
+            ActionComputationStep[], "division by zero is undefined")
+    end
+
+    result = a / b
+    answer_str = string(round(result, digits=6))
+    # GRUG: Clean up trailing zeros for clean display
+    if result == floor(result) && abs(result) < typemax(Int)
+        answer_str = string(Int(result))
+    elseif occursin(r"\.\d+0+$", answer_str)
+        answer_str = string(round(result, digits=4))
+    end
+
+    reply = "$(a_surface) divided by $(b_surface) equals $answer_str"
+    steps = [ActionComputationStep("$(a_surface) ÷ $(b_surface) = $answer_str")]
+
+    return ActionResult("divide_two", result, reply, "divide($a_surface, $b_surface)",
+        steps, nothing)
+end)
+
 end # module ActionEngine

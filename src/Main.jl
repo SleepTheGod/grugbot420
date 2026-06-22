@@ -3487,12 +3487,14 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
     # =================================================================
     action_compute_result = nothing
     action_compute_reply = ""
+    _winning_action_callback = ""   # GRUG v8.20: remember for coherence check
     try
         _winning_node = lock(NODE_LOCK) do
             get(NODE_MAP, primary_vote.node_id, nothing)
         end
         if _winning_node !== nothing
             _action_cb = get(_winning_node.json_data, "action_callback", "")
+            _winning_action_callback = String(_action_cb)   # GRUG v8.20: save for later
             if !isempty(_action_cb)
                 # GRUG: Get the bindings for this node's group.
                 _mp_group = getfield(primary_vote, :multipart_group)
@@ -3645,11 +3647,31 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         end
     end
 
-    claim_raw = if !isempty(action_compute_reply)
-        # GRUG v7.61: DYNAMIC ACTION WINS. The computed answer IS the claim.
+    claim_raw = if !isempty(action_compute_reply) && isempty(arithmetic_reply)
+        # GRUG v7.61: DYNAMIC ACTION WINS when no arithmetic computed.
         # Priority 0a — above arithmetic (action sigils are more specific).
         # "factorial of 5 is 120" — not "5 factorial" or meta-commentary.
         action_compute_reply
+    elseif !isempty(action_compute_reply) && !isempty(arithmetic_reply)
+        # GRUG v8.20-coherence: BOTH action and arithmetic computed. This happens
+        # when a binary-op sigil node (e.g. &op &n and &n) wins the vote AND the
+        # ArithmeticEngine also computed from the actual &op binding. The action
+        # callback comes from the WINNING NODE which may be wrong due to tie-
+        # breaking (e.g. node_sigil_14 "add_two" wins the coin flip for "20 divided
+        # by 5" because &op &n and &n ties with &op &n by &n at the same confidence).
+        # The ArithmeticEngine reads the ACTUAL operator from the &op binding, so
+        # it's always correct. Trust arithmetic over action when both are present.
+        # Exception: if the action callback is a unary operation (factorial, square,
+        # half, etc.), it's genuinely more specific than generic binary arithmetic
+        # — in that case the action callback wins.
+        _action_is_unary = lowercase(strip(_winning_action_callback)) in
+            ["factorial", "square", "square_root", "double", "half",
+             "negate", "cube", "absolute", "reciprocal", "fibonacci"]
+        if _action_is_unary
+            action_compute_reply   # unary action is genuinely more specific
+        else
+            arithmetic_reply       # binary action may be wrong node — trust bindings
+        end
     elseif !isempty(arithmetic_reply)
         # GRUG: ARITHMETIC WINS. The computed answer IS the claim.
         # Priority 0 — above everything else. When math is present,
