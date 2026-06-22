@@ -42,7 +42,14 @@ end
 
 # GRUG: Include engine after macro is alive. Engine need coinflip!
 # Engine.jl now includes patternscanner.jl, ImageSDF.jl and EyeSystem.jl internally.
-include("engine.jl")
+# GRUG v8.20: Guard against double-include — when loaded via GrugBot420.jl,
+# engine.jl is already included (GrugBot420.jl:282). Including it again causes
+# const redefinition issues that can make _GLOBAL_RAW_PRE_EXPANSION (and
+# potentially other consts) invisible to process_mission(). Only include
+# when running Main.jl standalone.
+if !isdefined(@__MODULE__, :_GLOBAL_PROMOTION_LOCK)
+    include("engine.jl")
+end
 
 # GRUG: Bring the Chatter Mode gossip system into the cave!
 # GRUG: Guard against double-include if ChatterMode already loaded by caller.
