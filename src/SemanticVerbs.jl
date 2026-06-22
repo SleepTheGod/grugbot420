@@ -58,7 +58,14 @@ const _VERB_REGISTRY = Dict{String, Set{String}}(
     "causal"   => Set(["hits", "makes", "causes", "increases", "reduces",
                         "routes", "contradicts"]),
     "spatial"  => Set(["is", "are", "was", "were", "connects"]),
-    "temporal" => Set(["chasing", "follows", "precedes"])
+    "temporal" => Set(["chasing", "follows", "precedes"]),
+    # GRUG v8.16: Arithmetic verbs — math operation words that appear in
+    # user inputs like "what is 5 plus 3" or "7 minus 2". Without these,
+    # triple extraction skips math operators and the &arithmetic relation
+    # sigil can't gate sigil math nodes properly.
+    "arithmetic" => Set(["plus", "minus", "times", "divided", "multiply",
+                         "add", "subtract", "over", "mod", "modulo",
+                         "power", "equals"])
 )
 
 # GRUG: This lock guards ALL three dicts below. One lock, one cave door.

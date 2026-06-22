@@ -879,7 +879,10 @@ function thesaurus_gate_filter(input_text::AbstractString)::Set{String}
     end
 
     tokens = filter(!isempty, map(t -> lowercase(strip(t)), split(input_text)))
-    expanded = Set{String}(tokens)  # GRUG: Start with originals, add synonyms on top
+    # GRUG v8.17: Start with both original AND stemmed forms of all tokens.
+    # "atoms" produces {"atoms", "atom"}, "running" produces {"running", "run"}.
+    # This ensures gate expansion matches work even before synonym lookup.
+    expanded = normalize_tokens(tokens)
 
     for tok in tokens
         syns = get_seed_synonyms(tok)
@@ -890,7 +893,23 @@ function thesaurus_gate_filter(input_text::AbstractString)::Set{String}
         for syn in syns
             count >= GATE_MAX_EXPANSIONS_PER_TOKEN && break
             push!(expanded, syn)
+            # GRUG v8.17: Also add the stemmed form of each synonym.
+            stemmed = stem_token(syn)
+            stemmed != syn && push!(expanded, stemmed)
             count += 1
+        end
+        # GRUG v8.17: Also expand the stemmed form's synonyms.
+        # If "atoms" stems to "atom", and "atom" has synonyms ["particle", ...],
+        # we should include those too.
+        stemmed_tok = stem_token(tok)
+        if stemmed_tok != tok
+            stemmed_syns = get_seed_synonyms(stemmed_tok)
+            count2 = 0
+            for syn in stemmed_syns
+                count2 >= GATE_MAX_EXPANSIONS_PER_TOKEN && break
+                push!(expanded, syn)
+                count2 += 1
+            end
         end
     end
 
@@ -1305,7 +1324,379 @@ function seed_synonym_count()::Int
     return length(SYNONYM_SEED_MAP)
 end
 
+# ============================================================================
+# GRUG v8.17: SYSTEM-WIDE STEMMING / NORMALIZATION
+# GRUG say: words come in many shapes — "atoms" ≠ "atom" in old code.
+#           That bad. Plurals, verb conjugations, gerunds — all should
+#           fold to base form so "explain atoms" matches node "atom",
+#           "rivers" matches "river", "running" matches "run", etc.
+# GRUG say: NOT a real Porter stemmer — too aggressive, turns "atom"
+#           into "atom" but also "universal" into "univers". Bad for
+#           semantic matching. Instead: rule-based inflection stripper
+#           that only strips COMMON, SAFE English suffixes. If unsure,
+#           return the word unchanged. False negatives (missed stems)
+#           are cheap; false positives (wrong stems) are expensive.
+# ============================================================================
+
+# GRUG: Irregular plurals that rule-based stripping gets wrong.
+# "men" → "man", "feet" → "foot", etc. Must come before suffix rules.
+const _IRREGULAR_PLURALS = Dict{String, String}(
+    "men"      => "man",
+    "women"    => "woman",
+    "children" => "child",
+    "feet"     => "foot",
+    "teeth"    => "tooth",
+    "geese"    => "goose",
+    "mice"     => "mouse",
+    "lice"     => "louse",
+    "oxen"     => "ox",
+    "people"   => "person",
+    "criteria" => "criterion",
+    "phenomena"=> "phenomenon",
+    "data"     => "datum",
+    "dice"     => "die",
+    "indices"  => "index",
+    "vertices" => "vertex",
+    "matrices" => "matrix",
+)
+
+# GRUG: Irregular verb forms — past tense / gerund / participle → base.
+# Only the most common ones. Regular forms handled by suffix rules.
+const _IRREGULAR_VERBS = Dict{String, String}(
+    "was"      => "be",
+    "were"     => "be",
+    "been"     => "be",
+    "am"       => "be",
+    "is"       => "be",
+    "are"      => "be",
+    "had"      => "have",
+    "has"      => "have",
+    "did"      => "do",
+    "does"     => "do",
+    "went"     => "go",
+    "gone"     => "go",
+    "goes"     => "go",
+    "came"     => "come",
+    "took"     => "take",
+    "taken"    => "take",
+    "takes"    => "take",
+    "gave"     => "give",
+    "given"    => "give",
+    "gives"    => "give",
+    "made"     => "make",
+    "makes"    => "make",
+    "knew"     => "know",
+    "known"    => "know",
+    "knows"    => "know",
+    "thought"  => "think",
+    "thinks"   => "think",
+    "saw"      => "see",
+    "seen"     => "see",
+    "sees"     => "see",
+    "said"     => "say",
+    "says"     => "say",
+    "told"     => "tell",
+    "tells"    => "tell",
+    "found"    => "find",
+    "finds"    => "find",
+    "got"      => "get",
+    "gets"     => "get",
+    "felt"     => "feel",
+    "feels"    => "feel",
+    "ran"      => "run",
+    "runs"     => "run",
+    "spoke"    => "speak",
+    "spoken"   => "speak",
+    "wrote"    => "write",
+    "written"  => "write",
+    "writes"   => "write",
+    "ate"      => "eat",
+    "eaten"    => "eat",
+    "drank"    => "drink",
+    "drunk"    => "drink",
+    "slept"    => "sleep",
+    "swept"    => "sweep",
+    "kept"     => "keep",
+    "left"     => "leave",
+    "brought"  => "bring",
+    "bought"   => "buy",
+    "caught"   => "catch",
+    "taught"   => "teach",
+    "fought"   => "fight",
+    "sought"   => "seek",
+    "stood"    => "stand",
+    "understood" => "understand",
+    "meant"    => "mean",
+    "met"      => "meet",
+    "led"      => "lead",
+    "fed"      => "feed",
+    "bred"     => "breed",
+    "fled"     => "flee",
+    "sped"     => "speed",
+    "shed"     => "shed",
+    "lit"      => "light",
+    "sat"      => "sit",
+    "won"      => "win",
+    "lost"     => "lose",
+    "hung"     => "hang",
+    "shrank"   => "shrink",
+    "shrunk"   => "shrink",
+    "sang"     => "sing",
+    "sung"     => "sing",
+    "rang"     => "ring",
+    "rung"     => "ring",
+    "swam"     => "swim",
+    "swum"     => "swim",
+    "began"    => "begin",
+    "begun"    => "begin",
+    "showed"   => "show",
+    "shown"    => "show",
+    "grew"     => "grow",
+    "grown"    => "grow",
+    "drew"     => "draw",
+    "drawn"    => "draw",
+    "threw"    => "throw",
+    "thrown"   => "throw",
+    "blew"     => "blow",
+    "blown"    => "blow",
+    "flew"     => "fly",
+    "flown"    => "fly",
+    "knew"     => "know",
+    "arose"    => "arise",
+    "arisen"   => "arise",
+    "chose"    => "choose",
+    "chosen"   => "choose",
+    "bore"     => "bear",
+    "born"     => "bear",
+    "wore"     => "wear",
+    "worn"     => "wear",
+    "tore"     => "tear",
+    "torn"     => "tear",
+    "drove"    => "drive",
+    "driven"   => "drive",
+    "rose"     => "rise",
+    "risen"    => "rise",
+    "broke"    => "break",
+    "broken"   => "break",
+    "spoke"    => "speak",
+    "froze"    => "freeze",
+    "frozen"   => "freeze",
+    "woke"     => "wake",
+    "woken"    => "wake",
+    "shook"    => "shake",
+    "took"     => "take",
+    "stole"    => "steal",
+    "stolen"   => "steal",
+    "swore"    => "swear",
+    "sworn"    => "swear",
+    "strove"   => "strive",
+    "striven"  => "strive",
+    "wove"     => "weave",
+    "woven"    => "weave",
+    "hid"      => "hide",
+    "hidden"   => "hide",
+    "bit"      => "bite",
+    "bitten"   => "bite",
+    "fell"     => "fall",
+    "fallen"   => "fall",
+    "held"     => "hold",
+    "told"     => "tell",
+    "sent"     => "send",
+    "spent"    => "spend",
+    "built"    => "build",
+    "dealt"    => "deal",
+    "meant"    => "mean",
+    "heard"    => "hear",
+    "learned"  => "learn",
+    "learnt"   => "learn",
+)
+
+# GRUG: Words that should NOT be stripped by suffix rules because the
+# result would be a different valid word or a non-word.
+# "atoms" → "atom" is good, but "universe" → "univers" is bad,
+# "being" → "be" changes meaning, "doing" → "do" loses gerund sense.
+# This is a blacklist — if the stem would produce one of these,
+# skip the suffix stripping.
+const _STEM_BLACKLIST = Set([
+    "being", "doing", "having", "going", "coming", "seeing",
+    "knowing", "feeling", "thinking", "getting", "making",
+    "finding", "telling", "saying", "keeping", "leaving",
+    "meaning", "meeting", "dealing", "reading", "leading",
+    "universe", "universal", "diverse", "diversity", "inverse",
+    "converse", "reverse", "perverse", "adverse", "averse",
+    "promise", "compromise", "enterprise", "surprise", "arise",
+    "arouse", "cause", "because", "clause", "pause", "applause",
+    "house", "mouse", "douse", "rouse", "course", "resource",
+    "force", "source", "substance", "distance", "instance",
+])
+
+"""
+    stem_token(word::AbstractString) -> String
+
+GRUG: Normalize a single token to its base form. Applies:
+  1. Irregular plural lookup (men → man, children → child)
+  2. Irregular verb lookup (was → be, went → go, knew → know)
+  3. Regular plural stripping (atoms → atom, rivers → river)
+  4. Regular verb suffix stripping (running → run, explained → explain)
+  5. Blacklist check — if the word is in _STEM_BLACKLIST, return unchanged
+
+Rules are deliberately conservative. False negatives (missed stem) are
+cheap — the thesaurus gate expansion and seed synonyms still provide
+alternate paths. False positives (wrong stem) are expensive — they
+cause semantic conflation. When in doubt, return the word unchanged.
+
+Special: sigil tokens (&n, &op, etc.) are returned unchanged — they
+are not natural language words and must not be mangled.
+"""
+function stem_token(word::AbstractString)::String
+    w = lowercase(strip(word))
+    isempty(w) && return w
+
+    # GRUG: Sigil tokens pass through unchanged — &n, &op, &being etc.
+    # These are pattern holes, not natural language.
+    length(w) >= 2 && w[1] == '&' && return word
+
+    # GRUG: Very short words — no safe suffix to strip.
+    length(w) <= 2 && return w
+
+    # GRUG: Check blacklist FIRST — these words must not be mangled.
+    w in _STEM_BLACKLIST && return w
+
+    # GRUG: Irregular plurals — check before suffix rules.
+    if haskey(_IRREGULAR_PLURALS, w)
+        return _IRREGULAR_PLURALS[w]
+    end
+
+    # GRUG: Irregular verbs — past/gerund/participle → base.
+    if haskey(_IRREGULAR_VERBS, w)
+        return _IRREGULAR_VERBS[w]
+    end
+
+    # GRUG: Regular plural stripping — only safe, common patterns.
+    # "atoms" → "atom" (drop -s)
+    # "rivers" → "river" (drop -s)
+    # "boxes" → "box" (drop -es after x/s/z)
+    # "wishes" → "wish" (drop -es after sh/ch)
+    # "countries" → "country" (-ies → -y)
+    # "leaves" → "leaf" (-ves → -f) — irregular, but common enough
+    # DO NOT strip -s if the result would be a different common word
+    # (e.g., "us" ≠ "u", "yes" ≠ "ye", "bus" ≠ "bu")
+
+    if length(w) >= 4 && endswith(w, "ies")
+        # "countries" → "country", "stories" → "story"
+        candidate = w[1:end-3] * "y"
+        # GRUG: Sanity — candidate must be shorter and sensible
+        length(candidate) >= 3 && return candidate
+    end
+
+    if length(w) >= 4 && endswith(w, "ves")
+        # "leaves" → "leaf", "wolves" → "wolf", "lives" → "life"
+        # But NOT "gives" → "gif" or "drives" → "drif"
+        # Only for common f→ves pattern words
+        _fves_candidates = Dict(
+            "leaves" => "leaf", "wolves" => "wolf", "calves" => "calf",
+            "halves" => "half", "knives" => "knife", "lives" => "life",
+            "wives" => "wife", "shelves" => "shelf", "selves" => "self",
+            "thieves" => "thief", "loaves" => "loaf",
+        )
+        if haskey(_fves_candidates, w)
+            return _fves_candidates[w]
+        end
+    end
+
+    if length(w) >= 4 && endswith(w, "es")
+        # "boxes" → "box", "wishes" → "wish", "passes" → "pass"
+        # "watches" → "watch", "judges" → "judge"
+        # But NOT "bees" → "be", "sees" → "se", "yes" → "ye"
+        candidate = w[1:end-2]
+        # GRUG: Only accept if candidate is at least 3 chars and
+        # the -es follows s/x/z/sh/ch pattern
+        pre = w[end-2:end-2]  # char before "es"
+        if length(candidate) >= 3 && (pre in ['s','x','z'] || endswith(w[1:end-2], "sh") || endswith(w[1:end-2], "ch"))
+            return candidate
+        end
+    end
+
+    if length(w) >= 3 && endswith(w, "s") && !endswith(w, "ss") && !endswith(w, "us")
+        # "atoms" → "atom", "rivers" → "river", "feelings" → "feeling"
+        # But NOT "bus" → "bu", "yes" → "ye", "us" → "u", "gas" → "ga"
+        # Also NOT "loss" → "los", "class" → "clas" (ss words)
+        candidate = w[1:end-1]
+        length(candidate) >= 2 && return candidate
+    end
+
+    # GRUG: Regular verb suffix stripping — conservative rules only.
+    # "running" → "run" (drop -ning → double-consonant check)
+    # "explaining" → "explain" (drop -ing)
+    # "explained" → "explain" (drop -ed)
+    # "computes" → "compute" (drop -s — already handled above by plural rule)
+    # DO NOT strip if it would produce a different common word.
+
+    if length(w) >= 5 && endswith(w, "ing")
+        candidate = w[1:end-3]
+        if length(candidate) >= 3
+            # GRUG: Doubled consonant — "running" → "runn" → "run"
+            # If candidate ends with doubled consonant, try stripping one
+            if length(candidate) >= 2 && candidate[end] == candidate[end-1] &&
+               candidate[end] in 'b':'z'
+                return candidate[1:end-1]
+            end
+            return candidate
+        end
+    end
+
+    if length(w) >= 4 && endswith(w, "ed")
+        candidate = w[1:end-2]
+        if length(candidate) >= 3
+            # GRUG: Doubled consonant — "planned" → "plann" → "plan"
+            if length(candidate) >= 2 && candidate[end] == candidate[end-1] &&
+               candidate[end] in 'b':'z'
+                return candidate[1:end-1]
+            end
+            return candidate
+        end
+    end
+
+    # GRUG: No safe stripping found — return word unchanged.
+    return w
+end
+
+"""
+    normalize_tokens(tokens) -> Set{String}
+
+GRUG: Apply stemming to a collection of tokens, returning a set that
+includes BOTH the original tokens AND their stemmed forms. This way,
+"atoms" produces {"atoms", "atom"} — the original is preserved for
+exact matching while the stem enables cross-form matching.
+"""
+function normalize_tokens(tokens)::Set{String}
+    result = Set{String}()
+    for tok in tokens
+        s = String(tok)  # GRUG: SubString{String} → String for Set{String}
+        push!(result, s)
+        stemmed = stem_token(s)
+        if stemmed != s
+            push!(result, stemmed)
+        end
+    end
+    return result
+end
+
+"""
+    stem_expand_text(text::String) -> Set{String}
+
+GRUG: Tokenize text, apply stemming, and return expanded set with
+both original and stemmed tokens. Used by _lexical_overlap_confidence
+to normalize both input and pattern tokens before comparison.
+"""
+function stem_expand_text(text::String)::Set{String}
+    isempty(strip(text)) && return Set{String}()
+    tokens = filter(!isempty, map(t -> lowercase(strip(t)), split(text)))
+    return normalize_tokens(tokens)
+end
+
 # GRUG say: module done! Seed synonyms bridge structural gap. Gate filter ready for scan.
 # GRUG say: Runtime seeds via add_seed_synonym!() keep cave growing without restart.
+# GRUG say: v8.17 stemming — "atoms" matches "atom" now. System-wide. Happy Grug.
 
 end # module Thesaurus
