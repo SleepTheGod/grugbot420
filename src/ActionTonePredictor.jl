@@ -2,6 +2,18 @@
 # ==============================================================================
 # GRUG: This is the reflex prediction cave. Fires BEFORE the vote pool assembles.
 #
+# v8.22 — LAZY CONSERVATIVE REBASING. Old ATP was too eager: every tone
+# nudged arousal, every action family boosted aligned nodes (1.2–1.7x),
+# and suppression of misaligned nodes was aggressive (0.85x floor).
+# The result: ATP ALWAYS skewed the vote pool, even for calm inputs where
+# the cave should just scan normally. New philosophy: DON'T MODULATE
+# UNLESS THERE'S URGENCY. Non-urgent families get weight=1.0 (no boost),
+# non-urgent tones get arousal_nudge=0.0 (no push), the confidence gate
+# for modulation is raised from 0.3 to 0.5, misaligned suppression is
+# gentler (0.92x floor), and escalation requires 0.7 confidence (up from
+# 0.6). The cave should trust its own scan over ATP's guess unless ATP
+# is genuinely confident and the input is genuinely urgent.
+#
 # NOT token prediction. NOT next-word guessing. NOT an LLM.
 # THIS reads raw input structure and predicts:
 #   1. What ACTION the user intends (ASSERT / QUERY / COMMAND / NEGATE /
@@ -674,29 +686,39 @@ end
 # GRUG: Numbers that turn prediction results into cave pre-tuning values.
 # ==============================================================================
 
-# GRUG: Arousal nudge per tone. Positive = more peripheral, Negative = more foveal.
-# HOSTILE and URGENT push arousal up — the cave needs wider attention.
-# REFLECTIVE and DECLARATIVE pull arousal down — narrow focus, deliberate scan.
+# GRUG v8.22: LAZY CONSERVATIVE AROUSAL NUDGE.
+# Old values were too aggressive — every tone pushed arousal around.
+# New philosophy: don't nudge unless there's GENUINE URGENCY.
+# URGENT and HOSTILE keep their nudge (that's real urgency).
+# Everything else stays at 0.0 — the cave scans normally without
+# pre-tuning from tone prediction unless the user is actually urgent.
+# DECLARATIVE/REFLECTIVE used to pull arousal DOWN, which is just as
+# aggressive as pushing it up — let the scan decide on its own.
 const TONE_AROUSAL_NUDGE = Dict{ToneFamily, Float64}(
-    TONE_HOSTILE     => +0.35,
-    TONE_URGENT      => +0.25,
-    TONE_CURIOUS     =>  0.0,
-    TONE_DECLARATIVE => -0.10,
-    TONE_NEUTRAL     =>  0.0,
-    TONE_REFLECTIVE  => -0.15
+    TONE_HOSTILE     => +0.20,   # reduced from +0.35 — still alerts, less violently
+    TONE_URGENT      => +0.20,   # reduced from +0.25 — urgency still matters, gentler
+    TONE_CURIOUS     =>  0.0,    # unchanged — no urgency signal
+    TONE_DECLARATIVE =>  0.0,    # was -0.10 — removed, let scan run naturally
+    TONE_NEUTRAL     =>  0.0,    # unchanged — no urgency signal
+    TONE_REFLECTIVE  =>  0.0     # was -0.15 — removed, let scan run naturally
 )
 
-# GRUG: Base confidence weight multiplier per predicted action family.
-# Applied to aligned node confidence scores in scan_specimens.
-# ESCALATE is highest — cave must respond fast when user is spiking.
-# SPECULATE is lowest — uncertain input deserves less aggressive pre-weighting.
+# GRUG v8.22: LAZY CONSERVATIVE ACTION WEIGHT TABLE.
+# Old values ALL boosted aligned nodes (1.2–1.7), meaning ATP ALWAYS
+# skewed the vote pool. That's the opposite of lazy. New philosophy:
+#   - Non-urgent families: weight = 1.0 (NO boost, NO skew)
+#   - ESCALATE only: weight = 1.3 (mild boost, genuine urgency signal)
+# The cave should scan normally unless the user is spiking. A calm
+# ASSERT or QUERY doesn't need ATP inflating its aligned nodes.
+# The old "always boost" approach was causing false confidence inflation
+# — every prediction made the winning family look stronger than it was.
 const ACTION_WEIGHT_TABLE = Dict{ActionFamily, Float64}(
-    ACTION_ASSERT    => 1.4,
-    ACTION_QUERY     => 1.6,
-    ACTION_COMMAND   => 1.5,
-    ACTION_NEGATE    => 1.3,
-    ACTION_SPECULATE => 1.2,
-    ACTION_ESCALATE  => 1.7
+    ACTION_ASSERT    => 1.0,   # was 1.4 — no boost for declarative claims
+    ACTION_QUERY     => 1.0,   # was 1.6 — no boost for questions
+    ACTION_COMMAND   => 1.0,   # was 1.5 — no boost for directives
+    ACTION_NEGATE    => 1.0,   # was 1.3 — no boost for negations
+    ACTION_SPECULATE => 1.0,   # was 1.2 — no boost for hedging
+    ACTION_ESCALATE  => 1.3    # was 1.7 — mild boost ONLY for urgency
 )
 
 # ==============================================================================
@@ -1537,8 +1559,13 @@ function get_action_weight_multiplier(
     node_action_name::String
 )::Float64
 
-    # GRUG: Weak prediction = don't skew anything. Let the cave scan naturally.
-    if prediction.confidence < 0.3
+    # GRUG v8.22: LAZY CONSERVATIVE GATE — raised from 0.3 to 0.5.
+    # Old gate: modulate at 30% confidence. Too eager — ATP was skewing
+    # the vote pool even when it wasn't sure what the user wanted.
+    # New gate: don't modulate unless 50% confident. Below that, let
+    # the cave scan naturally without ATP interference. This is the
+    # "lazy" part — ATP stays out of the way unless it has a real read.
+    if prediction.confidence < 0.5
         return 1.0
     end
 
@@ -1553,9 +1580,14 @@ function get_action_weight_multiplier(
     if aligned
         return prediction.action_weight
     else
-        # GRUG: Misaligned node gets gentle suppression. Not a hard block —
-        # just a probabilistic lean. Low-confidence predictions suppress less.
-        return 0.85 + (0.15 * (1.0 - prediction.confidence))
+        # GRUG v8.22: LAZY CONSERVATIVE SUPPRESSION — was 0.85 + 0.15*(1-conf),
+        # now 0.92 + 0.08*(1-conf). Old value suppressed misaligned nodes to
+        # 0.85–1.0 range. That's too aggressive for a system that should stay
+        # out of the way unless there's urgency. New range: 0.92–1.0. A
+        # misaligned node gets at most an 8% tap-down, not 15%. The cave
+        # should trust its own scan results more than ATP's prediction about
+        # what the user probably wants.
+        return 0.92 + (0.08 * (1.0 - prediction.confidence))
     end
 end
 
@@ -1667,9 +1699,12 @@ const ESCALATION_FAMILIES = Set{Symbol}([
 
 """
 Minimum ATP confidence to even consider escalation. Below this, the
-automaton is never consulted — zero cost.
+automaton is never consulted — zero cost. Raised from 0.6 to 0.7 in
+v8.22: escalation is expensive (automaton scratch loop), only fire
+when ATP is genuinely confident. Lazy conservative principle: the
+automaton should be a rare event, not a common path.
 """
-const ESCALATION_CONFIDENCE_FLOOR = 0.6
+const ESCALATION_CONFIDENCE_FLOOR = 0.7
 
 """
 Last escalation trace produced by `maybe_escalate`. `nothing` if no
