@@ -5390,25 +5390,103 @@ end
 # SCAN + EXPAND COMPATIBILITY API
 # ==============================================================================
 
+# GRUG v8.23: WORD COEFFICIENT STRUCTURE — flow instead of force.
+# Old approach: binary stopword filter (word is either 0 or 1) + binary generic
+# penalty (0.5 if ALL overlap is generic, else 1.0). Three hard tiers = force.
+# New approach: every word gets a coefficient reflecting its semantic
+# discriminative power. "the" still contributes, but at 0.05 — it's not
+# deleted, it flows. "work" contributes 0.15 — weak but present. "fire"
+# contributes 1.0 — strong discriminative signal. The overlap sum, coverage
+# denominators, and harmonic mean all use weighted sums instead of counts.
+# No more tiers, no more cutoffs, no more _all_generic penalty flag.
+# Words NOT in this dict default to 1.0 (assumed highly discriminative).
+# Sigil tokens (&n, &op, etc.) are not in the dict → default 1.0.
+const WORD_COEFFICIENT = Dict{String, Float64}(
+    # --- Tier 0.05: Pure function words (determiners, articles, copula) ---
+    # These appear in virtually every sentence. They're not zero because
+    # they DO participate in overlap, but their contribution is negligible.
+    "a" => 0.05, "an" => 0.05, "the" => 0.05,
+    "is" => 0.05, "am" => 0.05, "are" => 0.05, "was" => 0.05, "were" => 0.05,
+    "be" => 0.05, "been" => 0.05, "being" => 0.05,
+    "it" => 0.05, "its" => 0.05, "me" => 0.05,
+    # --- Tier 0.08: Pronouns and light function words ---
+    "i" => 0.08, "you" => 0.08, "we" => 0.08, "he" => 0.08, "she" => 0.08,
+    "they" => 0.08, "him" => 0.08, "her" => 0.08, "them" => 0.08, "us" => 0.08,
+    "my" => 0.08, "your" => 0.08, "our" => 0.08, "his" => 0.08, "their" => 0.08,
+    "this" => 0.08, "that" => 0.08, "these" => 0.08, "those" => 0.08,
+    "what" => 0.08, "who" => 0.08, "whom" => 0.08, "which" => 0.08,
+    # --- Tier 0.10: Conjunctions and basic operators ---
+    "and" => 0.10, "or" => 0.10, "but" => 0.10, "nor" => 0.10,
+    "not" => 0.10, "no" => 0.10, "so" => 0.10, "yet" => 0.10,
+    "if" => 0.10, "than" => 0.10, "then" => 0.10, "because" => 0.10,
+    # --- Tier 0.10: Modal/auxiliary verbs ---
+    "do" => 0.10, "does" => 0.10, "did" => 0.10,
+    "have" => 0.10, "has" => 0.10, "had" => 0.10,
+    "will" => 0.10, "would" => 0.10, "could" => 0.10, "should" => 0.10,
+    "may" => 0.10, "might" => 0.10, "shall" => 0.10, "can" => 0.10,
+    # --- Tier 0.12: Prepositions (light spatial/temporal) ---
+    "to" => 0.12, "of" => 0.12, "in" => 0.12, "for" => 0.12, "on" => 0.12,
+    "with" => 0.12, "at" => 0.12, "by" => 0.12, "from" => 0.12, "as" => 0.12,
+    "into" => 0.12, "about" => 0.12,
+    # --- Tier 0.18: Prepositions with more semantic content ---
+    "through" => 0.18, "during" => 0.18, "before" => 0.18, "after" => 0.18,
+    "above" => 0.18, "below" => 0.18, "between" => 0.18,
+    "out" => 0.18, "off" => 0.18, "over" => 0.18, "under" => 0.18,
+    "up" => 0.18, "down" => 0.18,
+    # --- Tier 0.20: Quantifiers/determiners with selection meaning ---
+    "both" => 0.20, "either" => 0.20, "neither" => 0.20,
+    "each" => 0.20, "every" => 0.20, "all" => 0.20, "any" => 0.20,
+    "few" => 0.20, "more" => 0.20, "most" => 0.20, "other" => 0.20,
+    "some" => 0.20, "such" => 0.20, "only" => 0.20, "own" => 0.20,
+    "same" => 0.20, "too" => 0.20, "very" => 0.20, "just" => 0.20,
+    "again" => 0.20, "further" => 0.20, "once" => 0.20,
+    # --- Tier 0.25: Question words (some discriminative power) ---
+    "how" => 0.25, "why" => 0.25, "when" => 0.25, "where" => 0.25,
+    "tell" => 0.25,
+    # --- Tier 0.15: Generic content words (was _generic_content_words) ---
+    # These pass the old stopword filter but appear across many topics.
+    # They contribute, but weakly — "work" in "how does fire work" is
+    # structural, not topical. The coefficient handles this naturally:
+    # overlap on "work" alone → small weighted overlap → low harmonic mean.
+    # No need for a separate _all_generic penalty flag anymore.
+    "work" => 0.15, "make" => 0.15, "go" => 0.15, "get" => 0.15,
+    "use" => 0.15, "find" => 0.15, "give" => 0.15, "ask" => 0.15,
+    "try" => 0.15, "leave" => 0.15, "call" => 0.15, "keep" => 0.15,
+    "let" => 0.15, "begin" => 0.15, "seem" => 0.15, "help" => 0.15,
+    "show" => 0.15, "hear" => 0.15, "play" => 0.15, "run" => 0.15,
+    "move" => 0.15, "live" => 0.15, "believe" => 0.15, "bring" => 0.15,
+    "happen" => 0.15, "write" => 0.15, "provide" => 0.15, "sit" => 0.15,
+    "stand" => 0.15, "lose" => 0.15, "pay" => 0.15, "meet" => 0.15,
+    "include" => 0.15, "continue" => 0.15, "set" => 0.15, "learn" => 0.15,
+    "change" => 0.15, "lead" => 0.15, "watch" => 0.15, "follow" => 0.15,
+    "stop" => 0.15, "create" => 0.15, "speak" => 0.15, "read" => 0.15,
+    "allow" => 0.15, "add" => 0.15, "spend" => 0.15, "grow" => 0.15,
+    "open" => 0.15, "walk" => 0.15, "win" => 0.15, "offer" => 0.15,
+    "remember" => 0.15, "consider" => 0.15, "appear" => 0.15, "buy" => 0.15,
+    "wait" => 0.15, "serve" => 0.15, "die" => 0.15, "send" => 0.15,
+    "expect" => 0.15, "build" => 0.15, "stay" => 0.15, "fall" => 0.15,
+    "cut" => 0.15, "reach" => 0.15, "kill" => 0.15, "remain" => 0.15,
+    "suggest" => 0.15, "raise" => 0.15, "pass" => 0.15, "sell" => 0.15,
+    "require" => 0.15, "report" => 0.15, "decide" => 0.15, "pull" => 0.15,
+    "develop" => 0.15,
+    # --- Special: grug (self-reference, matches too many nodes) ---
+    "grug" => 0.10,
+)
+
+# Helper: get word coefficient with default 1.0 for unknown words
+_word_coeff(w::String) = get(WORD_COEFFICIENT, w, 1.0)
+
 function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
-# GRUG v7.60-coherence: Content-weighted lexical overlap.
-# Function words (what, is, the, a, and, etc.) carry very little semantic
-# signal — they make "what is macroeconomics" match "what is fire" with
-# 66.7% overlap even though the topics are completely unrelated.
-# NEW: Strip function words before computing overlap, so only content
-# words (nouns, verbs, adjectives) drive the match score. A node that
-# shares content words with the input is genuinely relevant; one that
-# only shares function words is not.
-#
-# GRUG v7.61-coherence: GENERIC-CONTENT-WORD DISCOUNT. Some words pass
-# the stopword filter but are still semantically generic — they appear
-# in many different patterns across topics ("work" in "how does fire work",
-# "how does shelter work", "how does grug think"). Matching only on these
-# generic content words produces false positives: "shelter work" beats
-# "fire burn" for "how does fire work" because both share "work". The fix:
-# when the OVERLAP consists ENTIRELY of generic content words (no topic-
-# specific words match), apply a penalty. A node that matches "fire" is
-# genuinely about fire; one that only matches "work" could be about anything.
+# GRUG v8.23: COEFFICIENT-WEIGHTED LEXICAL OVERLAP — flow, not force.
+# Replaces the old binary stopword filter + generic penalty with a smooth
+# coefficient spectrum. Every word flows with its natural semantic weight:
+# "the" contributes 0.05, "work" contributes 0.15, "fire" contributes 1.0.
+# Overlap is the sum of coefficients for shared tokens, not the count.
+# Coverage denominators use coefficient-weighted sums, not raw counts.
+# No more hard tiers, no more _all_generic penalty flag, no more binary
+# filter. The harmonic mean naturally handles everything — if overlap is
+# only on "work" (coeff 0.15), the weighted overlap is tiny → low harmonic.
+# If overlap includes "fire" (coeff 1.0), the weighted overlap is strong.
 #
 # GRUG v8.17: STEMMED OVERLAP. Before computing overlap, expand both
 # input and pattern tokens with their stemmed forms via Thesaurus.stem_token.
@@ -5416,92 +5494,88 @@ function _lexical_overlap_confidence(input_text::String, node::Node)::Float64
 # pattern produces {"atom"} — overlap found! Same for verb forms:
 # "running" produces {"running", "run"}, matching "run" in pattern.
 # Both original AND stemmed forms are kept so exact matches still work.
-    _lex_stopwords = Set(["what","is","the","a","an","are","was","were","be",
-                          "been","have","has","had","do","does","did","will",
-                          "would","could","should","may","might","shall","can",
-                          "to","of","in","for","on","with","at","by","from","as",
-                          "into","through","during","before","after","above",
-                          "below","between","out","off","over","under","again",
-                          "further","then","once","and","but","or","nor","not",
-                          "so","yet","both","either","neither","each","every",
-                          "all","any","few","more","most","other","some","such",
-                          "no","only","own","same","than","too","very","just",
-                          "because","if","when","where","how","which","who",
-                          "whom","this","that","these","those","it","its",
-                          "about","tell","me","does","why","grug"])
-    # GRUG v7.61: Generic content words — pass stopword filter but are
-    # semantically lightweight. Used in many patterns across topics.
-    # When overlap is ENTIRELY these words, the match is structural
-    # not topical, and confidence should be discounted.
-    # NOTE: Words like "love", "think", "fear" are topic words in grug's
-    # world (emotions, cognition) — they are NOT generic here.
-    _generic_content_words = Set(["work","make","go","get","use","find",
-                                   "give","tell","ask","try","leave","call",
-                                   "keep","let","begin","seem","help","show",
-                                   "hear","play","run","move","live","believe",
-                                   "bring","happen","write","provide","sit","stand",
-                                   "lose","pay","meet","include","continue","set",
-                                   "learn","change","lead","watch",
-                                   "follow","stop","create","speak","read","allow",
-                                   "add","spend","grow","open","walk","win","offer",
-                                   "remember","consider",
-                                   "appear","buy","wait",
-                                   "serve","die","send","expect","build","stay","fall",
-                                   "cut","reach","kill","remain","suggest","raise","pass",
-                                   "sell","require","report","decide","pull","develop"])
-    # GRUG v8.17: Tokenize, filter stopwords, then expand with stemmed forms.
-    # Each content token gets BOTH its original form and its stem added.
-    # "atoms" → {"atoms", "atom"}, "running" → {"running", "run"}
-    # Sigil tokens (&n, &op, etc.) pass through stem_token unchanged.
+#
+# IMPORTANT: Stemmed forms inherit the coefficient of their ORIGINAL token.
+# "atoms" (coeff 1.0, not in dict) → stem "atom" (also 1.0, not in dict).
+# "running" (coeff 0.15, generic) → stem "run" (also 0.15, in dict).
+# This prevents stemmed expansions from gaming the coefficient system.
+    # GRUG v8.23: Tokenize ALL tokens (no stopword filtering), then expand
+    # with stemmed forms. Each token gets BOTH its original form and its stem.
+    # Coefficients handle what stopwords used to — no need to delete tokens.
     input_tokens_raw = split(lowercase(strip(input_text)))
-    input_content = filter(t -> !(t in _lex_stopwords), input_tokens_raw)
-    input_tokens = Thesaurus.normalize_tokens(input_content)
+    input_tokens = Thesaurus.normalize_tokens(input_tokens_raw)
 
     node_tokens_raw = split(lowercase(strip(node.pattern)))
-    node_content = filter(t -> !(t in _lex_stopwords), node_tokens_raw)
-    node_tokens = Thesaurus.normalize_tokens(node_content)
+    node_tokens = Thesaurus.normalize_tokens(node_tokens_raw)
 
     if isempty(input_tokens) || isempty(node_tokens)
         return 0.0
     end
+    # GRUG v8.23: Build coefficient maps for expanded token sets.
+    # Each expanded token inherits the coefficient of its original form.
+    # input_tokens = ["the", "fire", "fire"] (from "the fire" → stem "fire" added)
+    # input_coeff = Dict("the" => 0.05, "fire" => 1.0)
+    # For coverage, we sum coefficients of ALL expanded tokens, but each
+    # unique token's coefficient is counted only once per side.
+    function _build_coeff_map(tokens_raw, tokens_expanded)
+        coeff_map = Dict{String, Float64}()
+        # Pre-build stem→coeff map from raw tokens (avoids repeated stem_token calls)
+        stem_coeff = Dict{String, Float64}()
+        for raw in tokens_raw
+            stem = Thesaurus.stem_token(String(raw))
+            c = _word_coeff(String(raw))
+            # If multiple raw tokens stem to same form, take max coefficient
+            if !haskey(stem_coeff, stem) || c > stem_coeff[stem]
+                stem_coeff[stem] = c
+            end
+        end
+        for t in tokens_expanded
+            if !haskey(coeff_map, t)
+                if haskey(stem_coeff, t)
+                    coeff_map[t] = stem_coeff[t]
+                else
+                    coeff_map[t] = _word_coeff(t)
+                end
+            end
+        end
+        return coeff_map
+    end
+    input_coeff = _build_coeff_map(input_tokens_raw, input_tokens)
+    node_coeff = _build_coeff_map(node_tokens_raw, node_tokens)
+    # GRUG v8.23: Weighted overlap = sum of coefficients of shared tokens.
+    # If "fire" (1.0) and "the" (0.05) are both shared, overlap = 1.05.
+    # This naturally replaces the old binary filter + generic penalty.
     overlap_set = intersect(input_tokens, node_tokens)
-    overlap = length(overlap_set)
-    overlap == 0 && return 0.0
-    # GRUG v7.61: GENERIC-ONLY OVERLAP PENALTY. If every word in the overlap
-    # is a generic content word, the match is structural (both patterns use
-    # "work") not topical (both are about fire). Discount by 0.5 so the
-    # harmonic mean is halved. This prevents "shelter work" from matching
-    # "fire work" as strongly as "fire burn" matches "fire work" (via "fire").
-    # GRUG v8.17: Check overlap against stemmed forms too — "runs" stems to
-    # "run" which is generic, so check both original and stem.
-    _all_generic = all(w -> w in _generic_content_words, overlap_set)
-    _generic_penalty = _all_generic ? 0.5 : 1.0
-    # GRUG v8.17: Use the ORIGINAL content token counts (not the expanded
-    # stemmed set) for coverage calculations. This prevents stemmed expansions
-    # from inflating coverage — "atoms" is one content word, not two
-    # ("atoms" + "atom"). The overlap count uses the expanded set (so "atoms"
-    # can match "atom"), but the denominator uses the original content counts.
-    input_content_count = length(collect(input_content))
-    node_content_count = length(collect(node_content))
-    # GRUG v7.60-coherence: BIDIRECTIONAL OVERLAP. Use the harmonic mean
-    # of input-coverage and node-coverage so that:
-    #   - A node that covers ALL of the input's content (input_coverage=1.0)
-    #     AND whose content is mostly covered by the input (node_coverage high)
-    #     gets the highest score.
-    #   - A node that covers the input but has lots of extra unrelated content
-    #     (low node_coverage) gets a moderate score.
-    #   - This prevents "find clean water source" (4 content words, only "water"
-    #     matches) from tying with "water" (1 content word, perfect match).
-    # Formula: harmonic_mean(input_coverage, node_coverage)
-    # = 2 * (input_coverage * node_coverage) / (input_coverage + node_coverage)
-    input_coverage = overlap / max(1, input_content_count)
-    node_coverage = overlap / max(1, node_content_count)
+    isempty(overlap_set) && return 0.0
+    weighted_overlap = sum(get(input_coeff, w, 1.0) for w in overlap_set)
+    # GRUG v8.23: Weighted coverage denominators.
+    # OLD: input_content_count = length(input_content) — just a count.
+    # NEW: input_weight = sum of coefficients for all unique tokens on this side.
+    # "the fire is hot" → tokens {the, fire, is, hot} → weights 0.05+1.0+0.05+1.0 = 2.10
+    # "fire burn" → tokens {fire, burn} → weights 1.0+1.0 = 2.0
+    input_weight = sum(values(input_coeff))
+    node_weight = sum(values(node_coeff))
+    # GRUG v8.23: BIDIRECTIONAL WEIGHTED OVERLAP. Harmonic mean of weighted
+    # input_coverage and node_coverage. Same principle as v7.60 but with
+    # coefficient-weighted numerators and denominators instead of raw counts.
+    #   - input_coverage = weighted_overlap / input_weight
+    #     How much of the input's semantic weight is captured by overlap.
+    #   - node_coverage = weighted_overlap / node_weight
+    #     How much of the node's semantic weight is captured by overlap.
+    #   - harmonic mean balances both directions.
+    # Example: "the fire is hot" ↔ "fire burn wood"
+    #   input_weight = 0.05+1.0+0.05+1.0 = 2.10, node_weight = 1.0+1.0+1.0 = 3.0
+    #   overlap_set = {"fire"}, weighted_overlap = 1.0
+    #   input_coverage = 1.0/2.10 = 0.476, node_coverage = 1.0/3.0 = 0.333
+    #   harmonic = 2*0.476*0.333/(0.476+0.333) = 0.393
+    # OLD binary approach would give: overlap=1, input_content=2, node_content=3
+    #   input_coverage = 0.5, node_coverage = 0.333, harmonic = 0.40
+    # The coefficient approach penalizes "the"/"is" in denominators automatically.
+    input_coverage = weighted_overlap / max(0.01, input_weight)
+    node_coverage = weighted_overlap / max(0.01, node_weight)
     harmonic = (input_coverage + node_coverage) > 0 ?
                2.0 * (input_coverage * node_coverage) / (input_coverage + node_coverage) : 0.0
-    # GRUG v7.61: Apply generic-only overlap penalty. When the overlap
-    # consists entirely of generic content words, the match is not topical.
-    # "shelter work" ↔ "fire work" via "work" is structural, not semantic.
-    return clamp(harmonic * _generic_penalty, 0.0, 1.0)
+    return clamp(harmonic, 0.0, 1.0)
 end
 
 function _scan_confidence_for_node(input_signal::Vector{Float64}, input_text::String, node::Node, base_mode::Int)::Float64
