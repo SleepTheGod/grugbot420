@@ -17643,7 +17643,16 @@ elseif !isnothing(m_right)
                 end
 
             else
-                error("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!")
+                # GRUG v9: Bare text (no / prefix) → auto-mission.
+                # User-friendliness: typing "what is 5+5" should just work,
+                # not require "/mission what is 5+5". If the input starts with
+                # "/" but didn't match any known command, THEN it's a bad format.
+                # But plain conversational text goes straight to process_mission.
+                if !startswith(line, "/")
+                    process_mission(String(line))
+                else
+                    error("!!! FATAL: Grug command bad format. Use /help to see all valid commands. !!!")
+                end
             end
             
         catch e
