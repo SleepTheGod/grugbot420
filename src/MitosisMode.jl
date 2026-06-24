@@ -1472,12 +1472,12 @@ function run_mitosis!(;
         #   3. vote_overlap > MITOSIS_VOTE_SIM_FLOOR     (action_packet name overlap)
         # Hard strength floor is REPLACED by strength-biased coinflip:
         #   p_join = avg_strength / STRENGTH_CAP
-        # AIML nodes (backward-compat) and antimatch nodes are ALWAYS singletons — no latching.
+        # AIML nodes (backward-compat) and antimatch nodes (REMOVED v8.26h) are ALWAYS singletons — no latching.
         # Match nodes and time nodes participate in the full pipeline.
         # Singletons with <4 connected nodes get NOCHAT label (ChatterMode-ineligible).
         # NO AUTO GROWTH — stochastic gate remains disabled.
 
-        # GRUG: First — node type branch. AIML (backward-compat) and antimatch = always singleton.
+        # GRUG: First — node type branch. AIML (backward-compat) and antimatch (REMOVED v8.26h) = always singleton.
         _is_antimatch = false
         _is_singleton_type = false
         try

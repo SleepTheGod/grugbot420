@@ -493,13 +493,28 @@ const _LAST_SPECIMEN_PATH_LOCK = ReentrantLock()
 const LAST_SELECTED_MSG_IDS = Ref(Set{Int}())
 const LAST_SELECTED_MSG_LOCK = ReentrantLock()
 
+# GRUG v8.26i: Lobe Dictionary System — one Dict{String,String} per lobe.
+# Word definitions live here, not as separate nodes. "fire" → "oxidation and heat"
+# lives in the science lobe's dictionary, not as its own node cluster.
+# Looked up during strain response and voice synthesis to enrich answers.
+const _LOBE_DICTIONARIES      = Dict{String, Dict{String, String}}()  # lobe_id → word → definition
+const _LOBE_DICTIONARIES_LOCK = ReentrantLock()
+
 # GRUG v7.51: Pending hippocampal ask-question state.
 # When the cave is empty or confidence is very low, the system asks a question.
-# This stores the mission text that caused the question so /answer and /antiAnswer
+# This stores the mission text that caused the question so /answer
 # can reference it. Cleared when either command fires. The lock is for thread
 # safety since maybe_run_idle and process_mission run on different tasks.
 const _HIPPOCAMPAL_PENDING_ASK      = Ref("")          # mission text that caused the question
 const _HIPPOCAMPAL_PENDING_ASK_LOCK = ReentrantLock()
+
+# GRUG v8.28: Conversational learning loop — when the user asks about something
+# Grug doesn't know, Grug asks for clarification (subject + meaning). The user's
+# next input is then matched against this pending state to create the right node.
+# Format: Dict with keys "topic" (what was asked about), "asked_at" (time()),
+# and "ask_text" (the question Grug asked). Empty dict = no pending teach.
+const _CONV_PENDING_TEACH      = Ref(Dict{String,Any}())
+const _CONV_PENDING_TEACH_LOCK = ReentrantLock()
 
 # GRUG FIX 3.1: Strict Role Validation!
 # Grug no let random strangers paint on memory wall.
@@ -1039,9 +1054,567 @@ function _parse_inverse_sigil_directives(text::String)::Vector{Tuple{String, Str
     return results
 end
 
+"""
+    _parse_question_answer(text::String) -> Vector{Tuple{String, String}}
+
+GRUG v8.26f: Parse `question:answer` pairs from user text.
+Dead simple: "fire:oxidation and heat" → ("fire", "oxidation and heat").
+User handles their own decomposition. No auto-split, no multipart groups.
+
+Rules:
+  - Match `some text: some text` where both sides are non-empty
+  - Left side = pattern/trigger, right side = answer content
+  - Does NOT match known lobe names (those go to _parse_lobe_qualified_answer)
+  - Does NOT match sigil patterns (&something)
+  - Multiple pairs on separate lines or separated by semicolons
+  - The question side must be 1-5 words (not a whole paragraph)
+"""
+function _parse_question_answer(text::String)::Vector{Tuple{String, String}}
+    results = Tuple{String, String}[]
+    if !isdefined(@__MODULE__, :Lobe)
+        return results
+    end
+    # GRUG: Get known lobe names so we don't steal their syntax.
+    _known_lobe_names = Set{String}()
+    try
+        for (lid, lrec) in Lobe.LOBE_REGISTRY
+            push!(_known_lobe_names, lowercase(lrec.name))
+        end
+    catch _
+    end
+
+    # GRUG: Split on newlines and semicolons for multiple pairs.
+    for segment in split(text, r"[;\n]+")
+        segment = strip(String(segment))
+        isempty(segment) && continue
+        # GRUG: Match "some text: some text" — colon with content on both sides.
+        # The left side is 1-5 words (a trigger pattern, not an essay).
+        # The right side can be any length.
+        m = match(r"^([^\s:][^:]{0,40}?)\s*:\s*(.+)$", segment)
+        if isnothing(m)
+            continue
+        end
+        question = strip(String(m.captures[1]))
+        answer   = strip(String(m.captures[2]))
+        isempty(question) && continue
+        isempty(answer) && continue
+        # GRUG: Skip if question is a known lobe name — that's lobe-qualified syntax.
+        if lowercase(question) in _known_lobe_names
+            continue
+        end
+        # GRUG: Skip if question starts with & — that's sigil syntax.
+        if startswith(question, "&")
+            continue
+        end
+        # GRUG: Skip if question starts with / — that's a slash command.
+        if startswith(question, "/")
+            continue
+        end
+        # GRUG: Question must be 1-5 words (a trigger, not a paragraph).
+        q_words = split(question, r"\s+")
+        if length(q_words) < 1 || length(q_words) > 5
+            continue
+        end
+        push!(results, (question, answer))
+    end
+    return results
+end
+
 
 """
-score_message_relevance(msg, user_tokens, user_triples)::Float64
+    _conversation_prescan(text::String) -> Union{Nothing, Tuple{Symbol, String, String, String}}
+
+GRUG v8.27: Heuristic intent classification for the ConversationLobe.
+Detects questions, teaching, correcting, and defining statements from natural
+language and returns the appropriate routing tuple, or nothing if the text
+doesn't match any conversational pattern.
+
+Returns: (kind, word, definition, lobe_hint) where kind is :question, :define,
+:answer, or :correct. lobe_hint is "" when no lobe is specified.
+
+Patterns detected:
+  - "what is X" / "what are X"  → :question (organic lookup)
+  - "who is X" / "who are X"    → :question
+  - "what does X mean"          → :question
+  - "tell me about X"           → :question
+  - "explain X"                 → :question
+  - "how does X work"           → :question
+  - "define X"                  → :question (standalone, no "as Y")
+  - "X is Y" / "X are Y"       → :define if Y is short, :answer if Y is long
+  - "X means Y"                → :define
+  - "define X as Y"            → :define
+  - "X = Y"                    → :define (not a command, natural language)
+  - "no, X is Y"               → :correct + re-teach
+  - "actually, X is Y"         → :correct + re-teach
+  - "wrong" / "incorrect"      → :correct (standalone, no re-teach)
+
+Must NOT match:
+  - Slash commands (start with /)
+  - Lobe-qualified answers (science: X is Y — handled earlier)
+  - question:answer syntax (fire:oxidation — handled earlier)
+"""
+# GRUG v9: Compound question prescan result — holds sub-intents for compound questions.
+const _COMPOUND_SUB_INTENTS = Ref{Vector{Tuple{Symbol, String, String, String}}}(Vector{Tuple{Symbol, String, String, String}}())
+
+function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, String, String, String}}
+    t = strip(text)
+
+    # GRUG v8.28e: ROUTING JUDGE — lazy conservative intent resolver.
+    # Instead of the greedy waterfall (first match wins), collect ALL candidate
+    # intents and resolve with entropy-aware jitter snap-back. The judge is
+    # lazy — if one intent clearly wins (low entropy), it passes through.
+    # If entropy is high (close call), jitter snaps toward the conservative
+    # (safer) intent. Graph backing (existing knowledge) amplifies :question
+    # and penalizes :define (redundant redefinition).
+    try
+        _rj_candidates = RoutingJudge.collect_intents(String(t))
+
+        # GRUG v9: Detect compound candidates — if any came from the compound splitter,
+        # we need to process ALL sub-intents, not just pick one winner.
+        _compound_candidates = filter(c -> startswith(c.source, "compound-"), _rj_candidates)
+        if !isempty(_compound_candidates) && length(_compound_candidates) >= 2
+            # COMPOUND QUESTION: Multiple independent sub-intents from the splitter.
+            # Collect all non-:nothing sub-intents and return as :compound.
+            _sub_tuples = Tuple{Symbol, String, String, String}[]
+            for cc in _compound_candidates
+                if cc.kind !== :nothing
+                    push!(_sub_tuples, (cc.kind, cc.topic, cc.definition, cc.hint))
+                end
+            end
+            if length(_sub_tuples) >= 2
+                # Store all sub-intents in the compound Ref for the handler to process
+                _COMPOUND_SUB_INTENTS[] = _sub_tuples
+                println("[CONV-PRESCAN] 🧩 Compound question detected: $(length(_sub_tuples)) sub-intents")
+                return (:compound, "", "", "")
+            end
+        end
+
+        if length(_rj_candidates) > 1
+            # Multiple intents — routing judge resolves
+            _rj_result = RoutingJudge.resolve(_rj_candidates; verbose=false)
+            if _rj_result !== nothing
+                # GRUG v8.28e: If routing judge resolved to :question but there's
+                # pending teach state, clear it (topic shift detected by the judge
+                # via the conservative snap-back — :question beat :teach).
+                if first(_rj_result) == :question
+                    _pending_check = _conv_get_pending_teach()
+                    if !isempty(_pending_check)
+                        _conv_clear_pending_teach!()
+                        println("[CONV-PRESCAN] 🔄 RoutingJudge: question won over pending teach — clearing")
+                    end
+                end
+                return _rj_result
+            end
+        elseif length(_rj_candidates) == 1
+            # Single candidate — lazy pass-through
+            _rj_result = RoutingJudge.resolve(_rj_candidates; verbose=false)
+            if _rj_result !== nothing
+                return _rj_result
+            end
+        end
+    catch e
+        # Routing judge failed — fall through to greedy waterfall
+        println("[CONV-PRESCAN] ⚠️ RoutingJudge error: $e — falling back to greedy waterfall")
+    end
+
+    # ── GREEDY WATERFALL (fallback) ──────────────────────────────────────
+    # The original first-match-wins logic. Kept as fallback in case the
+    # routing judge has issues. All v8.28d fixes are preserved here too.
+
+    # GRUG: Skip slash commands and empty input.
+    # GRUG v8.27: Questions (containing ?) are NO LONGER skipped — they are
+    # detected as :question patterns below and routed to the organic answer
+    # system (dictionary → answer clusters → AIML fallback).
+    if isempty(t) || startswith(t, "/")
+        return nothing
+    end
+
+    # GRUG v8.28: TEACH RESPONSE DETECTION — conversational learning loop.
+    # When Grug asked a clarification question ("What does X mean? What subject?"),
+    # the user's next input is a teaching response. We detect this by checking
+    # the pending teach state. The response format is flexible:
+    #   "math, factorial is multiply all numbers from 1 to n"
+    #   "science: it's oxidation and heat"
+    #   "physics - gravity pulls masses together"
+    #   Even bare definitions like "it's a chemical reaction" work — the subject
+    # defaults to "default" lobe. This check MUST come before :question detection
+    # so teaching responses aren't re-interpreted as new questions.
+    _pending = _conv_get_pending_teach()
+    if !isempty(_pending)
+        # GRUG: Check if the pending state has expired.
+        if _conv_pending_teach_is_expired()
+            _conv_clear_pending_teach!()
+            println("[CONV-TEACH] ⏰ Pending teach state expired — clearing")
+        else
+            # GRUG v8.28d: TOPIC SHIFT DETECTION — if the user's input is itself
+            # a question (starts with a question word or contains a question mark),
+            # they've moved on from the pending teach topic. Clear the pending state
+            # and fall through to normal processing so the new question is handled
+            # properly. Without this, "who discovered penicillin" sets pending state,
+            # then "what causes tides" is treated as a :teach response about penicillin,
+            # producing crosstalk: "🔗 Grug learned relationship: penicillin — what causes tides"
+            _looks_like_question = match(r"^(?:what|who|where|when|why|how|which)\b"i, t) !== nothing || occursin('?', t)
+            if _looks_like_question
+                _conv_clear_pending_teach!()
+                println("[CONV-TEACH] 🔄 User asked new question — clearing pending teach state")
+                # Fall through to normal question processing below
+            else
+                # GRUG: The user is responding to our clarification question.
+                # CHECK 1: Acknowledgment words (must be checked BEFORE parsing,
+                # because _extract_teach_parts("yes") returns ("", "yes") which
+                # looks like a definition-only answer).
+                _lower_t = lowercase(t)
+                _ack_words = Set(["yes", "yeah", "yep", "ok", "okay", "sure", "right",
+                                  "no", "nope", "nah", "idk", "i don't know", "dunno"])
+                if _lower_t in _ack_words
+                    # User acknowledged but didn't teach. Clear pending, move on.
+                    _conv_clear_pending_teach!()
+                    return nothing
+                end
+
+                # CHECK 2: Subject-only input detection.
+                # Parse their answer into (subject, definition).
+                _topic = String(get(_pending, "topic", ""))
+                _subj, _def = _extract_teach_parts(t)
+
+                # GRUG: If the user just said the subject alone (e.g., "math"),
+                # we still need a definition. Ask again for the definition.
+                if !isempty(_subj) && isempty(_def)
+                    # Update the pending state with the subject, ask for definition
+                    _conv_set_pending_teach!(_topic, "What does $_topic mean?")
+                    # Store the subject for the next round
+                    lock(_CONV_PENDING_TEACH_LOCK) do
+                        _CONV_PENDING_TEACH[]["subject"] = _subj
+                    end
+                    return (:teach, _topic, "", _subj)
+                end
+
+                # GRUG: Bare-word subject detection — when _extract_teach_parts
+                # can't find a separator, it returns ("", bare_word). Check if
+                # the bare word looks like a subject rather than a definition.
+                if isempty(_subj) && !isempty(_def)
+                    _def_words = split(_def)
+                    if length(_def_words) == 1
+                        # Single word — check if it's a known subject/lobe keyword
+                        _def_lower = lowercase(_def)
+                        _known_subjects = Set([
+                            "math", "mathematics", "science", "physics", "chemistry",
+                            "biology", "history", "philosophy", "language", "nature",
+                            "technology", "emotion", "psychology", "geography",
+                            "art", "music", "literature", "computing", "engineering",
+                        ])
+                        if _def_lower in _known_subjects
+                            # This is a subject-only answer, not a definition
+                            _conv_set_pending_teach!(_topic, "What does $_topic mean?")
+                            lock(_CONV_PENDING_TEACH_LOCK) do
+                                _CONV_PENDING_TEACH[]["subject"] = _def_lower
+                            end
+                            return (:teach, _topic, "", _def_lower)
+                        end
+                    end
+                end
+
+                # GRUG: If the user gave a definition but no subject, check if
+                # a subject was stored from a previous round (subject-only input).
+                if isempty(_subj) && !isempty(_def)
+                    _prev_subject = get(_pending, "subject", "")
+                    if !isempty(_prev_subject)
+                        _subj = String(_prev_subject)
+                    end
+                end
+
+                # GRUG: If we have both subject and definition (or just definition),
+                # return a :teach result. The process_mission handler will classify
+                # the knowledge and create the right node type.
+                if !isempty(_def)
+                    return (:teach, _topic, _def, _subj)
+                end
+
+                # GRUG: If neither subject nor definition was parseable, treat
+                # this as a failed teaching attempt. Clear pending and fall through
+                # to normal processing. The user might be saying something unrelated.
+            end  # GRUG v8.28d: closes the else block for topic-shift detection
+        end
+    end
+
+    # GRUG v8.27: QUESTION DETECTION — organic question answering.
+    # When the user asks "what is fire", "who is einstein", "what does gravity mean",
+    # "tell me about entropy", "explain photosynthesis", "how does mitosis work",
+    # "define gravity" (standalone), we detect it as a :question and route it
+    # to the dictionary/answer-cluster system DIRECTLY — bypassing AIML voting.
+    # The whole point of the ConversationLobe is organic interaction without /answer.
+    #
+    # Question patterns (ordered by specificity):
+    _question_topic = ""
+
+    # "what does X mean"
+    _whatdoes_match = match(r"^(?:what\s+does|what\s+do)\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s+mean\s*\??\s*$"i, t)
+    if _whatdoes_match !== nothing
+        _question_topic = String(strip(_whatdoes_match.captures[1]))
+    end
+
+    # "what is X" / "what are X" / "what was X"
+    if isempty(_question_topic)
+        _whatis_match = match(r"^what\s+(?:is|are|was|were)\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s*\??\s*$"i, t)
+        if _whatis_match !== nothing
+            _w = String(strip(_whatis_match.captures[1]))
+            # Skip pronouns/determiners — "what is it" / "what is this" aren't knowledge queries
+            _q_skip = Set(["it", "this", "that", "there", "he", "she", "they", "we", "you", "i",
+                           "up", "wrong", "happening", "going", "that"])
+            if !(lowercase(_w) in _q_skip)
+                _question_topic = _w
+            end
+        end
+    end
+
+    # GRUG v8.28d: "what X is Y" / "what X are Y" — question patterns with intervening word.
+    # "what time is it" was falling through to the "X is Y" define pattern, producing
+    # "📖 Learned: what time means it" — a false winner. These are questions where "what"
+    # is followed by a noun/adjective before the copula. The entire phrase after "what"
+    # is the question topic. Return :nothing (not a knowledge query) because phrases
+    # like "what time is it" / "what day is it" are conversational, not definitional.
+    if isempty(_question_topic)
+        _whatwordis_match = match(r"^what\s+([^\s?]+)\s+(?:is|are|was|were)\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s*\??\s*$"i, t)
+        if _whatwordis_match !== nothing
+            _w2 = String(strip(_whatwordis_match.captures[2]))
+            # "what time is it" → the part after "is" is "it" — not a knowledge query
+            # "what color is the sky" → could be a knowledge query
+            _q_skip2 = Set(["it", "this", "that", "there", "he", "she", "they", "we", "you", "i",
+                            "up", "wrong", "happening", "going"])
+            if lowercase(_w2) in _q_skip2
+                # Conversational question like "what time is it" — not a knowledge query.
+                # Set topic to the word between "what" and "is" so the question-answer
+                # system can try to answer it (and ask clarification if unknown).
+                _question_topic = String(strip(_whatwordis_match.captures[1]))
+            else
+                # "what color is the sky" — treat as question about the full phrase
+                _full_topic = String(strip(_whatwordis_match.captures[1])) * " " * _w2
+                _question_topic = _full_topic
+            end
+        end
+    end
+
+    # "who is X" / "who are X"
+    if isempty(_question_topic)
+        _whois_match = match(r"^who\s+(?:is|are|was|were)\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s*\??\s*$"i, t)
+        if _whois_match !== nothing
+            _question_topic = String(strip(_whois_match.captures[1]))
+        end
+    end
+
+    # "tell me about X"
+    if isempty(_question_topic)
+        _tellme_match = match(r"^tell\s+me\s+about\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s*\??\s*$"i, t)
+        if _tellme_match !== nothing
+            _question_topic = String(strip(_tellme_match.captures[1]))
+        end
+    end
+
+    # "explain X"
+    if isempty(_question_topic)
+        _explain_match = match(r"^explain\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s*\??\s*$"i, t)
+        if _explain_match !== nothing
+            _question_topic = String(strip(_explain_match.captures[1]))
+        end
+    end
+
+    # "how does X work" / "how do X work"
+    if isempty(_question_topic)
+        _howdoes_match = match(r"^how\s+(?:does|do|did)\s+([^\s?]+(?:\s+[^\s?]+){0,2})(?:\s+work)?\s*\??\s*$"i, t)
+        if _howdoes_match !== nothing
+            _question_topic = String(strip(_howdoes_match.captures[1]))
+        end
+    end
+
+    # GRUG v8.28b: "how is X" / "how are X" / "how was X" — question patterns.
+    # Without these, "how are you feeling" falls through to X is/are Y define pattern.
+    # Also catches "how is the weather", "how are things", etc.
+    if isempty(_question_topic)
+        _howis_match = match(r"^how\s+(?:is|are|was|were)\s+([^\s?]+(?:\s+[^\s?]+){0,3})\s*\??\s*$"i, t)
+        if _howis_match !== nothing
+            _w = String(strip(_howis_match.captures[1]))
+            # Skip very generic responses like "how are you" (not a knowledge query)
+            _how_skip = Set(["you", "things", "it", "that", "this", "we", "they"])
+            if !(lowercase(_w) in _how_skip)
+                _question_topic = _w
+            else
+                # "how are you" etc — not a knowledge question, return :question with empty topic
+                # so the system handles it normally (greeting/emotion AIML pattern)
+                return nothing
+            end
+        end
+    end
+
+    # GRUG v8.28b: "why is X" / "why are X" / "why was X" / "why does X" — question patterns.
+    # "why is the sky blue" was falling through to define "why means the sky blue".
+    if isempty(_question_topic)
+        _why_match = match(r"^why\s+(?:is|are|was|were|does|do|did)\s+([^\s?]+(?:\s+[^\s?]+){0,3})\s*\??\s*$"i, t)
+        if _why_match !== nothing
+            _question_topic = String(strip(_why_match.captures[1]))
+        end
+    end
+
+    # GRUG v8.28c: "where is X" / "where are X" / "where does X" / "where do X" — question patterns.
+    # "where do rivers come from" was falling through and returning nothing.
+    if isempty(_question_topic)
+        _where_match = match(r"^where\s+(?:is|are|was|were|does|do|did)\s+([^\s?]+(?:\s+[^\s?]+){0,3})\s*\??\s*$"i, t)
+        if _where_match !== nothing
+            _question_topic = String(strip(_where_match.captures[1]))
+        end
+    end
+
+    # GRUG v8.28c: "who did X" / "who discovered X" / "who made X" — question patterns.
+    # "who discovered penicillin" was falling through and returning nothing.
+    if isempty(_question_topic)
+        _whodid_match = match(r"^who\s+(?:did|discovered|invented|made|created|found|built)\s+([^\s?]+(?:\s+[^\s?]+){0,3})\s*\??\s*$"i, t)
+        if _whodid_match !== nothing
+            _question_topic = String(strip(_whodid_match.captures[1]))
+        end
+    end
+
+    # "define X" (standalone — no "as Y" part, that's the :define pattern below)
+    if isempty(_question_topic)
+        _define_q_match = match(r"^define\s+([^\s?]+(?:\s+[^\s?]+){0,2})\s*\??\s*$"i, t)
+        if _define_q_match !== nothing
+            _question_topic = String(strip(_define_q_match.captures[1]))
+        end
+    end
+
+    # GRUG v8.28e: "what causes/makes/creates X" — question without copula.
+    # "what causes tides" was returning nothing because no pattern matched it.
+    if isempty(_question_topic)
+        _whatverb_match = match(r"^what\s+(?:causes|makes|creates|produces|drives|leads\s+to|contributes\s+to)\s+([^\s?]+(?:\s+[^\s?]+){0,3})\s*\??\s*$"i, t)
+        if _whatverb_match !== nothing
+            _question_topic = String(strip(_whatverb_match.captures[1]))
+        end
+    end
+
+    if !isempty(_question_topic)
+        return (:question, _question_topic, "", "")
+    end
+
+    # GRUG: Skip lobe-qualified answers — those have a "word:" prefix that
+    # _parse_question_answer already handles. If the text matches that pattern,
+    # don't double-process it here.
+    _qa_test = _parse_question_answer(String(t))
+    if !isempty(_qa_test)
+        return nothing
+    end
+
+    # GRUG: Check for correction signals first — they have highest priority.
+    # "no, X is Y" / "actually, X is Y" / "wrong, X is Y"
+    # GRUG v8.28d: Also accept "no X is Y" (space after "no" instead of comma).
+    # "no fire is not just oxidation fire is plasma" was falling through to :define
+    # because the comma was missing, producing "📖 Learned: no fire means not just..."
+    _correct_match = match(r"^(?:no[, ]\s*|actually[, ]\s*|wrong[, ]\s*|incorrect[, ]\s*)(.+?)\s+(?:is|are|means)\s+(.+)$"i, t)
+    if _correct_match !== nothing
+        _word = String(strip(_correct_match.captures[1]))
+        _def  = String(strip(_correct_match.captures[2]))
+        if !isempty(_word) && !isempty(_def)
+            return (:correct, _word, _def, "")
+        end
+    end
+
+    # GRUG v8.28d: Broader correction patterns — "no, X verbs Y" without is/are/means.
+    # "no, stalactite hangs from ceiling not grows from floor" — the correction
+    # uses verbs other than "is/are/means" but is still clearly a correction.
+    # Pattern: correction_prefix + word + verb + rest
+    _correct_verb_match = match(r"^(?:no[, ]\s*|actually[, ]\s*|wrong[, ]\s*|incorrect[, ]\s*)(\S+(?:\s+\S+){0,2})\s+(?:hangs?|grows?|forms?|appears?|comes?|goes?|lies?|sits?|stands?|falls?|rises?|moves?|flows?|runs?|exists?|lives?|happens?|occurs?|starts?|begins?|ends?|stops?|means?|is|are|was|were|has|have|had|does|do|did|will|would|should|can|could|must|might|shall)\s+(.+)$"i, t)
+    if _correct_verb_match !== nothing
+        _word = String(strip(_correct_verb_match.captures[1]))
+        _def  = String(strip(_correct_verb_match.captures[2]))
+        if !isempty(_word) && !isempty(_def)
+            # Reconstruct the full corrected statement
+            _full_def = _word * " " * _def
+            return (:correct, _word, _full_def, "")
+        end
+    end
+
+    # GRUG: Standalone correction signals — just "wrong" or "incorrect" or "no"
+    # without any teaching content. Punish last response, don't re-teach.
+    _standalone_correct = match(r"^(?:wrong|incorrect|no|bad|nope|nah)\s*$"i, t)
+    if _standalone_correct !== nothing
+        return (:correct, "", "", "")
+    end
+
+    # GRUG: "define X as Y" — explicit definition syntax.
+    _define_match = match(r"^define\s+(\S+(?:\s+\S+){0,2})\s+as\s+(.+)$"i, t)
+    if _define_match !== nothing
+        _word = String(strip(_define_match.captures[1]))
+        _def  = String(strip(_define_match.captures[2]))
+        if !isempty(_word) && !isempty(_def)
+            return (:define, _word, _def, "")
+        end
+    end
+
+    # GRUG: "X means Y" — dictionary definition.
+    # GRUG v8.28b: Same question-word guard as X is/are Y pattern.
+    _means_match = match(r"^(\S+(?:\s+\S+){0,2})\s+means\s+(.+)$"i, t)
+    if _means_match !== nothing
+        _word = String(strip(_means_match.captures[1]))
+        _def  = String(strip(_means_match.captures[2]))
+        if !isempty(_word) && !isempty(_def)
+            _means_skip = Set(["how", "why", "when", "where", "what", "who", "which",
+                               "it", "this", "that", "there", "here", "he", "she", "they", "we", "you", "i"])
+            if lowercase(_word) in _means_skip
+                return nothing
+            end
+            return (:define, _word, _def, "")
+        end
+    end
+
+    # GRUG: "X is Y" / "X are Y" — the most common teaching pattern.
+    # Short definitions (≤15 words) go to dictionary, longer ones to answer cluster.
+    # This threshold keeps "fire is oxidation" as a dictionary entry but
+    # "gravity is an attractive force between two masses that follows the
+    # inverse square law" as a full answer node.
+    _is_match = match(r"^(\S+(?:\s+\S+){0,2})\s+(?:is|are)\s+(.+)$"i, t)
+    if _is_match !== nothing
+        _word = String(strip(_is_match.captures[1]))
+        _def  = String(strip(_is_match.captures[2]))
+        if !isempty(_word) && !isempty(_def)
+            # GRUG: Skip if the word is a common pronoun/determiner — not a definition target.
+            # GRUG v8.28b: Added question words (how, why, when, where) — "how are you feeling"
+            # and "why is the sky blue" were being misclassified as definitions.
+            _skip_words = Set(["it", "this", "that", "there", "here", "he", "she", "they", "we", "you", "i",
+                         "what", "which", "who", "how", "why", "when", "where",
+                         "the", "a", "an", "my", "your", "his", "her", "its", "our", "their", "some", "any", "all", "every",
+                         "these", "those", "such", "each", "both", "few", "many", "much", "no", "neither"])
+            # GRUG: Also skip if the first word of a multi-word term is an article/determiner.
+            _first_word = lowercase(first(split(_word, r"\s+")))
+            if _first_word in Set(["the", "a", "an", "this", "that", "these", "those"])
+                return nothing
+            end
+            if lowercase(_word) in _skip_words
+                return nothing
+            end
+            # GRUG: Skip if the definition starts with a/an — probably a sentence, not a definition.
+            # e.g. "It is a beautiful day" — not "it" being defined as "a beautiful day".
+            # But "fire is a chemical reaction" IS a definition. So only skip for pronouns.
+            _def_word_count = length(split(_def, r"\s+"))
+            if _def_word_count <= 15
+                return (:define, _word, _def, "")
+            else
+                return (:answer, _word, _def, "")
+            end
+        end
+    end
+
+    # GRUG: "X = Y" — shorthand definition (if not already a /define command).
+    _eq_match = match(r"^(\S+(?:\s+\S+){0,2})\s*=\s*(.+)$", t)
+    if _eq_match !== nothing
+        _word = String(strip(_eq_match.captures[1]))
+        _def  = String(strip(_eq_match.captures[2]))
+        if !isempty(_word) && !isempty(_def) && !startswith(_word, "/")
+            return (:define, _word, _def, "")
+        end
+    end
+
+    return nothing
+end
+
+"""
+    score_message_relevance(msg, user_tokens, user_triples)::Float64
 
 GRUG v7.12: Weighted sum of
   * lexical token overlap (Jaccard of cleaned tokens)
@@ -1589,7 +2162,11 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
     end
 
     vote_candidates = VoteOrchestrator.VoteCandidate[]
-    candidate_to_vote = Dict{String, Vote}()
+    # GRUG v8.26g: Key by (node_id, multipart_group) tuple so the same node
+    # in different groups doesn't overwrite. Old key was just node_id, which
+    # caused the second group's vote to clobber the first when the same node
+    # appeared in both groups (cascade leakage).
+    candidate_to_vote = Dict{Tuple{String,String}, Vote}()
     lock(NODE_LOCK) do
         for v in sorted_votes
             node = get(NODE_MAP, v.node_id, nothing)
@@ -1597,6 +2174,17 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
             # loudly (warn, not crash). Another thread may have graved it.
             if isnothing(node)
                 @warn "[ORCHESTRATOR] ⚠ Vote for missing node '$(v.node_id)' dropped."
+                continue
+            end
+
+            # GRUG v8.26e: HARD VOTE CONFIDENCE FLOOR. Below this confidence,
+            # a node does NOT vote AT ALL. No fallback, no "best of the worst."
+            # The user said: "only high confidence scans should ever vote at all.
+            # like below x confidence no vote." This prevents high-strength but
+            # low-relevance nodes (like thermodynamics) from winning over actually
+            # relevant weak nodes. If no node clears this floor, the system asks
+            # the user a question instead of guessing.
+            if v.confidence < VoteOrchestrator.VOTE_CONFIDENCE_FLOOR
                 continue
             end
 
@@ -1741,64 +2329,121 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
                 frame_match_multiplier = frame_mult,
                 is_relay          = is_relay,
                 grave_shadow_multiplier = grave_shadow,
+                multipart_group   = _vote_group,
                 # recency_bonus left NaN — Node struct lacks last_fire_cycle
                 # so we can't compute honest recency without adding tracking.
                 # Knob is plumbed; fill in when the field exists.
             ))
-            candidate_to_vote[v.node_id] = v
+            candidate_to_vote[(v.node_id, _vote_group)] = v
         end
     end
 
     if isempty(vote_candidates)
-        error("!!! FATAL: Orchestrator failed: All votes referenced vanished nodes! !!!")
+        # GRUG v8.26e: All votes were below VOTE_CONFIDENCE_FLOOR or referenced
+        # vanished nodes. Produce strain response instead of crashing.
+        @warn "[ORCHESTRATOR] ⚠ No vote candidates survived VOTE_CONFIDENCE_FLOOR=$(VoteOrchestrator.VOTE_CONFIDENCE_FLOOR). Producing strain response."
+        strain_output = generate_ask_question(mission; reason="low_confidence")
+        return (strain_output, Vote[], Vote[])
     end
 
-    top_tier, subtop_tier, rejected_tier = VoteOrchestrator.select_aiml_votes(
-        vote_candidates;
-        threshold  = VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD,
-        top_window = VoteOrchestrator.AIML_TOP_TIER_WINDOW
-    )
+    # GRUG v8.26g: PER-GROUP VOTE SELECTION for multipart inputs.
+    # Old way: run select_aiml_votes globally → one node wins for ALL groups.
+    # Problem: node_113 (fire) wins globally, so even mp_2 (water) uses fire.
+    # New way: partition by multipart_group, select winner per group, merge.
+    _mp_groups_in_candidates = unique([vc.multipart_group for vc in vote_candidates if !isempty(vc.multipart_group)])
+    _is_multipart_selection = !isempty(_mp_groups_in_candidates)
 
-    # GRUG: If nothing passed the threshold, fall back to the highest-confidence
-    # vote we have. Biology rule: cave should always try to answer, not freeze.
-    # This also preserves backwards compatibility with tests that feed low-confidence votes.
+    if _is_multipart_selection
+        # GRUG v8.26g: Partition candidates by multipart_group, select per group.
+        top_tier = VoteOrchestrator.VoteCandidate[]
+        subtop_tier = VoteOrchestrator.VoteCandidate[]
+        rejected_tier = VoteOrchestrator.VoteCandidate[]
+        for grp in _mp_groups_in_candidates
+            grp_cands = filter(vc -> vc.multipart_group == grp, vote_candidates)
+            if isempty(grp_cands); continue; end
+            gt, gst, grj = VoteOrchestrator.select_aiml_votes(grp_cands;
+                threshold = VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD,
+                top_window = VoteOrchestrator.AIML_TOP_TIER_WINDOW)
+            append!(top_tier, gt)
+            append!(subtop_tier, gst)
+            append!(rejected_tier, grj)
+        end
+        # Also run singleton candidates (no group) through global selection
+        singleton_cands = filter(vc -> isempty(vc.multipart_group), vote_candidates)
+        if !isempty(singleton_cands)
+            st, sst, srj = VoteOrchestrator.select_aiml_votes(singleton_cands;
+                threshold = VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD,
+                top_window = VoteOrchestrator.AIML_TOP_TIER_WINDOW)
+            append!(top_tier, st)
+            append!(subtop_tier, sst)
+            append!(rejected_tier, srj)
+        end
+        println("[ORCHESTRATOR] 📊 Per-group selection: $(length(_mp_groups_in_candidates)) groups, top_tier=$(length(top_tier)), subtop=$(length(subtop_tier))")
+    else
+        # GRUG: Singleton path — old global selection, unchanged behavior.
+        top_tier, subtop_tier, rejected_tier = VoteOrchestrator.select_aiml_votes(
+            vote_candidates;
+            threshold  = VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD,
+            top_window = VoteOrchestrator.AIML_TOP_TIER_WINDOW
+        )
+    end
+
+    # GRUG v8.26e: NO FALLBACK. If nothing passed the threshold, the cave
+    # admits it doesn't know instead of picking a weak irrelevant node.
     if isempty(top_tier) && isempty(subtop_tier)
-        @warn "[ORCHESTRATOR] ⚠ No votes passed AIML_CONFIDENCE_THRESHOLD=$(VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD). Falling back to highest-confidence vote."
-        # GRUG: Pick top of the rejected list as emergency fallback.
-        fallback = rejected_tier[1]
-        push!(top_tier, fallback)
+        @warn "[ORCHESTRATOR] ⚠ No votes passed AIML_CONFIDENCE_THRESHOLD=$(VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD). Producing strain response instead of fallback."
+        strain_output = generate_ask_question(mission; reason="low_confidence")
+        return (strain_output, Vote[], Vote[])
     end
 
-    # GRUG: Translate selected candidates back to Vote objects for downstream use.
-    sure_votes   = Vote[candidate_to_vote[vc.node_id] for vc in top_tier]
-    unsure_votes = Vote[candidate_to_vote[vc.node_id] for vc in subtop_tier]
+    # GRUG v8.26g: Translate candidates back to Votes using composite key.
+    sure_votes   = Vote[candidate_to_vote[(vc.node_id, vc.multipart_group)] for vc in top_tier if haskey(candidate_to_vote, (vc.node_id, vc.multipart_group))]
+    unsure_votes = Vote[candidate_to_vote[(vc.node_id, vc.multipart_group)] for vc in subtop_tier if haskey(candidate_to_vote, (vc.node_id, vc.multipart_group))]
 
     if isempty(sure_votes)
-        # GRUG: Should be mathematically impossible after fallback, but NO SILENT FAILURES!
-        error("!!! FATAL: Grug math broke! Top tier produced zero sure votes even after fallback! !!!")
+        error("!!! FATAL: Grug math broke! Top tier produced zero sure votes despite passing threshold! !!!")
     end
 
-    # GRUG: TIE-BREAKING! If multiple rocks sit at the same confidence, pick random winner.
-    # Old behavior: always picked sure_votes[1] (first in sort order = arbitrary for ties).
-    # New behavior: shuffle the tied group, random winner. Deterministic if only one winner.
-    if length(sure_votes) > 1
-        # GRUG: Identify the TRUE ties — rocks at exactly the same confidence as the leader.
-        # "Within 0.05" already got them into sure_votes. Now find the subset that are
-        # dead-equal to the max (within floating-point epsilon). Those are the real tied rocks.
-        top_conf = sure_votes[1].confidence
-        tied_votes = Vote[v for v in sure_votes if abs(v.confidence - top_conf) < 1e-9]
-
-        if length(tied_votes) > 1
-            # GRUG: RANDOM TIE-BREAK! Shuffle the tied rocks and pick one.
-            shuffle!(tied_votes)
-            primary_vote = tied_votes[1]
-            println("[ORCHESTRATOR] 🎲  TIE DETECTED! $(length(tied_votes)) rocks at confidence $(round(top_conf, digits=3)). Random winner: $(primary_vote.node_id)")
+    # GRUG v8.26g: For multipart, pick primary_vote per group (each group's
+    # top winner). For singletons, old tie-breaking logic unchanged.
+    if _is_multipart_selection
+        # GRUG: Each group's top_tier winner is that group's primary.
+        # We pick the highest-confidence group winner as THE primary_vote
+        # for legacy code that expects a single primary. But the action
+        # log will use per-group primaries for each objective.
+        _group_primaries = Dict{String, Vote}()
+        for vc in top_tier
+            grp = vc.multipart_group
+            if isempty(grp); continue; end
+            v = get(candidate_to_vote, (vc.node_id, grp), nothing)
+            isnothing(v) && continue
+            if !haskey(_group_primaries, grp) || v.confidence > _group_primaries[grp].confidence
+                _group_primaries[grp] = v
+            end
+        end
+        # GRUG: The global primary_vote is the highest-confidence group primary.
+        # This is used by legacy code that expects a single primary_vote.
+        if !isempty(_group_primaries)
+            primary_vote = first(sort!(collect(values(_group_primaries)); by=v -> v.confidence, rev=true))
         else
-            # GRUG: No exact tie. Highest confidence rock wins cleanly.
             primary_vote = sure_votes[1]
         end
+        println("[ORCHESTRATOR] 📋 Per-group primaries: ", join(["$grp→$(v.node_id)@$(round(v.confidence,digits=3))" for (grp,v) in _group_primaries], ", "))
     else
-        primary_vote = sure_votes[1]
+        # GRUG: Old tie-breaking for singleton inputs.
+        if length(sure_votes) > 1
+            top_conf = sure_votes[1].confidence
+            tied_votes = Vote[v for v in sure_votes if abs(v.confidence - top_conf) < 1e-9]
+            if length(tied_votes) > 1
+                shuffle!(tied_votes)
+                primary_vote = tied_votes[1]
+                println("[ORCHESTRATOR] 🎲  TIE DETECTED! $(length(tied_votes)) rocks at confidence $(round(top_conf, digits=3)). Random winner: $(primary_vote.node_id)")
+            else
+                primary_vote = sure_votes[1]
+            end
+        else
+            primary_vote = sure_votes[1]
+        end
     end
 
     node = lock(() -> get(NODE_MAP, primary_vote.node_id, nothing), NODE_LOCK)
@@ -1845,7 +2490,7 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
         # surface as "honest uncertainty tip off" additive entries. Every
         # vote that didn't win its objective but had something to say gets
         # its own section. This works for ALL missions, not just multipart.
-        nonwinner_votes = Vote[candidate_to_vote[vc.node_id] for vc in rejected_tier if haskey(candidate_to_vote, vc.node_id)]
+        nonwinner_votes = Vote[candidate_to_vote[(vc.node_id, vc.multipart_group)] for vc in rejected_tier if haskey(candidate_to_vote, (vc.node_id, vc.multipart_group))]
         # GRUG v8.2: Pass scoped_text_of function so modulate_objectives!
         # can look up each objective's sub-subject text from the engine stash.
         HippocampalModulator.modulate_objectives!(action_log, objectives;
@@ -2239,136 +2884,53 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
     # The mapping still works for INPUT: user says "adore" → system
     # matches "love" node. But the output always stays "love".
     # Note: not const because Julia doesn't allow const in local scope.
+    # GRUG v8.26c: _grug_voice_excluded_synonyms — trimmed to ONLY words that
+    # cause GRAMMAR BREAKAGE or MEANING REVERSAL when substituted.
+    # "Wrong register" / "not caveman enough" is NOT a valid reason to exclude —
+    # Grug's voice is user-configurable. Variety is good; incoherence is bad.
     _grug_voice_excluded_synonyms = Set([
-        "adore",        # too romantic/elevated → canonical "love"
-        "combust",      # scientific register → canonical "burn"
-        "ignite",       # scientific register → canonical "burn"
-        "collaborate",  # corporate register → canonical "cooperate"
-        "consider",     # philosophical register → canonical "think"
-        "console",      # elevated emotional → canonical "comfort"
-        "construct",    # technical register → canonical "build"
-        "distribute",   # formal register → canonical "share"
-        "generate",     # technical register → canonical "create"
-        "produce",      # formal/technical → canonical "cause"
-        "rely upon",    # formal phrase → canonical "trust"
-        "sense",        # slightly elevated → canonical "feel"
-        "understand",   # slightly elevated → canonical "know"
-        "stream",       # poetic register → canonical "flow"
-        "experience",   # philosophical register → canonical "feel"
-        "dread",        # literary register → canonical "fear"
-        "ponder",       # philosophical register → canonical "think"
-        "track",        # slightly elevated → canonical "hunt"
-        "assemble",     # technical register → canonical "build"
-        "forage",       # slightly elevated → canonical "gather"
-        "guard",        # slightly elevated → canonical "protect"
-        "collect",      # slightly formal → canonical "gather"
-        # GRUG v8.15: expanded exclusion set — synonyms that pass the +1
-        # length rule but are still wrong for caveman voice
-        "amidst",       # literary → canonical "among"
-        "amuse",        # formal → canonical "play"
-        "anxious",      # clinical → canonical "afraid"
-        "azure",        # poetic → canonical "blue"
-        "battle",       # military → canonical "fight"
-        "blaze",        # poetic → canonical "fire"
-        "cautious",     # formal → canonical "careful"
-        "cease",        # formal → canonical "stop"
-        "combat",       # military → canonical "fight"
-        "convey",       # formal → canonical "bring"
-        "daring",       # literary → canonical "brave"
-        "datum",        # scientific → canonical "fact"
-        "definitely",   # formal → canonical "certainly"
-        "domain",       # formal → canonical "world"
-        "edict",        # formal → canonical "rule"
-        "entity",       # philosophical → canonical "thing"
-        "epoch",        # scientific → canonical "time"
-        "flame",        # poetic → canonical "fire"
-        "fortitude",    # literary → canonical "courage"
-        "fright",       # literary → canonical "fear"
-        "hence",        # formal → canonical "thus"
-        "heroic",       # literary → canonical "brave"
-        "insight",      # formal → canonical "wisdom"
-        "involve",      # formal → canonical "engage"
-        "launch",       # formal → canonical "start"
-        "march",        # military → canonical "walk"
-        "matter",       # philosophical → canonical "thing"
-        "nerve",        # slang/elevated → canonical "courage"
-        "object",       # philosophical → canonical "thing"
-        "obstacle",     # formal → canonical "problem"
-        "omission",     # formal → canonical "absence"
-        "opposing",     # formal → canonical "against"
-        "perception",   # philosophical → canonical "awareness"
-        "peril",        # literary → canonical "risk"
-        "perplexed",    # formal → canonical "confused"
-        "reckon",       # dialect/elevated → canonical "think"
-        "regard",       # formal → canonical "care"
-        "resist",       # formal → canonical "fight"
-        "reality",      # philosophical → canonical "truth"
-        "route",        # formal → canonical "way"
-        "safeguard",    # formal → canonical "preserve"
-        "seize",        # literary → canonical "take"
-        "solicitude",   # literary → canonical "care"
-        "stamina",      # clinical → canonical "energy"
-        "terrain",      # military/formal → canonical "ground"
-        "terror",       # literary → canonical "fear"
-        "wariness",     # formal → canonical "caution"
-        "whilst",       # archaic → canonical "while"
-        "wrath",        # literary → canonical "rage"
-        "certainty",    # philosophical → canonical "truth"
-        "bliss",        # poetic → canonical "joy"
-        "elation",      # formal → canonical "joy"
-        "equals",       # mathematical → canonical "is"
-        # GRUG v8.15b: second batch — more synonyms found in decoherence check
-        "moreover",     # formal connector → canonical "also"
-        "era",          # formal → canonical "time"
-        "dispatch",     # formal → canonical "send"
-        "cadence",      # formal → canonical "rhythm"
-        "heed",         # archaic → canonical "care"
-        "elated",       # formal → canonical "happy"
-        "nervous",      # clinical → canonical "afraid"
-        "vast",         # literary → canonical "big"
-        "epistemology", # philosophical jargon → canonical "knowledge"
-        "comprehension",# formal → canonical "understanding"
-        # GRUG v8.15c: third batch — more found in decoherence check
-        "betwixt",      # archaic → canonical "between"
-        "constitutes",  # formal → canonical "is"
-        "represents",   # formal → canonical "is"
-        "inferno",      # literary → canonical "fire"
-        "moreover",     # formal connector → canonical "also"
-        "furthermore",  # formal connector → canonical "also"
-        "however",      # formal connector → canonical "but"
-        "therefore",    # formal connector → canonical "so"
-        # GRUG v8.15d: fourth batch — same-length/similar-length synonyms
-        # that pass +1 length rule but are wrong for caveman voice
-        "glow",         # poetic → canonical "fire"
-        "intellect",    # formal → canonical "mind"
-        "title",        # formal → canonical "name"
-        "woe",          # literary → canonical "sorrow"
-        "via",          # formal/latin → canonical "with"
-        "clasps",       # literary → canonical "hands"
-        "vigor",        # formal → canonical "energy"
-        "inquiry",      # formal → canonical "question"
-        "soot",         # weird swap → canonical "carbon"
-        "grace",        # poetic → canonical "beauty"
-        "items",        # formal → canonical "things"
-        "alike",        # formal → canonical "same"
-        "supposed",     # weird swap → canonical "thought"
-        "minus",        # weird swap → canonical "lacking"
-        "age",          # formal → canonical "time"
-        "shall",        # archaic → canonical "will"
-        "hot",          # weird swap → canonical "warm"
-        "thicket",      # literary → canonical "forest"
-        # GRUG v8.15e: fifth batch — more same-length synonyms that
-        # produce wrong register or weird substitutions in caveman voice
-        "grips",        # weird swap → canonical "hands"
-        "notion",       # formal → canonical "thought"/"idea"
-        "offer",        # weird swap → canonical "force"
-        "choice",       # weird swap → canonical "selection"
-        "force",        # weird swap → canonical "might"
-        "diverse",      # formal → canonical "different"
-        "equal",        # formal/math → canonical "same"
-        "being",        # philosophical → canonical "life"
-        "grove",        # poetic → canonical "forest"/"woods"
-        "tint",         # formal → canonical "color"/"shade"
+        # ── Grammar-breaking swaps ──
+        "no",           # "not"→"no": "does no mean", "tries no to" — ungrammatical
+        "form",         # "are"→"form": "Atoms form made of" — ungrammatical
+        "fellow",       # "another"→"fellow": "divisors fellow than 1" — ungrammatical
+        "send",         # "forward"→"send": "moving send", "time flows send" — ungrammatical
+        # ── Meaning-changing swaps ──
+        "barely",       # "simply"→"barely": means "almost not" — reverses meaning
+        "just",         # "right/simply"→"just": ambiguous ("fits so just" = unclear)
+        "grant",        # "give/gift"→"grant": implies formal bestowal, not giving
+        "never",        # "not"→"never": "does never mean" — wrong scope
+        "neither",      # "not"→"neither": different grammatical role
+        "several",      # "some"→"several": different quantifier (3-7 vs unspecified)
+        "certain",      # "some"→"certain": changes from partitive to definite
+        "particular",   # "some"→"particular": changes from partitive to specific
+        "equals",       # "is"→"equals": mathematical narrowing
+        "constitutes",  # "is"→"constitutes": legal/formal narrowing
+        "represents",   # "is"→"represents": changes copula to symbolic relation
+        "supposed",     # "thought"→"supposed": changes epistemic certainty
+        "minus",        # "lacking"→"minus": mathematical wrong context
+        "star",         # "sun"→"star": wrong celestial body in context
+        "drizzle",      # "rain"→"drizzle": different scale (light rain ≠ rain)
+        "downpour",     # "rain"→"downpour": different scale (heavy rain ≠ rain)
+        "shower",       # "rain"→"shower": ambiguous (bathroom)
+        "moisture",     # "water"→"moisture": different substance
+        "flow",         # "water"→"flow": noun→verb swap breaks context
+        "display",      # "show"→"display": narrows to visual/screen context
+        "quantity",     # "number"→"quantity": narrows to mass/uncountable
+        # ── Context-breaking swaps (grammar in idioms / semantic in compounds) ──
+        "soot",         # "carbon"→"soot": "soot dioxide" is not a compound — meaning changed
+        "create",       # "make/shape"→"create": "takes the create of" — verb where noun needed
+        "forge",        # "make/shape"→"forge": "takes the forge of" — verb where noun needed
+        "craft",        # "make/shape"→"craft": "takes the craft of" — wrong noun in idiom
+        "fashion",      # "make/shape"→"fashion": "takes the fashion of" — wrong noun in idiom
+        "make",         # "shape"→"make": "takes the make of" — noun=brand not form in idiom
+        "build",        # "shape"→"build": "takes the build of" — noun=physique not form in idiom
+        # ── Part-of-speech mismatch (noun swapped where verb needed, or vice versa) ──
+        "edict",        # "rule"→"edict": "dread edict the cave" — noun where verb needed
+        "decree",       # "rule"→"decree": same POS mismatch as edict
+        "pause",        # "breathe"→"pause": "pause out oxygen" — opposite meaning, ungrammatical
+        # ── Preposition swaps that break idiomatic English ──
+        "using",        # "with"→"using": "Grug sit using sad" — unidiomatic, should be "with"
+        "via",          # "with"→"via": "Grug sit via sad" — wrong register, sounds robotic
     ])
 
     # -------------------------------------------------------------------
@@ -4249,7 +4811,7 @@ end
 # the system should ASK A COHERENT QUESTION about the misunderstood input.
 # This is the missing piece of the hippocampal cycle:
 #
-#   strain → ask question → user answers (/answer or /antiAnswer) → strain resolved
+#   strain → ask question → user answers (/answer) → strain resolved
 #
 # The old code just printed "Cave is silent" and returned. No question. No
 # prompt for /answer. The user had no idea that /answer even existed.
@@ -4259,7 +4821,7 @@ end
 # or node — because the whole point is there IS no matching node.
 #
 # It also stores the mission text in _HIPPOCAMPAL_PENDING_ASK so that
-# /answer and /antiAnswer can reference what caused the question.
+# /answer can reference what caused the question.
 # ==============================================================================
 
 """
@@ -4277,7 +4839,7 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
         error("!!! FATAL: generate_ask_question got empty mission text! !!!")
     end
 
-    # GRUG: Store the mission text so /answer and /antiAnswer can reference it.
+    # GRUG: Store the mission text so /answer can reference it.
     lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
         _HIPPOCAMPAL_PENDING_ASK[] = mission_text
     end
@@ -4300,6 +4862,22 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
         memory_hint = " (I do remember our recent conversation.)"
     end
 
+    # GRUG v8.26i: Dictionary enrichment — look up any known words in the mission text.
+    # If the user asks "what is fire" and we have a dictionary entry for "fire",
+    # we can provide a partial answer instead of just saying "I'm drawing a blank".
+    # This makes the strain response more useful and reduces the need for /answer.
+    dict_hits = _dict_lookup_for_mission(mission_text)
+    dict_hint = ""
+    if !isempty(dict_hits)
+        # GRUG: Show up to 3 dictionary hits. Beyond that, it's noise.
+        shown = dict_hits[1:min(3, length(dict_hits))]
+        dict_hint = "\n📖 I do know some words: " * join(["$w → $d" for (w, d, _) in shown], "; ")
+        if length(dict_hits) > 3
+            dict_hint *= " (+$(length(dict_hits)-3) more)"
+        end
+        dict_hint *= "\n   But I need a full answer to truly understand. Use /answer to teach me more."
+    end
+
     # GRUG: Build the reason preamble — different framing for empty cave vs low confidence.
     reason_preamble = if reason == "empty_cave"
         "⚡ Nothing in the cave matches this input."
@@ -4311,11 +4889,12 @@ function generate_ask_question(mission_text::String; reason::String="empty_cave"
     # 1. Reason preamble (why we're asking)
     # 2. The question itself (from skeleton)
     # 3. Memory hint (if we have context)
-    # 4. /answer prompt (tell the user what to do)
+    # 4. Dictionary hint (if we know some of the words)
+    # 5. /answer prompt (tell the user what to do)
     strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
     output = "$(reason_preamble)$memory_hint\n" *
-             "🤔 $question_text\n" *
-             "   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /antiAnswer to suppress. (strain=$strain_now)"
+             "🤔 $question_text$dict_hint\n" *
+             "   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=$strain_now)"
 
     # GRUG: Write a SelfObserver entry so the subconscious knows we asked.
     try
@@ -4478,6 +5057,38 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
                 end
             end
         end
+
+        # GRUG v8.24: ALSO GRAVE AUTO-GROWN NODES THAT MATCH THE RESOLVED ASK.
+        # When the user asks "what is a stromatolite", the engine auto-grows a
+        # placeholder node with pattern "what is a stromatolite". The hippocampal
+        # answer node has a different pattern ("stromatolites are layered rock..."),
+        # so the exact-match graving above misses it. The auto-grown placeholder
+        # then wins the vote over the fan-out shadow "what is stromatolites" because
+        # it has the exact query pattern. Fix: grave any auto-grown node whose
+        # pattern matches the resolved_ask text.
+        _resolved_ask = get(ans_data, "resolved_ask", "")
+        if !isempty(_resolved_ask)
+            _ask_key = lowercase(strip(_resolved_ask))
+            lock(NODE_LOCK) do
+                for (other_id, other_node) in NODE_MAP
+                    other_id == nid && continue
+                    other_node.is_grave && continue
+                    other_pat = lowercase(strip(other_node.pattern))
+                    if other_pat == _ask_key
+                        other_jd = other_node.json_data
+                        if other_jd !== nothing
+                            other_src = get(other_jd, "growth_source",
+                                            get(other_jd, "autogrowth_source", ""))
+                            if other_src != "" && !startswith(other_src, "hippocampal_")
+                                other_node.is_grave = true
+                                other_node.grave_reason = "superseded_by_hippocampal_answer_resolved_ask"
+                                println("[MAIN] ⚰  Node '$other_id' (pattern='$(other_pat)') graved: matches resolved ask, superseded by hippocampal answer node '$nid'")
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end
 
     if !isnothing(target_lobe)
@@ -4507,6 +5118,730 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
     end
 
     return (nid, lobe_tag)
+end
+
+# ==============================================================================
+# GRUG v8.26i: LOBE DICTIONARY SYSTEM — word definitions without node clusters
+# ==============================================================================
+# Instead of planting a whole answer cluster for every word definition, lobes
+# get a single Dict{String,String} of word→definition. "fire"→"oxidation and heat"
+# lives in the science lobe's dictionary, not as its own node. Lookup happens
+# during strain response (so "what is fire" hits the dictionary before asking
+# the user to /answer) and voice synthesis (so defined words enrich responses).
+#
+# Commands:
+#   /define <word> = <definition>          — define a word in the winning/current lobe
+#   /define @<lobe> <word> = <definition>  — define a word in a specific lobe
+#   /definitions [@<lobe>]                 — list all definitions in a lobe
+#
+# The ConversationLobe pre-scan hook also auto-routes "X is Y" statements here
+# when they look like simple word definitions (short subject, short definition).
+# ==============================================================================
+
+"""
+    _dict_define_word!(lobe_id::String, word::String, definition::String)
+
+Add or update a word definition in a lobe's dictionary. Creates the dictionary
+for the lobe if it doesn't exist yet.
+"""
+function _dict_define_word!(lobe_id::String, word::String, definition::String)
+    # GRUG v8.28b: Dictionary quality gate — reject garbage definitions.
+    _w = lowercase(strip(word))
+    _d = strip(definition)
+    _question_words = Set(["how", "why", "when", "where", "who", "what", "which"])
+    if _w in _question_words
+        println("[DICT-GATE] ⛔ Rejected definition of question word '$_w' → '$_d'")
+        return nothing
+    end
+    if isempty(_w) || isempty(_d)
+        println("[DICT-GATE] ⛔ Rejected empty word or definition")
+        return nothing
+    end
+    if length(_d) < 3
+        println("[DICT-GATE] ⛔ Rejected too-short definition: '$_w' → '$_d'")
+        return nothing
+    end
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        if !haskey(_LOBE_DICTIONARIES, lobe_id)
+            _LOBE_DICTIONARIES[lobe_id] = Dict{String, String}()
+        end
+        _LOBE_DICTIONARIES[lobe_id][_w] = _d
+    end
+    return nothing
+end
+
+"""
+    _dict_lookup_word(word::String; lobe_hint::String="") -> Union{String, Nothing}
+
+Look up a word definition across all lobe dictionaries (or a specific one if
+lobe_hint is given). Returns the definition string or nothing if not found.
+When lobe_hint is empty, searches all dictionaries and returns the first match.
+"""
+function _dict_lookup_word(word::String; lobe_hint::String="")::Union{String, Nothing}
+    _w = lowercase(strip(word))
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        if !isempty(lobe_hint) && haskey(_LOBE_DICTIONARIES, lobe_hint)
+            return get(_LOBE_DICTIONARIES[lobe_hint], _w, nothing)
+        end
+        # Search all dictionaries — first match wins
+        for (_lid, dict) in _LOBE_DICTIONARIES
+            if haskey(dict, _w)
+                return dict[_w]
+            end
+        end
+        return nothing
+    end
+end
+
+"""
+    _dict_lookup_for_mission(mission_text::String) -> Vector{Tuple{String, String, String}}
+
+Look up all dictionary words that appear in the mission text. Returns a vector
+of (word, definition, lobe_id) tuples for every word in the mission that has
+a dictionary entry. Used by strain response to provide partial answers before
+asking the user to /answer.
+"""
+function _dict_lookup_for_mission(mission_text::String)::Vector{Tuple{String, String, String}}
+    results = Tuple{String, String, String}[]
+    tokens = split(lowercase(strip(mission_text)), r"[\s,.;!?]+")
+    tokens = filter(t -> length(t) > 2, tokens)  # skip tiny words
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        for t in tokens
+            for (lid, dict) in _LOBE_DICTIONARIES
+                if haskey(dict, t)
+                    push!(results, (t, dict[t], lid))
+                    break  # first lobe wins per word
+                end
+            end
+        end
+    end
+    return results
+end
+
+"""
+    _dict_all_definitions(lobe_id::String) -> Dict{String, String}
+
+Return all definitions for a lobe. Empty dict if lobe has no dictionary.
+"""
+function _dict_all_definitions(lobe_id::String)::Dict{String, String}
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        return get(_LOBE_DICTIONARIES, lobe_id, Dict{String, String}())
+    end
+end
+
+"""
+    _dict_definitions_count() -> Int
+
+Total number of word definitions across all lobes.
+"""
+function _dict_definitions_count()::Int
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        return sum(length(d) for d in values(_LOBE_DICTIONARIES); init=0)
+    end
+end
+
+"""
+    _dict_save_state() -> Dict{String, Dict{String, String}}
+
+Serialize dictionary state for specimen save.
+"""
+function _dict_save_state()::Dict{String, Dict{String, String}}
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        return Dict{String, Dict{String, String}}(lid => Dict{String, String}(d) for (lid, d) in _LOBE_DICTIONARIES)
+    end
+end
+
+"""
+    _dict_load_state!(state::Dict)
+
+Restore dictionary state from specimen load.
+"""
+function _dict_load_state!(state)
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        empty!(_LOBE_DICTIONARIES)
+        if state !== nothing
+            for (lid, entries) in state
+                if entries !== nothing
+                    _LOBE_DICTIONARIES[string(lid)] = Dict{String, String}(string(k) => string(v) for (k, v) in entries)
+                end
+            end
+        end
+    end
+    return nothing
+end
+
+# ==============================================================================
+# GRUG v8.27: ORGANIC QUESTION ANSWERING — ConversationLobe direct lookup
+# ==============================================================================
+# When the ConversationLobe detects a question ("what is fire"), it routes here
+# instead of going through the AIML voting pipeline. The flow is:
+#   1. Dictionary lookup — if the word is defined, answer directly
+#   2. Answer cluster lookup — search NODE_MAP for answer nodes matching the topic
+#   3. Return nothing — let AIML handle it (graceful fallback)
+#
+# This is the organic path. No /answer command needed. The system answers from
+# what it's been taught through conversation, definitions, and /answer clusters.
+# ==============================================================================
+
+"""
+    _conversation_answer_question(topic::String) -> Union{String, Nothing}
+
+Answer a question organically by looking up the topic in the dictionary system
+and the full cave node map. Returns the answer string if found, or nothing if
+the system doesn't know (in which case AIML scanning proceeds as fallback).
+
+Priority: dictionary definitions → full cave node search → nothing.
+All non-grave nodes are candidates — not just /answer nodes. If the cave knows
+it (from any source: /answer, seeds, auto-growth, manual creation), the
+ConversationLobe can answer from it.
+"""
+function _conversation_answer_question(topic::String)::Union{String, Nothing}
+    _t = lowercase(strip(topic))
+
+    # GRUG: Strip common question prefixes that might be part of the topic.
+    # "what is fire" → topic is "fire" (already extracted by prescan),
+    # but sometimes "a fire" or "the fire" gets through — strip articles.
+    _t = replace(_t, r"^(?:a|an|the)\s+" => "")
+
+    # ── PASS 1: Dictionary lookup ──
+    _dict_def = _dict_lookup_word(_t)
+    if _dict_def !== nothing
+        return "📖 $_t: $_dict_def"
+    end
+
+    # GRUG: Also try multi-word dictionary lookups.
+    # "dark matter" might be in the dictionary as "dark matter".
+    # The single-word lookup above already handles this since topic
+    # preserves multi-word terms from the prescan regex.
+
+    # ── PASS 2: Full cave lookup ──
+    # Search ALL non-grave nodes in NODE_MAP — not just hippocampal answer nodes.
+    # The point of the ConversationLobe is organic: if the cave knows something
+    # (from /answer, seed nodes, auto-growth, manual creation, anything), the
+    # question should be answerable. Every node is a potential answer source.
+    #
+    # Scoring: pattern token overlap + noun_anchor overlap + content match bonus.
+    # The best-scoring node (above threshold) provides the answer.
+    # System_prompt nodes (hippocampal answers) get a slight bonus because
+    # they carry explicit answer content, but seed/auto-grown nodes with
+    # strong pattern overlap can beat them on merit.
+    _best_answer = ""
+    _best_score = 0.0
+    _best_source = ""   # GRUG: track where the answer came from
+
+    _topic_tokens = Set(split(_t, r"[\s_]+"))
+    filter!(w -> length(w) > 2, _topic_tokens)
+
+    # GRUG: Also build topic tokens WITHOUT articles stripped,
+    # so "dark matter" matches even if we stripped "the" above.
+    _topic_tokens_raw = Set(split(lowercase(strip(topic)), r"[\s_]+"))
+    filter!(w -> length(w) > 2, _topic_tokens_raw)
+
+    lock(NODE_LOCK) do
+        for (_nid, _node) in NODE_MAP
+            _node.is_grave && continue
+
+            # GRUG v8.27: Search ALL nodes — no growth_source filter.
+            # Every non-grave node is a candidate. The cave IS the knowledge.
+
+            # Score based on pattern overlap with topic
+            _pat_tokens = Set(split(lowercase(strip(_node.pattern)), r"[\s_]+"))
+            filter!(w -> length(w) > 2, _pat_tokens)
+
+            # Jaccard similarity
+            if isempty(_pat_tokens) || isempty(_topic_tokens)
+                continue
+            end
+            _inter = length(intersect(_pat_tokens, _topic_tokens))
+            _uni = length(union(_pat_tokens, _topic_tokens))
+            _score = _uni > 0 ? _inter / _uni : 0.0
+
+            # Also try against raw topic tokens
+            if !isempty(_topic_tokens_raw)
+                _inter_r = length(intersect(_pat_tokens, _topic_tokens_raw))
+                _uni_r = length(union(_pat_tokens, _topic_tokens_raw))
+                _score_r = _uni_r > 0 ? _inter_r / _uni_r : 0.0
+                _score = max(_score, _score_r)
+            end
+
+            # Also check noun_anchors
+            _anchors = get(_node.json_data, "noun_anchors", String[])
+            if !isempty(_anchors)
+                _anchor_tokens = Set(lowercase.(filter(w -> length(w) > 2, _anchors)))
+                if !isempty(_anchor_tokens)
+                    _a_inter = length(intersect(_anchor_tokens, _topic_tokens))
+                    _a_uni = length(union(_anchor_tokens, _topic_tokens))
+                    _a_score = _a_uni > 0 ? _a_inter / _a_uni : 0.0
+                    _score = max(_score, _a_score)
+                end
+            end
+
+            # GRUG: Bonus for nodes with explicit answer content (system_prompt).
+            # These are higher-quality answer sources — they carry the actual
+            # knowledge the user taught, not just pattern keywords.
+            _sys_prompt = get(_node.json_data, "system_prompt", "")
+            _sp = String(_sys_prompt)
+            if !isempty(_sp) && occursin(_t, lowercase(_sp))
+                _score += 0.15  # content match bonus
+            end
+
+            # GRUG: Small bonus for hippocampal nodes — they carry explicit
+            # answer content, making them more authoritative than pattern-only
+            # seed nodes. But the bonus is small enough that a seed node with
+            # much better pattern overlap can still win.
+            _gs = get(_node.json_data, "growth_source", "")
+            if startswith(_gs, "hippocampal_")
+                _score += 0.05
+            end
+
+            if _score > _best_score && _score >= 0.3
+                _best_score = _score
+                _best_source = _gs
+                # Extract answer content
+                if !isempty(_sp)
+                    if startswith(_sp, "Grug. ") && length(_sp) > 6
+                        _content = _sp[7:end]
+                        if endswith(_content, ".")
+                            _content = _content[1:end-1]
+                        end
+                        _best_answer = _content
+                    else
+                        _best_answer = _sp
+                    end
+                else
+                    # Node has no system_prompt — use pattern + action_packet as fallback
+                    _best_answer = strip(_node.pattern)
+                end
+            end
+        end
+    end
+
+    if !isempty(_best_answer) && _best_score >= 0.3
+        return _best_answer
+    end
+
+    # ── PASS 3: No match — return nothing, let AIML handle it ──
+    return nothing
+end
+
+# ==============================================================================
+# GRUG v8.28: CONVERSATIONAL LEARNING LOOP — knowledge classification,
+# subject→lobe routing, and pending teach state management
+# ==============================================================================
+
+"""
+    _classify_knowledge(definition::String) -> Symbol
+
+GRUG v8.28: Classify a teaching statement into `:static`, `:procedural`, or
+`:relational`. This determines whether the knowledge becomes a dictionary/voter
+node (static facts) or a sigil node (procedures, calculations, relationships).
+
+- `:static` — "fire is oxidation", "gravity is a force" → dictionary/voter node
+- `:procedural` — "factorial is multiply all numbers from 1 to n", "to sort, compare pairs" → sigil node
+- `:relational` — "gravity pulls masses", "magnets attract iron" → sigil node with relational triple
+
+Heuristics:
+  1. Procedure indicators: how to, steps, multiply, divide, add, subtract,
+     calculate, compute, repeat, loop, first then, begin with, start by,
+     procedure, algorithm, formula, method, process
+  2. Relational indicators: pulls, attracts, repels, produces, causes,
+     leads to, comes before, comes after, follows, prevents, requires,
+     depends on, creates, destroys, transforms
+  3. Default: static (most knowledge is static facts)
+"""
+function _classify_knowledge(definition::AbstractString)::Symbol
+    _d = lowercase(strip(definition))
+
+    # GRUG: Procedure indicator words — if the definition describes HOW to do
+    # something or contains calculation/computation language, it's procedural.
+    _procedure_indicators = [
+        "how to", "how do", "how you", "steps to", "step 1", "step one",
+        "multiply", "divide", "add ", "subtract", "calculate", "compute",
+        "repeat ", "loop ", "first then", "first you", "then you",
+        "begin with", "start by", "start with", "procedure", "algorithm",
+        "formula", "method for", "method of", "process of", "process for",
+        "count from", "iterate", "recursion", "recursive", "increment",
+        "decrement", "sum all", "sum of all", "product of", "factorial",
+        "fibonacci", "square root", "exponent", "logarithm",
+        "convert ", "conversion", "solve ", "solving",
+        "sort by", "compare ", "swap ", "merge ", "search ",
+        "encode", "decode", "encrypt", "decrypt", "compress",
+    ]
+
+    # GRUG: Relational indicator words — if the definition describes a
+    # relationship between entities (A does X to B), it's relational.
+    _relational_indicators = [
+        "pulls", "pull ", "pulling", "pulled",
+        "attracts", "attract ", "attracting", "attracted",
+        "repels", "repel ", "repelling", "repelled",
+        "produces", "produce ", "producing", "produced",
+        "causes", "cause ", "causing", "caused",
+        "creates", "create ", "creating", "created",
+        "destroys", "destroy ", "destroying", "destroyed",
+        "transforms", "transform ", "transforming", "transformed",
+        "converts", "convert ", "converting", "converted",
+        "prevents", "prevent ", "preventing", "prevented",
+        "requires", "require ", "requiring", "required",
+        "depends on", "depending on", "depended on",
+        "comes before", "comes after", "follows", "follow ", "following",
+        "leads to", "leading to", "led to",
+        "results in", "resulting in", "resulted in",
+        "grows from", "growing from", "grew from", "feeds on", "feeding on",
+        "consumes", "consume ", "consuming", "consumed",
+        "releases", "release ", "releasing", "released",
+        "absorbs", "absorb ", "absorbing", "absorbed",
+        "reflects", "reflect ", "reflecting", "reflected",
+        "refracts", "refract ", "refracting", "refracted",
+        "bends", "bending", "accelerates", "accelerate ", "accelerating",
+        "decelerates", "decelerate ", "decelerating",
+        "heats", "heat ", "heating", "heated",
+        "cools", "cool ", "cooling", "cooled",
+        "expands", "expand ", "expanding", "expanded",
+        "contracts", "contract ", "contracting", "contracted",
+        "dissolves", "dissolve ", "dissolving", "dissolved",
+    ]
+
+    # Check procedural first (more specific)
+    for _indicator in _procedure_indicators
+        if occursin(_indicator, _d)
+            return :procedural
+        end
+    end
+
+    # Check relational
+    for _indicator in _relational_indicators
+        if occursin(_indicator, _d)
+            return :relational
+        end
+    end
+
+    # Default: static fact
+    return :static
+end
+
+"""
+    _extract_relational_from_definition(definition::String, topic::String) -> Vector{RelationalTriple}
+
+GRUG v8.28b: Extract relational triples directly from a teaching definition,
+using the SAME indicator vocabulary that `_classify_knowledge` uses. This bridges
+the gap between classification and extraction — when `_classify_knowledge` says
+"this is relational because of 'pulls'", this function finds the actual triple
+(Subject, pulls, Object) without depending on the SemanticVerbs registry.
+
+The standard `extract_relational_triples` only finds triples for verbs in the
+SemanticVerbs registry (27 verbs, mostly math). This function covers the full
+relational indicator vocabulary so that conversational learning actually creates
+nodes with meaningful triples attached.
+
+Strategy: Find the indicator word in the definition, then:
+  - subject = the topic (what was being defined)
+  - relation = the indicator verb (normalized to base form)
+  - object = the word(s) after the indicator verb
+
+For compound indicators like "depends on", "leads to", the entire phrase is
+the relation.
+"""
+function _extract_relational_from_definition(definition::AbstractString, topic::AbstractString)::Vector{RelationalTriple}
+    _d = lowercase(strip(definition))
+    _t = lowercase(strip(topic))
+    triples = RelationalTriple[]
+
+    # GRUG: Relational indicator → base form mapping.
+    # Map all conjugated/variant forms to their canonical base form.
+    _indicator_base = Dict{String,String}(
+        "pulls" => "pulls", "pull " => "pulls", "pulling" => "pulls", "pulled" => "pulls",
+        "attracts" => "attracts", "attract " => "attracts", "attracting" => "attracts", "attracted" => "attracts",
+        "repels" => "repels", "repel " => "repels", "repelling" => "repels", "repelled" => "repels",
+        "produces" => "produces", "produce " => "produces", "producing" => "produces", "produced" => "produces",
+        "causes" => "causes", "cause " => "causes", "causing" => "causes", "caused" => "causes",
+        "creates" => "creates", "create " => "creates", "creating" => "creates", "created" => "creates",
+        "destroys" => "destroys", "destroy " => "destroys", "destroying" => "destroys", "destroyed" => "destroys",
+        "transforms" => "transforms", "transform " => "transforms", "transforming" => "transforms", "transformed" => "transforms",
+        "converts" => "converts", "convert " => "converts", "converting" => "converts", "converted" => "converts",
+        "prevents" => "prevents", "prevent " => "prevents", "preventing" => "prevents", "prevented" => "prevents",
+        "requires" => "requires", "require " => "requires", "requiring" => "requires", "required" => "requires",
+        "depends on" => "depends_on",
+        "depending on" => "depends_on",
+        "depended on" => "depends_on",
+        "comes before" => "precedes",
+        "comes after" => "follows",
+        "follows" => "follows", "follow " => "follows", "following" => "follows",
+        "leads to" => "leads_to",
+        "leading to" => "leads_to",
+        "led to" => "leads_to",
+        "results in" => "results_in",
+        "resulting in" => "results_in",
+        "resulted in" => "results_in",
+        "grows from" => "grows_from",
+        "growing from" => "grows_from",
+        "grew from" => "grew_from",
+        "feeds on" => "feeds_on",
+        "feeding on" => "feeds_on",
+        "consumes" => "consumes", "consume " => "consumes", "consuming" => "consumes", "consumed" => "consumes",
+        "releases" => "releases", "release " => "releases", "releasing" => "releases", "released" => "releases",
+        "absorbs" => "absorbs", "absorb " => "absorbs", "absorbing" => "absorbs", "absorbed" => "absorbs",
+        "reflects" => "reflects", "reflect " => "reflects", "reflecting" => "reflects", "reflected" => "reflects",
+        "refracts" => "refracts", "refract " => "refracts", "refracting" => "refracts", "refracted" => "refracts",
+        "bends" => "bends", "bending" => "bends",
+        "accelerates" => "accelerates", "accelerate " => "accelerates", "accelerating" => "accelerates",
+        "decelerates" => "decelerates", "decelerate " => "decelerates", "decelerating" => "decelerates",
+        "heats" => "heats", "heat " => "heats", "heating" => "heats", "heated" => "heats",
+        "cools" => "cools", "cool " => "cools", "cooling" => "cools", "cooled" => "cools",
+        "expands" => "expands", "expand " => "expands", "expanding" => "expands", "expanded" => "expands",
+        "contracts" => "contracts", "contract " => "contracts", "contracting" => "contracts", "contracted" => "contracts",
+        "dissolves" => "dissolves", "dissolve " => "dissolves", "dissolving" => "dissolves", "dissolved" => "dissolves",
+    )
+
+    # GRUG: Find the first matching indicator in the definition text.
+    # We need the POSITION of the indicator to extract subject/object around it.
+    _best_pos = 0        # position in the definition string
+    _best_len = 0        # length of the matched indicator
+    _best_base = ""      # canonical base form of the relation
+    for (_indicator, _base) in _indicator_base
+        _pos = findfirst(_indicator, _d)
+        if _pos !== nothing
+            _p = first(_pos)
+            # GRUG: Prefer the EARLIEST match (closest to subject).
+            if _best_pos == 0 || _p < _best_pos
+                _best_pos = _p
+                _best_len = length(_indicator)
+                _best_base = _base
+            end
+        end
+    end
+
+    if _best_pos == 0 || isempty(_best_base)
+        # No relational indicator found — fall back to standard extraction
+        return extract_relational_triples(_d)
+    end
+
+    # GRUG: Extract the object — the word(s) AFTER the indicator.
+    # Subject is always the topic (what was being defined).
+    _after_indicator = strip(_d[_best_pos + _best_len:end])
+    # Take up to 3 words as the object
+    _obj_words = split(_after_indicator, r"[\s,;]+"; limit=4)
+    _obj = length(_obj_words) > 0 ? String(_obj_words[1]) : ""
+    # GRUG: If the first object word is an article/preposition, skip it
+    _skip_obj = Set(["a", "an", "the", "by", "from", "to", "into", "on", "in", "of", "and", "or", "with"])
+    if lowercase(_obj) in _skip_obj && length(_obj_words) > 1
+        _obj = String(_obj_words[2])
+    end
+    # GRUG: Stem the topic and object for matching consistency
+    _subj_stemmed = Thesaurus.stem_token(lowercase(_t))
+    _obj_stemmed = Thesaurus.stem_token(lowercase(_obj))
+
+    if !isempty(_subj_stemmed) && !isempty(_obj_stemmed)
+        push!(triples, RelationalTriple(_subj_stemmed, _best_base, _obj_stemmed))
+    end
+
+    # GRUG: Also run the standard extractor to catch additional triples
+    # that might be in the text but not related to the primary indicator.
+    _standard_triples = extract_relational_triples(_d)
+    for _t3 in _standard_triples
+        # Don't add duplicates
+        _is_dup = any(tr -> tr.subject == _t3.subject && tr.relation == _t3.relation && tr.object == _t3.object, triples)
+        if !_is_dup
+            push!(triples, _t3)
+        end
+    end
+
+    return triples
+end
+
+"""
+    _find_lobe_for_subject(subject::String) -> String
+
+GRUG v8.28: Given a subject string (e.g., "math", "physics", "science"),
+find the best matching lobe in LOBE_REGISTRY. Uses both the subject_whitelist
+and the lobe's subject field for matching.
+
+Returns the lobe_id of the best match, or "default" if no lobe matches.
+If the subject is empty or generic, returns "default".
+"""
+function _find_lobe_for_subject(subject::AbstractString)::String
+    _s = lowercase(strip(subject))
+    if isempty(_s)
+        return "default"
+    end
+
+    # GRUG: Generic subjects that should always go to default
+    _generic_subjects = Set(["thing", "stuff", "something", "anything", "general", "misc", "other"])
+    if _s in _generic_subjects
+        return "default"
+    end
+
+    _tokens = split(_s, r"[\s,;:]+") |> xs -> filter(t -> length(t) > 1, xs) |> collect
+
+    if isempty(_tokens)
+        return "default"
+    end
+
+    # GRUG: Check each lobe's whitelist AND subject field against the input tokens.
+    # Score by how many tokens match. The most specific lobe wins.
+    _best_lobe = "default"
+    _best_score = 0
+
+    for (_lobe_id, _rec) in Lobe.LOBE_REGISTRY
+        _score = 0
+
+        # Check subject_whitelist (fuzzy substring matching)
+        _wl = _rec.subject_whitelist
+        if !isempty(_wl)
+            for _token in _tokens
+                for _wl_entry in _wl
+                    if occursin(_wl_entry, _token) || occursin(_token, _wl_entry)
+                        _score += 1
+                        break  # one match per token is enough
+                    end
+                end
+            end
+        end
+
+        # Check subject field (tokenized keyword matching)
+        _subj_tokens = Set(split(lowercase(_rec.subject), r"[\s,;:]+"))
+        for _token in _tokens
+            if _token in _subj_tokens
+                _score += 2  # subject field match is stronger signal
+            end
+            # Also partial match
+            for _st in _subj_tokens
+                if length(_st) > 2 && length(_token) > 2 &&
+                   (occursin(_st, _token) || occursin(_token, _st))
+                    _score += 1
+                    break
+                end
+            end
+        end
+
+        # GRUG: Also check the lobe_id itself — if the subject matches the id.
+        if occursin(_s, lowercase(_lobe_id)) || occursin(lowercase(_lobe_id), _s)
+            _score += 3
+        end
+
+        if _score > _best_score
+            _best_score = _score
+            _best_lobe = _lobe_id
+        end
+    end
+
+    return _best_lobe
+end
+
+"""
+    _extract_teach_parts(user_input::String) -> (subject, definition)
+
+GRUG v8.28: Parse a user's teaching response into (subject, definition).
+The user answers Grug's clarification question with a subject and definition.
+Supported formats:
+  - "math, factorial is multiply all numbers from 1 to n"
+  - "math: factorial is multiply all numbers from 1 to n"
+  - "math - factorial is multiply all numbers from 1 to n"
+  - "subject math, factorial is multiply all numbers from 1 to n"
+  - "math" (just the subject, definition follows in "X is Y" format)
+  - "science, it's oxidation and heat"
+  - "physics: gravity pulls masses together"
+
+If the subject can't be extracted, returns ("", user_input) so the
+definition can still be processed through the normal :define/:answer path.
+"""
+function _extract_teach_parts(user_input::AbstractString)::Tuple{String,String}
+    _t = String(strip(user_input))
+
+    # GRUG: Try multiple subject separator patterns.
+    # Priority: colon, comma, dash — with optional "subject" prefix.
+    for _pattern in [
+        r"^(?:subject\s+)?(\S{2,20})\s*[:]\s*(.+)$"i,     # "subject math: definition"
+        r"^(?:subject\s+)?(\S{2,20})\s*[,]\s*(.+)$"i,     # "subject math, definition"
+        r"^(?:subject\s+)?(\S{2,20})\s*[-—]\s*(.+)$"i,    # "subject math - definition"
+    ]
+        _m = match(_pattern, _t)
+        if _m !== nothing
+            _subj = String(strip(_m.captures[1]))
+            _def = String(strip(_m.captures[2]))
+            # GRUG: Validate subject — not a common stopword
+            _stop = Set(["it", "this", "that", "the", "a", "an", "is", "are", "was",
+                         "were", "be", "been", "being", "have", "has", "had", "do",
+                         "does", "did", "will", "would", "could", "should", "may",
+                         "might", "must", "shall", "can", "need", "dare", "ought",
+                         "used", "yes", "no", "not", "and", "but", "or", "if",
+                         "then", "else", "when", "where", "why", "how", "what",
+                         "who", "which", "whose", "whom"])
+            if !(lowercase(_subj) in _stop) && !isempty(_def)
+                return (_subj, _def)
+            end
+        end
+    end
+
+    # GRUG: No subject separator found. Check if the input starts with
+    # "subject " followed by a word, then the definition.
+    _subj_prefix = match(r"^subject\s+(\S{2,20})\s+(.+)$"i, _t)
+    if _subj_prefix !== nothing
+        _subj = String(strip(_subj_prefix.captures[1]))
+        _def = String(strip(_subj_prefix.captures[2]))
+        return (_subj, _def)
+    end
+
+    # GRUG: No subject found — the whole input is the definition.
+    return ("", _t)
+end
+
+"""
+    _conv_set_pending_teach!(topic::String, ask_text::String)
+
+GRUG v8.28: Set the pending teach state. Called when Grug encounters an
+unknown topic and asks the user for clarification. The state tracks what
+was asked about so the next input can be matched as a teaching response.
+"""
+function _conv_set_pending_teach!(topic::AbstractString, ask_text::AbstractString)
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        _CONV_PENDING_TEACH[] = Dict{String,Any}(
+            "topic"    => topic,
+            "asked_at" => time(),
+            "ask_text" => ask_text,
+        )
+    end
+end
+
+"""
+    _conv_get_pending_teach() -> Dict{String,Any}
+
+GRUG v8.28: Get the current pending teach state. Returns empty dict if none.
+"""
+function _conv_get_pending_teach()::Dict{String,Any}
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        return copy(_CONV_PENDING_TEACH[])
+    end
+end
+
+"""
+    _conv_clear_pending_teach!()
+
+GRUG v8.28: Clear the pending teach state. Called when the teaching response
+is processed or when the state expires.
+"""
+function _conv_clear_pending_teach!()
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        _CONV_PENDING_TEACH[] = Dict{String,Any}()
+    end
+end
+
+"""
+    _conv_pending_teach_is_expired() -> Bool
+
+GRUG v8.28: Check if the pending teach state has expired.
+Teach state expires after 120 seconds (2 minutes) of inactivity.
+If the user doesn't answer within that time, we clear it and
+resume normal conversation flow.
+"""
+function _conv_pending_teach_is_expired()::Bool
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        _pt = _CONV_PENDING_TEACH[]
+        if isempty(_pt)
+            return false  # no pending state = not expired, just absent
+        end
+        _asked_at = get(_pt, "asked_at", 0.0)
+        return (time() - _asked_at) > 120.0
+    end
 end
 
 """
@@ -5358,12 +6693,9 @@ Verbs    : /addVerb <verb> <class>             (add verb to relation class)
          : /addSynonym <canonical> <alias>     (normalize alias->canonical)
          : /addSeedSynonym <canonical> <syn1 syn2 ...>  (thesaurus seed group)
          : /addRelRelation <name> <alt1 alt2 ...>  (dynamic relation sigil)
-         : /addAntiMatch <pattern> [NONJITTER]  (anti-match confidence drain node)
          : /answer [@lobe_id] [:mode] <text>   (resolve strain — mode shapes the answer)
-         : /antiAnswer [@lobe_id] [:mode] <text> (suppress strain — modes: alert, multi, json)
          : /listVerbs                          (show all verb classes + synonyms)
 Hippo    : When cave is empty, system asks a question. Use /answer or
-         : /antiAnswer to resolve. Modes shape how answers are stored:
          :   /answer @physics :explain energy is conserved
          :   /answer :math 2+2=4        /answer :multi part1 | part2
          :   /answer :relate fire | burns | wood
@@ -5371,8 +6703,11 @@ Hippo    : When cave is empty, system asks a question. Use /answer or
          :   /answer :proc step1; step2; step3
          :   /answer :json {...}        /answer energy is conserved
          : Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json
-         : /antiAnswer modes: alert (default), multi, json
          : strain → ask → you answer → strain resolved.
+Dict     : /define <word> = <definition>       (add word definition to lobe dictionary)
+         : /define @<lobe> <word> = <definition> (add definition to specific lobe)
+         : /definitions [@<lobe>]                (list definitions in lobe, or all)
+         : Also auto-detected: "X is Y", "X means Y", "define X as Y"
 Lobes    : /newLobe <id> <subject>             (create a new subject lobe)
          : /nameLobe <lobe_id> <name>          (give a lobe a human-readable name)
          : /connectLobes <id_a> <id_b>         (connect two lobes)
@@ -5448,9 +6783,9 @@ const HELP_MSG = """
 ║  /addSynonym <canon> <alias> Register synonym normalization  ║
 ║  /addSeedSynonym <can> <syns> Register thesaurus seed group   ║
 ║  /addRelRelation <name> <alts> Dynamic relation sigil macro  ║
-║  /addAntiMatch <pattern>    Anti-match confidence drain node  ║
+║  /addAntiMatch <pattern>    REMOVED — antimatch nodes deleted ║
 ║  /answer [@lobe] [:mode] <text>   Resolve strain with mode-shaped answer  ║
-║  /antiAnswer [@lobe] [:mode] <text> Suppress strain (modes: alert/multi/json) ║
+║  /antiAnswer [@lobe] [:mode] <text> REMOVED — antimatch nodes deleted        ║
 ║  /listVerbs                 Show verb registry               ║
 ║                                                              ║
 ║  HIPPOCAMPAL ASK-CYCLE                                      ║
@@ -5467,7 +6802,7 @@ const HELP_MSG = """
 ║    :time    time node (subj | obj) auto &temporal gate    ║
 ║    :proc    procedural chain (step1; step2; step3)          ║
 ║    :json    raw JSON passthrough to grow_nodes_from_packet  ║
-║  /antiAnswer [@lobe] [:mode] <text> Suppress strain         ║
+║  /antiAnswer [@lobe] [:mode] <text> REMOVED                  ║
 ║    :alert (default) / :multi / :json                        ║
 ║                                                              ║
 ║  LOBES & TABLES                                              ║
@@ -5497,6 +6832,8 @@ const HELP_MSG = """
 ║        regex=X → occursin(Regex(X), t) (advanced)          ║
 ║  /sigil remove <name>     Remove user-registered sigil     ║
 ║    (engine-default sigils are protected)                    ║
+║  /sigil addStructure <name> <s1 s2 ...>  Register :structure sigil  ║
+║  /sigil expand <name>             Show sigil expansion chain        ║
 ║                                                             ║
 ║  INVERSESIGIL (inverse evidence table diagnostics)          ║
 ║  /inverseStatus              Show inverse table summary     ║
@@ -5598,7 +6935,42 @@ const HELP_MSG = """
 ║  /coherenceConfig reset        Reset to defaults (weight=0)  ║
 ║    WARNING: weight > 0 enables attractor dynamics!           ║
 ║    Start low (0.05). >0.3 risks quantum Zeno state-lock.    ║
+│                                                              │
+│  PHASE SPACE & GEOMETRY (v9 — four named geometric spaces)   │
+│  /phaseSpace                    Overview of all four spaces  │
+│  /phaseSpace semantic <a> <b>   Semantic space distance     │
+│  /phaseSpace coherence <a> <b>  Coherence space distance     │
+│  /phaseSpace phase <a> <b>      Phase space distance (JS)   │
+│  /phaseSpace tone <a> <b>       Tone space distance          │
+│  /phaseSpace nearest <node>     Nearest neighbors (phase)    │
+│  /geometry                      Geometry overview            │
+│  /geometry trajectory           Trajectory through PhaseSpace│
+│  /geometry attractors           Current attractor basins     │
+│  /geometry distance <sp> <a> <b> Distance in named space     │
 ║                                                              ║
+│  PATTERN MINING (v9 — operator genesis)                     │
+│  /mineShapes                   Miner status & instance counts│
+│  /mineShapes scan              Scan triples for graph shapes │
+│  /mineShapes proposals [stat]  List genesis proposals        │
+│  /mineShapes approve <id>      Approve a genesis proposal   │
+│  /mineShapes reject <id>       Reject a genesis proposal    │
+│  /mineShapes config [k v]      View/set miner thresholds     │
+│  /mineShapes clear <inst|prop> Clear instances or proposals │
+│  TEMPORAL IDENTITY (v9 — continuants)                       │
+│  /identity                     Identity status & list        │
+│  /identity create <class> [id] Create a continuant           │
+│  /identity chain <id>         Show temporal chain            │
+│  /identity add <id> <node> <phase> <orient>  Add stage       │
+│  /identity rule <id> <from> <to>  Add transform rule         │
+│  /identity merge <a> <b> [cls] Merge two continuants         │
+│  /identity of <node_id>       Which continuant owns a node   │
+│  /identity proposals [stat]   List continuant proposals      │
+│  /identity approve <id>       Approve a continuant proposal  │
+│  /identity reject <id>        Reject a continuant proposal    │
+│  /identity config [k v]       View/set identity config       │
+│  /identity delete <id>        Delete a continuant             │
+│                                                              │
+│                                                              │
 ║  FLASHCARD (v10 — math fact lookup table)                   ║
 ║  /flashcard                 Show flashcard status (per lobe) ║
 ║  /flashcard count           Show total card count             ║
@@ -5626,7 +6998,7 @@ const HELP_MSG = """
 ║  🛡  IMMUNE SYSTEM (auto-gates all structure-storing cmds)  ║
 ║  Gated: /grow /lobeGrow /addRule /pin /addVerb              ║
 ║         /addRelationClass /addSynonym /addSeedSynonym        ║
-║         /addRelRelation /addAntiMatch /newLobe /nameLobe     ║
+║         /addRelRelation /newLobe /nameLobe                   ║
 ║         /connectLobes /setLobeHint                           ║
 ║         /loadSpecimen /nodeAttach /imgnodeAttach            ║
 ║  Exempt: /mission and all read-only commands                ║
@@ -6112,6 +7484,518 @@ function process_mission(mission_text::String)
     end
 
 
+    # GRUG v8.26f: Quick-teach question:answer syntax.
+    # Dead simple: "fire:oxidation and heat" → node matching "fire" that answers about oxidation.
+    # User handles their own question splitting. No auto-decompose, no multipart.
+    # Must NOT fire when the prefix is a known lobe name (that's lobe-qualified answer).
+    _qa_taught = false
+    try
+        _qa_pairs = _parse_question_answer(mission_text)
+        if !isempty(_qa_pairs)
+            for (question, answer) in _qa_pairs
+                _qa_data = _base_answer_data("explain"; answer_content=answer)
+                _qa_data["answer_mode"] = "explain"
+                _qa_data["noun_anchors"] = split(lowercase(question), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))]
+                _qa_data["voice_register"] = "plain"
+                _qa_data["frame_hints"] = ["plain", "exploratory"]
+                _pat = lowercase(strip(question))
+                _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _qa_data, nothing, "explain")
+                println("[QA-TEACH] 📝 Taught: question='$question' answer='$answer' → node=$_nid shadows=$(_sids)")
+            end
+            _qa_taught = true
+            # GRUG: After teaching, produce a brief acknowledgment and skip normal scan.
+            _ack = "Grug learned: " * join([q * " → " * a for (q, a) in _qa_pairs], "; ")
+            lock(_LAST_VOICE_OUTPUT_LOCK) do
+                _LAST_VOICE_OUTPUT[] = _ack
+            end
+            return
+        end
+    catch e
+        @warn "[MAIN] question:answer parse/teach failed (non-fatal): $e"
+    end
+
+    # GRUG v8.27/v8.28: ConversationLobe pre-scan hook.
+    # Detects questions, teaching, correcting, and defining statements from natural
+    # language and auto-routes them to the right mechanic — dictionary, answer clusters,
+    # /wrong, /define — without requiring slash commands.
+    #
+    # Patterns detected:
+    #   "what is X" / "who is X"   → :question (organic lookup, bypasses AIML)
+    #   "tell me about X"          → :question
+    #   "explain X"                → :question
+    #   "how does X work"          → :question
+    #   "what does X mean"         → :question
+    #   (unknown topic → clarification question → :teach response)
+    #   "math, factorial is ..."   → :teach (procedural → sigil node)
+    #   "science: it's oxidation"  → :teach (static → dictionary/voter node)
+    #   "physics - gravity pulls"  → :teach (relational → sigil node)
+    #   "X is Y"                   → dictionary define (short Y) or answer cluster (long Y)
+    #   "X means Y"                → dictionary define
+    #   "X are Y"                  → dictionary define
+    #   "define X as Y"            → dictionary define
+    #   "X = Y"                    → dictionary define (if not caught by /define command)
+    #   "no, X is Y"               → correction: /wrong + re-teach
+    #   "actually, X is Y"         → correction: /wrong + re-teach
+    #   "wrong" / "incorrect"      → /wrong (standalone correction signal)
+    #
+    # Only fires when _qa_taught is false (question:answer didn't already handle it).
+    # Must NOT interfere with lobe-qualified answers or inverse sigil directives.
+    if !_qa_taught
+        try
+            _conv_result = _conversation_prescan(mission_text)
+            if _conv_result !== nothing
+                _conv_kind, _conv_word, _conv_def, _conv_lobe_hint = _conv_result
+
+                if _conv_kind == :question
+                    # GRUG v8.27: Organic question answering — bypass AIML voting.
+                    # Look up the topic directly from dictionary → answer clusters.
+                    # If we know the answer, respond from the system immediately.
+                    # If we don't, let the normal AIML scan proceed (graceful fallback).
+                    _answer = _conversation_answer_question(_conv_word)
+                    if _answer !== nothing
+                        println("[CONV-QUESTION] 💬 Answered: '$_conv_word' → $_answer")
+                        lock(_LAST_VOICE_OUTPUT_LOCK) do
+                            _LAST_VOICE_OUTPUT[] = _answer
+                        end
+                        # Dampen strain since we're providing an answer
+                        try EphemeralMLP.dampen_strain!(0.3) catch _ end
+                        # Clear pending ask if any
+                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            _HIPPOCAMPAL_PENDING_ASK[] = ""
+                        end
+                        return
+                    else
+                        # GRUG v8.28: We don't know this topic organically.
+                        # Instead of just falling through to AIML, ask the user
+                        # for clarification — what does it mean, and what subject
+                        # does it belong to? This starts the conversational learning
+                        # loop. The user's next input will be matched as a teaching
+                        # response (see :teach handler below).
+                        println("[CONV-QUESTION] 🤷 Unknown topic '$(_conv_word)' — asking for clarification")
+
+                        # GRUG: Build a clarification question.
+                        _clarify = "Grug not know '$(_conv_word)'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)"
+
+                        # GRUG: Set pending teach state so the next input is
+                        # matched as a teaching response.
+                        _conv_set_pending_teach!(_conv_word, _clarify)
+
+                        # GRUG: Also store in hippocampal pending ask for strain flow.
+                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            _HIPPOCAMPAL_PENDING_ASK[] = mission_text
+                        end
+
+                        lock(_LAST_VOICE_OUTPUT_LOCK) do
+                            _LAST_VOICE_OUTPUT[] = _clarify
+                        end
+                        # Dampen strain slightly — we're actively seeking knowledge
+                        try EphemeralMLP.dampen_strain!(0.1) catch _ end
+                        return
+                    end
+
+                elseif _conv_kind == :calculate
+                    # GRUG v9: Arithmetic computation from routing judge.
+                    # The routing judge detected arithmetic tokens/sigils in the input
+                    # and classified it as :calculate instead of :question.
+                    # _conv_word = the arithmetic expression (e.g., "5+5", "3 plus 4")
+                    # We promote it through SigilPromoter to get sigil bindings,
+                    # then compute via ArithmeticEngine and return the result.
+                    println("[CONV-CALCULATE] 🔢 Computing: '$_conv_word'")
+                    try
+                        _sigil_table = _ENGINE_SIGIL_TABLE
+                        _, _calc_bindings = SigilPromoter.promote_input(_sigil_table, _conv_word)
+                        if ArithmeticEngine.has_math_bindings(_calc_bindings)
+                            _calc_result = ArithmeticEngine.compute_arithmetic(_calc_bindings)
+                            if _calc_result.error === nothing
+                                _calc_reply = ArithmeticEngine.format_arithmetic_reply(_calc_result)
+                                println("[CONV-CALCULATE] ✅ Result: $(_calc_result.expression) = $(_calc_result.answer_str)")
+                                # GRUG: Auto-write arithmetic result to flashcard for future instant lookup
+                                try
+                                    _arith_lobe = "math"
+                                    for (_lid, _lrec) in Lobe.LOBE_REGISTRY
+                                        if occursin("math", lowercase(_lrec.subject))
+                                            _arith_lobe = _lid
+                                            break
+                                        end
+                                    end
+                                    LobeTable.flashcard_put!(_arith_lobe, _calc_result.expression,
+                                        _calc_result.answer_str;
+                                        result_num=try Float64(_calc_result.answer) catch _ NaN end,
+                                        card_type=:arithmetic)
+                                catch _
+                                end
+                                lock(_LAST_VOICE_OUTPUT_LOCK) do
+                                    _LAST_VOICE_OUTPUT[] = _calc_reply
+                                end
+                                # Dampen strain since we're providing an answer
+                                try EphemeralMLP.dampen_strain!(0.3) catch _ end
+                                # Clear pending ask if any
+                                lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                    _HIPPOCAMPAL_PENDING_ASK[] = ""
+                                end
+                                return
+                            else
+                                println("[CONV-CALCULATE] ❌ Computation error: $(_calc_result.error)")
+                            end
+                        else
+                            println("[CONV-CALCULATE] ⚠️ No math bindings in promoted form of '$_conv_word'")
+                        end
+                    catch e
+                        println("[CONV-CALCULATE] ❌ Error computing arithmetic: $e")
+                    end
+                    # GRUG: If arithmetic computation failed, fall through to normal scan
+                    # (don't return — let process_mission continue)
+
+                elseif _conv_kind == :compound
+                    # GRUG v9: Compound question — multiple independent sub-intents.
+                    # The routing judge detected a compound question (e.g., "what is 5+5 and what is love")
+                    # and split it into sub-intents stored in _COMPOUND_SUB_INTENTS[].
+                    # Process each sub-intent independently and compose the reply.
+                    _sub_intents = copy(_COMPOUND_SUB_INTENTS[])
+                    _COMPOUND_SUB_INTENTS[] = Vector{Tuple{Symbol, String, String, String}}()  # Clear
+                    println("[CONV-COMPOUND] 🧩 Processing $(length(_sub_intents)) sub-intents")
+
+                    _replies = String[]
+                    for (_si_kind, _si_word, _si_def, _si_hint) in _sub_intents
+                        if _si_kind == :calculate
+                            # Compute arithmetic for this sub-intent
+                            try
+                                _sigil_table = _ENGINE_SIGIL_TABLE
+                                _, _cb = SigilPromoter.promote_input(_sigil_table, _si_word)
+                                if ArithmeticEngine.has_math_bindings(_cb)
+                                    _cr = ArithmeticEngine.compute_arithmetic(_cb)
+                                    if _cr.error === nothing
+                                        push!(_replies, ArithmeticEngine.format_arithmetic_reply(_cr))
+                                        println("[CONV-COMPOUND] 🔢 Calculate: $(_cr.expression) = $(_cr.answer_str)")
+                                    else
+                                        push!(_replies, "Could not compute $(_si_word): $(_cr.error)")
+                                    end
+                                else
+                                    push!(_replies, "Could not compute $(_si_word)")
+                                end
+                            catch e
+                                push!(_replies, "Error computing $(_si_word): $e")
+                            end
+                        elseif _si_kind == :question
+                            # Answer question for this sub-intent
+                            _ans = _conversation_answer_question(_si_word)
+                            if _ans !== nothing
+                                push!(_replies, _ans)
+                                println("[CONV-COMPOUND] 💬 Question: '$(_si_word)' → $_ans")
+                            else
+                                # Don't know the answer — ask for clarification
+                                push!(_replies, "Grug not know '$(_si_word)'")
+                                println("[CONV-COMPOUND] 🤷 Unknown: '$(_si_word)'")
+                            end
+                        elseif _si_kind == :define
+                            # Process definition for this sub-intent
+                            _target_lobe = isempty(_si_hint) ? "default" : _si_hint
+                            _dict_define_word!(_target_lobe, _si_word, _si_def)
+                            push!(_replies, "📖 Learned: $_si_word means $_si_def")
+                            println("[CONV-COMPOUND] 📖 Define: '$_si_word' → '$_si_def'")
+                        else
+                            push!(_replies, "(unhandled sub-intent: $_si_kind)")
+                        end
+                    end
+
+                    if !isempty(_replies)
+                        _compound_reply = join(_replies, "; ")
+                        lock(_LAST_VOICE_OUTPUT_LOCK) do
+                            _LAST_VOICE_OUTPUT[] = _compound_reply
+                        end
+                        # Dampen strain since we answered
+                        try EphemeralMLP.dampen_strain!(0.3) catch _ end
+                        # Clear pending ask if any
+                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            _HIPPOCAMPAL_PENDING_ASK[] = ""
+                        end
+                        println("[CONV-COMPOUND] ✅ Compound reply: $_compound_reply")
+                        return
+                    end
+
+                elseif _conv_kind == :teach
+                    # GRUG v8.28: Conversational learning loop — the user is
+                    # responding to our clarification question. They gave us
+                    # a subject and/or definition for the unknown topic.
+                    # _conv_word = the topic we asked about
+                    # _conv_def  = the definition they provided (may be empty if subject-only)
+                    # _conv_lobe_hint = the subject they specified (may be empty)
+
+                    _teach_topic = _conv_word
+                    _teach_def   = _conv_def
+                    _teach_subject = _conv_lobe_hint
+
+                    # GRUG: If the definition is empty, we only got a subject.
+                    # Ask for the definition. Update pending state with subject.
+                    if isempty(_teach_def)
+                        _followup = "What does '$(_teach_topic)' mean?"
+                        _conv_set_pending_teach!(_teach_topic, _followup)
+                        println("[CONV-TEACH] 📝 Got subject '$_teach_subject' for '$_teach_topic' — asking for definition")
+                        lock(_LAST_VOICE_OUTPUT_LOCK) do
+                            _LAST_VOICE_OUTPUT[] = _followup
+                        end
+                        return
+                    end
+
+                    # GRUG: We have a definition! Classify the knowledge type.
+                    _knowledge_type = _classify_knowledge(_teach_def)
+
+                    # GRUG: Determine the target lobe from the subject.
+                    _target_lobe_id = isempty(_teach_subject) ? "default" : _find_lobe_for_subject(_teach_subject)
+
+                    # GRUG: If the subject doesn't match any existing lobe and
+                    # isn't "default", create a new lobe for this subject.
+                    # We use _find_lobe_for_subject which already checked all
+                    # lobes' subjects and whitelists. If it returned "default"
+                    # and we have a real subject, no existing lobe is a good fit.
+                    if _target_lobe_id == "default" && !isempty(_teach_subject)
+                        # GRUG: Create a new lobe for this subject.
+                        # The lobe_id is the subject (lowercased, spaces→underscores).
+                        _new_lobe_id = replace(lowercase(strip(_teach_subject)), r"[\s]+" => "_")
+                        # Sanitize: only alphanumeric + underscore
+                        _new_lobe_id = replace(_new_lobe_id, r"[^a-z0-9_]" => "")
+                        if !isempty(_new_lobe_id) && !haskey(Lobe.LOBE_REGISTRY, _new_lobe_id)
+                            Lobe.create_lobe!(_new_lobe_id, lowercase(_teach_subject);
+                                              name="$(titlecase(_teach_subject)) Lobe")
+                            println("[CONV-TEACH] 🧠 Created new lobe '$_new_lobe_id' for subject '$_teach_subject'")
+                            _target_lobe_id = _new_lobe_id
+                        elseif haskey(Lobe.LOBE_REGISTRY, _new_lobe_id)
+                            _target_lobe_id = _new_lobe_id
+                        end
+                    end
+
+                    println("[CONV-TEACH] 📝 Teaching: topic='$_teach_topic' subject='$_teach_subject' type=$_knowledge_type lobe='$_target_lobe_id' def='$_teach_def'")
+
+                    if _knowledge_type == :static
+                        # ── STATIC KNOWLEDGE → dictionary entry or voter node ──
+                        # Short definitions go to dictionary, longer ones to answer clusters.
+                        _def_word_count = length(split(_teach_def, r"\s+"))
+                        if _def_word_count <= 15
+                            # Dictionary entry — simplest storage
+                            # GRUG: Clean up definition — strip "X is/are/means" prefix from
+                            # definition if it redundantly restates the topic. The dictionary
+                            # entry should be just the meaning, not "fire is oxidation and heat"
+                            # but rather "oxidation and heat".
+                            _clean_def = _teach_def
+                            _topic_lower = lowercase(_teach_topic)
+                            _def_lower = lowercase(_teach_def)
+                            if startswith(_def_lower, _topic_lower * " is ") ||
+                               startswith(_def_lower, _topic_lower * " are ") ||
+                               startswith(_def_lower, _topic_lower * " means ")
+                                # Find where the topic + copula ends
+                                _prefix_len = length(_topic_lower) + 1  # topic + space
+                                _copula_match = match(r"^(?:is|are|means)\s+", _def_lower[_prefix_len:end])
+                                if _copula_match !== nothing
+                                    _clean_def = strip(_teach_def[_prefix_len + length(_copula_match.match):end])
+                                end
+                            end
+                            _dict_define_word!(_target_lobe_id, _teach_topic, _clean_def)
+                            println("[CONV-TEACH] 📖 Static (dictionary): '$_teach_topic' → '$_clean_def' in lobe '$_target_lobe_id'")
+                            _ack = "📖 Grug learned: $_teach_topic means $_clean_def"
+                            if !isempty(_teach_subject)
+                                _ack = "📖 Grug learned: $_teach_topic means $_clean_def ($_teach_subject)"
+                            end
+                        else
+                            # Answer cluster — longer explanation
+                            _ans_data = _base_answer_data("explain"; answer_content=_teach_def)
+                            _ans_data["answer_mode"] = "explain"
+                            _ans_data["noun_anchors"] = split(lowercase(_teach_topic), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))]
+                            _ans_data["voice_register"] = "plain"
+                            _ans_data["frame_hints"] = ["plain", "exploratory"]
+                            _ans_data["taught_subject"] = _teach_subject
+                            _ans_data["conversational_source"] = "teach_loop"
+                            _pat = lowercase(strip(_teach_topic))
+                            _target_lobe_obj = haskey(Lobe.LOBE_REGISTRY, _target_lobe_id) ? _target_lobe_id : nothing
+                            _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _ans_data, _target_lobe_obj, "explain")
+                            println("[CONV-TEACH] 📝 Static (cluster): '$_teach_topic' → '$_teach_def' → node=$_nid shadows=$(_sids)")
+                            _ack = "📝 Grug learned: $_teach_topic → $_teach_def"
+                        end
+
+                    elseif _knowledge_type == :procedural
+                        # ── PROCEDURAL KNOWLEDGE → sigil node ──
+                        # Procedures, calculations, algorithms, methods.
+                        # Sigil nodes are NOCHAT, singleton, unlinked.
+                        # Pattern captures the topic + sigil for the procedure.
+                        _sigil_pattern = lowercase(strip(_teach_topic)) * " &procedure"
+                        _sigil_data = Dict{String,Any}(
+                            "growth_source"       => "conversational_teach",
+                            "conversational_source" => "teach_loop",
+                            "taught_subject"      => _teach_subject,
+                            "knowledge_type"      => "procedural",
+                            "system_prompt"       => "Grug. $(_teach_def).",
+                            "noun_anchors"        => split(lowercase(_teach_topic), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))],
+                        )
+                        _sigil_drop = String["conversational_sigil"]
+                        _nid = create_sigil_node(
+                            _sigil_pattern,
+                            "explain^1",
+                            _sigil_data,
+                            _sigil_drop;
+                            kind = :procedural,
+                            initial_strength = 1.0,
+                        )
+
+                        # GRUG: Assign to the target lobe.
+                        if haskey(Lobe.LOBE_REGISTRY, _target_lobe_id)
+                            try
+                                Lobe.add_node_to_lobe!(_target_lobe_id, _nid)
+                            catch _
+                            end
+                        end
+
+                        println("[CONV-TEACH] ⚡ Procedural (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid in lobe='$_target_lobe_id'")
+                        _ack = "⚡ Grug learned procedure: $_teach_topic — $_teach_def"
+
+                    elseif _knowledge_type == :relational
+                        # ── RELATIONAL KNOWLEDGE → sigil node with relational triple ──
+                        # "gravity pulls masses" → sigil node with RelationalTriple.
+                        # The relationship IS the pattern — it's not a static fact,
+                        # it's a dynamic connection between entities.
+                        _sigil_pattern = lowercase(strip(_teach_topic)) * " &relation"
+                        _sigil_data = Dict{String,Any}(
+                            "growth_source"       => "conversational_teach",
+                            "conversational_source" => "teach_loop",
+                            "taught_subject"      => _teach_subject,
+                            "knowledge_type"      => "relational",
+                            "system_prompt"       => "Grug. $(_teach_def).",
+                            "noun_anchors"        => split(lowercase(_teach_topic), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))],
+                        )
+                        _sigil_drop = String["conversational_sigil"]
+                        _nid = create_sigil_node(
+                            _sigil_pattern,
+                            "reason^1",
+                            _sigil_data,
+                            _sigil_drop;
+                            kind = :relational,
+                            initial_strength = 1.0,
+                        )
+
+                        # GRUG: Also extract relational triples from the definition
+                        # and attach them to the node.
+                        _rel_triples = _extract_relational_from_definition(_teach_def, _teach_topic)
+                        if !isempty(_rel_triples)
+                            lock(NODE_LOCK) do
+                                if haskey(NODE_MAP, _nid)
+                                    append!(NODE_MAP[_nid].relational_patterns, _rel_triples)
+                                end
+                            end
+                        end
+
+                        # GRUG: Assign to the target lobe.
+                        if haskey(Lobe.LOBE_REGISTRY, _target_lobe_id)
+                            try
+                                Lobe.add_node_to_lobe!(_target_lobe_id, _nid)
+                            catch _
+                            end
+                        end
+
+                        println("[CONV-TEACH] 🔗 Relational (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid triples=$(_rel_triples) in lobe='$_target_lobe_id'")
+                        _ack = "🔗 Grug learned relationship: $_teach_topic — $_teach_def"
+                    end
+
+                    # GRUG: Clear the pending teach state — learning complete.
+                    _conv_clear_pending_teach!()
+
+                    # GRUG: Also clear hippocampal pending ask.
+                    lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                        _HIPPOCAMPAL_PENDING_ASK[] = ""
+                    end
+
+                    # GRUG: Dampen strain — knowledge deficit resolved.
+                    try EphemeralMLP.dampen_strain!(0.5) catch _ end
+
+                    lock(_LAST_VOICE_OUTPUT_LOCK) do
+                        _LAST_VOICE_OUTPUT[] = _ack
+                    end
+                    return
+
+                elseif _conv_kind == :define
+                    # Simple word definition → lobe dictionary
+                    # GRUG: Dictionary system is independent of LOBE_REGISTRY —
+                    # dictionaries can exist for any lobe_id, even if the lobe
+                    # itself was never created in LOBE_REGISTRY.  The old guard
+                    # (haskey check) silently dropped every definition when the
+                    # target lobe wasn't registered, which broke ConversationLobe
+                    # after specimen load (specimens often lack a "default" lobe).
+                    _target_lobe = isempty(_conv_lobe_hint) ? "default" : _conv_lobe_hint
+                    _dict_define_word!(_target_lobe, _conv_word, _conv_def)
+                    println("[CONV-DEFINE] 📖 Learned: '$_conv_word' → '$_conv_def' in lobe '$_target_lobe'")
+                    _ack = "📖 Learned: $_conv_word means $_conv_def"
+                    lock(_LAST_VOICE_OUTPUT_LOCK) do
+                        _LAST_VOICE_OUTPUT[] = _ack
+                    end
+                    # Return early — no need for normal scan for pure definitions
+                    return
+
+                elseif _conv_kind == :answer
+                    # Longer teaching statement → plant an answer cluster
+                    _ans_data = _base_answer_data("explain"; answer_content=_conv_def)
+                    _ans_data["answer_mode"] = "explain"
+                    _ans_data["noun_anchors"] = split(lowercase(_conv_word), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))]
+                    _ans_data["voice_register"] = "plain"
+                    _ans_data["frame_hints"] = ["plain", "exploratory"]
+                    _target_lobe = isempty(_conv_lobe_hint) ? nothing : (haskey(Lobe.LOBE_REGISTRY, _conv_lobe_hint) ? _conv_lobe_hint : nothing)
+                    _pat = lowercase(strip(_conv_word))
+                    _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _ans_data, _target_lobe, "explain")
+                    println("[CONV-ANSWER] 📝 Taught: '$_conv_word' → '$_conv_def' → node=$_nid shadows=$(_sids)")
+                    _ack = "Grug learned: $_conv_word → $_conv_def"
+                    lock(_LAST_VOICE_OUTPUT_LOCK) do
+                        _LAST_VOICE_OUTPUT[] = _ack
+                    end
+                    # Dampen strain since we're resolving a knowledge deficit
+                    try EphemeralMLP.dampen_strain!(0.5) catch _ end
+                    # Clear pending ask if any
+                    lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                        _HIPPOCAMPAL_PENDING_ASK[] = ""
+                    end
+                    return
+
+                elseif _conv_kind == :correct
+                    # Correction: punish the last response and re-teach
+                    # Fire /wrong logic then re-teach with the corrected info
+                    # GRUG: Use the same feedback path as /wrong — lock-in-only
+                    # penalization via apply_wrong_feedback! + context intensity nudge.
+                    _contrib_ids = lock(LAST_VOTER_LOCK) do
+                        copy(LAST_CONTRIBUTOR_IDS)
+                    end
+                    _locked_ids = lock(LAST_VOTER_LOCK) do
+                        copy(LAST_LOCKED_NODE_IDS)
+                    end
+                    if !isempty(_contrib_ids) && !isempty(_locked_ids)
+                        apply_wrong_feedback!(_contrib_ids, _locked_ids)
+                    end
+                    try
+                        apply_last_selected_feedback!(CONTEXT_FEEDBACK_WRONG_DELTA)
+                    catch _
+                    end
+                    try
+                        EphemeralMLP.register_wrong_feedback!()
+                    catch _
+                    end
+                    # Now re-teach the corrected fact
+                    if !isempty(_conv_word) && !isempty(_conv_def)
+                        _ans_data = _base_answer_data("explain"; answer_content=_conv_def)
+                        _ans_data["answer_mode"] = "explain"
+                        _ans_data["noun_anchors"] = split(lowercase(_conv_word), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))]
+                        _pat = lowercase(strip(_conv_word))
+                        _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _ans_data, nothing, "explain")
+                        println("[CONV-CORRECT] ✏️ Corrected: '$_conv_word' → '$_conv_def' → node=$_nid (old weakened)")
+                        _ack = "✏️ Corrected: $_conv_word → $_conv_def"
+                    else
+                        println("[CONV-CORRECT] ✏️ Correction signal — last response weakened")
+                        _ack = "✏️ Got it, I'll remember that correction"
+                    end
+                    lock(_LAST_VOICE_OUTPUT_LOCK) do
+                        _LAST_VOICE_OUTPUT[] = _ack
+                    end
+                    return
+                end
+            end
+        catch e
+            @warn "[MAIN v8.26i] ConversationLobe pre-scan failed (non-fatal): $e"
+        end
+    end  # !_qa_taught
+
     # GRUG v8.1-coherence-fix: Clear per-group binding stash at the start
     # of each mission cycle so stale bindings from previous cycles don't
     # leak into the current one.
@@ -6371,6 +8255,14 @@ function process_mission(mission_text::String)
                     stash_multipart_scoped_text!("$(sub.multipart_group)_chk_$(chk.chunk_index)", chk.text)
                 end
             end
+            # GRUG v8.26g: Set pre_expansion to ONLY this sub-subject's text.
+            # Old bug: pre_expansion was the full compound text, so fire cascades
+            # leaked into the water sub-scan because "fire" appeared in the
+            # pre_expansion string, letting cascade relevance gates pass.
+            # Now: each sub-scan only sees its own text in pre_expansion.
+            lock(_GLOBAL_PROMOTION_LOCK) do
+                _GLOBAL_RAW_PRE_EXPANSION[] = sub.text
+            end
             sub_task_name, sub_task = VoteOrchestrator.dispatch_task_with_timeout(
                 () -> scan_and_expand(sub.text; chunks=sub_chunks, multipart_group=sub.multipart_group),
                 "scan_$(sub.multipart_group)",
@@ -6510,7 +8402,7 @@ function process_mission(mission_text::String)
         # GRUG v7.51: ASK QUESTION instead of silent return!
         # The old code just printed "Cave is silent" and returned. Now the system
         # asks a coherent question about the input it doesn't understand, and prompts
-        # the user to use /answer or /antiAnswer. This is the hippocampal ask step:
+        # the user to use /answer. This is the hippocampal ask step:
         # strain → ask question → user answers → strain resolved.
 
         # ── AUTOGROWTH: EMPTY-CAVE EVIDENCE ACCUMULATION ──
@@ -8792,6 +10684,18 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize hippocampal pending ask: $e"
     end
 
+    # GRUG v8.28: Save conversational pending teach state.
+    # If Grug asked a clarification question and the session ends before
+    # the user answers, the pending teach state must survive reload.
+    try
+        lock(_CONV_PENDING_TEACH_LOCK) do
+            specimen["conv_pending_teach"] = copy(_CONV_PENDING_TEACH[])
+        end
+        println("  📝  Conversational pending teach saved")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize conv pending teach: $e"
+    end
+
     # ── 42. ADMIN SESSION ────────────────────────────────────────────────────────
     # GRUG: Admin session state (login status + timestamps). On reload the
     # session is always reset to logged-out for safety — but we save it so
@@ -8902,6 +10806,61 @@ function save_specimen_to_file!(filepath::String)::String
         end
     catch e
         @warn "[MAIN] save_specimen: FAILED to serialize coherence config: $e"
+    end
+
+    # ── 26b. GEOMETRY KIT CONFIG ──────────────────────────────────────────────
+    # GRUG v9: Save the GeometryKit config so space preferences survive reload.
+    try
+        _gk_cfg = GeometryKit.geometry_config_to_dict()
+        specimen["geometry_config"] = _gk_cfg
+        println("  📐 GeometryKit config saved (default_space=$(_gk_cfg["default_space"]))")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize geometry config: $e"
+    end
+
+    # ── 26c. PATTERN MINER CONFIG ─────────────────────────────────────────────
+    # GRUG v9: Save the PatternMiner config so genesis thresholds survive reload.
+    try
+        _pm_cfg = PatternMiner.pattern_miner_config_to_dict()
+        specimen["pattern_miner_config"] = _pm_cfg
+        println("  ⛏  PatternMiner config saved (T=$(_pm_cfg["transitivity_threshold"]), C=$(_pm_cfg["chaining_threshold"]), S=$(_pm_cfg["symmetry_threshold"]))")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize pattern miner config: $e"
+    end
+    # GRUG v9: Save PatternMiner instances + proposals so they survive reload.
+    try
+        _pm_data = PatternMiner.pattern_miner_data_to_dict()
+        specimen["pattern_miner_data"] = _pm_data
+        _n_inst = length(_pm_data["instances"])
+        _n_prop = length(_pm_data["proposals"])
+        println("  ⛏  PatternMiner data saved ($_n_inst instances, $_n_prop proposals)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize pattern miner data: $e"
+    end
+
+        # ── 26d. TEMPORAL IDENTITY ────────────────────────────────────────────────
+    # GRUG v9: Save temporal identities so continuants survive reload.
+    try
+        _ti_data = TemporalIdentity.temporal_identity_to_dict()
+        specimen["temporal_identities"] = _ti_data
+        _ti_conts = _ti_data["continuants"]
+        println("  🕐 TemporalIdentity saved ($(length(_ti_conts)) continuants)")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize temporal identities: $e"
+    end
+
+    # ── 27. LOBE DICTIONARIES ──────────────────────────────────────────────
+    # GRUG v8.26i: Save the per-lobe word dictionaries. These are lightweight
+    # Dict{String,String} maps — one per lobe — so they serialize trivially.
+    try
+        _dict_state = _dict_save_state()
+        if !isempty(_dict_state)
+            specimen["lobe_dictionaries"] = _dict_state
+            _dc = _dict_definitions_count()
+            println("  📖 Lobe dictionaries saved ($_dc definitions across $(length(_dict_state)) lobes)")
+        end
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize lobe dictionaries: $e"
     end
 
 
@@ -9123,14 +11082,20 @@ function load_specimen_from_file!(filepath::String)::String
                         "phagy_rules_ref",
                         "time_orientation_config",
                         "coherence_config",
+                        "geometry_config",  # GRUG v9: GeometryKit space preferences
+                        "pattern_miner_config",  # GRUG v9: PatternMiner genesis thresholds
+                        "pattern_miner_data",    # GRUG v9: PatternMiner instances + proposals
+                        "temporal_identities",   # GRUG v9: TemporalIdentity continuants
                         "autogrowth_evidence", "autogrowth_co_occur",
                         "autolink_evidence",
                         "inverse_table",
+                        "lobe_dictionaries",
                         "flashcards", "curiosity", "_comments",
                         "actions", "concept_classes", "concept_inhibitions",
                         "crystalize", "groups", "resolve_conflict_mode",
                         "sigils", "subconscious", "tonal_buildup",
                         "chatter_swap_cooldowns",
+                        "conv_pending_teach",  # GRUG v8.28: conversational learning loop pending state
                         "aiml_system"])  # GRUG v8.12: aiml_system allowed for backward-compat (silently skipped during load)
     for key in keys(specimen)
         if !(key in allowed_keys)
@@ -9156,7 +11121,7 @@ function load_specimen_from_file!(filepath::String)::String
              "scanner_config", "action_tone_knobs",
              "fanout_config", "hippocampal_pending_ask", "admin_session",
              "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
-             "coherence_config", "mlp_cached_phi"]
+             "coherence_config", "geometry_config", "pattern_miner_config", "temporal_identities", "mlp_cached_phi"]
         if haskey(specimen, k) && !_is_dict_like(specimen[k])
             push!(validation_errors, "'$k' must be an object")
         end
@@ -9291,6 +11256,16 @@ function load_specimen_from_file!(filepath::String)::String
     # Wipe immune system state
     # GRUG: Clear all immune memory. Specimen will bring its own.
     ImmuneSystem.reset_immune_state!()
+
+    # GRUG v9: Wipe TemporalIdentity state (continuants + proposals + node index).
+    # Specimen will bring its own, or defaults apply if key absent.
+    TemporalIdentity.clear_continuants!()
+    TemporalIdentity.clear_proposals!()
+
+    # GRUG v9: Wipe PatternMiner state (instances + proposals).
+    # Specimen will bring its own, or defaults apply if key absent.
+    PatternMiner.clear_instances!()
+    PatternMiner.clear_proposals!()
 
     # Wipe sigil table back to engine defaults
     # GRUG: Specimen may have merged custom lexicons; reset to clean slate.
@@ -9449,16 +11424,19 @@ function load_specimen_from_file!(filepath::String)::String
                 # curated (source of truth). Specimen entries supplement but
                 # never overwrite. This prevents stale specimen synonyms
                 # (e.g. "like"→"enjoy") from clobbering better built-in ones.
+                # GRUG v8.26c: Only merge into keys the built-in map ALREADY has.
+                # If the built-in map doesn't have a key, the entry was intentionally
+                # removed (e.g. "not"→["never","no","neither"] causes grammar breakage).
+                # Stale specimen entries must NOT resurrect removed keys.
                 if haskey(Thesaurus.SYNONYM_SEED_MAP, w)
                     union!(Thesaurus.SYNONYM_SEED_MAP[w], incoming)
-                else
-                    Thesaurus.SYNONYM_SEED_MAP[w] = incoming
+                    n_thesaurus += 1
                 end
-                n_thesaurus += 1
+                # else: key was intentionally removed from built-in map; drop stale specimen entry
             end
         end
         counts["thesaurus_words"] = n_thesaurus
-        println("  🖤 Thesaurus restored ($n_thesaurus words, merged)")
+        println("  🖤 Thesaurus restored ($n_thesaurus words, merged with built-in curation)")
     end
 
     # ── 4.4 LOBES ────────────────────────────────────────────────────────
@@ -10785,6 +12763,26 @@ function load_specimen_from_file!(filepath::String)::String
         @warn "[MAIN] load_specimen: failed to restore hippocampal pending ask: $e"
     end
 
+    # GRUG v8.28: Restore conversational pending teach state.
+    try
+        if haskey(specimen, "conv_pending_teach")
+            _cpt = specimen["conv_pending_teach"]
+            if _is_dict_like(_cpt)
+                lock(_CONV_PENDING_TEACH_LOCK) do
+                    _CONV_PENDING_TEACH[] = Dict{String,Any}(_cpt)
+                end
+                _cpt_topic = get(_cpt, "topic", "")
+                if !isempty(_cpt_topic)
+                    println("  📝  Conversational pending teach restored: topic='$(_cpt_topic)'")
+                else
+                    println("  📝  Conversational pending teach: empty (no pending clarification)")
+                end
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore conv pending teach: $e"
+    end
+
     # ── 4.42 ADMIN SESSION ────────────────────────────────────────────────────────
     # GRUG: Admin session is ALWAYS reset to logged-out on reload for safety.
     # An active session at save time means the specimen was saved mid-admin;
@@ -10977,6 +12975,81 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  CoherenceField config: FAILED to load (defaults will apply)")
     end
 
+    # ── 26c. GEOMETRY KIT CONFIG ──────────────────────────────────────────────
+    # GRUG v9: Restore GeometryKit config so space preferences survive reload.
+    try
+        if haskey(specimen, "geometry_config")
+            _gc = specimen["geometry_config"]
+            if _is_dict_like(_gc)
+                GeometryKit.geometry_config_from_dict!(_gc)
+                _ds = get(_gc, "default_space", "phase")
+                println("  📐  GeometryKit config loaded (default_space=$_ds)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore geometry config: $e"
+        println("  ⚠️  GeometryKit config: FAILED to load (defaults will apply)")
+    end
+
+    # ── 26d. PATTERN MINER CONFIG ─────────────────────────────────────────────
+    # GRUG v9: Restore PatternMiner config so genesis thresholds survive reload.
+    try
+        if haskey(specimen, "pattern_miner_config")
+            _pmc = specimen["pattern_miner_config"]
+            if _is_dict_like(_pmc)
+                PatternMiner.pattern_miner_config_from_dict!(_pmc)
+                println("  ⛏  PatternMiner config loaded (T=$(_pmc["transitivity_threshold"]), C=$(_pmc["chaining_threshold"]), S=$(_pmc["symmetry_threshold"]))")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore pattern miner config: $e"
+        println("  ⚠️  PatternMiner config: FAILED to load (defaults will apply)")
+    end
+    # GRUG v9: Restore PatternMiner instances + proposals so they survive reload.
+    try
+        if haskey(specimen, "pattern_miner_data")
+            _pmd = specimen["pattern_miner_data"]
+            if _is_dict_like(_pmd)
+                PatternMiner.pattern_miner_data_from_dict!(_pmd)
+                _n_i = length(get(_pmd, "instances", []))
+                _n_p = length(get(_pmd, "proposals", []))
+                println("  ⛏  PatternMiner data loaded ($_n_i instances, $_n_p proposals)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore pattern miner data: $e"
+        println("  ⚠️  PatternMiner data: FAILED to load (miner will start fresh)")
+    end
+
+        # ── 26e. TEMPORAL IDENTITIES ──────────────────────────────────────────────
+    # GRUG v9: Restore temporal identities so continuants survive reload.
+    try
+        if haskey(specimen, "temporal_identities")
+            _ti = specimen["temporal_identities"]
+            if _is_dict_like(_ti)
+                TemporalIdentity.temporal_identity_from_dict!(_ti)
+                _ti_st = TemporalIdentity.temporal_identity_status()
+                println("  🕐 TemporalIdentity loaded ($(_ti_st["total_continuants"]) continuants, $(_ti_st["total_stages"]) stages)")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore temporal identities: $e"
+        println("  ⚠️  TemporalIdentity: FAILED to load (defaults will apply)")
+    end
+
+    # ── 27b. LOBE DICTIONARIES ──────────────────────────────────────────────
+    # GRUG v8.26i: Restore per-lobe word dictionaries from specimen.
+    try
+        if haskey(specimen, "lobe_dictionaries")
+            _dict_load_state!(specimen["lobe_dictionaries"])
+            _dc = _dict_definitions_count()
+            println("  📖 Lobe dictionaries loaded ($_dc definitions)")
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore lobe dictionaries: $e"
+        println("  ⚠️  Lobe dictionaries: FAILED to load (dictionaries will be empty)")
+    end
+
     # ══════════════════════════════════════════════════════════════════════════════
     # PHASE 4.5: ENSURE SIGIL SEED NODES EXIST
     # GRUG v7.59: All sigil seed nodes are created with node_type=:sigil, which
@@ -11126,6 +13199,17 @@ function _plant_inline_boot_seeds()
     # for almost any conversation.
     Lobe.create_lobe!("default", "general thinking reasoning conversation greeting")
     println("  + lobe `default` created (subject: general thinking reasoning conversation greeting)")
+
+    # GRUG v8.26i: Create the conversation lobe at boot.
+    # This lobe catches general chat, definitions, corrections, and teaching
+    # statements. It has a broad subject whitelist so it's eligible for most
+    # input, but low vote weights so it only wins when nothing else does.
+    # The pre-scan hook routes "X is Y" statements to dictionary or /answer
+    # mechanics before the normal scan even starts.
+    if !haskey(Lobe.LOBE_REGISTRY, "conversation")
+        Lobe.create_lobe!("conversation", "chat define teach correct explain what is"; name="ConversationLobe")
+        println("  + lobe `conversation` created (ConversationLobe: auto-routes teaching/corrections)")
+    end
 
     greet_ctx    = Dict{String, Any}("system_prompt" => "Highly polite greeting protocols active. Friend at the cave mouth, Grug nod and make space by the fire.")
     reason_ctx   = Dict{String, Any}("system_prompt" => "Cold logical analysis engine active. Grug line up the rocks one by one and check each before moving on.")
@@ -11984,12 +14068,18 @@ function run_cli()
             m_addrelclass = match(r"^/addRelationClass\s+(\S+)\s*$",        line)
             m_addsynonym  = match(r"^/addSynonym\s+(\S+)\s+(\S+)\s*$",     line)
             m_addseedsyn  = match(r"^/addSeedSynonym\s+(\S+)\s+(.+)$",      line)
-            m_addantimatch= match(r"^/addAntiMatch\s+(.+)$",                 line)
+            # GRUG v8.26h: /addAntiMatch REMOVED — antimatch nodes are no longer a thing.
             # GRUG v7.55: /addRelRelation <name> <alt1 alt2 alt3 ...>
             # Register a :relation-class sigil for dynamic relational triples.
             m_addrelrelation = match(r"^/addRelRelation\s+(\S+)\s+(.+)$",  line)
             m_answer      = match(r"^/answer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$",            line)  # GRUG v7.52: @lobe_id + :mode
-            m_antianswer  = match(r"^/antiAnswer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$",          line)  # GRUG v7.52: @lobe_id + :mode
+            # GRUG v8.26i: /define command — add word definitions to lobe dictionaries.
+            # Syntax: /define <word> = <definition>  OR  /define @<lobe> <word> = <definition>
+            # Also: /definitions [@<lobe>]  — list definitions in a lobe (or all)
+            m_define      = match(r"^/define(?:\s+@(\S+))?\s+(\S+)\s*=\s+(.+)$",              line)
+            m_definitions = match(r"^/definitions(?:\s+@(\S+))?\s*$",                         line)
+            # GRUG v8.26h: /antiAnswer REMOVED — antimatch nodes are no longer a thing.
+            # m_antianswer  = match(r"^/antiAnswer(?:\s+@(\S+))?(?:\s+:(\w+))?\s+(.+)$", line)
             m_listverbs   = match(r"^/listVerbs\s*$",                        line)
             # GRUG: Lobe management commands
             m_newlobe     = match(r"^/newLobe\s+(\S+)\s+(.+)$",               line)
@@ -12101,6 +14191,10 @@ function run_cli()
             m_sigillist   = match(r"^/sigil\s+list\s*$",                                    line)
             m_sigiladd    = match(r"^/sigil\s+add\s+(\S+)\s+(\S+)\s+(\S+)(?:\s+(.+))?\s*$", line)
             m_sigilremove = match(r"^/sigil\s+remove\s+(\S+)\s*$",                          line)
+            # GRUG v9: Structure sigil commands — meta-sigils that expand to ordered sequences
+            m_sigiladdstruct = match(r"^/sigil\s+addStructure\s+(\S+)\s+(.+)\s*$",           line)
+            m_sigilexpand = match(r"^/sigil\s+expand\s+(\S+)\s*$",                           line)
+
             # GRUG v10: InverseSigil diagnostic & lobe-hint management commands.
             #   /inverseStatus                    — show inverse table summary (sigils, concretes, lobe hints)
             #   /inverseDetail <sigil_name>       — show detailed entry for one inverse sigil
@@ -12124,6 +14218,38 @@ function run_cli()
             m_coherence_grad    = match(r"^/coherenceGradient\s+(\S+)\s*$",                   line)
             m_coherence_field   = match(r"^/coherenceField\s*$",                             line)
             m_coherence_config  = match(r"^/coherenceConfig(?:\s+(.+))?\s*$",                 line)
+            # GRUG v9: Phase space and geometry CLI match patterns
+            m_phase_space       = match(r"^/phaseSpace\s*$",                                  line)
+            m_phase_space_sem   = match(r"^/phaseSpace\s+semantic\s+(\S+)\s+(\S+)\s*$",       line)
+            m_phase_space_coh   = match(r"^/phaseSpace\s+coherence\s+(\S+)\s+(\S+)\s*$",      line)
+            m_phase_space_pha   = match(r"^/phaseSpace\s+phase\s+(\S+)\s+(\S+)\s*$",          line)
+            m_phase_space_ton   = match(r"^/phaseSpace\s+tone\s+(\S+)\s+(\S+)\s*$",           line)
+            m_phase_space_near  = match(r"^/phaseSpace\s+nearest\s+(\S+)\s*$",                line)
+            m_geometry          = match(r"^/geometry\s*$",                                    line)
+            m_geometry_traj     = match(r"^/geometry\s+trajectory\s*$",                       line)
+            m_geometry_attr     = match(r"^/geometry\s+attractors\s*$",                       line)
+            m_geometry_dist     = match(r"^/geometry\s+distance\s+(\S+)\s+(\S+)\s+(\S+)\s*$",  line)
+            # GRUG v9: Pattern mining CLI match patterns
+            m_mine_shapes       = match(r"^/mineShapes\s*$",                                        line)
+            m_mine_scan         = match(r"^/mineShapes\s+scan\s*$",                                 line)
+            m_mine_proposals    = match(r"^/mineShapes\s+proposals(?:\s+(\S+))?\s*$",              line)
+            m_mine_approve      = match(r"^/mineShapes\s+approve\s+(\S+)\s*$",                    line)
+            m_mine_reject       = match(r"^/mineShapes\s+reject\s+(\S+)\s*$",                     line)
+            m_mine_config       = match(r"^/mineShapes\s+config(?:\s+(\S+)\s+(.+))?\s*$",         line)
+            m_mine_clear        = match(r"^/mineShapes\s+clear\s+(\S+)\s*$",                      line)
+            # GRUG v9: Temporal Identity CLI match patterns
+            m_identity          = match(r"^/identity\s*$",                                        line)
+            m_identity_create   = match(r"^/identity\s+create\s+(\S+)(?:\s+(\S+))?\s*$",          line)
+            m_identity_chain    = match(r"^/identity\s+chain\s+(\S+)\s*$",                         line)
+            m_identity_add      = match(r"^/identity\s+add\s+(\S+)\s+(\S+)\s+(\S+)\s+(before|now|next)\s*$", line)
+            m_identity_merge    = match(r"^/identity\s+merge\s+(\S+)\s+(\S+)(?:\s+(\S+))?\s*$",    line)
+            m_identity_of       = match(r"^/identity\s+of\s+(\S+)\s*$",                            line)
+            m_identity_proposals= match(r"^/identity\s+proposals(?:\s+(\S+))?\s*$",                line)
+            m_identity_approve  = match(r"^/identity\s+approve\s+(\S+)\s*$",                       line)
+            m_identity_reject   = match(r"^/identity\s+reject\s+(\S+)\s*$",                        line)
+            m_identity_config   = match(r"^/identity\s+config(?:\s+(\S+)\s+(.+))?\s*$",            line)
+            m_identity_delete   = match(r"^/identity\s+delete\s+(\S+)\s*$",                        line)
+            m_identity_rule     = match(r"^/identity\s+rule\s+(\S+)\s+(\S+)\s+(\S+)\s*$",          line)
             m_errors            = match(r"^/errors(?:\s+(clear))?\s*$",                       line)
             m_help         = match(r"^/help\s*$",                                       line)
             
@@ -12815,43 +14941,7 @@ elseif !isnothing(m_right)
                     end
                 end
 
-            elseif !isnothing(m_addantimatch)
-                # GRUG v7.49: /addAntiMatch <pattern> [NONJITTER]
-                # Create an anti-match node that pattern-activates but drains confidence
-                # from regular votes in the same lobe instead of casting its own vote.
-                # Each activation drains a random tick; NONJITTER tag makes it a fixed constant.
-                # Anti-match nodes never gain/lose strength and never compete for stages.
-                # Example: /addAntiMatch offensive
-                # Example: /addAntiMatch rude NONJITTER
-                am_raw = String(strip(m_addantimatch.captures[1]))
-                # GRUG: Parse optional NONJITTER suffix.
-                has_nonjitter = false
-                am_pattern = am_raw
-                if occursin(r"\s+NONJITTER\s*$"i, am_raw)
-                    has_nonjitter = true
-                    am_pattern = replace(am_raw, r"\s+NONJITTER\s*$"i => "")
-                end
-                am_pattern = String(strip(am_pattern))
-                if isempty(am_pattern)
-                    println("!!! FATAL: /addAntiMatch needs a pattern string. Example: /addAntiMatch offensive [NONJITTER] !!!")
-                else
-                    # GRUG: IMMUNE GATE — anti-match nodes are stored structure!
-                    if !immune_gate("/addAntiMatch", am_pattern; is_critical=false)
-                        println("⛔ /addAntiMatch blocked by immune system.")
-                    else
-                        req_rels = has_nonjitter ? ["NONJITTER"] : String[]
-                        am_data = Dict{String,Any}("required_relations" => req_rels)
-                        # GRUG: Anti-match nodes need a dummy action_packet. They never
-                        # actually fire an action (they're removed before vote casting),
-                        # but the Node struct requires one. Use "say^1" as the no-op default.
-                        nid = create_node(am_pattern, "ponder^1", am_data, String[]; is_antimatch_node=true)
-                        nj_tag = has_nonjitter ? " [NONJITTER — fixed drain]" : " [jitter drain]"
-                        lobe_tag = let l = Lobe.find_lobe_for_node(nid)
-                            isnothing(l) ? " (no lobe)" : " (lobe: $l)"
-                        end
-                        println("🧫 Anti-match node created: id=$nid pattern='$am_pattern'$nj_tag$lobe_tag")
-                    end
-                end
+            # GRUG v8.26h: /addAntiMatch handler REMOVED — antimatch nodes are no longer a thing.
 
             # GRUG v7.52: /answer [@lobe_id] [:mode] <content>
             # The hippocampal answer mechanism. When the system encounters input it
@@ -12950,16 +15040,24 @@ elseif !isnothing(m_right)
                                 end
 
                             elseif ans_mode == "multi"
-                                # --- :multi — pipe-delimited multi-node creation ---
+                                # GRUG v8.25: :multi — pipe-delimited multi-cluster creation
+                                # Now uses _plant_answer_cluster per part (instead of _create_answer_node)
+                                # so each part gets fan-out shadow nodes with query-matching patterns
+                                # ("what is X", "tell me about X", etc.). This mirrors how multipart
+                                # QUESTIONS split into sub-missions — each ANSWER part becomes its own
+                                # discoverable cluster. Cross-links and grouping ensure all parts
+                                # co-activate when ANY part is matched.
                                 parts = _parse_multi_parts(ans_content)
                                 if isempty(parts)
                                     println("!!! FATAL: /answer :multi needs pipe-delimited parts. Example: /answer :multi part1 | part2 | part3 !!!")
                                 else
-                                    multi_ids = String[]
-                                    for (action_pkt, part_text) in parts
-                                        part_data = _base_answer_data("reason"; pending_ask_text=pending_ask_text, answer_content=part_text)
-                                        # GRUG: Override action-specific voice if the part has a custom action
+                                    all_primary_ids = String[]
+                                    all_shadow_ids  = String[]
+                                    for (i, (action_pkt, part_text)) in enumerate(parts)
                                         action_name = split(action_pkt, '^')[1]
+                                        # Build answer data with the part's own mode config
+                                        part_data = _base_answer_data(action_name; pending_ask_text=pending_ask_text, answer_content=part_text)
+                                        # GRUG: Override action-specific voice if the part has a custom action
                                         if haskey(_ANSWER_MODE_CONFIG, action_name) && !isempty(_ANSWER_MODE_CONFIG[action_name])
                                             cfg = _ANSWER_MODE_CONFIG[action_name]
                                             # v7.55: Don't override system_prompt with mode prompt — answer_content is already embedded
@@ -12968,17 +15066,45 @@ elseif !isnothing(m_right)
                                         end
                                         part_data["answer_mode"] = "multi"
                                         part_data["multi_part_action"] = action_pkt
-                                        nid, lobe_tag = _create_answer_node(part_text, action_pkt, part_data, target_lobe_ans; skip_auto_latch=true)
-                                        push!(multi_ids, nid)
+                                        part_data["multi_part_index"] = i
+                                        part_data["multi_part_total"] = length(parts)
+                                        # Plant a FULL CLUSTER (primary + fan-out shadows) per part
+                                        primary_id, shadow_ids, lobe_tag = _plant_answer_cluster(
+                                            part_text, action_pkt, part_data, target_lobe_ans, action_name)
+                                        push!(all_primary_ids, primary_id)
+                                        append!(all_shadow_ids, shadow_ids)
                                     end
-                                    # GRUG: Auto-group the multi-part nodes so they fire together.
-                                    if length(multi_ids) > 1
+                                    # Cross-link all primary nodes via drop_table
+                                    # so if ANY part fires, ALL parts co-activate (multipart recall)
+                                    for pid in all_primary_ids
+                                        if haskey(NODE_MAP, pid)
+                                            for other_pid in all_primary_ids
+                                                other_pid == pid && continue
+                                                if haskey(NODE_MAP, other_pid)
+                                                    if !(other_pid in NODE_MAP[pid].drop_table)
+                                                        push!(NODE_MAP[pid].drop_table, other_pid)
+                                                    end
+                                                end
+                                            end
+                                            # Also link shadows from other parts
+                                            for sid in all_shadow_ids
+                                                if haskey(NODE_MAP, sid)
+                                                    shadow_of = get(NODE_MAP[sid].json_data, "shadow_of", "")
+                                                    if shadow_of != pid && !(sid in NODE_MAP[pid].drop_table)
+                                                        push!(NODE_MAP[pid].drop_table, sid)
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                    # GRUG: Auto-group ALL clusters together (primaries + all shadows)
+                                    all_cluster_ids = vcat(all_primary_ids, all_shadow_ids)
+                                    if length(all_cluster_ids) > 1
                                         try
-                                            first_id = multi_ids[1]
-                                            # Register the first node as a group root
+                                            first_id = all_primary_ids[1]
                                             if haskey(NODE_MAP, first_id)
                                                 register_group!(NODE_MAP[first_id])
-                                                for other_id in multi_ids[2:end]
+                                                for other_id in all_cluster_ids[2:end]
                                                     if haskey(NODE_MAP, other_id)
                                                         grp = group_for(first_id)
                                                         if !isnothing(grp)
@@ -12992,7 +15118,8 @@ elseif !isnothing(m_right)
                                             @warn "[MAIN] /answer :multi — auto-grouping failed (non-fatal): $e"
                                         end
                                     end
-                                    println("🧠 Answer [:multi]: planted $(length(multi_ids)) node(s) [$(join(multi_ids, ", "))] | $strain_msg$resolve_msg")
+                                    total_planted = length(all_primary_ids) + length(all_shadow_ids)
+                                    println("🧠 Answer [:multi]: planted $total_planted node(s) ($(length(all_primary_ids)) primaries + $(length(all_shadow_ids)) shadows) [$(join(all_primary_ids, ", "))] | $strain_msg$resolve_msg")
                                 end
 
                             elseif ans_mode == "relate"
@@ -13118,8 +15245,14 @@ elseif !isnothing(m_right)
                                     # v7.55: system_prompt already set by _base_answer_data with answer_content
                                     time_data["voice_register"] = "plain"
                                     time_data["frame_hints"] = ["plain", "exploratory"]
+                                    # GRUG v8.26e: TIME NODE PATTERN FIX. The old pattern was just `subj`
+                                    # (e.g., "the dark ages"), which means queries about the OBJECT
+                                    # ("what came before the renaissance") can't find the node because
+                                    # "the renaissance" isn't in the pattern. Fix: pattern includes
+                                    # both subj and obj so either endpoint is findable by the scanner.
+                                    _time_pattern = strip("$(lowercase(subj)) $(lowercase(obj))")
                                     # GRUG v7.53: Fan-out for time — primary + shadow nodes.
-                                    nid, shadow_ids, lobe_tag = _plant_answer_cluster(subj, "reason^1", time_data, target_lobe_ans, "time")
+                                    nid, shadow_ids, lobe_tag = _plant_answer_cluster(_time_pattern, "reason^1", time_data, target_lobe_ans, "time")
                                     shadow_msg = !isempty(shadow_ids) ? " +$(length(shadow_ids)) shadows [$(join(shadow_ids, ", "))]" : ""
                                     orient_msg = !isempty(time_orient) ? " orient=$time_orient" : ""
                                     println("⏳ Answer [:time]: id=$nid triple='$(lowercase(subj)) → $(rel_for_triple) → $(lowercase(obj))'$orient_msg (temporal: $(join(rel_for_display[1:min(3,length(rel_for_display))], " | "))…)$lobe_tag$shadow_msg | $strain_msg$resolve_msg")
@@ -13298,149 +15431,78 @@ elseif !isnothing(m_right)
                     end
                 end
 
-            # GRUG v7.50: /antiAnswer <text> — user provides anti-answer for strain-causing input.
-            # When the system sees something that causes strain and the user knows it's
-            # WRONG or should be SUPPRESSED, the anti-answer creates an anti-match node.
-            # This drains confidence from matching votes, suppressing the strain-causing
-            # pattern. The anti-answer is the structural negation — "this is not valid input."
-            #
-            # GRUG v7.51: Also DAMPENS STRAIN and CLEARS the pending ask.
-            # Same as /answer — the user is resolving the strain event.
-            elseif !isnothing(m_antianswer)
-                # GRUG v7.52: /antiAnswer [@lobe_id] [:mode] <text>
-                # Optional @lobe_id targets the anti-answer to a specific lobe.
-                # Optional :mode selects answer shape (:alert, :multi, :json).
-                #   /antiAnswer @moderation :alert no slurs allowed
-                #   /antiAnswer offensive content   (no lobe, no mode)
-                anti_lobe_raw = m_antianswer.captures[1]  # may be Nothing if no @lobe_id
-                anti_mode_raw = m_antianswer.captures[2]  # may be Nothing if no :mode
-                anti_raw      = String(strip(m_antianswer.captures[3]))
-                # GRUG v7.52: Resolve mode — antiAnswer supports :alert, :multi, :json.
-                anti_mode = if !isnothing(anti_mode_raw)
-                    mode_candidate = lowercase(String(anti_mode_raw))
-                    if mode_candidate ∉ ["alert", "multi", "json"]
-                        println("⚠  /antiAnswer: unknown mode ':$mode_candidate'. Valid modes: alert, multi, json. Falling back to default.")
-                        "alert"
+            # GRUG v8.26h: /antiAnswer handler REMOVED — antimatch nodes are no longer a thing.
+
+            # GRUG v8.26i: /define — add word definition to a lobe dictionary.
+            # Syntax: /define <word> = <definition>  OR  /define @<lobe> <word> = <definition>
+            # The word goes into the lobe's Dict{String,String} — not a node.
+            # If no @lobe is given, use the "default" lobe, or the last winning lobe if known.
+            elseif !isnothing(m_define)
+                def_lobe_raw = m_define.captures[1]   # may be Nothing
+                def_word     = String(strip(m_define.captures[2]))
+                def_text     = String(strip(m_define.captures[3]))
+
+                # Resolve target lobe
+                target_lobe_def = if !isnothing(def_lobe_raw)
+                    lobe_candidate = String(def_lobe_raw)
+                    if !haskey(Lobe.LOBE_REGISTRY, lobe_candidate)
+                        println("⚠  /define: lobe '@$lobe_candidate' does not exist. Use /newLobe first.")
+                        nothing
                     else
-                        mode_candidate
+                        lobe_candidate
                     end
                 else
-                    "alert"  # default for anti-answer — terse suppression
+                    # Default: use "default" lobe if it exists, otherwise first lobe in registry
+                    if haskey(Lobe.LOBE_REGISTRY, "default")
+                        "default"
+                    elseif !isempty(Lobe.LOBE_REGISTRY)
+                        first(keys(Lobe.LOBE_REGISTRY))
+                    else
+                        println("⚠  /define: no lobes exist yet. Use /newLobe first.")
+                        nothing
+                    end
                 end
 
-                if isempty(anti_raw)
-                    println("!!! FATAL: /antiAnswer needs text. Example: /antiAnswer @moderation :alert no slurs, or /antiAnswer :multi slur1 | slur2 !!!")
-                else
-                    # GRUG v7.51: Validate lobe if specified.
-                    target_lobe_anti = if !isnothing(anti_lobe_raw)
-                        lobe_candidate = String(anti_lobe_raw)
-                        if !haskey(Lobe.LOBE_REGISTRY, lobe_candidate)
-                            println("⚠  /antiAnswer: lobe '@$lobe_candidate' does not exist. Use /newLobe first, or omit @lobe_id. Anti-answer NOT created.")
-                            nothing  # signal: abort
-                        elseif Lobe.lobe_is_full(lobe_candidate)
-                            println("!!! LOBE FULL: Lobe '$lobe_candidate' has reached its node cap. Anti-answer NOT created. Use /newLobe to add a new lobe. !!!")
-                            nothing  # signal: abort
-                        else
-                            lobe_candidate
-                        end
+                if target_lobe_def !== nothing
+                    _dict_define_word!(target_lobe_def, def_word, def_text)
+                    total = _dict_definitions_count()
+                    println("📖 /define: '$def_word' → '$def_text' in lobe '$target_lobe_def' (total definitions: $total)")
+                end
+
+            # GRUG v8.26i: /definitions — list word definitions in a lobe (or all lobes).
+            elseif !isnothing(m_definitions)
+                defs_lobe_raw = m_definitions.captures[1]   # may be Nothing
+                if !isnothing(defs_lobe_raw)
+                    # Show definitions for one lobe
+                    defs_lobe = String(defs_lobe_raw)
+                    if !haskey(Lobe.LOBE_REGISTRY, defs_lobe)
+                        println("⚠  /definitions: lobe '@$defs_lobe' does not exist.")
                     else
-                        nothing  # no lobe targeting
-                    end
-                    if target_lobe_anti !== nothing || isnothing(anti_lobe_raw)
-                        # Either a valid lobe was found, or no lobe was specified.
-                        # GRUG: IMMUNE GATE — anti-answer nodes are stored structure!
-                        if !immune_gate("/antiAnswer", anti_raw; is_critical=false)
-                            println("⛔ /antiAnswer blocked by immune system.")
+                        defs = _dict_all_definitions(defs_lobe)
+                        if isempty(defs)
+                            println("📖 Lobe '$defs_lobe' has no definitions yet. Use /define @$(defs_lobe) <word> = <definition>.")
                         else
-                            # GRUG v7.51: Dampen strain — the user is resolving the deficit.
-                            dampen_result = try
-                                EphemeralMLP.dampen_strain!(0.7)  # 70% reduction — strong resolution
-                            catch e
-                                @warn "[MAIN] dampen_strain! failed (non-fatal): $e"
-                                nothing
+                            println("📖 Definitions in lobe '$defs_lobe' ($(length(defs)) words):")
+                            for (w, d) in sort(collect(defs))
+                                println("  $w → $d")
                             end
-
-                            # GRUG v7.51: Clear the pending ask — question has been anti-answered.
-                            pending_ask_text = lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                                old = _HIPPOCAMPAL_PENDING_ASK[]
-                                _HIPPOCAMPAL_PENDING_ASK[] = ""
-                                old
-                            end
-
-                            # ==========================================================
-                            # ANTI-ANSWER MODE DISPATCH (GRUG v7.52)
-                            # ==========================================================
-                            # Anti-answer modes: :alert (default), :multi, :json
-                            # These create anti-match nodes that drain confidence from
-                            # matching votes, suppressing the strain-causing pattern.
-
-                            strain_now = round(EphemeralMLP.get_strain_energy(); digits=3)
-                            strain_msg = if dampen_result !== nothing
-                                "strain $(round(dampen_result.old; digits=3)) → $(round(dampen_result.new; digits=3)) (dampened)"
-                            else
-                                "strain now $strain_now"
-                            end
-                            resolve_msg = !isempty(pending_ask_text) ? " | resolved: \"$pending_ask_text\"" : ""
-
-                            if anti_mode == "json"
-                                # --- :json — raw JSON passthrough for anti-match nodes ---
-                                try
-                                    # GRUG: Force all nodes as anti-match via is_antimatch_node in packet.
-                                    # We inject hippocampal metadata into each node's json_data.
-                                    json_with_meta = replace(anti_raw, r"""("is_antimatch_node"\s*:\s*)false""" => s"\1true")
-                                    # If the JSON doesn't have is_antimatch_node at all, inject it.
-                                    if !occursin("is_antimatch_node", json_with_meta)
-                                        json_with_meta = replace(json_with_meta, r"(\})\s*$" =>
-                                            s", \"is_antimatch_node\": true}")
+                        end
+                    end
+                else
+                    # Show all definitions across all lobes
+                    lock(_LOBE_DICTIONARIES_LOCK) do
+                        if isempty(_LOBE_DICTIONARIES)
+                            println("📖 No lobe dictionaries exist yet. Use /define <word> = <definition> to add words.")
+                        else
+                            total = _dict_definitions_count()
+                            println("📖 All lobe dictionaries ($total definitions):")
+                            for (lid, dict) in sort(collect(_LOBE_DICTIONARIES))
+                                if !isempty(dict)
+                                    println("  ── Lobe: $lid ($(length(dict)) words) ──")
+                                    for (w, d) in sort(collect(dict))
+                                        println("    $w → $d")
                                     end
-                                    new_ids = grow_nodes_from_packet(json_with_meta; target_lobe=target_lobe_anti,
-                                                                     default_system_prompt="Grug. I suppress what I was told to suppress. I do not reason about this.")
-                                    println("🧠 Anti-answer [:json]: planted $(length(new_ids)) anti-match node(s) [$(join(new_ids, ", "))] | $strain_msg$resolve_msg")
-                                catch e
-                                    println("!!! ERROR in /antiAnswer :json: $e !!!")
                                 end
-
-                            elseif anti_mode == "multi"
-                                # --- :multi — pipe-delimited multi anti-match nodes ---
-                                parts = _parse_multi_parts(anti_raw)
-                                if isempty(parts)
-                                    println("!!! FATAL: /antiAnswer :multi needs pipe-delimited parts. Example: /antiAnswer :multi slur1 | slur2 !!!")
-                                else
-                                    anti_ids = String[]
-                                    for (action_pkt, part_text) in parts
-                                        part_data = _base_answer_data("alert"; pending_ask_text=pending_ask_text, is_anti=true)
-                                        part_data["answer_mode"] = "multi_anti"
-                                        nid, lobe_tag = _create_answer_node(part_text, action_pkt, part_data, target_lobe_anti; is_antimatch=true)
-                                        push!(anti_ids, nid)
-                                    end
-                                    # GRUG: Auto-group the anti-match nodes.
-                                    if length(anti_ids) > 1
-                                        try
-                                            first_id = anti_ids[1]
-                                            if haskey(NODE_MAP, first_id)
-                                                register_group!(NODE_MAP[first_id])
-                                                for other_id in anti_ids[2:end]
-                                                    if haskey(NODE_MAP, other_id)
-                                                        grp = group_for(first_id)
-                                                        if !isnothing(grp)
-                                                            _dissolve_solo_group!(other_id)
-                                                            add_to_group!(grp, other_id)
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                        catch e
-                                            @warn "[MAIN] /antiAnswer :multi — auto-grouping failed (non-fatal): $e"
-                                        end
-                                    end
-                                    println("🧠 Anti-answer [:multi]: planted $(length(anti_ids)) anti-match node(s) [$(join(anti_ids, ", "))] | $strain_msg$resolve_msg")
-                                end
-
-                            else
-                                # --- :alert (default) — single anti-match node ---
-                                anti_data = _base_answer_data("alert"; pending_ask_text=pending_ask_text, is_anti=true)
-                                anti_id, lobe_tag = _create_answer_node(anti_raw, "ponder^1", anti_data, target_lobe_anti; is_antimatch=true)
-                                println("🧠 Anti-answer [:alert]: id=$anti_id pattern='$(lowercase(strip(anti_raw)))' [confidence drain]$lobe_tag | $strain_msg$resolve_msg")
                             end
                         end
                     end
@@ -14633,6 +16695,65 @@ elseif !isnothing(m_right)
                 end
 
 
+            # ── GRUG v9: Structure Sigil CLI (/sigil addStructure, /sigil expand) ──
+
+            elseif !isnothing(m_sigiladdstruct)
+                # /sigil addStructure <name> <sig1 sig2 ...> — register a :structure sigil
+                try
+                    sname = String(strip(m_sigiladdstruct.captures[1]))
+                    expansion_str = String(strip(m_sigiladdstruct.captures[2]))
+                    expansion_parts = split(expansion_str)
+                    if isempty(expansion_parts)
+                        println("⚠  /sigil addStructure: expansion cannot be empty")
+                    else
+                        entry = SigilRegistry.register_structure_sigil!(_ENGINE_SIGIL_TABLE;
+                            name = sname,
+                            expansion = collect(String, expansion_parts))
+                        println("✓  Structure sigil &$(sname) registered → [$(join(expansion_parts, " "))]")
+                    end
+                catch e
+                    println("⚠  /sigil addStructure: $e")
+                end
+
+            elseif !isnothing(m_sigilexpand)
+                # /sigil expand <name> — show expansion of a structure/procedure/relation sigil
+                try
+                    sname = String(strip(m_sigilexpand.captures[1]))
+                    if !haskey(_ENGINE_SIGIL_TABLE.entries, sname)
+                        println("⚠  /sigil expand: '&$sname' not in registry")
+                    else
+                        entry = _ENGINE_SIGIL_TABLE.entries[sname]
+                        if entry.class == :structure
+                            expanded = SigilRegistry.expand_structure_sigil(_ENGINE_SIGIL_TABLE, sname)
+                            println("╔══════════════════════════════════════╗")
+                            println("║   STRUCTURE EXPANSION: &$sname")
+                            println("╠══════════════════════════════════════╣")
+                            println("║  Raw: $(join(entry.expansion, " "))")
+                            println("║  Flat: $(join(expanded, " "))")
+                            println("╚══════════════════════════════════════╝")
+                        elseif entry.class == :procedure
+                            expanded = SigilRegistry.expand_procedure_sigil(_ENGINE_SIGIL_TABLE, sname)
+                            println("╔══════════════════════════════════════╗")
+                            println("║   PROCEDURE EXPANSION: &$sname")
+                            println("╠══════════════════════════════════════╣")
+                            println("║  Raw: $(join(entry.expansion, " "))")
+                            println("║  Flat: $(join(expanded, " "))")
+                            println("╚══════════════════════════════════════╝")
+                        elseif entry.class == :relation
+                            expanded = SigilRegistry.expand_relation_sigil(_ENGINE_SIGIL_TABLE, sname)
+                            println("╔══════════════════════════════════════╗")
+                            println("║   RELATION EXPANSION: &$sname")
+                            println("╠══════════════════════════════════════╣")
+                            println("║  Alternatives: $(join(expanded, ", "))")
+                            println("╚══════════════════════════════════════╝")
+                        else
+                            println("  &$(sname) is class :$(entry.class) — no expansion")
+                        end
+                    end
+                catch e
+                    println("⚠  /sigil expand: $e")
+                end
+
             # ── GRUG v10: InverseSigil diagnostic & lobe-hint commands ────────
             elseif !isnothing(m_inverse_status)
                 # /inverseStatus — show inverse table summary
@@ -14845,6 +16966,639 @@ elseif !isnothing(m_right)
                         println("⚠  /coherenceConfig: unknown subcommand '$(parts[1])'")
                         println("   Valid: weight, depth, decay, recency, reset")
                     end
+                end
+
+            # ── v9 Phase Space & Geometry CLI ──────────────────────────────────
+            elseif !isnothing(m_phase_space_sem)
+                # /phaseSpace semantic <a> <b> — semantic space distance
+                a_id = String(strip(m_phase_space_sem.captures[1]))
+                b_id = String(strip(m_phase_space_sem.captures[2]))
+                lock(NODE_LOCK) do
+                    if !haskey(NODE_MAP, a_id)
+                        println("⚠  /phaseSpace semantic: node '$a_id' not found")
+                    elseif !haskey(NODE_MAP, b_id)
+                        println("⚠  /phaseSpace semantic: node '$b_id' not found")
+                    else
+                        sa = try engine._semantic_truth_score(NODE_MAP[a_id]) catch _; 0.0 end
+                        sb = try engine._semantic_truth_score(NODE_MAP[b_id]) catch _; 0.0 end
+                        d = GeometryKit.semantic_distance(sa, sb)
+                        println("SemanticSpace distance($a_id, $b_id) = $(round(d; digits=4))")
+                        println("  scores: $a_id=$(round(sa; digits=4)), $b_id=$(round(sb; digits=4))")
+                    end
+                end
+
+            elseif !isnothing(m_phase_space_coh)
+                # /phaseSpace coherence <a> <b> — coherence space distance
+                a_id = String(strip(m_phase_space_coh.captures[1]))
+                b_id = String(strip(m_phase_space_coh.captures[2]))
+                lock(NODE_LOCK) do
+                    if !haskey(NODE_MAP, a_id)
+                        println("⚠  /phaseSpace coherence: node '$a_id' not found")
+                    elseif !haskey(NODE_MAP, b_id)
+                        println("⚠  /phaseSpace coherence: node '$b_id' not found")
+                    else
+                        da = try CoherenceField.compute_delta(a_id, NODE_MAP, BRIDGE_MAP) catch _; 0.0 end
+                        db = try CoherenceField.compute_delta(b_id, NODE_MAP, BRIDGE_MAP) catch _; 0.0 end
+                        d = GeometryKit.coherence_distance(da, db)
+                        println("CoherenceSpace distance($a_id, $b_id) = $(round(d; digits=4))")
+                        println("  ΔΦ: $a_id=$(round(da; digits=6)), $b_id=$(round(db; digits=6))")
+                    end
+                end
+
+            elseif !isnothing(m_phase_space_pha)
+                # /phaseSpace phase <a> <b> — phase space distance (JS on ATP vectors)
+                a_id = String(strip(m_phase_space_pha.captures[1]))
+                b_id = String(strip(m_phase_space_pha.captures[2]))
+                lock(NODE_LOCK) do
+                    pa = try EphemeralAutomaton._phase_accumulator().entries[a_id].phase_vector catch nothing end
+                    pb = try EphemeralAutomaton._phase_accumulator().entries[b_id].phase_vector catch nothing end
+                    if pa === nothing
+                        println("⚠  /phaseSpace phase: no PhaseSnapshot for '$a_id'")
+                    elseif pb === nothing
+                        println("⚠  /phaseSpace phase: no PhaseSnapshot for '$b_id'")
+                    else
+                        d = GeometryKit.phase_distance(pa, pb)
+                        println("PhaseSpace distance($a_id, $b_id) = $(round(d; digits=4))  [JS on 12-dim ATP]")
+                    end
+                end
+
+            elseif !isnothing(m_phase_space_ton)
+                # /phaseSpace tone <a> <b> — tone space distance (coarse lobe proxy)
+                a_id = String(strip(m_phase_space_ton.captures[1]))
+                b_id = String(strip(m_phase_space_ton.captures[2]))
+                lock(NODE_LOCK) do
+                    if !haskey(NODE_MAP, a_id)
+                        println("⚠  /phaseSpace tone: node '$a_id' not found")
+                    elseif !haskey(NODE_MAP, b_id)
+                        println("⚠  /phaseSpace tone: node '$b_id' not found")
+                    else
+                        la = try Lobe.find_lobe_for_node(NODE_MAP[a_id]) catch nothing end
+                        lb = try Lobe.find_lobe_for_node(NODE_MAP[b_id]) catch nothing end
+                        d = GeometryKit.tone_distance(la, lb)
+                        println("ToneSpace distance($a_id, $b_id) = $(round(d; digits=4))  [lobe proxy]")
+                        println("  lobes: $a_id=$(la === nothing ? "none" : la), $b_id=$(lb === nothing ? "none" : lb)")
+                    end
+                end
+
+            elseif !isnothing(m_phase_space_near)
+                # /phaseSpace nearest <node_id> — nearest neighbors in phase space
+                target_id = String(strip(m_phase_space_near.captures[1]))
+                try
+                    acc = EphemeralAutomaton._phase_accumulator()
+                    target_snap = lock(acc.lock) do
+                        get(acc.entries, target_id, nothing)
+                    end
+                    if target_snap === nothing
+                        println("⚠  /phaseSpace nearest: no PhaseSnapshot for '$target_id'")
+                    else
+                        result = EphemeralAutomaton.phase_pull_query(target_snap.phase_vector;
+                                                                     is_compound=true, scan_mode=3)
+                        phase_entries = result["phase_entries"]
+                        n = min(GeometryKit.geometry_config_snapshot().nearest_k, length(phase_entries))
+                        println("PhaseSpace nearest neighbors for $target_id (top $n):")
+                        for i in 1:n
+                            (conf, snap) = phase_entries[i]
+                            d = GeometryKit.phase_distance(target_snap.phase_vector, snap.phase_vector)
+                            println("  $(snap.id): JS=$(round(d; digits=4)), pull_conf=$(round(conf; digits=4))")
+                        end
+                        if isempty(phase_entries)
+                            println("  (no high-coherence neighbors found)")
+                        end
+                    end
+                catch e
+                    println("⚠  /phaseSpace nearest: $e")
+                end
+
+            elseif !isnothing(m_phase_space)
+                # /phaseSpace — overview of all four spaces
+                lock(NODE_LOCK) do
+                    phi = try CoherenceField.compute_field(NODE_MAP; force=false) catch _; 0.0 end
+                    cs = try EphemeralAutomaton.phase_pull_status()["crystal_size"] catch _; 0 end
+                    ov = GeometryKit.geometry_overview(; phi=phi, crystal_size=cs,
+                                                        n_nodes=length(NODE_MAP))
+                    println("╔══════════════════════════════════════╗")
+                    println("║     PHASE SPACE OVERVIEW (v9)       ║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Default space: $(rpad(ov["default_space"], 22))║")
+                    println("║  Nodes: $(rpad(string(ov["n_nodes"]), 28))║")
+                    println("║  Φ (coherence): $(rpad(string(ov["phi"]), 22))║")
+                    println("║  Crystal size: $(rpad(string(ov["crystal_size"]), 23))║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Spaces:                             ║")
+                    println("║    semantic  — relational anchoring   ║")
+                    println("║    coherence — scalar field Φ         ║")
+                    println("║    phase     — 12-dim ATP vectors     ║")
+                    println("║    tone      — action×tone categories ║")
+                    println("╚══════════════════════════════════════╝")
+                end
+
+            elseif !isnothing(m_geometry_traj)
+                # /geometry trajectory — current trajectory through PhaseSpace
+                try
+                    acc = EphemeralAutomaton._phase_accumulator()
+                    entries = lock(acc.lock) do
+                        sorted = sort(collect(acc.entries); by=x->x.second.timestamp, rev=true)
+                        [(id=e.id, conf=round(e.atp_confidence; digits=4),
+                          time=round(e.timestamp; digits=2)) for (_,e) in sorted]
+                    end
+                    traj = GeometryKit.trajectory(entries)
+                    println("Geometry trajectory (last $(traj["depth"]):")
+                    for e in traj["entries"]
+                        println("  $(e.id): confidence=$(e.conf), time=$(e.time)")
+                    end
+                    if isempty(traj["entries"])
+                        println("  (no PhaseSnapshots recorded)")
+                    end
+                catch e
+                    println("⚠  /geometry trajectory: $e")
+                end
+
+            elseif !isnothing(m_geometry_attr)
+                # /geometry attractors — current attractor basins
+                try
+                    gini = try
+                        ActionTonePredictor._gini_coefficient(
+                            collect(values(ActionTonePredictor._CATEGORY_ACC))
+                        )
+                    catch
+                        1.0
+                    end
+                    attr = GeometryKit.attractors(; gini=gini)
+                    println("Geometry attractors:")
+                    println("  Tone: $(attr["tone_attractor"])")
+                catch e
+                    println("⚠  /geometry attractors: $e")
+                end
+
+            elseif !isnothing(m_geometry_dist)
+                # /geometry distance <space> <a> <b> — distance in named space
+                space_str = String(strip(m_geometry_dist.captures[1]))
+                a_id = String(strip(m_geometry_dist.captures[2]))
+                b_id = String(strip(m_geometry_dist.captures[3]))
+                lock(NODE_LOCK) do
+                    if !haskey(NODE_MAP, a_id) || !haskey(NODE_MAP, b_id)
+                        println("⚠  /geometry distance: node not found (a=$a_id, b=$b_id)")
+                    else
+                        try
+                            if space_str == "semantic"
+                                sa = engine._semantic_truth_score(NODE_MAP[a_id])
+                                sb = engine._semantic_truth_score(NODE_MAP[b_id])
+                                d = GeometryKit.semantic_distance(sa, sb)
+                                println("SemanticSpace($a_id, $b_id) = $(round(d; digits=4))")
+                            elseif space_str == "coherence"
+                                da = CoherenceField.compute_delta(a_id, NODE_MAP, BRIDGE_MAP)
+                                db = CoherenceField.compute_delta(b_id, NODE_MAP, BRIDGE_MAP)
+                                d = GeometryKit.coherence_distance(da, db)
+                                println("CoherenceSpace($a_id, $b_id) = $(round(d; digits=4))")
+                            elseif space_str == "phase"
+                                pa = EphemeralAutomaton._phase_accumulator().entries[a_id].phase_vector
+                                pb = EphemeralAutomaton._phase_accumulator().entries[b_id].phase_vector
+                                d = GeometryKit.phase_distance(pa, pb)
+                                println("PhaseSpace($a_id, $b_id) = $(round(d; digits=4))")
+                            elseif space_str == "tone"
+                                la = Lobe.find_lobe_for_node(NODE_MAP[a_id])
+                                lb = Lobe.find_lobe_for_node(NODE_MAP[b_id])
+                                d = GeometryKit.tone_distance(la, lb)
+                                println("ToneSpace($a_id, $b_id) = $(round(d; digits=4))")
+                            else
+                                println("⚠  Unknown space '$space_str'. Valid: semantic, coherence, phase, tone")
+                            end
+                        catch e
+                            println("⚠  /geometry distance $space_str: $e")
+                        end
+                    end
+                end
+
+            elseif !isnothing(m_geometry)
+                # /geometry — overview of state-space geometry
+                lock(NODE_LOCK) do
+                    phi = try CoherenceField.compute_field(NODE_MAP; force=false) catch _; 0.0 end
+                    cs = try EphemeralAutomaton.phase_pull_status()["crystal_size"] catch _; 0 end
+                    gini = try
+                        ActionTonePredictor._gini_coefficient(
+                            collect(values(ActionTonePredictor._CATEGORY_ACC))
+                        )
+                    catch
+                        1.0
+                    end
+                    attr = GeometryKit.attractors(; gini=gini)
+                    ov = GeometryKit.geometry_overview(; phi=phi, crystal_size=cs,
+                                                        n_nodes=length(NODE_MAP))
+                    println("╔══════════════════════════════════════╗")
+                    println("║     GEOMETRY OVERVIEW (v9)           ║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Φ = $(rpad(string(ov["phi"]), 30))║")
+                    println("║  Nodes: $(rpad(string(ov["n_nodes"]), 28))║")
+                    println("║  Crystal: $(rpad(string(ov["crystal_size"]), 26))║")
+                    println("║  Attractor: $(rpad(attr["tone_attractor"], 24))║")
+                    println("║  Spaces: semantic, coherence,       ║")
+                    println("║          phase, tone                 ║")
+                    println("╚══════════════════════════════════════╝")
+                end
+
+            # ── GRUG v9: Pattern Mining CLI (/mineShapes) ──────────────────────
+            # Operator genesis: scan triple store for recurring graph shapes,
+            # propose new :relation sigils, approve/reject proposals.
+
+            elseif !isnothing(m_mine_shapes)
+                # /mineShapes — overview of pattern miner status
+                lock(NODE_LOCK)
+                try
+                    st = PatternMiner.pattern_miner_status()
+                    println("╔══════════════════════════════════════╗")
+                    println("║   PATTERN MINER STATUS (v9)          ║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Instances: $(rpad(string(st["total_instances"]), 24))║")
+                    println("║  Transitivity: $(rpad(string(st["transitivity_count"]), 21))║")
+                    println("║  Chaining: $(rpad(string(st["chaining_count"]), 24))║")
+                    println("║  Symmetry: $(rpad(string(st["symmetry_count"]), 25))║")
+                    println("║  Proposals: $(rpad(string(st["pending_proposals"]) * " pending", 23))║")
+                    println("║  Approved: $(rpad(string(st["approved_proposals"]), 25))║")
+                    println("║  Rejected: $(rpad(string(st["rejected_proposals"]), 25))║")
+                    cfg = PatternMiner.pattern_miner_config_snapshot()
+                    println("║  Thresholds: T=$(cfg.transitivity_threshold) C=$(cfg.chaining_threshold) S=$(cfg.symmetry_threshold)  ║")
+                    println("╚══════════════════════════════════════╝")
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            elseif !isnothing(m_mine_scan)
+                # /mineShapes scan — scan all nodes' relational triples for shapes
+                lock(NODE_LOCK)
+                try
+                    # Collect all relational triples from all nodes
+                    all_triples = Tuple{String,String,String}[]
+                    for (_id, _node) in NODE_MAP
+                        for rt in _node.relational_patterns
+                            push!(all_triples, (rt.subject, rt.relation, rt.object))
+                        end
+                    end
+                    counts = PatternMiner.scan_all!(all_triples)
+                    println("✓  Pattern scan complete:")
+                    println("   Transitivity: $(get(counts, "transitivity", 0)) new instances")
+                    println("   Chaining: $(get(counts, "chaining", 0)) new instances")
+                    println("   Symmetry: $(get(counts, "symmetry", 0)) new instances")
+                    # Auto-check thresholds after scan
+                    new_proposals = PatternMiner.check_and_propose!()
+                    if !isempty(new_proposals)
+                        println("⚡ $(length(new_proposals)) new genesis proposal(s) created!")
+                        for p in new_proposals
+                            println("   → $(p.id): $(p.proposed_name) [$(PatternMiner.SHAPE_NAMES[p.shape_type])] ($(p.instance_count) instances)")
+                        end
+                    end
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            elseif !isnothing(m_mine_proposals)
+                # /mineShapes proposals [pending|approved|rejected] — list proposals
+                lock(NODE_LOCK)
+                try
+                    status_filter = nothing
+                    if m_mine_proposals.captures[1] !== nothing
+                        sf = String(strip(m_mine_proposals.captures[1]))
+                        if sf == "pending";    status_filter = :pending
+                        elseif sf == "approved";  status_filter = :approved
+                        elseif sf == "rejected";  status_filter = :rejected
+                        else
+                            println("⚠  Unknown status filter: '$sf'. Use: pending, approved, rejected")
+                        end
+                    end
+                    props = PatternMiner.list_proposals(; status=status_filter)
+                    if isempty(props)
+                        println("  No proposals$(status_filter !== nothing ? " with status :$status_filter" : "").")
+                    else
+                        println("╔════════════════════════════════════════════════════════╗")
+                        println("║   GENESIS PROPOSALS                                    ║")
+                        println("╠════════════════════════════════════════════════════════╣")
+                        for p in props
+                            st_icon = p.status == :approved ? "✓" : (p.status == :rejected ? "✗" : "○")
+                            println("║  $st_icon $(rpad(p.id, 8)) $(rpad(p.proposed_name, 22))$(rpad(PatternMiner.SHAPE_NAMES[p.shape_type], 12))║")
+                            println("║      Count: $(p.instance_count), Verbs: $(join(p.proposed_expansion, ","))  ║")
+                        end
+                        println("╚════════════════════════════════════════════════════════╝")
+                    end
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            elseif !isnothing(m_mine_approve)
+                # /mineShapes approve <id> — approve a genesis proposal
+                lock(NODE_LOCK)
+                try
+                    pid = String(strip(m_mine_approve.captures[1]))
+                    result = PatternMiner.approve_proposal!(pid)
+                    if result !== nothing
+                        println("✓  Approved proposal '$(pid)': $(result.proposed_name)")
+                        println("   Shape: $(PatternMiner.SHAPE_NAMES[result.shape_type]), Expansion: $(join(result.proposed_expansion, ","))")
+                        println("   ⚠ Remember: you still need to register the sigil manually with /sigil addRelation")
+                    else
+                        println("⚠  Proposal '$pid' not found or not in :pending status")
+                    end
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            elseif !isnothing(m_mine_reject)
+                # /mineShapes reject <id> — reject a genesis proposal
+                lock(NODE_LOCK)
+                try
+                    pid = String(strip(m_mine_reject.captures[1]))
+                    result = PatternMiner.reject_proposal!(pid)
+                    if result !== nothing
+                        println("✗  Rejected proposal '$(pid)': $(result.proposed_name)")
+                    else
+                        println("⚠  Proposal '$pid' not found or not in :pending status")
+                    end
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            elseif !isnothing(m_mine_config)
+                # /mineShapes config [key value] — view or set pattern miner config
+                lock(NODE_LOCK)
+                try
+                    if m_mine_config.captures[1] !== nothing
+                        key_str = String(strip(m_mine_config.captures[1]))
+                        val_str = String(strip(m_mine_config.captures[2]))
+                        key_sym = Symbol(key_str)
+                        # Parse value
+                        parsed_val = tryparse(Float64, val_str)
+                        if parsed_val === nothing
+                            parsed_val = tryparse(Int, val_str)
+                        end
+                        if parsed_val === nothing
+                            parsed_val = val_str  # keep as string
+                        end
+                        try
+                            PatternMiner.set_pattern_miner_config!(key_sym, parsed_val)
+                            println("✓  Set $(key_str) = $(parsed_val)")
+                        catch e
+                            println("⚠  Failed to set $(key_str): $e")
+                        end
+                    else
+                        cfg = PatternMiner.pattern_miner_config_snapshot()
+                        println("╔══════════════════════════════════════╗")
+                        println("║   PATTERN MINER CONFIG               ║")
+                        println("╠══════════════════════════════════════╣")
+                        println("║  transitivity_threshold: $(rpad(string(cfg.transitivity_threshold), 10))║")
+                        println("║  chaining_threshold: $(rpad(string(cfg.chaining_threshold), 14))║")
+                        println("║  symmetry_threshold: $(rpad(string(cfg.symmetry_threshold), 14))║")
+                        println("║  max_proposals: $(rpad(string(cfg.max_proposals), 18))║")
+                        println("║  scan_interval: $(rpad(string(cfg.scan_interval), 17))║")
+                        println("║  instance_ttl: $(rpad(string(cfg.instance_ttl), 17))║")
+                        println("╚══════════════════════════════════════╝")
+                    end
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            elseif !isnothing(m_mine_clear)
+                # /mineShapes clear <instances|proposals> — clear instances or proposals
+                lock(NODE_LOCK)
+                try
+                    what = String(strip(m_mine_clear.captures[1]))
+                    if what == "instances"
+                        PatternMiner.clear_instances!()
+                        println("✓  All pattern instances cleared")
+                    elseif what == "proposals"
+                        PatternMiner.clear_proposals!()
+                        println("✓  All genesis proposals cleared")
+                    else
+                        println("⚠  Unknown target: '$what'. Use: instances, proposals")
+                    end
+                finally
+                    unlock(NODE_LOCK)
+                end
+
+            # ── GRUG v9: Temporal Identity CLI (/identity) ─────────────────────
+            # First-class continuants: identity that persists across temporal change.
+            # NOT memory — identity. The thing that remains itself while changing.
+
+            elseif !isnothing(m_identity)
+                # /identity — overview of temporal identity status
+                try
+                    st = TemporalIdentity.temporal_identity_status()
+                    conts = TemporalIdentity.list_continuants()
+                    println("╔══════════════════════════════════════╗")
+                    println("║   TEMPORAL IDENTITY STATUS (v9)      ║")
+                    println("╠══════════════════════════════════════╣")
+                    println("║  Continuants: $(rpad(string(st["total_continuants"]), 22))║")
+                    println("║  Total stages: $(rpad(string(st["total_stages"]), 21))║")
+                    println("║  Avg coherence: $(rpad(string(st["avg_coherence"]), 19))║")
+                    println("║  Pending proposals: $(rpad(string(st["pending_proposals"]), 16))║")
+                    println("╚══════════════════════════════════════╝")
+                    if !isempty(conts)
+                        println("  Identities:")
+                        for c in conts[1:min(10, length(conts))]
+                            println("    $(c.id): $(c.class) [$(length(c.stages)) stages, coherence=$(round(c.coherence; digits=2))]")
+                        end
+                        length(conts) > 10 && println("    ... and $(length(conts) - 10) more")
+                    end
+                catch e
+                    println("⚠  /identity: $e")
+                end
+
+            elseif !isnothing(m_identity_create)
+                # /identity create <class> [id] — create a new continuant
+                try
+                    cls = String(strip(m_identity_create.captures[1]))
+                    custom_id = m_identity_create.captures[2] !== nothing ? String(strip(m_identity_create.captures[2])) : ""
+                    c = TemporalIdentity.create_continuant(cls; id=custom_id)
+                    println("✓  Created continuant: $(c.id) [class=$(c.class)]")
+                catch e
+                    println("⚠  /identity create: $e")
+                end
+
+            elseif !isnothing(m_identity_chain)
+                # /identity chain <id> — show temporal chain for an identity
+                try
+                    cid = String(strip(m_identity_chain.captures[1]))
+                    stages = TemporalIdentity.stages_of(cid)
+                    c = TemporalIdentity.get_continuant(cid)
+                    if c === nothing
+                        println("⚠  Continuant '$cid' not found")
+                    else
+                        println("╔══════════════════════════════════════╗")
+                        println("║   CHAIN: $(rpad(cid, 29))║")
+                        println("║   Class: $(rpad(c.class, 28))║")
+                        println("║   Coherence: $(rpad(string(round(c.coherence; digits=3)), 24))║")
+                        println("╠══════════════════════════════════════╣")
+                        for s in stages
+                            orient_icon = s.orientation == :before ? "⬅" : (s.orientation == :now ? "⬤" : "➡")
+                            println("║  $orient_icon $(rpad(s.phase, 12)) $(rpad(s.node_id, 16))$(rpad(String(s.orientation), 6))║")
+                        end
+                        if !isempty(c.transform_rules)
+                            println("╠══════════════════════════════════════╣")
+                            println("║  Transform rules:                    ║")
+                            for (from, to) in c.transform_rules
+                                println("║    $from → $to$(repeat(" ", max(0, 24 - length(from) - length(to) - 3)))║")
+                            end
+                        end
+                        println("╚══════════════════════════════════════╝")
+                    end
+                catch e
+                    println("⚠  /identity chain: $e")
+                end
+
+            elseif !isnothing(m_identity_add)
+                # /identity add <cont_id> <node_id> <phase> <orientation>
+                try
+                    cont_id = String(strip(m_identity_add.captures[1]))
+                    node_id = String(strip(m_identity_add.captures[2]))
+                    phase = String(strip(m_identity_add.captures[3]))
+                    orient = Symbol(String(strip(m_identity_add.captures[4])))
+                    c = TemporalIdentity.add_stage!(cont_id, node_id, phase, orient)
+                    println("✓  Added stage '$phase' ($orient) to $(cont_id), coherence=$(round(c.coherence; digits=3))")
+                catch e
+                    println("⚠  /identity add: $e")
+                end
+
+            elseif !isnothing(m_identity_merge)
+                # /identity merge <a_id> <b_id> [new_class]
+                try
+                    a_id = String(strip(m_identity_merge.captures[1]))
+                    b_id = String(strip(m_identity_merge.captures[2]))
+                    new_cls = m_identity_merge.captures[3] !== nothing ? String(strip(m_identity_merge.captures[3])) : ""
+                    TemporalIdentity.merge_continuants!(a_id, b_id; new_class=new_cls)
+                    println("✓  Merged '$b_id' into '$a_id'$(isempty(new_cls) ? "" : " as '$new_cls'")")
+                catch e
+                    println("⚠  /identity merge: $e")
+                end
+
+            elseif !isnothing(m_identity_of)
+                # /identity of <node_id> — which continuant does this node belong to?
+                try
+                    nid = String(strip(m_identity_of.captures[1]))
+                    c = TemporalIdentity.identity_of(nid)
+                    if c === nothing
+                        println("  Node '$nid' is not part of any continuant")
+                    else
+                        println("  Node '$nid' → continuant '$(c.id)' [$(c.class), $(length(c.stages)) stages, coherence=$(round(c.coherence; digits=3))]")
+                    end
+                catch e
+                    println("⚠  /identity of: $e")
+                end
+
+            elseif !isnothing(m_identity_proposals)
+                # /identity proposals [status]
+                try
+                    status_filter = nothing
+                    if m_identity_proposals.captures[1] !== nothing
+                        sf = String(strip(m_identity_proposals.captures[1]))
+                        if sf == "pending";    status_filter = :pending
+                        elseif sf == "approved";  status_filter = :approved
+                        elseif sf == "rejected";  status_filter = :rejected
+                        else
+                            println("⚠  Unknown status filter: '$sf'. Use: pending, approved, rejected")
+                        end
+                    end
+                    props = TemporalIdentity.list_continuant_proposals(; status=status_filter)
+                    if isempty(props)
+                        println("  No continuant proposals$(status_filter !== nothing ? " with status :$status_filter" : "").")
+                    else
+                        println("╔════════════════════════════════════════════════╗")
+                        println("║   CONTINUANT PROPOSALS                         ║")
+                        println("╠════════════════════════════════════════════════╣")
+                        for p in props
+                            st_icon = p.status == :approved ? "✓" : (p.status == :rejected ? "✗" : "○")
+                            println("║  $st_icon $(rpad(p.id, 8)) $(rpad(p.proposed_class, 20))$(rpad("coh=$(round(p.chain_coherence; digits=2))", 14))║")
+                        end
+                        println("╚════════════════════════════════════════════════╝")
+                    end
+                catch e
+                    println("⚠  /identity proposals: $e")
+                end
+
+            elseif !isnothing(m_identity_approve)
+                # /identity approve <id>
+                try
+                    pid = String(strip(m_identity_approve.captures[1]))
+                    result = TemporalIdentity.approve_continuant_proposal!(pid)
+                    if result !== nothing
+                        println("✓  Approved proposal '$(pid)': $(result.proposed_class) [$(length(result.proposed_stages)) stages]")
+                    else
+                        println("⚠  Proposal '$pid' not found or not in :pending status")
+                    end
+                catch e
+                    println("⚠  /identity approve: $e")
+                end
+
+            elseif !isnothing(m_identity_reject)
+                # /identity reject <id>
+                try
+                    pid = String(strip(m_identity_reject.captures[1]))
+                    result = TemporalIdentity.reject_continuant_proposal!(pid)
+                    if result !== nothing
+                        println("✗  Rejected proposal '$(pid)': $(result.proposed_class)")
+                    else
+                        println("⚠  Proposal '$pid' not found or not in :pending status")
+                    end
+                catch e
+                    println("⚠  /identity reject: $e")
+                end
+
+            elseif !isnothing(m_identity_config)
+                # /identity config [key value]
+                try
+                    if m_identity_config.captures[1] !== nothing
+                        key_str = String(strip(m_identity_config.captures[1]))
+                        val_str = String(strip(m_identity_config.captures[2]))
+                        key_sym = Symbol(key_str)
+                        parsed_val = tryparse(Float64, val_str)
+                        if parsed_val === nothing
+                            parsed_val = tryparse(Int, val_str)
+                        end
+                        if parsed_val === nothing
+                            if val_str == "true"; parsed_val = true
+                            elseif val_str == "false"; parsed_val = false
+                            else parsed_val = val_str
+                            end
+                        end
+                        try
+                            TemporalIdentity.set_temporal_identity_config!(key_sym, parsed_val)
+                            println("✓  Set $(key_str) = $(parsed_val)")
+                        catch e
+                            println("⚠  Failed to set $(key_str): $e")
+                        end
+                    else
+                        cfg = TemporalIdentity.temporal_identity_config_snapshot()
+                        println("╔══════════════════════════════════════╗")
+                        println("║   TEMPORAL IDENTITY CONFIG           ║")
+                        println("╠══════════════════════════════════════╣")
+                        println("║  enabled: $(rpad(string(cfg.enabled), 25))║")
+                        println("║  auto_discover: $(rpad(string(cfg.auto_discover), 20))║")
+                        println("║  coherence_threshold: $(rpad(string(cfg.coherence_threshold), 11))║")
+                        println("║  max_stages: $(rpad(string(cfg.max_stages), 21))║")
+                        println("║  max_continuants: $(rpad(string(cfg.max_continuants), 18))║")
+                        println("║  max_proposals: $(rpad(string(cfg.max_proposals), 19))║")
+                        println("║  stage_ttl: $(rpad(string(cfg.stage_ttl), 23))║")
+                        println("╚══════════════════════════════════════╝")
+                    end
+                catch e
+                    println("⚠  /identity config: $e")
+                end
+
+            elseif !isnothing(m_identity_delete)
+                # /identity delete <id>
+                try
+                    cid = String(strip(m_identity_delete.captures[1]))
+                    TemporalIdentity.delete_continuant!(cid)
+                    println("✓  Deleted continuant '$cid'")
+                catch e
+                    println("⚠  /identity delete: $e")
+                end
+
+            elseif !isnothing(m_identity_rule)
+                # /identity rule <cont_id> <from_phase> <to_phase> — add transform rule
+                try
+                    cont_id = String(strip(m_identity_rule.captures[1]))
+                    from_phase = String(strip(m_identity_rule.captures[2]))
+                    to_phase = String(strip(m_identity_rule.captures[3]))
+                    TemporalIdentity.add_transform_rule!(cont_id, from_phase, to_phase)
+                    println("✓  Added transform rule: $from_phase → $to_phase for '$cont_id'")
+                catch e
+                    println("⚠  /identity rule: $e")
                 end
 
             elseif !isnothing(m_errors)

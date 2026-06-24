@@ -92,19 +92,32 @@ const FIRE_BATCH_SIZE = 64
 # 12 at 0.05, scattered 0.19-0.24 are all pattern-collision noise; the lowest
 # legitimate semantic family in that distribution clusters at 0.38, so 0.35
 # is the cleanest cut. Sub-threshold votes don't get coinflipped — they're
-# rejected outright. A safety fallback in run_orchestrator picks the highest
-# rejected vote if NOTHING passes, so the cave never freezes silent.
+# rejected outright.
 # Raw token+rel confidence floor for "this rock has real opinion".
 const AIML_CONFIDENCE_THRESHOLD = 0.70
+
+# GRUG v8.26e: HARD VOTE CONFIDENCE FLOOR. Below this confidence, a node
+# does NOT vote AT ALL. No fallback. No "best of the worst." The system
+# asks the user a question instead of guessing with irrelevant low-confidence
+# nodes. This prevents the "thermodynamics wins everything" problem where
+# a high-strength but low-relevance node beats actually relevant weak nodes.
+# Must be >= SCAN_CONFIDENCE_LOCK (0.35) but lower than AIML_CONFIDENCE_THRESHOLD.
+# At 0.55: nodes with <55% pattern confidence are excluded from voting entirely.
+const VOTE_CONFIDENCE_FLOOR = 0.55
 
 # GRUG: How close to max confidence to be "top". Votes within this window of
 # the max confidence are the "top tier" and ALWAYS picked. No coinflip.
 const AIML_TOP_TIER_WINDOW = 0.05
 
-# GRUG: Coinflip base + strength bonus for sub-top votes within threshold.
-# Mirrors engine.jl strength_biased_scan_coinflip formula so behavior is consistent.
-const AIML_SUBTOP_BASE_PROB  = 0.20
-const AIML_SUBTOP_BONUS_PROB = 0.70
+# GRUG v8.26e: REMOVED strength-biased coinflip. Per user directive:
+# "strength should not bias confidence at all. strength only affects
+# chatter really and when things get graved." All sub-top votes that
+# pass threshold now get a flat coinflip with equal probability.
+# The old strength-biased formula (0.20 + 0.70 * strength/cap) gave
+# strong nodes up to 90% keep chance vs 20% for weak ones — this let
+# high-strength low-relevance nodes survive and beat relevant weak nodes.
+const AIML_SUBTOP_BASE_PROB  = 0.50
+const AIML_SUBTOP_BONUS_PROB = 0.00
 
 # ============================================================================
 # COMPOSITE VOTE-SCORING KNOBS (vote-pick stage matching dimensions)
@@ -136,8 +149,8 @@ const VOTE_W_LOBE_ALIGNMENT     = 0.20   # in winner lobe (1.0) vs passthrough (
 const VOTE_W_RELATIONAL_MATCH   = 0.15   # input/node triple overlap fraction
 const VOTE_W_RECENCY_BONUS      = 0.05   # node fired/voted recently (warm rocks)
 const VOTE_W_ACTION_TONE_ALIGN  = 0.10   # action_packet matches predicted family
-const VOTE_W_ANTI_MATCH_PENALTY = 0.00   # antimatch removed — penalty unused, zeroed
-const VOTE_W_PEAK_DOMINANCE     = 0.10   # vote conf vs lobe mean — clear within-lobe winners
+const VOTE_W_ANTI_MATCH_PENALTY = 0.00   # GRUG v8.26h: antimatch nodes removed. Penalty dead/zero.
+const VOTE_W_PEAK_DOMINANCE     = 0.00   # GRUG v8.26e: ZEROED — strength should not bias confidence
 
 # GRUG: Cap on cumulative positive bonus. Anti-match penalty is NOT capped —
 # it's a hard demotion signal that should be allowed to push a vote below
@@ -648,7 +661,7 @@ OPTIONAL SCORING SIGNALS (all default to NaN = "skip this dimension"):
   recency_bonus        in [0,1] — 1.0 if fired this cycle, decays with age
   action_tone_align    in [0,1] — 1.0 if action_packet aligns with the
                                   predicted action family, 0.0 if misaligned
-  anti_match_score     in [0,1] — 1.0 if anti-match detected (stance violator)
+  anti_match_score     in [0,1] — LEGACY: was 1.0 if anti-match detected. Antimatch nodes removed v8.26h.
   peak_dominance       in [0,1] — vote's confidence relative to its lobe's
                                   mean confidence (clear within-lobe winner)
 
@@ -668,7 +681,7 @@ struct VoteCandidate
     relational_match::Float64
     recency_bonus::Float64
     action_tone_align::Float64
-    anti_match_score::Float64
+    anti_match_score::Float64  # GRUG v8.26h: LEGACY — antimatch nodes removed, score always 0.0
     peak_dominance::Float64
     # ---- v7.21b-3b: orthogonal multiplicative tilt (1.0 = pass-through) --
     # GRUG: Frame-match plug from TonalJudge. 1.0 means "no opinion / neutral";
@@ -693,6 +706,11 @@ struct VoteCandidate
     # compute_grave_shadow() so VoteOrchestrator stays decoupled from engine.
     # Antimatch nodes always get 1.0 — suppressors don't die, they don't cast shadows.
     grave_shadow_multiplier::Float64
+    # ---- v8.26g: multipart group tag for per-group vote selection ----
+    # GRUG: Which multipart group this candidate belongs to. Empty = singleton.
+    # When compound queries split into mp_1, mp_2 etc, each group should
+    # select its own winner independently, not compete globally.
+    multipart_group::String
 end
 
 function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
@@ -701,11 +719,12 @@ function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
                        relational_match::Float64  = NaN,
                        recency_bonus::Float64     = NaN,
                        action_tone_align::Float64 = NaN,
-                       anti_match_score::Float64  = NaN,
+                       anti_match_score::Float64  = NaN,  # GRUG v8.26h: LEGACY — antimatch nodes removed, score always 0.0
                        peak_dominance::Float64    = NaN,
                        frame_match_multiplier::Float64 = 1.0,
                        is_relay::Bool = false,
-                       grave_shadow_multiplier::Float64 = 1.0)
+                       grave_shadow_multiplier::Float64 = 1.0,
+                       multipart_group::String = "")
     if isempty(strip(node_id))
         throw_vo_error("VoteCandidate node_id cannot be empty", "VoteCandidate")
     end
@@ -721,7 +740,8 @@ function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
     return VoteCandidate(node_id, confidence, strength, strength_cap,
                          lobe_alignment, relational_match, recency_bonus,
                          action_tone_align, anti_match_score, peak_dominance,
-                         frame_match_multiplier, is_relay, grave_shadow_multiplier)
+                         frame_match_multiplier, is_relay, grave_shadow_multiplier,
+                         multipart_group)
 end
 
 """
@@ -805,15 +825,14 @@ end
 """
     strength_biased_vote_coinflip(vc::VoteCandidate)::Bool
 
-GRUG: Same formula as engine.strength_biased_scan_coinflip. Strong nodes biased
-to be kept. Weak nodes still have ~20% base chance.
-  base = 0.20
-  bonus = 0.70 * (strength / cap)
-  prob  = base + bonus (clamped to [0, 1])
+GRUG v8.26e: STRENGTH REMOVED from vote coinflip. Per user directive,
+strength should NOT bias confidence/voting at all — only chatter and
+graving. All sub-top votes now get a flat 50/50 coinflip regardless
+of node strength. This prevents high-strength low-relevance nodes
+from dominating the sub-top tier.
 """
 function strength_biased_vote_coinflip(vc::VoteCandidate)::Bool
-    p = AIML_SUBTOP_BASE_PROB + (vc.strength / vc.strength_cap) * AIML_SUBTOP_BONUS_PROB
-    return rand() < clamp(p, 0.0, 1.0)
+    return rand() < AIML_SUBTOP_BASE_PROB
 end
 
 """
@@ -825,8 +844,8 @@ end
 GRUG: AIML picks votes past confidence threshold. Within threshold:
   - TOP TIER: votes within `top_window` of the max confidence go straight in.
               No coinflip. They are the strongest opinions.
-  - SUB-TOP:  votes below top_window but above threshold get a strength-biased
-              coinflip. Strong neurons more likely kept.
+  - SUB-TOP:  votes below top_window but above threshold get a flat 50/50
+              coinflip. v8.26e: strength removed per user directive.
   - REJECTED: below threshold or lost coinflip.
 
 Returns (top_votes, kept_subtop_votes, rejected_votes). Caller combines
@@ -882,7 +901,7 @@ function select_aiml_votes(candidates::Vector{VoteCandidate};
         end
     end
 
-    # GRUG: Sub-top coinflip. Strong neurons more likely to survive.
+    # GRUG v8.26e: Sub-top coinflip — flat 50/50, no strength bias.
     kept_subtop = VoteCandidate[]
     for vc in subtop_tier
         if strength_biased_vote_coinflip(vc)
@@ -901,7 +920,7 @@ end
 
 export VoteOrchestratorError, TaskTimeoutError
 export ACTIVE_FIRE_CAP, FIRE_BATCH_SIZE
-export AIML_CONFIDENCE_THRESHOLD, AIML_TOP_TIER_WINDOW
+export AIML_CONFIDENCE_THRESHOLD, AIML_TOP_TIER_WINDOW, VOTE_CONFIDENCE_FLOOR
 export AIML_SUBTOP_BASE_PROB, AIML_SUBTOP_BONUS_PROB
 export VOTE_W_LOBE_ALIGNMENT, VOTE_W_RELATIONAL_MATCH, VOTE_W_RECENCY_BONUS
 export VOTE_W_ACTION_TONE_ALIGN, VOTE_W_ANTI_MATCH_PENALTY, VOTE_W_PEAK_DOMINANCE

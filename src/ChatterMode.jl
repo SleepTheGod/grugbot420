@@ -964,7 +964,7 @@ function start_chatter_session!(
                     node = node_map[mid]
                     node.is_grave && continue
                     node.is_image_node && continue
-                    node.is_antimatch_node && continue  # GRUG v7.39: antimatch nodes drain confidence, don't participate in steal+remix
+                    # GRUG v8.26h: antimatch nodes removed. is_antimatch_node is always false for new nodes.  # node.is_antimatch_node && continue
                     # GRUG v7.59: Sigil nodes are NOCHAT — their patterns are syntactic
                     # grammars (e.g. "&n &op &n"), not semantic content. Chatter must not
                     # remix procedural votes. People don't dream in procedures. Relational

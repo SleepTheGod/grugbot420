@@ -111,7 +111,7 @@ mutable struct EvidenceRecord
     sources::Set{String}         # Which warrant sources noticed this gap
     last_seen::Float64           # Unix timestamp of most recent observation
     first_seen::Float64          # Unix timestamp of first observation
-    growth_type::Symbol          # :match, :time, :aiml, :antimatch, :sigil, :thesaurus, :lobe_whitelist, :flashcard
+    growth_type::Symbol          # :match, :time, :aiml, :antimatch(DEAD), :sigil, :thesaurus, :lobe_whitelist, :flashcard
     lobe_hint::String            # Inferred lobe for this candidate
     user_triples::Vector{Tuple{String,String,String}}  # GRUG v7.58: Relational triples from user input that triggered this evidence. Promoted to sigil refs at growth time.
     # GRUG: Evidence-biased coinflip needs these to be mutable.
@@ -131,7 +131,7 @@ end
 
 struct AutoGrowthStats
     pattern::String
-    growth_type::String         # "match", "time", "aiml", "antimatch", "sigil", "thesaurus", "lobe_whitelist", "flashcard"
+    growth_type::String         # "match", "time", "aiml", "antimatch"(DEAD), "sigil", "thesaurus", "lobe_whitelist", "flashcard"
     evidence_intensity::Float64
     evidence_frequency::Int
     coinflip_prob::Float64
@@ -752,7 +752,7 @@ function accumulate_evidence!(;
     #   - :match nodes get relational_patterns for disambiguation
     #   - :time nodes get &temporal relational anchoring
     #   - :aiml nodes get relational context for template selection
-    #   - :antimatch nodes get anti-relations (inverse triples)
+    #   - :antimatch nodes — REMOVED v8.26h. Antimatch nodes no longer exist.
     #   - :sigil growth uses relational context for expansion discovery
     #   - :thesaurus pairs are discovered from co-occurrence IN relational context
     #   - :lobe_whitelist entries gain relational fingerprints

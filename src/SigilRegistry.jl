@@ -163,7 +163,7 @@ const SIGIL_PREFIX::Char = '&'
 # :glue, :functor, :procedure are RESERVED — their registry entries are accepted
 # but cannot yet appear in a pattern (would throw at parse time). Reservation
 # is so Stage 2+ can add them without revising the registry schema.
-const SIGIL_CLASSES::NTuple{7,Symbol} = (
+const SIGIL_CLASSES::NTuple{8,Symbol} = (
     :lambda,    # parametric position; binds value at match time. Stage 1.
     :macro,     # alternation family; expands to alternatives at bind. Stage 1.
     :tag,       # annotation; carries no value, no expansion. Stage 1.
@@ -171,6 +171,7 @@ const SIGIL_CLASSES::NTuple{7,Symbol} = (
     :functor,   # phase morphism; applies to phase data. RESERVED for Stage 6.
     :procedure, # named ordered chain of sigils+literals. RESERVED for Stage 6.
     :relation,  # relational triple macro; expands to alternative relation names. Stage 4.
+    :structure, # meta-sigil; expands to ordered sequence of sigil refs + literals. v9.
 )
 
 # GRUG: closed enum of phases a sigil can `applies_at`. Stage 1 only really
@@ -190,7 +191,7 @@ const SIGIL_APPLIES_AT::NTuple{9,Symbol} = (
 
 # GRUG: which classes are activated in Stage 1. Patterns referencing reserved
 # classes throw at parse time with a clear "reserved for stage N" message.
-const STAGE1_ACTIVE_CLASSES::NTuple{4,Symbol} = (:lambda, :macro, :tag, :relation)
+const STAGE1_ACTIVE_CLASSES::NTuple{5,Symbol} = (:lambda, :macro, :tag, :relation, :structure)
 
 # GRUG: which applies_at values are activated in Stage 1 (now including :relation
 # for dynamic relational triples — Stage 4 feature activated early).
@@ -437,12 +438,12 @@ function register_sigil!(
         params_clean = d
     end
 
-    # GRUG: expansion field is for :procedure class (ordered chains) and
-    # :relation class (alternative relation names). Other classes must not
-    # carry expansion.
+    # GRUG: expansion field is for :procedure class (ordered chains),
+    # :relation class (alternative relation names), and :structure class
+    # (meta-sigil expansion sequences). Other classes must not carry expansion.
     exp_clean::Union{Nothing,Vector{Any}} = nothing
     if expansion !== nothing
-        if class !== :procedure && class !== :relation
+        if class !== :procedure && class !== :relation && class !== :structure
             throw(SigilConfigError(
                 "expansion field is reserved for :procedure and :relation classes (got class :$class)",
                 "expansion"))
@@ -566,6 +567,25 @@ function _validate_class_fields(
         # GRUG: Stage 6 reserved. expansion field is the procedure's chain.
         # Stage 1 won't be able to USE these but we let them register so a
         # specimen can ship them ahead of Stage 6.
+    elseif class === :structure
+        # GRUG v9: Structure-class sigils (meta-sigils) expand to ordered
+        # sequences of other sigil names. They require an expansion list,
+        # must not carry sigil_type or lexicon, and apply at :structure phase.
+        if expansion === nothing
+            throw(SigilConfigError(
+                ":structure sigil &$name requires an expansion list of sigil names (e.g. [\"noun\", \"verb\", \"adjective\"])",
+                "expansion"))
+        end
+        if sigil_type !== nothing
+            throw(SigilConfigError(
+                ":structure sigil &$name must not carry sigil_type",
+                "sigil_type"))
+        end
+        if lexicon !== nothing
+            throw(SigilConfigError(
+                ":structure sigil &$name must not carry lexicon",
+                "lexicon"))
+        end
     elseif class === :relation
         # GRUG v7.55: Relation-class sigils expand to alternative relation names
         # for dynamic relational triples. They require an expansion list (the
@@ -1385,6 +1405,141 @@ end
 # Re-export the new public surface so callers can `using` them.
 export register_procedure_sigil!, expand_procedure_sigil, is_procedure_sigil,
        MAX_PROCEDURE_DEPTH
+
+# ==============================================================================
+# v9: STRUCTURE-CLASS SIGIL — meta-sigils that expand to ordered sequences
+# ==============================================================================
+# GRUG: A :structure sigil is a meta-sigil whose expansion is an ordered
+# sequence of sigil references plus literal tokens. When the pattern matcher
+# encounters a :structure sigil, it expands the structure inline — effectively
+# inlining the sub-pattern. This is compressible: structures can reference
+# other structures, building hierarchical pattern compression.
+#
+# Example:
+#   &cause_structure  → [&entity &causal &entity]
+#   &narrative_arc     → [&cause_structure &enable_structure &cause_structure]
+#
+# The expansion field (already present on every SigilEntry) holds the chain.
+# This parallels the :procedure class but :structure applies at :bind time
+# (for pattern compilation) rather than :match time.
+# ==============================================================================
+
+"""
+    register_structure_sigil!(table; name, expansion, provenance="user-structure",
+                              overwrite=false) -> SigilEntry
+
+Register a `:structure` class sigil whose body is an ordered `expansion`
+chain of literal `String`s and `&name` references to other registered sigils.
+This is the v9 entry point for meta-sigil compression.
+
+Example:
+    register_structure_sigil!(tbl;
+        name = "cause_structure",
+        expansion = ["&entity", "&causal", "&entity"])
+
+Throws SigilConfigError on empty expansion or any non-String element.
+"""
+function register_structure_sigil!(table::SigilTable;
+                                   name::AbstractString,
+                                   expansion::AbstractVector,
+                                   provenance::AbstractString = "user-structure",
+                                   overwrite::Bool = false)::SigilEntry
+    if isempty(expansion)
+        throw(SigilConfigError(
+            "register_structure_sigil!: expansion cannot be empty for &$name",
+            "expansion"))
+    end
+    for (i, el) in enumerate(expansion)
+        if !(el isa AbstractString)
+            throw(SigilConfigError(
+                "register_structure_sigil!: expansion[$i] must be a String, got $(typeof(el))",
+                "expansion"))
+        end
+        if isempty(strip(String(el)))
+            throw(SigilConfigError(
+                "register_structure_sigil!: expansion[$i] is empty/whitespace",
+                "expansion"))
+        end
+    end
+    return register_sigil!(table;
+                           name = name,
+                           class = :structure,
+                           applies_at = :bind,
+                           expansion = collect(String, expansion),
+                           provenance = provenance,
+                           overwrite = overwrite)
+end
+
+"""
+    expand_structure_sigil(table, name; depth=0) -> Vector{String}
+
+Recursively expand a `:structure` sigil into a flat vector of literal tokens.
+Nested `&xxx` references inside the expansion are looked up; if the nested
+sigil is also a `:structure`, it is expanded recursively (bounded by
+MAX_PROCEDURE_DEPTH). Non-structure nested sigils are emitted as their
+canonical `&name` token.
+
+Throws:
+  - SigilResolutionError when a referenced sigil is not in the table.
+  - SigilConfigError when recursion exceeds MAX_PROCEDURE_DEPTH (cycle guard).
+  - SigilConfigError when the named sigil exists but is not :structure class.
+"""
+function expand_structure_sigil(table::SigilTable,
+                                name::AbstractString;
+                                depth::Int = 0)::Vector{String}
+    if depth > MAX_PROCEDURE_DEPTH
+        throw(SigilConfigError(
+            "structure expansion depth exceeded MAX_PROCEDURE_DEPTH=$MAX_PROCEDURE_DEPTH (cycle?) at &$name",
+            "expansion"))
+    end
+    nm = String(name)
+    haskey(table.entries, nm) || throw(SigilResolutionError(
+        "no such sigil in registry \"$(table.label)\"", nm, "<expand>"))
+    entry = table.entries[nm]
+    entry.class === :structure || throw(SigilConfigError(
+        "expand_structure_sigil: &$nm has class :$(entry.class), expected :structure",
+        "class"))
+    entry.expansion === nothing && throw(SigilConfigError(
+        "expand_structure_sigil: &$nm has no expansion chain", "expansion"))
+
+    out = String[]
+    prefix_str = string(SIGIL_PREFIX)
+    prefix_len = length(prefix_str)
+    for el in entry.expansion
+        s = String(el)
+        if startswith(s, prefix_str)
+            inner_str = String(SubString(s, prefix_len + 1))
+            if haskey(table.entries, inner_str) &&
+               table.entries[inner_str].class === :structure
+                append!(out, expand_structure_sigil(table, inner_str; depth = depth + 1))
+            else
+                # Non-structure nested sigil: emit canonical token unchanged.
+                if !haskey(table.entries, inner_str)
+                    throw(SigilResolutionError(
+                        "structure &$nm references unknown sigil &$inner_str",
+                        inner_str, s))
+                end
+                push!(out, s)
+            end
+        else
+            push!(out, s)
+        end
+    end
+    return out
+end
+
+"""
+    is_structure_sigil(table, name) -> Bool
+
+Cheap check: does this name refer to a :structure sigil?
+"""
+function is_structure_sigil(table::SigilTable, name::AbstractString)::Bool
+    nm = String(name)
+    haskey(table.entries, nm) || return false
+    return table.entries[nm].class === :structure
+end
+
+export register_structure_sigil!, expand_structure_sigil, is_structure_sigil
 
 # ==============================================================================
 # v7.55: RELATION-CLASS SIGIL — dynamic relational triple macros

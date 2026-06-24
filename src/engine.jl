@@ -1097,14 +1097,18 @@ const STRENGTH_FLOOR = 0.0
 """
     strength_biased_scan_coinflip(node::Node)::Bool
 
-Stochastic scan-admission gate. Strong nodes are more likely to be scanned,
-weak nodes still have a floor chance. BUG-011: this is not reinforcement and
-never changes node strength.
+GRUG v8.26e: STRENGTH REMOVED from scan coinflip. Per user directive:
+"strength should not bias confidence at all. strength only affects
+chatter really and when things get graved." The old formula gave
+strong nodes up to 90% scan chance vs 20% for weak ones — this meant
+high-strength low-relevance nodes (like thermodynamics) always got
+scanned while weaker but more relevant nodes (like fire) often got
+skipped entirely. Now ALL non-grave nodes get a flat 50/50 coinflip.
+Grave nodes are already excluded before this gate.
+BUG-011: this is not reinforcement and never changes node strength.
 """
 function strength_biased_scan_coinflip(node)::Bool
-    strength_ratio = clamp(node.strength / STRENGTH_CAP, 0.0, 1.0)
-    probability = clamp(0.20 + 0.70 * strength_ratio, 0.0, 1.0)
-    return rand() < probability
+    return rand() < 0.50
 end
 
 # GRUG: Slow-response telemetry threshold. v7.21c-5 side-process isolation:
@@ -1156,10 +1160,9 @@ mutable struct Node
     # GRUG NEW: Is this node an image node? (pattern is SDF binary, not text)
     is_image_node::Bool
 
-    # GRUG v7.49: Is this node an anti-match node? (pattern-activated confidence drain,
-    # never enters vote pool, no strength dynamics, no stage competition)
+    # GRUG v8.26h: is_antimatch_node field is DEAD/LEGACY. Antimatch nodes were removed.
+    # /addAntiMatch and /antiAnswer commands deleted. This field remains for specimen compat.
     is_antimatch_node::Bool
-# ⚠️ REMINDER: ANTIMATCH NODES WERE REMOVED. This field is dead/legacy only.
 
     # GRUG NEW: Neighbor linking (max neighbors rolled per-node 8-16 before UNLINKABLE)
     neighbor_ids::Vector{String}
@@ -1220,7 +1223,7 @@ struct Vote
 # REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
     node_triples::Vector{RelationalTriple}
 # REMINDER: Relational triples CAN contain sigils like &n, &op — they are dynamic, not just literal strings.
-    antimatch::Bool
+    antimatch::Bool  # GRUG v8.26h: LEGACY — antimatch nodes removed. Field kept for compat.
     # ---- v7.23 multipart fields (additive, default-safe) ------------------
     # GRUG: empty group_id means "this vote is on its own". Same node may emit
     # several votes that all carry the SAME non-empty group_id; AIML treats
@@ -3339,12 +3342,12 @@ No more fabricated connector pattern — the ACTUAL unmatched tokens at the seam
 become the bridge payload. Both sides know about each other (bidirectional).
 
 JIT CONFIDENCE BAKING: Same as old attach_node! but now symmetric:
-  base_confidence_AB = token_overlap(node_A.pattern, node_B.pattern) + (B.strength/CAP)*0.5
-  base_confidence_BA = token_overlap(node_A.pattern, node_B.pattern) + (A.strength/CAP)*0.5
-Each side's base_confidence includes the PARTNER's strength bonus, so the
-stronger your partner, the more likely the handoff succeeds. Symmetric overlap
-but asymmetric strength bonus = asymmetric confidence (correct! the node with
-more provenance should fire more readily).
+  base_confidence_AB = token_overlap(node_A.pattern, node_B.pattern)
+  base_confidence_BA = token_overlap(node_A.pattern, node_B.pattern)
+v8.26e: STRENGTH BONUS REMOVED. Old formula included (partner.strength/CAP)*0.5
+which let high-strength nodes like thermodynamics (8.0) get +0.40 bonus on
+bridges, passing SCAN_CONFIDENCE_LOCK even with zero overlap. Now confidence
+is purely pattern overlap — no strength bias.
 
 SEAM TOKENS: The tokens at the match boundary where the source lobe's scanner
 cut off. These become the handoff payload — the receiving lobe's scanner
@@ -3401,23 +3404,23 @@ function bridge_nodes!(node_a::String, node_b::String;
     lobe_a = _safe_find_lobe(node_a)
     lobe_b = _safe_find_lobe(node_b)
 
-    # GRUG: JIT CONFIDENCE BAKING — symmetric overlap, asymmetric strength bonus.
-    # Each side's base_confidence includes the PARTNER's strength so a strong
-    # partner = easier handoff. This is the match-cascade analog of the old
-    # connector-pattern JIT baking, but without the dumb middle-man.
+    # GRUG v8.26e: JIT CONFIDENCE BAKING — symmetric, no strength bonus.
+    # Bridge confidence is purely based on token pattern overlap between
+    # the two nodes. No strength bias per user directive.
     overlap = lock(NODE_LOCK) do
         na = NODE_MAP[node_a]
         nb = NODE_MAP[node_b]
         return _token_overlap_similarity(na.pattern, nb.pattern)
     end
-    jit_conf_a_to_b = lock(NODE_LOCK) do
-        nb = NODE_MAP[node_b]
-        return overlap + (nb.strength / STRENGTH_CAP) * 0.5
-    end
-    jit_conf_b_to_a = lock(NODE_LOCK) do
-        na = NODE_MAP[node_a]
-        return overlap + (na.strength / STRENGTH_CAP) * 0.5
-    end
+    # GRUG v8.26e: STRENGTH REMOVED from JIT confidence baking. Per user
+    # directive: "strength should not bias confidence at all." The old formula
+    # was `overlap + (partner.strength / CAP) * 0.5`, which gave strong nodes
+    # like thermodynamics (str=8.0) an extra 0.40 confidence on bridges —
+    # enough to pass SCAN_CONFIDENCE_LOCK (0.35) even with zero overlap.
+    # This caused fire→thermo cascade to fire and dominate the answer.
+    # Now bridge confidence is purely based on token pattern overlap.
+    jit_conf_a_to_b = overlap
+    jit_conf_b_to_a = overlap
 
     lock(BRIDGE_LOCK) do
         # GRUG: Check bridge caps on BOTH sides (bidirectional = both must have room)
@@ -3536,18 +3539,21 @@ end
 """
     confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
 
-Bridge relay gate used by fire_cascades!. This is not reinforcement and never
-changes node strength. It only decides whether an existing bridge relays this
-cycle, biased by the partner node's current strength and the bridge's baked
-semantic confidence.
+GRUG v8.26e: STRENGTH REMOVED from bridge coinflip. Per user directive:
+"strength should not bias confidence at all. strength only affects chatter
+really and when things get graved." Bridge relays now use ONLY the bridge's
+baked semantic confidence, not the partner's strength. This prevents
+high-strength nodes from dominating cascade relays.
 """
 function confidence_biased_bridge_coinflip(node::Node, bridge_confidence::Float64)::Bool
     if !isfinite(bridge_confidence)
         error("!!! FATAL: bridge_confidence must be finite, got $bridge_confidence !!!")
     end
-    strength_bias = clamp(node.strength / STRENGTH_CAP, 0.0, 1.0)
+    # GRUG v8.26e: Only confidence-based probability. No strength bias.
     confidence_bias = clamp(bridge_confidence / VoteOrchestrator.AIML_CONFIDENCE_THRESHOLD, 0.0, 1.0)
-    probability = clamp((strength_bias + confidence_bias) / 2.0, 0.0, 1.0)
+    # Scale to [0.10, 0.90] range so very low confidence bridges still have
+    # a tiny chance and very high ones aren't guaranteed.
+    probability = clamp(0.10 + 0.80 * confidence_bias, 0.0, 1.0)
     return rand() < probability
 end
 
@@ -5410,11 +5416,18 @@ const WORD_COEFFICIENT = Dict{String, Float64}(
     "be" => 0.05, "been" => 0.05, "being" => 0.05,
     "it" => 0.05, "its" => 0.05, "me" => 0.05,
     # --- Tier 0.08: Pronouns and light function words ---
-    "i" => 0.08, "you" => 0.08, "we" => 0.08, "he" => 0.08, "she" => 0.08,
+    # GRUG v8.26e: "you" raised to 0.30 — "you" in "who are you" IS the
+    # discriminative content, not filler. The identity node (pattern="you")
+    # must beat the copula node (pattern="are") for self-reference queries.
+    # At 0.08 both get near-identical tiny overlap and signal similarity
+    # becomes the tiebreaker, which is unreliable for single-word patterns.
+    "i" => 0.08, "you" => 0.30, "we" => 0.08, "he" => 0.08, "she" => 0.08,
     "they" => 0.08, "him" => 0.08, "her" => 0.08, "them" => 0.08, "us" => 0.08,
-    "my" => 0.08, "your" => 0.08, "our" => 0.08, "his" => 0.08, "their" => 0.08,
+    "my" => 0.08, "your" => 0.20, "our" => 0.08, "his" => 0.08, "their" => 0.08,
     "this" => 0.08, "that" => 0.08, "these" => 0.08, "those" => 0.08,
-    "what" => 0.08, "who" => 0.08, "whom" => 0.08, "which" => 0.08,
+    # GRUG v8.26e: "who" raised to 0.25 — "who" is a question word with
+    # discriminative power (like "how"/"why"/"when" at tier 0.25).
+    "what" => 0.08, "who" => 0.25, "whom" => 0.25, "which" => 0.08,
     # --- Tier 0.10: Conjunctions and basic operators ---
     "and" => 0.10, "or" => 0.10, "but" => 0.10, "nor" => 0.10,
     "not" => 0.10, "no" => 0.10, "so" => 0.10, "yet" => 0.10,
@@ -5731,6 +5744,11 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
         # confidence >= SCAN_CONFIDENCE_LOCK to even enter the voter pool.
         # Without this, every node with any activation fires, and composite
         # scoring can inflate weak matches past the vote threshold.
+        # GRUG v8.26e: A SECOND gate (VOTE_CONFIDENCE_FLOOR = 0.55) exists in
+        # Main.jl's ephemeral_voice_orchestrator. Nodes that pass this SCAN lock
+        # but fall below VOTE_CONFIDENCE_FLOOR still fire for cascade/drop-table
+        # purposes but do NOT get to vote. This double-gate prevents high-strength
+        # low-relevance nodes from dominating the answer.
         conf < SCAN_CONFIDENCE_LOCK && continue
 
         # GRUG v8.16: SIGIL NODE CONFIDENCE GATE. Sigil pattern nodes
@@ -5765,6 +5783,25 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
             conf = min(1.0, conf + _specificity_bonus)
         end
 
+        # GRUG v8.26e: TEMPORAL RELATION BONUS. Nodes with required_relations
+        # containing &temporal are TIME nodes. When the input contains temporal
+        # keywords (before, after, during, since, until, when, while, precedes,
+        # follows, then, now), these nodes get a confidence bonus because the
+        # user is asking a temporal question. Without this, a simple node like
+        # "renaissance" (pattern="renaissance") beats the time node
+        # "the dark ages the renaissance" because the longer pattern dilutes
+        # node_coverage. The temporal bonus compensates for this dilution.
+        _has_temporal_req = any(r -> occursin("temporal", lowercase(r)), node.required_relations)
+        if _has_temporal_req
+            _input_lower = lowercase(pre_expansion_input)
+            _temporal_keywords = ["before", "after", "during", "since", "until", "when", "while", "precedes", "follows", "then", "now", "came before", "came after", "next", "previous", "past", "future", "present"]
+            _temporal_hits = count(kw -> occursin(kw, _input_lower), _temporal_keywords)
+            if _temporal_hits > 0
+                _temporal_bonus = min(0.25, _temporal_hits * 0.12)  # 12% per keyword hit, cap 25%
+                conf = min(1.0, conf + _temporal_bonus)
+            end
+        end
+
         # GRUG v7.60-confidence-lock: ANTIMATCH REMOVED. No antimatch bypass.
         # All non-grave, non-image nodes with conf >= SCAN_CONFIDENCE_LOCK enter voter pool directly.
 
@@ -5795,6 +5832,17 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
     end
 
     # Bridge/cascade pass over a stable snapshot of current matches.
+    # GRUG v8.26e: CASCADE RELEVANCE GATE. Cascade-fired nodes get their
+    # bridge confidence as their "scan confidence", but this doesn't reflect
+    # actual lexical relevance to the input. A high-strength node bridged
+    # from a relevant node can have bridge_conf > SCAN_CONFIDENCE_LOCK
+    # even with zero lexical overlap with the input. This is how thermodynamics
+    # wins over fire/water: fire fires, bridge cascades to thermo with conf=0.35,
+    # thermo votes with that inflated confidence, and wins because it's stronger.
+    # Fix: CASCADE NODES MUST ALSO PASS LEXICAL OVERLAP CHECK against the input.
+    # Their bridge confidence is used for scoring/ranking, but they need at
+    # least MINIMAL lexical relevance (overlap >= SCAN_CONFIDENCE_LOCK) to enter
+    # the voter pool. Without this, cascaded nodes are phantom voters.
     for source_id in copy(collect(seen))
         length(matched) >= active_cap && break
         for (bridge_id, bridge_conf, seam_text) in fire_cascades!(source_id, length(matched), active_cap)
@@ -5802,9 +5850,28 @@ function scan_specimens(input::String; chunks=[])::Vector{Tuple{String, Float64,
             bridge_node = get(NODE_MAP, bridge_id, nothing)
             isnothing(bridge_node) && continue
             bridge_node.is_grave && continue
+            # GRUG v8.26e: LEXICAL RELEVANCE GATE for cascade nodes.
+            # Bridge confidence alone is not sufficient — the cascaded node
+            # must have SOME lexical overlap with the input to vote.
+            # This prevents the thermodynamics-domination bug where a
+            # high-strength but irrelevant node cascades in and wins.
+            # GRUG v8.26e: Use PRE-EXPANSION input for cascade lexical check.
+            # The `input` parameter is thesaurus-expanded (e.g., "what is fire blaze combustion heat ..."),
+            # which gives thermodynamics nodes spurious lexical overlap via thesaurus-added tokens
+            # like "heat" and "combustion". The raw pre-expansion input ("what is fire") correctly
+            # shows zero overlap with thermodynamics anchors, blocking the cascade.
+            _cascade_lex_conf = _lexical_overlap_confidence(pre_expansion_input, bridge_node)
+            if _cascade_lex_conf < SCAN_CONFIDENCE_LOCK
+                continue   # skip — no genuine relevance to the input
+            end
+            # Use the BETTER of bridge confidence and lexical confidence
+            # as the node's effective scan confidence. Bridge conf captures
+            # the relational chain strength; lexical conf captures direct
+            # relevance. Taking the max respects both signals.
+            effective_conf = max(Float64(bridge_conf), _cascade_lex_conf)
             seam_triples = isempty(strip(seam_text)) ? RelationalTriple[] : extract_relational_triples(seam_text)
             node_triples = vcat(bridge_node.relational_patterns, seam_triples)
-            push!(matched, _specimen_tuple(bridge_id, Float64(bridge_conf), false, user_triples, node_triples, input_chunk_ids))
+            push!(matched, _specimen_tuple(bridge_id, effective_conf, false, user_triples, node_triples, input_chunk_ids))
             push!(seen, bridge_id)
             bridge_node.fired_this_cycle = true
             bridge_node.voted_this_cycle = true

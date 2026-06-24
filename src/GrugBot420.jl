@@ -68,6 +68,25 @@ using .ActionTonePredictor
 include("CoherenceField.jl")
 using .CoherenceField
 
+# GRUG: GeometryKit — v9 state-space geometry. Thin wrapper over four named
+# geometric spaces (semantic, coherence, phase, tone). No new algorithms —
+# just names the spaces and provides unified distance/overview queries.
+# Must load AFTER CoherenceField (references coherence concepts).
+include("GeometryKit.jl")
+using .GeometryKit
+
+# GRUG: PatternMiner — v9 operator genesis. Self-discovery of new relation
+# sigils from recurring graph shapes in the triple store.
+# Follows CoherenceField's parameter-passing pattern — no cross-module refs.
+include("PatternMiner.jl")
+using .PatternMiner
+
+# GRUG: TemporalIdentity — v9 temporal continuants. First-class objects
+# for identity that persists across temporal change.
+# Follows same parameter-passing pattern — no cross-module refs.
+include("TemporalIdentity.jl")
+using .TemporalIdentity
+
 include("TonalJudge.jl")
 using .TonalJudge
 
@@ -278,6 +297,9 @@ using .HippocampalModulator
 # except Base and Random — fully self-contained.
 include("EphemeralMLP.jl")
 using .EphemeralMLP
+
+include("RoutingJudge.jl")
+using .RoutingJudge
 
 include("engine.jl")
 include("Main.jl")
@@ -532,6 +554,52 @@ export get_activation_mode, get_novelty_score
 export get_strain_energy, is_hippocampal_warrant_active
 export STRAIN_NOVELTY_WEIGHT, STRAIN_QUALITY_WEIGHT, STRAIN_THRESHOLD, STRAIN_FLOOR, STRAIN_CEILING
 export MLP_TRANSFORM_FUZZY, MLP_TRANSFORM_SOLID
+
+# GRUG v9: GeometryKit exports — state-space geometry over four named spaces.
+# Thin wrapper: distance functions, space overview, trajectory, attractors.
+# No new algorithms; just names what already exists.
+export GeometryKit
+export SpaceName, SEMANTIC_SPACE, COHERENCE_SPACE, PHASE_SPACE, TONE_SPACE
+export SPACE_NAMES, SPACE_FROM_NAME
+export GeometryConfig, GEOMETRY_CONFIG, geometry_config_snapshot
+export set_geometry_config!, reset_geometry_config!
+export geometry_config_to_dict, geometry_config_from_dict!
+export semantic_distance, coherence_distance, phase_distance, tone_distance
+export space_distance
+export geometry_overview, trajectory, attractors
+
+# GRUG v9: PatternMiner exports — operator genesis from recurring graph shapes.
+# Proposal/approval gate: proposals are visible, not auto-registered.
+export PatternMiner
+export ShapeType, SHAPE_TRANSITIVITY, SHAPE_CHAINING, SHAPE_SYMMETRY
+export SHAPE_NAMES
+export ShapeInstance, GenesisProposal
+export PatternMinerConfig, PATTERN_MINER_CONFIG, pattern_miner_config_snapshot
+export set_pattern_miner_config!, reset_pattern_miner_config!
+export pattern_miner_config_to_dict, pattern_miner_config_from_dict!
+export record_instance!, prune_expired_instances!, count_instances, get_all_instances
+export scan_transitivity!, scan_chaining!, scan_symmetry!, scan_all!
+export check_and_propose!, list_proposals
+export approve_proposal!, reject_proposal!
+export clear_instances!, clear_proposals!
+export pattern_miner_status
+
+# GRUG v9: TemporalIdentity exports — first-class continuants for identity across change.
+# Proposal/approval gate: proposals are visible, not auto-registered.
+export TemporalIdentity
+export Stage, Continuant, ContinuantProposal
+export TemporalIdentityConfig, TEMPORAL_IDENTITY_CONFIG, temporal_identity_config_snapshot
+export set_temporal_identity_config!, reset_temporal_identity_config!
+export temporal_identity_config_to_dict, temporal_identity_config_from_dict!
+export create_continuant, add_stage!, add_transform_rule!, remove_stage!
+export identity_of, get_continuant, list_continuants, stages_of
+export what_was, what_becomes
+export merge_continuants!, delete_continuant!
+export propose_continuant!, list_continuant_proposals
+export approve_continuant_proposal!, reject_continuant_proposal!
+export clear_continuants!, clear_proposals!
+export temporal_identity_status
+export temporal_identity_to_dict, temporal_identity_from_dict!
 
 # GRUG v8.20: CLI entry-point + specimen lifecycle exports.
 # These live in Main.jl (included into this module) but were never exported,

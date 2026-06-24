@@ -1170,7 +1170,7 @@ Features (VOTE_FEATURE_DIM = 24):
   3. Confidence variance
   4. Max confidence
   5. Min confidence
-  6. Fraction of votes with antimatch=true
+  6. Fraction of votes with antimatch=true (LEGACY v8.26h — always 0 now)
   7. Number of unique node IDs (normalized)
   8. Confidence range (max - min)
   ── Input correlation features (4) ──
@@ -2481,7 +2481,7 @@ end
     dampen_strain!(factor::Float64=0.5)
 
 GRUG v7.51: Reduce strain energy by a dampening factor. Called when the user
-provides an /answer or /antiAnswer — resolving the structural deficit that
+provides an /answer — resolving the structural deficit that
 caused the strain. The factor multiplies the current strain (0.5 = halve it).
 Also re-evaluates hippocampal_warrant_active since strain may now be below threshold.
 

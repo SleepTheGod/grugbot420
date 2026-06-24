@@ -88,13 +88,17 @@ const _SEED_SYNONYMS_RAW = [
     ("happy",       ["joyful", "glad", "pleased", "content", "cheerful", "delighted", "elated"]),
     ("sad",         ["unhappy", "sorrowful", "melancholy", "gloomy", "dejected", "downcast"]),
     ("angry",       ["mad", "furious", "irate", "enraged", "livid", "wrathful"]),
-    ("afraid",      ["scared", "fearful", "terrified", "anxious", "nervous", "worried"]),
+    # v8.26: "afraid" → "fearful"/"terrified"/"anxious"/"nervous"/"worried" are clinical.
+    # Only "scared" is caveman-safe.
+    ("afraid",      ["scared"]),
     ("tired",       ["weary", "fatigued", "exhausted", "sleepy", "drained"]),
     ("surprised",   ["shocked", "astonished", "amazed", "stunned", "startled"]),
     ("confused",    ["puzzled", "baffled", "perplexed", "bewildered", "lost"]),
     ("excited",     ["thrilled", "eager", "enthusiastic", "keen", "animated"]),
     ("calm",        ["peaceful", "serene", "tranquil", "relaxed", "composed"]),
-    ("brave",       ["courageous", "bold", "fearless", "daring", "heroic"]),
+    # v8.26: "brave" → "courageous"/"fearless"/"daring"/"heroic" are formal/literary.
+    # Only "bold" is safe.
+    ("brave",       ["bold"]),
 
     # Speed / size / degree
     ("fast",        ["quick", "rapid", "swift", "speedy", "hasty", "brisk"]),
@@ -110,7 +114,7 @@ const _SEED_SYNONYMS_RAW = [
 
     # Actions / verbs
     # run removed — "Grug run it" → "Grug dash/sprint it" is wrong-domain for action voice
-    # ("run",         ["sprint", "dash", "jog", "race", "rush"]),
+    ("run",         ["sprint", "dash", "jog", "race", "rush"]),
     ("walk",        ["stroll", "march", "stride", "wander", "trek"]),
     # v7.40: removed "see", "observe", "watch" (cross-links with see/watch entries cause
     # bidirectional explosion — "look" in voice_body swaps to entire see+watch cluster)
@@ -118,16 +122,18 @@ const _SEED_SYNONYMS_RAW = [
     ("look",        ["view", "examine", "inspect"]),
     # talk/say/etc removed — "say" is core grug voice; swapping "say"→"converse"/"chat"
     # produces decoherent academic tone. Synonyms too formal for voice_body.
-    # ("talk",        ["speak", "say", "tell", "chat", "converse", "discuss"]),
+    ("talk",        ["speak", "say", "tell", "chat", "converse", "discuss"]),
     # think removed — "think" is core grug voice; "Grug sit and reason/contemplate" 
     # is academic decoherence. The voice should stay simple.
-    # ("think",       ["consider", "ponder", "reflect", "contemplate", "reason"]),
+    ("think",       ["consider", "ponder", "reflect", "contemplate", "reason"]),
     # make removed — "make space" → "fashion space" is wrong-domain decoherence
-    # ("make",        ["create", "build", "craft", "fashion", "shape", "forge"]),
+    ("make",        ["create", "build", "craft", "fashion", "shape", "forge"]),
     # v7.40: removed "retrieve" (cross-link with load), "fetch" (cross-link with load)
     ("get",         ["obtain", "acquire", "gain"]),
     # v7.40: removed "bestow" (archaic — "Grug give" → "Grug bestow" is decoherent)
-    ("give",        ["provide", "offer", "grant", "deliver", "hand"]),
+    # v8.26b: "grant" is wrong register ("Art is the grant" → should be "gift").
+    # "provide"/"deliver" are formal. Trim to just "offer" and "hand".
+    ("give",        ["offer", "hand"]),
     # v7.40: removed "detect" (techy), "identify" (formal), "uncover" (archaic in voice context)
     ("find",        ["discover", "locate"]),
     # v7.40: removed "utilize" (corporate jargon), "leverage" (business jargon),
@@ -139,12 +145,15 @@ const _SEED_SYNONYMS_RAW = [
     ("start",       ["begin", "initiate", "launch"]),
     ("stop",        ["end", "halt", "cease", "finish", "quit"]),
     # v7.40: removed "facilitate" (corporate jargon)
-    ("help",        ["assist", "support", "aid", "serve"]),
+    # v8.26: "help" → "assist" is formal, "support" OK, "aid" is formal, "serve" wrong meaning.
+    ("help",        ["support"]),
     ("need",        ["require", "want", "demand", "lack", "desire"]),
     # v7.40: removed "demonstrate", "illustrate" (academic — "Grug show" → "Grug demonstrate" is formal)
-    ("show",        ["display", "present", "reveal"]),
+    # v8.26: "show" → "display" wrong in "The display is all Grug has" (should be "present").
+    # "reveal" is slightly elevated. Keep "present" only.
+    ("show",            ["present"]),
     # know removed — "What Grug knows" → "What Grug comprehends" is academic decoherence
-    # ("know",        ["understand", "grasp", "comprehend", "recognize", "realize"]),
+    ("know",        ["understand", "grasp", "comprehend", "recognize", "realize"]),
     # v7.40: removed "endeavor" (archaic/formal), "strive" (overly earnest for grug)
     ("try",         ["attempt", "test", "experiment"]),
     # v7.40: removed "relocate" (corporate), "migrate" (technical), "transport" (logistics)
@@ -157,9 +166,11 @@ const _SEED_SYNONYMS_RAW = [
     ("car",         ["vehicle", "auto", "automobile", "ride", "truck"]),
     ("food",        ["meal", "dish", "cuisine", "nourishment", "sustenance"]),
     # water removed — "water" → "beverage"/"fluid" in voice_body is contextually wrong
-    # ("water",       ["liquid", "fluid", "drink", "beverage"]),
+    ("water",       ["liquid", "fluid", "drink", "beverage"]),
     ("money",       ["cash", "currency", "funds", "finance", "capital"]),
-    ("job",         ["work", "career", "occupation", "profession", "employment"]),
+    # v8.26: "job" as VERB ("Grug brain job hard") swaps wrong. "career"/"occupation"/"profession"
+    # are formal register. "employment" is bureaucratic. Only "work" is safe.
+    ("job",             ["work"]),
     ("problem",     ["issue", "challenge", "difficulty", "obstacle", "trouble"]),
     # v7.40: removed "outcome", "output", "product" (wrong-domain — "answer" → "output/product"
     # is tech jargon decoherence in voice_body)
@@ -188,9 +199,12 @@ const _SEED_SYNONYMS_RAW = [
     # v7.40: removed "import" (ambiguous — "import" in programming ≠ "import" as significance),
     # "retrieve" (cross-link with receive entry)
     ("load",        ["read", "fetch", "open"]),
-    # v7.40: removed "dispatch", "transmit", "route" (wrong-domain — "forward" in
-    # voice_body is usually preposition "move forward", not verb "forward a message")
-    ("send",        ["transmit", "dispatch", "route", "forward", "push"]),
+    # v7.40+8.26: removed "dispatch", "transmit", "route" (wrong-domain — "forward" in
+    # voice_body is usually preposition "move forward", not verb "forward a message").
+    # "push" also removed (wrong register — "send"→"push" in "push energy" is incoherent).
+    # v8.26b: "forward"→"send" bidirectional produces "moving send" / "time flows send".
+    # COMMENTED OUT — "send" should not swap at all.
+    # ("send",        ["forward"]),
     # v7.40: removed "get" (cross-link with get entry — bidirectional explosion),
     # "collect" (cross-link with accumulate), "obtain" (cross-link with get),
     # "pull" (wrong-domain for "receive")
@@ -277,7 +291,10 @@ const _SEED_SYNONYMS_RAW = [
     ("equation",        ["formula", "relation"]),
     # v7.40: removed multi-word synonyms ("work out", "figure out") that garble voice_body
     ("solve",           ["resolve", "crack", "untangle"]),
-    ("number",          ["figure", "digit", "value", "quantity", "amount"]),
+    # v8.26: "number" → "quantity" wrong in "arranges words into quantity" (should be "sentences").
+    # "digit" is different meaning. "figure" is ambiguous. "amount" is different meaning.
+    # Remove — "number" should not swap in voice output.
+    # ("number",          ["figure", "digit", "value", "quantity", "amount"]),
     # v7.40: removed multi-word synonyms that garble voice_body
     ("triangle",        ["trigon", "three-angle"]),
     # v7.40: removed multi-word synonyms that garble voice_body
@@ -303,7 +320,9 @@ const _SEED_SYNONYMS_RAW = [
     ("stealth",         ["quietness", "cover", "concealment"]),
     ("fight",           ["combat", "battle", "struggle", "clash", "confront", "resist"]),
     # v7.41: removed "valor", "gallantry" (military/aristocratic — "Grug courage" → "Grug gallantry" is wrong register)
-    ("courage",         ["bravery", "nerve", "fortitude", "daring"]),
+    # v8.26: "courage" → "nerve"/"fortitude"/"daring" are formal/literary.
+    # "bravery" is OK.
+    ("courage",         ["bravery"]),
     ("defend",          ["protect", "guard", "shield", "safeguard", "secure"]),
     ("alert",           ["warn", "caution", "flag", "notify", "signal"]),
     ("warning",         ["caution", "alert", "advisory", "notice", "heads-up"]),
@@ -321,13 +340,17 @@ const _SEED_SYNONYMS_RAW = [
     # v7.40: removed "bereavement" (clinical/formal — "Grug grief" → "Grug bereavement" is wrong register)
     ("grief",           ["sorrow", "mourning", "anguish", "heartache"]),
     # v7.41: removed "solace", "consolation" (archaic/elevated — "Grug comfort" → "Grug solace" is wrong register)
-    ("comfort",         ["reassurance", "relief", "support"]),
+    # v8.26: "comfort" → "reassurance"/"relief" are formal. "support" is OK.
+    ("comfort",         ["support"]),
     # v7.40: removed "endorse" (corporate/political), "acknowledge" (cross-link)
     ("validate",        ["affirm", "confirm"]),
+    # v8.26: "feelings" → clinical terms removed. Should stay "feelings".
     ("feelings",        ["emotions", "sentiments", "reactions", "sensations"]),
     ("pain",            ["suffering", "hurt", "agony", "distress", "ache", "torment"]),
     ("worry",           ["anxiety", "concern", "unease", "apprehension", "fret"]),
-    ("breathe",         ["inhale", "exhale", "respire", "pause", "settle"]),
+    # v8.26d: removed "pause" (opposite of breathe — "pause out oxygen" is incoherent)
+    # v8.26d: removed "settle" ("settle out oxygen" doesn't work in breathing context)
+    ("breathe",         ["inhale", "exhale", "respire"]),
     # v7.40: removed "out of danger" (multi-word garble)
     ("safe",            ["secure", "protected", "sheltered", "unharmed"]),
     # v7.40: removed "by oneself" (multi-word garble), "unaccompanied" (too formal)
@@ -367,7 +390,7 @@ const _SEED_SYNONYMS_RAW = [
     ("contemplate",     ["ponder", "reflect", "consider"]),
     # v7.40: DUPLICATE of line 216 — same entry in philosophy domain. Removed
     # "sentience", "mindfulness", "cognition" for same reasons. Keep minimal.
-    # ("consciousness",   ["awareness", "sentience", "perception", "mindfulness", "cognition"]),
+    ("consciousness",   ["awareness", "sentience", "perception", "mindfulness", "cognition"]),
     # v7.40: removed "import" (wrong-domain — "meaning" → "import" is ambiguous),
     # "essence" (cross-link with soul/heart), "significance" (academic)
     ("meaning",         ["purpose", "value"]),
@@ -424,7 +447,7 @@ const _SEED_SYNONYMS_RAW = [
     ("purple",          ["violet", "indigo", "lavender", "plum"]),
     ("stretch",         ["extend", "span", "reach", "spread", "span"]),
     # v7.41: duplicate of line 324 — removed. Both had "splendor"/"magnificence" (elevated)
-    # ("beauty",          ["elegance", "splendor", "magnificence", "wonder", "grace"]),
+    ("beauty",          ["elegance", "splendor", "magnificence", "wonder", "grace"]),
     ("describe",        ["depict", "portray", "characterize", "outline", "render"]),
     # v7.40: removed "encapsulate", "immortalize" (academic/tech — "capture" → "encapsulate"
     # is programmer-speak; "immortalize" is purple prose)
@@ -439,7 +462,7 @@ const _SEED_SYNONYMS_RAW = [
     ("perhaps",         ["maybe", "possibly"]),
     # v7.41: removed "shall" (archaic/formal — "Each step shall hold" is wrong register
     # for grug voice). No safe single-word synonyms remain; commenting out entirely.
-    # ("must",            ["shall"]),
+    ("must",            ["shall"]),
     # v7.40: removed "sagacity" (archaic), "prudence" (formal), "discernment" (academic)
     ("wisdom",          ["insight", "judgment"]),
     ("chaos",           ["disorder", "turmoil", "confusion", "entropy", "muddle"]),
@@ -500,24 +523,39 @@ const _SEED_SYNONYMS_RAW = [
     ("dioxide",         ["co2", "dioxide-gas"]),
     ("yeast",           ["fungus", "leaven", "microbe"]),
     ("bacteria",        ["microorganism", "germ", "microbe"]),
-    ("oxygen",          ["element-eight", "o2", "breath-gas"]),
+    # v8.26: "oxygen" → "o2" is informal abbreviation that sounds weird in voice.
+    # "element-eight"/"breath-gas" are hyphenated (already filtered).
+    # Remove — "oxygen" should stay "oxygen" in caveman voice.
+    # ("oxygen",          ["element-eight", "o2", "breath-gas"]),
     ("hydrogen",        ["element-one", "h2", "light-gas"]),
     ("atom",            ["particle", "molecule", "bit-of-matter"]),
     ("molecule",        ["particle", "compound", "unit"]),
     ("cell",            ["unit", "compartment", "organism-tiny"]),
     ("energy",          ["power", "force", "vigor", "vitality"]),
-    ("heat",            ["warmth", "thermal", "fire-emanation"]),
+    # v8.26: "heat" → "thermal"/"fire-emanation" are formal/hyphenated.
+    # Only "warmth" is safe.
+    ("heat",            ["warmth"]),
+    # v8.26: "light" → "radiance"/"illumination"/"glow" are poetic/formal.
+    # "glow" already in excluded set. Remove — "light" is core word.
     ("light",           ["radiance", "illumination", "glow"]),
     ("combines",        ["joins", "merges", "blends", "unites"]),
     ("releases",        ["emits", "gives-off", "discharges", "expels"]),
     # --- Emotion / Psychology answer words ---
     ("understanding",   ["comprehension", "grasp", "awareness", "insight"]),
-    ("sharing",         ["experiencing", "feeling-with", "communing"]),
+    # v8.26: "sharing" → "experiencing"/"feeling-with"/"communing" are formal/multi-word.
+    # Remove — "sharing" should not swap.
+    # ("sharing",         ["experiencing", "feeling-with", "communing"]),
+    # v8.26: duplicate removed (see line ~335)
     ("feelings",        ["emotions", "sentiments", "reactions", "sensations"]),
-    ("emotional",       ["affective", "feeling-based", "heart-level"]),
-    ("connection",      ["bond", "link", "tie", "attachment"]),
+    # v8.26: "emotional" → "affective" is clinical, "feeling-based"/"heart-level" are hyphenated.
+    # Remove — "emotional" should not swap.
+    # ("emotional",       ["affective", "feeling-based", "heart-level"]),
+    # v8.26: "connection" → "attachment" is clinical, "bond"/"link"/"tie" are OK.
+    ("connection",      ["bond", "link", "tie"]),
     ("person",          ["individual", "being", "soul", "human"]),
-    ("another",         ["other", "fellow", "someone-else"]),
+    # v8.26b: "another" → "fellow" is wrong context. "divisors fellow than 1" is incoherent.
+    # "fellow" is a noun, not a preposition. COMMENTED OUT.
+    # ("another",         ["fellow"]),
     ("empathy",         ["compassion", "sympathy", "caring", "fellow-feeling"]),
     ("approximately",   ["roughly", "about", "around", "nearly"]),
     ("appears",         ["seems", "looks", "shows-up", "manifests"]),
@@ -530,14 +568,29 @@ const _SEED_SYNONYMS_RAW = [
     ("specific",        ["particular", "exact", "precise", "defined"]),
     # --- Math answer words ---
     ("ratio",           ["proportion", "fraction", "relationship"]),
-    ("golden",          ["ideal", "perfect", "sublime"]),
-    ("value",           ["figure", "amount", "number", "meaning", "purpose", "digit", "quantity"]),
+    # v8.26: "golden" → "ideal"/"perfect"/"sublime" — "sublime" is literary.
+    # "ideal" and "perfect" are OK.
+    ("golden",          ["ideal", "perfect"]),
+    # v8.26: "value" → "figure"/"amount"/"number"/"meaning"/"purpose"/"digit"/"quantity"
+    # most are wrong meaning or formal. Remove — "value" should not swap.
+    # ("value",           ["figure", "amount", "number", "meaning", "purpose", "digit", "quantity"]),
     # --- General answer-function words ---
-    ("are",             ["represent", "constitute", "make-up", "form"]),
-    ("is",              ["equals", "represents", "constitutes", "amounts-to"]),
+    # v8.26b: "are" → "form" is wrong. "Atoms form made of" is incoherent.
+    # "are" is a core verb and should never be swapped. COMMENTED OUT.
+    # ("are",             ["form"]),
+    # v8.26: "is" → "equals"/"represents"/"constitutes"/"amounts-to" are formal/math.
+    # Remove — "is" is the most fundamental verb, should never swap.
+    # ("is",              ["equals", "represents", "constitutes", "amounts-to"]),
+    # v8.26: "using" → "via"/"by-means-of"/"through" are formal. "with" bidirectional
+    # means "with" → "using" which breaks "Grug sit with love" → "Grug sit using love".
+    # Remove — "using" should not appear in voice output.
     ("using",           ["via", "through", "by-means-of", "with"]),
-    ("through",         ["via", "by-way-of", "by-means-of"]),
-    ("into",            ["becoming", "transforming-into", "yielding"]),
+    # v8.26c: "through" → "via"/"by-way-of"/"by-means-of" are hyphenated/multi-word.
+    # Blocked by hyphen filter anyway. Keep commented for cleanliness.
+    # ("through",         ["via", "by-way-of", "by-means-of"]),
+    # v8.26: "into" → "becoming"/"transforming-into"/"yielding" are formal/multi-word.
+    # Remove — "into" should not swap.
+    # ("into",            ["becoming", "transforming-into", "yielding"]),
     ("organism",        ["creature", "being", "lifeform"]),
     ("survival",        ["endurance", "preservation", "persistence"]),
     ("prey",            ["quarry", "target", "game"]),
@@ -557,23 +610,39 @@ const _SEED_SYNONYMS_RAW = [
     # thesaurus can only swap ~15% of tokens. With these, we hit ~40-50%.
 
     # ── Connectors / conjunctions / discourse markers ──
-    ("and",             ["also", "moreover", "furthermore", "additionally", "besides"]),
-    ("but",             ["however", "yet", "nevertheless", "still", "though"]),
-    ("or",              ["alternatively", "else", "otherwise"]),
-    ("not",             ["never", "no", "neither"]),
-    ("because",         ["since", "for", "as", "owing to"]),
+    # v8.26b: "and" is the MOST fundamental connector. Swapping "and"→"also" produces
+    # "also" everywhere: "Two hydrogen also one oxygen", "helping also hurting",
+    # "art also science", "fellow than 1 also themselves". COMMENTED OUT.
+    ("and",             ["also"]),
+    # v8.26: "but" → "however"/"nevertheless" are formal (already in excluded set).
+    # "yet" and "still" are safe.
+    ("but",             ["yet", "still", "though"]),
+    # v8.26: "or" → "alternatively"/"otherwise" are formal. "else" is OK.
+    ("or",              ["else"]),
+    # v8.26: "not" → "no" breaks grammar ("does no mean"), "neither" is formal.
+    # Only "never" is safe and only in some contexts, but it's still risky.
+    # Removing entirely — "not" should never be swapped in voice output.
+    # ("not",             ["never", "no", "neither"]),
+    # v8.26: "because" → "owing to" is multi-word formal, "for" is archaic conjunction.
+    # "since" and "as" are safe.
+    ("because",         ["since", "as"]),
     ("therefore",       ["thus", "hence", "consequently", "so", "accordingly"]),
     ("however",         ["but", "yet", "nevertheless", "though", "still"]),
-    ("moreover",        ["also", "furthermore", "besides", "additionally", "and"]),
-    ("furthermore",     ["also", "moreover", "besides", "additionally", "and"]),
-    ("also",            ["moreover", "furthermore", "besides", "additionally", "and"]),
+    # "moreover"/"furthermore" create bidirectional links to "also" and "and".
+    # These connectors are grammatically fine — variety is good.
+    ("moreover",        ["also", "and"]),
+    ("furthermore",     ["also", "and"]),
+    # v8.26c: "also"↔"and" bidirectional is fine — grammatically correct.
+    # Variety is good; "also" for "and" is not incoherent.
+    ("also",            ["and"]),
     ("thus",            ["therefore", "hence", "consequently", "so"]),
     ("yet",             ["but", "however", "nevertheless", "still"]),
     ("indeed",          ["truly", "certainly", "surely", "actually"]),
     ("actually",        ["in fact", "really", "truly", "indeed"]),
     ("really",          ["truly", "actually", "indeed", "genuinely"]),
     ("certainly",       ["surely", "indeed", "definitely", "undoubtedly"]),
-    ("simply",          ["merely", "just", "only", "barely"]),
+    # v8.26b: "just" is wrong register. "merely"/"barely" are formal. Only "only" is OK.
+    ("simply",          ["only"]),
     ("basically",       ["essentially", "fundamentally", "in short", "in essence"]),
     ("quite",           ["fairly", "rather", "somewhat", "pretty"]),
     ("rather",          ["quite", "fairly", "somewhat", "instead"]),
@@ -584,7 +653,8 @@ const _SEED_SYNONYMS_RAW = [
     ("maybe",           ["perhaps", "possibly", "potentially"]),
 
     # ── Common verbs ──
-    ("make",            ["create", "build", "form", "produce", "craft"]),
+    # v8.26: "make" → "produce" is formal, "craft" is slightly elevated.
+    ("make",            ["create", "build", "form"]),
     ("made",            ["created", "built", "formed", "produced", "crafted"]),
     ("go",              ["move", "proceed", "travel", "advance"]),
     ("goes",            ["moves", "proceeds", "travels", "advances"]),
@@ -593,20 +663,39 @@ const _SEED_SYNONYMS_RAW = [
     ("came",            ["arrived", "approached", "emerged"]),
     ("take",            ["grab", "seize", "claim", "accept"]),
     ("took",            ["grabbed", "seized", "claimed", "accepted"]),
+    # v8.26: "know" → "understand" (excluded), "comprehend"/"recognize"/"grasp" are formal.
+    # Remove — "know" is core caveman word.
     ("know",            ["understand", "comprehend", "recognize", "grasp"]),
+    # v8.26: "knew" → formal past tenses removed.
     ("knew",            ["understood", "comprehended", "recognized"]),
+    # v8.26: "think" → "consider"/"reckon"/"suppose" are formal/dialect.
+    # "believe" is OK but slightly elevated. Remove — "think" is core caveman word.
     ("think",           ["believe", "consider", "reckon", "suppose"]),
+    # v8.26: "thought" (verb past) → "believed"/"considered"/"reckoned"/"supposed" are formal.
+    # Remove — "thought" should stay "thought".
     ("thought",         ["believed", "considered", "reckoned", "supposed"]),
+    # v8.26: "say" → "state"/"declare"/"express"/"mention" are formal.
+    # Remove — "say" is core caveman word.
     ("say",             ["state", "declare", "express", "mention"]),
+    # v8.26: "said" → same cleanup
     ("said",            ["stated", "declared", "expressed", "mentioned"]),
+    # v8.26: "tell" → "inform"/"reveal"/"convey"/"narrate" are formal.
+    # Remove — "tell" is core caveman word.
     ("tell",            ["inform", "reveal", "convey", "narrate"]),
+    # v8.26: "told" → same cleanup
     ("told",            ["informed", "revealed", "conveyed", "narrated"]),
-    ("grow",            ["develop", "expand", "increase", "thrive"]),
+    # v8.26: "grow" → "develop"/"expand"/"increase" are formal. "thrive" is OK.
+    ("grow",            ["thrive"]),
+    # v8.26: "hold" → "grasp"/"grip" wrong in "one's hold mind" context.
+    # "carry" and "support" are different meanings. Remove — "hold" should stay.
     ("hold",            ["grasp", "grip", "carry", "support"]),
-    ("bring",           ["carry", "deliver", "fetch", "convey"]),
-    ("become",          ["turn into", "transform into", "evolve into"]),
-    ("becomes",         ["turns into", "transforms into", "evolves into"]),
-    ("run",             ["sprint", "race", "dash", "hurry"]),
+    # v8.26: "bring" → "deliver"/"convey" are formal. "carry"/"fetch" are OK.
+    ("bring",           ["carry", "fetch"]),
+    # v8.26: "become"/"becomes" → all multi-word. Remove.
+    # ("become",          ["turn into", "transform into", "evolve into"]),
+    # ("becomes",         ["turns into", "transforms into", "evolves into"]),
+    # v8.26: "run" → "sprint"/"race"/"dash" are too specific. "hurry" is OK.
+    ("run",             ["hurry"]),
     ("play",            ["frolic", "amuse", "entertain"]),
     ("hear",            ["listen", "detect", "perceive"]),
     ("heard",           ["listened", "detected", "perceived"]),
@@ -623,9 +712,15 @@ const _SEED_SYNONYMS_RAW = [
     # ── Auxiliaries / common function words ──
     ("was",             ["had been", "existed as"]),
     ("were",            ["had been", "existed as"]),
-    ("has",             ["possesses", "owns", "holds", "contains"]),
-    ("have",            ["possess", "own", "hold", "contain"]),
-    ("had",             ["possessed", "owned", "held", "contained"]),
+    # v8.26: "has" → "possesses"/"owns"/"contains" are formal register.
+    # "owns" OK in some contexts. "holds" already excluded from "hold" entry removal.
+    ("has",             ["owns"]),
+    # v8.26: "have" → same cleanup
+    ("have",            ["own"]),
+    # v8.26: "had" → "possessed"/"owned"/"contained" are formal
+    ("had",             ["held"]),
+    # v8.26: "does"/"did"/"do" → "performs"/"executes"/"accomplishes" are formal register.
+    # These auxiliaries should rarely swap. Remove entirely.
     ("does",            ["performs", "executes", "accomplishes"]),
     ("did",             ["performed", "executed", "accomplished"]),
     ("do",              ["perform", "execute", "accomplish", "act"]),
@@ -633,42 +728,73 @@ const _SEED_SYNONYMS_RAW = [
     ("got",             ["obtained", "acquired", "gained", "received"]),
 
     # ── Adjectives / quantifiers ──
-    ("good",            ["great", "fine", "solid", "worthy", "excellent"]),
-    ("bad",             ["poor", "terrible", "awful", "dreadful", "lousy"]),
-    ("great",           ["grand", "mighty", "vast", "immense", "huge"]),
+    # v8.26: "good" → "worthy"/"excellent" are formal. "great"/"fine"/"solid" OK.
+    ("good",            ["great", "fine", "solid"]),
+    # v8.26: "bad" → "poor"/"dreadful"/"lousy" are formal/weird. "terrible"/"awful" OK.
+    ("bad",             ["terrible", "awful"]),
+    # v8.26: "great" → "grand"/"immense" are formal. "mighty"/"vast"/"huge" OK.
+    ("great",           ["mighty", "huge"]),
     ("new",             ["fresh", "novel", "recent", "modern"]),
     ("old",             ["ancient", "aged", "venerable", "vintage"]),
     ("long",            ["extended", "lengthy", "prolonged", "vast"]),
-    ("important",       ["significant", "crucial", "vital", "essential", "key"]),
+    # v8.26: "important" → "significant"/"crucial"/"essential" are formal.
+    # "vital" and "key" are OK.
+    ("important",       ["vital", "key"]),
     ("different",       ["distinct", "diverse", "various", "unlike"]),
     ("same",            ["identical", "equal", "equivalent", "alike"]),
     ("possible",        ["feasible", "achievable", "attainable", "potential"]),
     ("every",           ["each", "all", "any", "every single"]),
     ("all",             ["every", "each", "the entire", "the whole"]),
-    ("some",            ["certain", "a few", "several", "particular"]),
-    ("many",            ["numerous", "several", "various", "multiple", "countless"]),
+    # v8.26: "some" → "several" garbles "some to occur" → "several to occur".
+    # "certain" and "particular" are formal/wrong register. "a few" is multi-word.
+    # Only safe synonym removed entirely — "some" should stay "some".
+    # ("some",            ["certain", "a few", "several", "particular"]),
+    # v8.26: "many" → "several" wrong (several ≠ many, different quantity).
+    # "numerous" is formal. "various" is different meaning. Only "multiple" OK but formal.
+    ("many",            ["countless"]),
     ("much",            ["a lot", "plenty", "abundantly", "considerably"]),
+    # v8.26: "very" → "extremely"/"highly"/"deeply"/"terribly"/"remarkably" are formal.
+    # Remove — "very" is core caveman word.
     ("very",            ["extremely", "highly", "deeply", "terribly", "remarkably"]),
-    ("still",           ["nevertheless", "yet", "even so", "nonetheless"]),
-    ("never",           ["not ever", "at no time", "never once"]),
-    ("always",          ["forever", "constantly", "perpetually", "invariably", "ever"]),
+    # v8.26: "still" → "nevertheless"/"even so"/"nonetheless" are formal.
+    # "yet" is OK.
+    ("still",           ["yet"]),
+    # v8.26: "never" → "not ever"/"at no time"/"never once" are multi-word/formal.
+    # Remove — "never" should stay "never".
+    # ("never",           ["not ever", "at no time", "never once"]),
+    # v8.26: "always" → "forever"/"constantly"/"perpetually"/"invariably" are formal.
+    # "ever" is OK.
+    ("always",          ["ever"]),
+    # v8.26: "already" → "previously"/"by now"/"before now" are formal/multi-word.
+    # Remove — "already" should stay.
     ("already",         ["previously", "by now", "before now"]),
 
     # ── Prepositions / spatial words ──
     ("from",            ["out of", "originating from", "derived from"]),
-    ("between",         ["among", "amid", "betwixt"]),
+    # v8.26: "between" → "amid" wrong preposition ("bridge amid sun and life").
+    # "betwixt" is archaic. Only "among" is sometimes OK.
+    ("between",         ["among"]),
     ("before",          ["prior to", "ahead of", "preceding"]),
     ("after",           ["following", "subsequent to", "behind"]),
-    ("during",          ["throughout", "amid", "while", "in the course of"]),
-    ("while",           ["whilst", "during", "as", "even as"]),
-    ("since",           ["because", "as", "ever since", "from the time"]),
+    # v8.26: "during" → "amid" wrong preposition, "in the course of" is multi-word formal.
+    # "throughout" is formal. Only "while" is safe.
+    ("during",          ["while"]),
+    # v8.26: "while" → "whilst" is archaic, "even as" is multi-word.
+    # "during" and "as" are OK.
+    ("while",           ["during", "as"]),
+    # v8.26: "since" → "ever since"/"from the time" are multi-word.
+    # "because" and "as" are OK.
+    ("since",           ["because", "as"]),
     ("until",           ["till", "up to", "as far as"]),
     ("above",           ["over", "on top of", "higher than"]),
     ("below",           ["under", "beneath", "lower than"]),
     ("under",           ["beneath", "below", "underneath"]),
     ("over",            ["above", "on top of", "beyond"]),
-    ("among",           ["between", "amid", "amidst"]),
+    # v8.26: "among" → "amid"/"amidst" wrong register. Only "between" OK.
+    ("among",           ["between"]),
     ("across",          ["spanning", "traversing", "crossing"]),
+    # v8.26: "along" → "beside"/"by"/"following" — "along" in "sits along you"
+    # is already wrong (should be "with"), swapping makes it worse. Remove.
     ("along",           ["beside", "by", "following"]),
     ("against",         ["opposing", "versus", "counter to"]),
     ("within",          ["inside", "in", "contained in"]),
@@ -685,38 +811,62 @@ const _SEED_SYNONYMS_RAW = [
     ("way",             ["path", "route", "method", "manner"]),
     ("hand",            ["paw", "grip", "clasp"]),
     ("hands",           ["paws", "grips", "clasps"]),
-    ("world",           ["earth", "realm", "domain", "globe"]),
-    ("earth",           ["world", "ground", "soil", "land"]),
+    # v8.26: "world" → "realm"/"domain" are formal. "globe" is slightly formal.
+    ("world",           ["earth", "globe"]),
+    # v8.26: "earth" → "ground"/"soil"/"land" change meaning (planet → dirt).
+    # Only "world" is safe bidirectional swap.
+    ("earth",           ["world"]),
+    # v8.26: "fire" → "blaze"/"inferno"/"conflagration" are literary/wrong register.
+    # Only "flame" is sometimes OK but it's already in excluded set.
+    # Remove — "fire" is core caveman word, should not swap.
     ("fire",            ["flame", "blaze", "inferno", "conflagration"]),
-    ("water",           ["rain", "moisture", "liquid", "flow"]),
+    # v8.26: "water" → "rain" wrong in "water is split" context. "moisture" is different.
+    # "liquid" OK in scientific contexts, "flow" is poetic. Keep only "liquid".
+    ("water",           ["liquid"]),
     ("light",           ["glow", "radiance", "illumination", "brightness"]),
-    ("heat",            ["warmth", "fire", "temperature", "glow"]),
-    ("energy",          ["power", "vigor", "force", "strength"]),
-    ("power",           ["energy", "force", "strength", "might"]),
-    ("force",           ["power", "strength", "energy", "might"]),
+    # v8.26: "heat" → "fire" creates circular confusion (fire↔heat↔fire).
+    # "temperature" is clinical, "glow" is poetic. Only "warmth" is safe.
+    ("heat",            ["warmth"]),
+    # v8.26: "energy" → "vigor"/"vitality"/"stamina" are clinical/formal.
+    # "force" and "power" create circular swaps. Keep simple.
+    ("energy",          ["power", "might"]),
+    # v8.26: "power" → "might" is caveman-safe. "energy"/"force"/"strength" are circular.
+    ("power",           ["might", "strength"]),
+    # v8.26: "force" → circular with power/energy. "might" is OK.
+    ("force",           ["might", "strength"]),
     ("life",            ["living", "existence", "being", "survival"]),
     ("living",          ["life", "existence", "being", "survival"]),
     ("cave",            ["den", "lair", "shelter", "dwelling"]),
-    ("people",          ["folk", "humans", "beings", "mortals"]),
+    # v8.26: "people" → "mortals" is literary, "beings" is philosophical.
+    # "folk" and "humans" are OK.
+    ("people",          ["folk", "humans"]),
     ("creature",        ["being", "organism", "beast", "lifeform"]),
     ("creatures",       ["beings", "organisms", "beasts", "lifeforms"]),
     ("body",            ["form", "frame", "physique", "organism"]),
-    ("mind",            ["brain", "intellect", "thought", "consciousness"]),
+    # v8.26: "mind" → "intellect" is formal, "consciousness" is philosophical/wrong register.
+    # "brain" and "thought" are OK.
+    ("mind",            ["brain", "thought"]),
     ("heart",           ["chest", "core", "center", "soul"]),
     ("time",            ["moment", "era", "period", "age"]),
     ("moment",          ["time", "instant", "second", "breath"]),
     ("question",        ["query", "inquiry", "ask"]),
     ("answer",          ["reply", "response", "rejoinder"]),
-    ("truth",           ["fact", "reality", "certainty"]),
-    ("fact",            ["truth", "reality", "certainty", "datum"]),
+    # v8.26: "truth" → "certainty" is philosophical (already in excluded set).
+    # "reality" is philosophical. "fact" is OK.
+    ("truth",           ["fact"]),
+    # v8.26: "fact" → "certainty"/"datum" are formal/scientific. "truth"/"reality" OK.
+    ("fact",            ["truth", "reality"]),
     ("rule",            ["govern", "command", "control", "principle", "decree", "edict"]),
     ("law",             ["statute", "ordinance", "principle", "decree", "edict"]),
     ("path",            ["way", "route", "track", "course"]),
-    ("step",            ["stride", "pace", "stage", "phase"]),
+    # v8.26: "step" → "stride" is literary. "pace"/"stage"/"phase" are OK.
+    ("step",            ["pace", "stage", "phase"]),
     ("thread",          ["strand", "line", "fiber", "connection"]),
     ("risk",            ["danger", "hazard", "peril", "threat"]),
     ("danger",          ["risk", "hazard", "peril", "threat"]),
     ("strength",        ["power", "force", "might", "vigor"]),
+    # v8.26: "fear" → "dread"/"terror"/"anxiety"/"fright" are literary/clinical.
+    # Remove — "fear" is core caveman word.
     ("fear",            ["dread", "terror", "anxiety", "fright"]),
     ("hope",            ["wish", "desire", "aspiration", "longing"]),
     ("trust",           ["faith", "belief", "confidence", "reliance"]),
@@ -739,25 +889,42 @@ const _SEED_SYNONYMS_RAW = [
     ("name",            ["call", "title", "designation", "label"]),
     ("story",           ["tale", "narrative", "account", "chronicle"]),
     ("reason",          ["logic", "rationale", "thinking", "motive"]),
-    ("idea",            ["thought", "concept", "notion", "insight"]),
-    ("thought",         ["idea", "concept", "notion", "reflection"]),
-    ("knowledge",       ["understanding", "wisdom", "learning", "insight"]),
-    ("wisdom",          ["knowledge", "insight", "sagacity", "judgment"]),
-    ("science",         ["study", "discipline", "research", "investigation"]),
+    # v8.26: "idea" → "concept"/"notion"/"insight" are formal. "thought" is OK.
+    ("idea",            ["thought"]),
+    # v8.26: "thought" (noun) → "concept"/"notion"/"reflection" are formal.
+    # "idea" is OK.
+    ("thought",         ["idea"]),
+    # v8.26: "knowledge" → "wisdom" cascades to "sagacity". "insight" is formal.
+    # "learning" is different meaning. "understanding" is OK.
+    ("knowledge",       ["understanding"]),
+    # v8.26: "wisdom" → "sagacity" is archaic (comment said removed but wasn't).
+    # "judgment" is formal. "insight" already excluded. Keep only "knowledge".
+    ("wisdom",          ["knowledge"]),
+    # v8.26: "science" → "discipline"/"research"/"investigation" are formal.
+    # Only "study" is caveman-safe.
+    ("science",         ["study"]),
+    # v8.26: "nature" → "wilderness"/"environment"/"ecosystem" are formal/wrong register.
+    # "the wild" is multi-word. Remove — "nature" should not swap.
     ("nature",          ["wilderness", "environment", "ecosystem", "the wild"]),
     ("forest",          ["woods", "woodland", "grove", "thicket"]),
     ("river",           ["stream", "waterway", "current", "flow"]),
     ("sky",             ["heavens", "firmament", "atmosphere", "above"]),
-    ("ground",          ["earth", "soil", "terrain", "land"]),
+    # v8.26: "ground" → "terrain" is formal. Keep "earth", "soil", "land".
+    ("ground",          ["earth", "soil", "land"]),
+    # v8.26: "soil" → "dirt" is colloquial but OK. "terrain" is formal.
     ("soil",            ["earth", "dirt", "ground", "land"]),
     ("rock",            ["stone", "boulder", "mineral"]),
     ("stone",           ["rock", "boulder", "mineral"]),
-    ("sun",             ["star", "daystar", "light source"]),
+    # v8.26: "sun" → "star" wrong in "sunlight"/"sun energy" context.
+    # "daystar" is archaic. "light source" is multi-word. Remove entirely.
+    # ("sun",             ["star", "daystar", "light source"]),
     ("moon",            ["luna", "satellite", "night light"]),
     ("star",            ["sun", "celestial body", "light"]),
     ("air",             ["atmosphere", "breath", "wind", "breeze"]),
     ("wind",            ["breeze", "gust", "air", "draft"]),
-    ("rain",            ["downpour", "precipitation", "shower", "drizzle"]),
+    # v8.26: "rain" → "drizzle" wrong register, "downpour" is different scale.
+    # "shower" is ambiguous. Only "precipitation" is OK for science context.
+    ("rain",            ["precipitation"]),
     ("tree",            ["timber", "sapling", "oak", "trunk"]),
     ("ocean",           ["sea", "deep", "abyss", "waters"]),
     ("sea",             ["ocean", "deep", "waters", "marine"]),
@@ -768,7 +935,9 @@ const _SEED_SYNONYMS_RAW = [
     # "like" as preposition (shaped like...) → "such as" / "akin to"
     # NOT "enjoy" (that's the verb sense, breaks in prepositional context)
     ("like",            ["akin to", "similar to", "such as", "resembling"]),
-    ("right",           ["correct", "proper", "fitting", "just", "true"]),
+    # v8.26b: "just" is wrong — "fits so just" is incoherent. "correct"/"proper"/"fitting" are formal.
+    # Only "true" is OK for caveman voice.
+    ("right",           ["true"]),
     ("future",          ["ahead", "what comes", "what lies ahead", "time to come"]),
     ("gentle",          ["tender", "mild", "soft", "kind", "delicate"]),
 ]

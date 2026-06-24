@@ -1349,7 +1349,7 @@ function compute_context_weight(;
     lobe_activation_depth::Float64 = 0.0,
     winner_strength::Float64 = 0.0,
     inhibition_hits::Int = 0,
-    anti_match_detected::Bool = false,
+    anti_match_detected::Bool = false,  # GRUG v8.26h: LEGACY — antimatch nodes removed
     memory_intensity::Float64 = 0.0
 )::Float64
     # GRUG: Normalize each dimension to [0, 1] then weighted sum.
