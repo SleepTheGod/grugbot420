@@ -515,6 +515,15 @@ const _HIPPOCAMPAL_PENDING_ASK_LOCK = ReentrantLock()
 # next input is then matched against this pending state to create the right node.
 # Format: Dict with keys "topic" (what was asked about), "asked_at" (time()),
 # and "ask_text" (the question Grug asked). Empty dict = no pending teach.
+#
+# GRUG v9.1: TRANSIENT MULTI-TOPIC MEMORY — a single compound/multipart question
+# can leave MORE THAN ONE sub-topic unknown at once (e.g. "what is X and what is Y"
+# where Grug knows neither). _CONV_PENDING_TEACH_QUEUE is a FIFO queue of pending
+# topics so all of them are tracked simultaneously instead of the older single-slot
+# design clobbering earlier asks. _CONV_PENDING_TEACH is kept as a read-mostly
+# MIRROR of queue[1] (the "active" topic — the one the next plain teaching answer
+# maps to) so all existing single-topic call sites keep working unmodified.
+const _CONV_PENDING_TEACH_QUEUE = Ref(Vector{Dict{String,Any}}())
 const _CONV_PENDING_TEACH      = Ref(Dict{String,Any}())
 const _CONV_PENDING_TEACH_LOCK = ReentrantLock()
 
@@ -1160,6 +1169,175 @@ Must NOT match:
 # GRUG v9: Compound question prescan result — holds sub-intents for compound questions.
 const _COMPOUND_SUB_INTENTS = Ref{Vector{Tuple{Symbol, String, String, String}}}(Vector{Tuple{Symbol, String, String, String}}())
 
+"""
+    _conv_pending_teach_turn(t::AbstractString) -> (Symbol, Any)
+
+GRUG v9.3: SINGLE SOURCE OF TRUTH for classifying (and, where appropriate,
+resolving) a user's turn against Grug's currently pending teach-clarification
+state. Extracted out of the greedy-waterfall fallback so BOTH the fast
+RoutingJudge path (`RoutingJudge.collect_intents`, via the lazy
+`_parent_binding` pattern) and the greedy-waterfall fallback call the EXACT
+SAME logic instead of maintaining two independent copies.
+
+This refactor fixes real behavioral drift that existed because RoutingJudge
+resolves BEFORE the greedy waterfall ever runs, so its (previously inline,
+now-removed) reimplementation was actually the one deciding outcomes in
+practice:
+  - RoutingJudge's ack-word set was missing "idk" / "dunno" / "i don't know"
+    (only had yes/no/ok-family words) — so answering "idk" to a
+    clarification question was being silently TAUGHT as the literal
+    definition ("X means idk") instead of being treated as a decline.
+  - RoutingJudge never implemented "bare subject-word" detection (e.g.
+    replying just "math" to "what subject is it?") — it would instead be
+    taught as the full (wrong) definition immediately, skipping the
+    follow-up "what does X mean?" question the greedy waterfall correctly
+    asks.
+  - RoutingJudge never carried forward a previously-supplied subject when
+    the user later replies with just the definition.
+Being lazy/conservative here means treating these ambiguous replies
+identically no matter which internal path happens to handle the turn.
+
+Returns `(status, payload)` where `status` is one of:
+  `:no_pending`   — no pending teach state at all. payload = nothing.
+  `:fall_through` — pending state exists but doesn't govern this turn
+                    (expired, topic-shift question, or topic mismatch).
+                    Any state mutation (clearing) has already been applied.
+                    Caller should proceed with NORMAL turn processing.
+  `:declined`     — user acknowledged/declined without teaching. Side
+                    effects (popping the queue, printing the next queued
+                    ask if any) already applied. Caller should treat this
+                    turn as fully handled — no further processing needed.
+  `:teach`        — a definition (with or without subject) was extracted.
+                    payload = `(:teach, topic, def, subj)` tuple, ready to
+                    return directly from `_conversation_prescan` (or wrap
+                    in an `IntentCandidate`).
+  `:unparsed`     — pending state is active but nothing above matched (the
+                    reply was neither a decline nor a parseable
+                    subject/definition). Caller should fall through to
+                    normal processing, same as `:fall_through`.
+"""
+function _conv_pending_teach_turn(t::AbstractString)
+    _pending = _conv_get_pending_teach()
+    if isempty(_pending)
+        return (:no_pending, nothing)
+    end
+
+    if _conv_pending_teach_is_expired()
+        _conv_clear_pending_teach!()
+        CaveJournal.cave_print("[CONV-TEACH] ⏰ Pending teach state expired — clearing"; tag="TEACH", emoji="📝")
+        return (:fall_through, nothing)
+    end
+
+    # GRUG v8.28d: TOPIC SHIFT DETECTION — if the user's input is itself
+    # a question, they've moved on from the pending teach topic.
+    _looks_like_question = match(r"^(?:what|who|where|when|why|how|which)\b"i, t) !== nothing || occursin('?', t)
+    if _looks_like_question
+        _conv_clear_pending_teach!()
+        CaveJournal.cave_print("[CONV-TEACH] 🔄 User asked new question — clearing pending teach state"; tag="TEACH", emoji="📝")
+        return (:fall_through, nothing)
+    end
+
+    # GRUG: Topic mismatch — "X is/are/means Y" where X isn't related to the
+    # pending topic means the user is defining something else entirely.
+    # GRUG v9.3 fix: must NOT treat a leading pronoun/stopword ("it is a game
+    # where...", "this is how...", "that means...") as a genuine competing
+    # topic — those are exactly the plain "definition-only, no subject"
+    # answers this whole pending-teach flow exists to handle. Reuse the same
+    # stopword set _extract_teach_parts already validates subjects against,
+    # so both places agree on what counts as a "real" topic word.
+    _define_match = match(r"^([^\s]+(?:\s+[^\s]+){0,2})\s+(?:is|are|means|refers\s+to)\s+"i, t)
+    if _define_match !== nothing
+        _input_topic = lowercase(String(strip(_define_match.captures[1])))
+        _topic_stop = Set([
+            "it", "this", "that", "the", "a", "an", "there", "here",
+            "he", "she", "they", "we", "i", "you",
+        ])
+        if !(_input_topic in _topic_stop)
+            _pending_topic = lowercase(String(get(_pending, "topic", "")))
+            if !isempty(_pending_topic)
+                _topics_related = occursin(_pending_topic, _input_topic) || occursin(_input_topic, _pending_topic)
+                if !_topics_related
+                    return (:fall_through, nothing)
+                end
+            end
+        end
+    end
+
+    # CHECK 1: Acknowledgment words (must be checked BEFORE parsing, because
+    # _extract_teach_parts("idk") returns ("", "idk") which looks like a
+    # definition-only answer).
+    _lower_t = lowercase(strip(t))
+    _ack_words = Set([
+        "yes", "yeah", "yep", "ok", "okay", "sure", "right",
+        "no", "nope", "nah", "idk", "i don't know", "dunno",
+    ])
+    if _lower_t in _ack_words
+        # GRUG v9.1: User acknowledged/declined but didn't teach. Pop just
+        # the ACTIVE topic — if other sub-topics from a compound/multipart
+        # turn are still queued, keep asking about them.
+        _declined_entry = _conv_pop_pending_teach!()
+        _still_left = _conv_get_pending_teach_queue()
+        if !isempty(_still_left)
+            _next_ask_text = String(get(first(_still_left), "ask_text", ""))
+            CaveJournal.cave_print("[CONV-TEACH] 👋 Declined '$(get(_declined_entry, "topic", ""))' — still asking about $(length(_still_left)) more"; tag="TEACH", emoji="📝")
+            if !isempty(_next_ask_text)
+                lock(_LAST_VOICE_OUTPUT_LOCK) do
+                    _LAST_VOICE_OUTPUT[] = _next_ask_text
+                end
+            end
+        end
+        return (:declined, nothing)
+    end
+
+    # CHECK 2: Subject-only input detection.
+    _topic = String(get(_pending, "topic", ""))
+    _subj, _def = _extract_teach_parts(t)
+
+    # GRUG: If the user just said the subject alone (e.g., "math"), we still
+    # need a definition. Ask again for the definition.
+    if !isempty(_subj) && isempty(_def)
+        _conv_update_active_pending_teach!(_topic, "What does $_topic mean?"; subject=_subj)
+        return (:teach, (:teach, _topic, "", _subj))
+    end
+
+    # GRUG: Bare-word subject detection — when _extract_teach_parts can't
+    # find a separator, it returns ("", bare_word). Check if the bare word
+    # looks like a subject rather than a definition.
+    if isempty(_subj) && !isempty(_def)
+        _def_words = split(_def)
+        if length(_def_words) == 1
+            _def_lower = lowercase(_def)
+            _known_subjects = Set([
+                "math", "mathematics", "science", "physics", "chemistry",
+                "biology", "history", "philosophy", "language", "nature",
+                "technology", "emotion", "psychology", "geography",
+                "art", "music", "literature", "computing", "engineering",
+            ])
+            if _def_lower in _known_subjects
+                _conv_update_active_pending_teach!(_topic, "What does $_topic mean?"; subject=_def_lower)
+                return (:teach, (:teach, _topic, "", _def_lower))
+            end
+        end
+    end
+
+    # GRUG: If the user gave a definition but no subject, check if a subject
+    # was stored from a previous round (subject-only input).
+    if isempty(_subj) && !isempty(_def)
+        _prev_subject = get(_pending, "subject", "")
+        if !isempty(_prev_subject)
+            _subj = String(_prev_subject)
+        end
+    end
+
+    if !isempty(_def)
+        return (:teach, (:teach, _topic, _def, _subj))
+    end
+
+    # GRUG: Neither subject nor definition was parseable. Not a teach
+    # response after all — fall through to normal processing.
+    return (:unparsed, nothing)
+end
+
 function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, String, String, String}}
     t = strip(text)
 
@@ -1271,8 +1449,21 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
                 _ack_words = Set(["yes", "yeah", "yep", "ok", "okay", "sure", "right",
                                   "no", "nope", "nah", "idk", "i don't know", "dunno"])
                 if _lower_t in _ack_words
-                    # User acknowledged but didn't teach. Clear pending, move on.
-                    _conv_clear_pending_teach!()
+                    # GRUG v9.1: User acknowledged/declined but didn't teach.
+                    # Pop just the ACTIVE topic — if other sub-topics from a
+                    # compound/multipart turn are still queued, keep asking
+                    # about them instead of wiping the whole transient memory.
+                    _declined_entry = _conv_pop_pending_teach!()
+                    _still_left = _conv_get_pending_teach_queue()
+                    if !isempty(_still_left)
+                        _next_ask_text = String(get(first(_still_left), "ask_text", ""))
+                        CaveJournal.cave_print("[CONV-TEACH] 👋 Declined '$(get(_declined_entry, "topic", ""))' — still asking about $(length(_still_left)) more"; tag="TEACH", emoji="📝")
+                        if !isempty(_next_ask_text)
+                            lock(_LAST_VOICE_OUTPUT_LOCK) do
+                                _LAST_VOICE_OUTPUT[] = _next_ask_text
+                            end
+                        end
+                    end
                     return nothing
                 end
 
@@ -1284,12 +1475,10 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
                 # GRUG: If the user just said the subject alone (e.g., "math"),
                 # we still need a definition. Ask again for the definition.
                 if !isempty(_subj) && isempty(_def)
-                    # Update the pending state with the subject, ask for definition
-                    _conv_set_pending_teach!(_topic, "What does $_topic mean?")
-                    # Store the subject for the next round
-                    lock(_CONV_PENDING_TEACH_LOCK) do
-                        _CONV_PENDING_TEACH[]["subject"] = _subj
-                    end
+                    # Update the pending state with the subject, ask for definition.
+                    # GRUG v9.1: in-place update (front entry only) so any OTHER
+                    # still-pending compound sub-topics stay queued untouched.
+                    _conv_update_active_pending_teach!(_topic, "What does $_topic mean?"; subject=_subj)
                     return (:teach, _topic, "", _subj)
                 end
 
@@ -1309,10 +1498,8 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
                         ])
                         if _def_lower in _known_subjects
                             # This is a subject-only answer, not a definition
-                            _conv_set_pending_teach!(_topic, "What does $_topic mean?")
-                            lock(_CONV_PENDING_TEACH_LOCK) do
-                                _CONV_PENDING_TEACH[]["subject"] = _def_lower
-                            end
+                            # GRUG v9.1: in-place update — preserves other pending sub-topics.
+                            _conv_update_active_pending_teach!(_topic, "What does $_topic mean?"; subject=_def_lower)
                             return (:teach, _topic, "", _def_lower)
                         end
                     end
@@ -3013,6 +3200,13 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             if InputQueue.is_inhibited(String(c_clean))
                 return false
             end
+            # GRUG v9.4: Context ledger — reject this SPECIFIC (word,
+            # synonym) pair if it's a known-bad register/context swap
+            # ("deep"->"abyss", "keep"->"store", etc.), even though
+            # neither word is wholesale-inhibited.
+            if InputQueue.is_synonym_blocked(clean, c_clean)
+                return false
+            end
             if c_clean in drop_table
                 return false
             end
@@ -3147,6 +3341,12 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                 if InputQueue.is_inhibited(c)
                     return false
                 end
+                # GRUG v9.4: Context ledger — same anti-stale-but-not-stupid
+                # guard as _pick_synonym. Orchestration freshness must not
+                # produce a known-bad register swap.
+                if InputQueue.is_synonym_blocked(clean, c)
+                    return false
+                end
                 if c in drop_table
                     return false
                 end
@@ -3227,6 +3427,10 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             _ht_orig_len = length(clean)
             allowed = filter(candidates) do c
                 if InputQueue.is_inhibited(c)
+                    return false
+                end
+                # GRUG v9.4: Context ledger guard — see _pick_synonym note.
+                if InputQueue.is_synonym_blocked(clean, c)
                     return false
                 end
                 if c in drop_table
@@ -3335,6 +3539,15 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
             _orig_len = length(clean)
             allowed = filter(candidates) do c
                 if InputQueue.is_inhibited(c)
+                    return false
+                end
+                # GRUG v9.4: Context ledger — this is the exact mechanism the
+                # user asked for: "for orchestration a bunch of random words
+                # are selected from the output and thesaurus swapped, random
+                # eligible words that have alternatives in memory" — the
+                # eligibility check must also reject known-bad (word,synonym)
+                # register/context swaps, not just wholesale-inhibited words.
+                if InputQueue.is_synonym_blocked(clean, c)
                     return false
                 end
                 if c in drop_table
@@ -3483,7 +3696,20 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                     # Lowercase the first letter after the hedge
                     orig = result[idx]
                     if length(orig) > 1
-                        result[idx] = "$(hedge), $(lowercase(orig[1:1]))$(orig[2:end])"
+                        # GRUG v8.23: COHERENCE FIX \u2014 Unicode-safe first-char
+                        # slicing. orig[1:1]/orig[2:end] assumed single-byte
+                        # ASCII chars; when orig starts with a multi-byte
+                        # character (e.g. the \u26a0\ufe0f warning emoji from
+                        # :alert nodes), that raw byte-index slicing threw
+                        # StringIndexError (byte index 2/3 lands mid-character
+                        # inside a 4-byte UTF-8 codepoint). iterate() gives us
+                        # the real first *character* (however many bytes wide)
+                        # plus the correct next valid byte-index for the rest,
+                        # which is safe for both ASCII and multi-byte leads.
+                        _fc, _fi = iterate(orig)
+                        _first_char = string(_fc)
+                        _rest = orig[_fi:end]
+                        result[idx] = "$(hedge), $(lowercase(_first_char))$(_rest)"
                     end
                 end
 
@@ -3555,7 +3781,13 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                     # Pattern 4: Generic prefix reframe if nothing else matched
                     if !reframed && length(orig) > 20
                         frame = rand(["What matters here is that", "The heart of it is", "At its core,", "Simply put,"])
-                        result[idx] = "$(frame) $(lowercase(orig[1:1]))$(orig[2:end])"
+                        # GRUG v8.23: COHERENCE FIX \u2014 same Unicode-safe
+                        # first-char handling as the hedge_insert branch above
+                        # (via iterate(), not byte-index slicing).
+                        _fc2, _fi2 = iterate(orig)
+                        _first_char2 = string(_fc2)
+                        _rest2 = orig[_fi2:end]
+                        result[idx] = "$(frame) $(lowercase(_first_char2))$(_rest2)"
                     end
                 end
             end
@@ -5501,8 +5733,47 @@ function _conversation_answer_question(topic::String)::Union{String, Nothing}
             if _score > _best_score && _score >= 0.3
                 _best_score = _score
                 _best_source = _gs
-                # Extract answer content
-                if !isempty(_sp)
+                # GRUG v9.4: COHERENCE FIX — action nodes compute, they don't
+                # recite. A node with a registered action_callback (e.g. the
+                # built-in "factorial of &n" / "square of &n" seeds, OR a
+                # freshly conversation-taught computable procedure like
+                # "gorbling of &n") carries a terse placeholder system_prompt
+                # ("Grug.") on purpose — the REAL answer is computed at match
+                # time from sigil bindings, not stored as static text. Before
+                # this fix, the organic :question path (this function) never
+                # invoked the callback and just returned that placeholder
+                # verbatim, so "what is factorial of 5" organically answered
+                # "Grug." instead of "Factorial of 5 = 120" — even though the
+                # exact same action_callback correctly computes the value
+                # when reached via the sigil voting/orchestration pipeline
+                # (Stage 2b in the primary claim-forming path) or the
+                # dedicated :calculate route. Fix: if the candidate node has
+                # an action_callback, try to promote the ORIGINAL topic text
+                # through SigilPromoter to recover the numeric binding(s),
+                # then call ActionEngine.compute_action directly and use the
+                # formatted result as the answer — falling back to the old
+                # placeholder-text behavior only if promotion/computation
+                # doesn't succeed (lazy/conservative: don't break working
+                # cases, only improve the ones that were silently wrong).
+                _act_cb = String(get(_node.json_data, "action_callback", ""))
+                _computed_answer = nothing
+                if !isempty(_act_cb) && ActionEngine.has_action_callback(_act_cb)
+                    try
+                        _, _q_bindings = SigilPromoter.promote_input(_ENGINE_SIGIL_TABLE, String(strip(topic)))
+                        if !isempty(_q_bindings)
+                            _q_result = ActionEngine.compute_action(_act_cb, _q_bindings)
+                            if _q_result.error === nothing
+                                _computed_answer = ActionEngine.format_action_reply(_q_result)
+                            end
+                        end
+                    catch _
+                        _computed_answer = nothing
+                    end
+                end
+
+                if _computed_answer !== nothing
+                    _best_answer = _computed_answer
+                elseif !isempty(_sp)
                     if startswith(_sp, "Grug. ") && length(_sp) > 6
                         _content = _sp[7:end]
                         if endswith(_content, ".")
@@ -5895,21 +6166,96 @@ end
 GRUG v8.28: Set the pending teach state. Called when Grug encounters an
 unknown topic and asks the user for clarification. The state tracks what
 was asked about so the next input can be matched as a teaching response.
+
+GRUG v9.1: This REPLACES the whole queue with a single entry (the classic
+single-topic behavior). Use `_conv_enqueue_pending_teach!` instead when you
+want to ADD an unknown topic without wiping other still-pending topics
+(the compound/multipart clarification case).
 """
 function _conv_set_pending_teach!(topic::AbstractString, ask_text::AbstractString)
     lock(_CONV_PENDING_TEACH_LOCK) do
-        _CONV_PENDING_TEACH[] = Dict{String,Any}(
+        _entry = Dict{String,Any}(
             "topic"    => topic,
             "asked_at" => time(),
             "ask_text" => ask_text,
         )
+        _CONV_PENDING_TEACH_QUEUE[] = Dict{String,Any}[_entry]
+        _CONV_PENDING_TEACH[] = copy(_entry)
+    end
+end
+
+"""
+    _conv_enqueue_pending_teach!(topic::String, ask_text::String; subject::String="")
+
+GRUG v9.1: TRANSIENT MULTI-TOPIC MEMORY. Adds a new pending-unknown topic to
+the back of the queue WITHOUT clobbering other topics already pending —
+this is what lets a single compound/multipart turn ("what is X also what is Y"
+where both X and Y are unknown) track BOTH as separate outstanding asks.
+De-duplicates by topic (case-insensitive) — re-asking about the same topic
+just refreshes its timestamp instead of creating a second entry.
+The FRONT of the queue is always mirrored into `_CONV_PENDING_TEACH` — that's
+the "active" topic that a plain (no-subject-prefix) teaching reply maps to.
+"""
+function _conv_enqueue_pending_teach!(topic::AbstractString, ask_text::AbstractString; subject::AbstractString="")
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        _q = _CONV_PENDING_TEACH_QUEUE[]
+        _tlow = lowercase(strip(topic))
+        _idx = findfirst(e -> lowercase(strip(get(e, "topic", ""))) == _tlow, _q)
+        _entry = Dict{String,Any}(
+            "topic"    => topic,
+            "asked_at" => time(),
+            "ask_text" => ask_text,
+        )
+        if !isempty(subject)
+            _entry["subject"] = subject
+        end
+        if _idx === nothing
+            push!(_q, _entry)
+        else
+            _q[_idx] = _entry  # refresh timestamp/ask_text, keep position
+        end
+        _CONV_PENDING_TEACH_QUEUE[] = _q
+        _CONV_PENDING_TEACH[] = copy(first(_q))
+    end
+end
+
+"""
+    _conv_update_active_pending_teach!(topic::String, ask_text::String; subject::String="")
+
+GRUG v9.1: Update the ACTIVE (front-of-queue) pending-teach entry IN PLACE —
+used when the user only gave part of the answer (e.g. just a subject, still
+need the definition) and Grug needs to re-ask about the SAME topic. Unlike
+`_conv_set_pending_teach!`, this does NOT wipe out any OTHER sub-topics still
+queued from a compound/multipart ask — it only refreshes the front entry.
+If the queue is empty, this behaves like a fresh single-topic set.
+"""
+function _conv_update_active_pending_teach!(topic::AbstractString, ask_text::AbstractString; subject::AbstractString="")
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        _q = _CONV_PENDING_TEACH_QUEUE[]
+        _entry = Dict{String,Any}(
+            "topic"    => topic,
+            "asked_at" => time(),
+            "ask_text" => ask_text,
+        )
+        if !isempty(subject)
+            _entry["subject"] = subject
+        end
+        if isempty(_q)
+            _q = Dict{String,Any}[_entry]
+        else
+            _q[1] = _entry
+        end
+        _CONV_PENDING_TEACH_QUEUE[] = _q
+        _CONV_PENDING_TEACH[] = copy(first(_q))
     end
 end
 
 """
     _conv_get_pending_teach() -> Dict{String,Any}
 
-GRUG v8.28: Get the current pending teach state. Returns empty dict if none.
+GRUG v8.28: Get the current ACTIVE pending teach state (front of queue).
+Returns empty dict if none. All existing single-topic call sites keep
+working exactly as before against this mirror.
 """
 function _conv_get_pending_teach()::Dict{String,Any}
     lock(_CONV_PENDING_TEACH_LOCK) do
@@ -5918,21 +6264,80 @@ function _conv_get_pending_teach()::Dict{String,Any}
 end
 
 """
+    _conv_get_pending_teach_queue() -> Vector{Dict{String,Any}}
+
+GRUG v9.1: Get a COPY of the full transient pending-teach queue — every
+sub-topic still awaiting a teaching answer, in ask order (oldest/active first).
+"""
+function _conv_get_pending_teach_queue()::Vector{Dict{String,Any}}
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        return [copy(e) for e in _CONV_PENDING_TEACH_QUEUE[]]
+    end
+end
+
+"""
+    _conv_pending_teach_queue_size() -> Int
+
+GRUG v9.1: How many sub-topics are currently pending a teaching answer.
+"""
+function _conv_pending_teach_queue_size()::Int
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        return length(_CONV_PENDING_TEACH_QUEUE[])
+    end
+end
+
+"""
     _conv_clear_pending_teach!()
 
-GRUG v8.28: Clear the pending teach state. Called when the teaching response
-is processed or when the state expires.
+GRUG v8.28: Clear ALL pending teach state (the whole transient queue, not
+just the active/front entry). Called when the teaching response is fully
+processed with nothing left pending, or when the active entry expires,
+or on topic-shift detection.
 """
 function _conv_clear_pending_teach!()
     lock(_CONV_PENDING_TEACH_LOCK) do
+        _CONV_PENDING_TEACH_QUEUE[] = Dict{String,Any}[]
         _CONV_PENDING_TEACH[] = Dict{String,Any}()
+    end
+end
+
+"""
+    _conv_pop_pending_teach!(topic::AbstractString="")
+
+GRUG v9.1: Pop ONE entry from the transient pending-teach queue — the one
+matching `topic` (case-insensitive) if given and found, otherwise the front
+entry (the active one, matching prior single-topic semantics). Re-syncs the
+`_CONV_PENDING_TEACH` mirror to the new front of the queue (or clears it if
+the queue is now empty). Returns the popped entry (empty Dict if nothing to pop),
+so callers can inspect what was just taught.
+
+This is the key primitive that lets "grug knows part, ask only for what he
+doesn't" keep working turn-by-turn: teaching ONE sub-topic doesn't wipe out
+the OTHER sub-topics still waiting to be taught — they stay queued and Grug
+keeps asking about them ("and so on") until the queue drains.
+"""
+function _conv_pop_pending_teach!(topic::AbstractString="")::Dict{String,Any}
+    lock(_CONV_PENDING_TEACH_LOCK) do
+        _q = _CONV_PENDING_TEACH_QUEUE[]
+        isempty(_q) && return Dict{String,Any}()
+        _idx = 1
+        if !isempty(topic)
+            _tlow = lowercase(strip(topic))
+            _found = findfirst(e -> lowercase(strip(get(e, "topic", ""))) == _tlow, _q)
+            _idx = _found === nothing ? 1 : _found
+        end
+        _popped = _q[_idx]
+        deleteat!(_q, _idx)
+        _CONV_PENDING_TEACH_QUEUE[] = _q
+        _CONV_PENDING_TEACH[] = isempty(_q) ? Dict{String,Any}() : copy(first(_q))
+        return copy(_popped)
     end
 end
 
 """
     _conv_pending_teach_is_expired() -> Bool
 
-GRUG v8.28: Check if the pending teach state has expired.
+GRUG v8.28: Check if the ACTIVE pending teach state has expired.
 Teach state expires after 120 seconds (2 minutes) of inactivity.
 If the user doesn't answer within that time, we clear it and
 resume normal conversation flow.
@@ -5946,6 +6351,92 @@ function _conv_pending_teach_is_expired()::Bool
         _asked_at = get(_pt, "asked_at", 0.0)
         return (time() - _asked_at) > 120.0
     end
+end
+
+# ==============================================================================
+# GRUG v9.1: THESAURUS-AWARE "DOES GRUG ACTUALLY KNOW THIS" CHECK
+# ==============================================================================
+# Before declaring a compound/multipart sub-topic "unknown" and queueing a
+# clarification ask, consult the Thesaurus so a synonymous phrasing of
+# something Grug ALREADY knows doesn't trigger a spurious "I don't know".
+# E.g. if Grug knows "gather" and is asked about "forage", these are close
+# enough (Thesaurus.synonym_lookup / word_similarity) that Grug should
+# answer using the known word rather than asking to be taught again.
+# ==============================================================================
+
+const _THESAURUS_KNOWLEDGE_FLOOR = 0.70  # same floor PettyLearner uses for petty-thesaurus fast path
+
+"""
+    _conv_thesaurus_known_match(topic::String) -> Union{Tuple{String,Float64}, Nothing}
+
+GRUG v9.1: Search every word Grug already has a dictionary definition for,
+and return the best (word, score) match by Thesaurus.synonym_lookup against
+`topic`, if the score clears `_THESAURUS_KNOWLEDGE_FLOOR`. Returns `nothing`
+if no known word is a close-enough synonym.
+"""
+function _conv_thesaurus_known_match(topic::AbstractString)::Union{Tuple{String,Float64}, Nothing}
+    _t = lowercase(strip(topic))
+    isempty(_t) && return nothing
+    # GRUG: multi-word topics — try the whole phrase first, then fall back to
+    # its most "contentful" token (longest word), since synonym_lookup/word_similarity
+    # are word-level comparisons.
+    _candidates_text = String[_t]
+    _toks = filter(w -> length(w) > 2, split(_t, r"[\s_]+"))
+    if !isempty(_toks)
+        push!(_candidates_text, String(_toks[argmax(length.(_toks))]))
+    end
+
+    _known_words = _dict_all_words()
+    isempty(_known_words) && return nothing
+
+    _best_word = ""
+    _best_score = 0.0
+    for _cand in _candidates_text
+        isempty(strip(_cand)) && continue
+        for _kw in _known_words
+            _kw == _cand && continue  # exact match already handled by dict lookup upstream
+            try
+                _score = Thesaurus.synonym_lookup(_cand, _kw)
+                if _score > _best_score
+                    _best_score = _score
+                    _best_word = _kw
+                end
+            catch _
+                continue
+            end
+        end
+    end
+
+    if _best_score >= _THESAURUS_KNOWLEDGE_FLOOR && !isempty(_best_word)
+        return (_best_word, _best_score)
+    end
+    return nothing
+end
+
+"""
+    _conv_answer_question_thesaurus_aware(topic::String) -> Union{String, Nothing}
+
+GRUG v9.1: Like `_conversation_answer_question`, but with a thesaurus-aware
+fallback: if the direct organic lookup finds nothing, check whether `topic`
+is a close synonym of a word Grug ALREADY knows (dictionary-defined) and,
+if so, answer using that known word instead of declaring ignorance.
+This is what stops synonymous phrasings from producing false "don't know"
+clarification asks in the compound/multipart teach loop.
+"""
+function _conv_answer_question_thesaurus_aware(topic::AbstractString)::Union{String, Nothing}
+    _direct = _conversation_answer_question(topic)
+    _direct !== nothing && return _direct
+
+    _match = _conv_thesaurus_known_match(topic)
+    if _match !== nothing
+        _known_word, _score = _match
+        _def = _dict_lookup_word(_known_word)
+        if _def !== nothing
+            CaveJournal.cave_print("[CONV-THESAURUS] 🧵 '$(topic)' ~ '$(_known_word)' (score=$(round(_score, digits=2))) — answering via synonym"; tag="THESAURUS", emoji="🧵")
+            return "📖 $(strip(topic)) (like '$(_known_word)'): $(_def)"
+        end
+    end
+    return nothing
 end
 
 """
@@ -6823,6 +7314,7 @@ InvSigil : /inverseStatus                     (show inverse table summary)
 Thesaurus: /thesaurus <word1> | <word2>        (compare words/concepts dimensionally)
          : /thesaurus <w1> | <w2> :: <ctx1> :: <ctx2>  (with context lists)
 NegThes  : /negativeThesaurus add|remove|list|check|flush
+         : /negativeThesaurus addPair|removePair|listPairs|checkPair|flushPairs <w>|<syn> (context edge cases)
 Bridge   : /nodeBridge <lobe> <n_a> <n_b> [seam...]  (bridge two nodes bidirectionally, max 4/node)
          : /nodeUnbridge <lobe> <n_a> <n_b>             (remove bidirectional bridge)
          : /nodeAttach / /nodeDetach                     (backward compat aliases)
@@ -6963,6 +7455,15 @@ const HELP_MSG = """
 ║  /negativeThesaurus list                                    ║
 ║  /negativeThesaurus check <word>                            ║
 ║  /negativeThesaurus flush                                   ║
+║                                                              ║
+║  NEGATIVE THESAURUS PAIRS (CONTEXT EDGE-CASE LEDGER)        ║
+║  /negativeThesaurus addPair <w> | <syn> [--reason <t>]      ║
+║    [--oneway]  (bidirectional by default; either side may   ║
+║    be a multi-word phrase, e.g. "you're" | "you are")       ║
+║  /negativeThesaurus removePair <w> | <syn>                  ║
+║  /negativeThesaurus listPairs                               ║
+║  /negativeThesaurus checkPair <w> | <syn>                   ║
+║  /negativeThesaurus flushPairs                              ║
 ║                                                              ║
 ║  RELATIONAL FIRE (CASCADE BRIDGES)                           ║
 ║  /nodeBridge <lobe> <node_a> <node_b> [seam...]             ║
@@ -7123,6 +7624,42 @@ const LAST_VOTER_LOCK = ReentrantLock()
 const LAST_CONTRIBUTOR_IDS = String[]  # Node IDs that actually contributed to output (fired) — DEPRECATED, kept for /wrong compat
 const LAST_CONTRIBUTOR_VOTES = Vote[]  # v7.23: Vote objects from contributors (preserves confidence for tiered /right)
 const LAST_LOCKED_NODE_IDS = Set{String}()  # v7.23: Node IDs that were in sure_votes (locked-in, guaranteed /right reward)
+
+# GRUG v9.3: ROUTING SELF-IMPROVEMENT — remember which conversational intent
+# kind `_conversation_prescan` routed the LAST turn to (:question, :teach,
+# :calculate, :define, :correct, ... or `:none` when the prescan didn't fire
+# at all, i.e. the AIML-payload/vote pipeline handled it instead). /right and
+# /wrong read this and feed it back into RoutingJudge.record_routing_outcome!
+# so the routing bias slowly adapts toward whatever routing path the user
+# actually confirms is working. `:none` outcomes are not fed back — there's
+# no routing decision to credit or blame if the prescan never matched.
+const _LAST_ROUTED_INTENT_KIND = Ref{Symbol}(:none)
+const _LAST_ROUTED_INTENT_LOCK = ReentrantLock()
+
+"""
+    _set_last_routed_intent!(kind::Symbol)
+
+Record the intent kind the conversational prescan routed to this turn.
+Called right after `_conversation_prescan` returns a non-nothing result.
+"""
+function _set_last_routed_intent!(kind::Symbol)
+    lock(_LAST_ROUTED_INTENT_LOCK) do
+        _LAST_ROUTED_INTENT_KIND[] = kind
+    end
+    return nothing
+end
+
+"""
+    _get_last_routed_intent()::Symbol
+
+Read the intent kind routed on the last turn (`:none` if the prescan didn't
+fire this turn — e.g. the raw AIML-payload/vote pipeline handled it).
+"""
+function _get_last_routed_intent()::Symbol
+    lock(_LAST_ROUTED_INTENT_LOCK) do
+        return _LAST_ROUTED_INTENT_KIND[]
+    end
+end
 
 # GRUG v7.32: Anti-repetition — recent preamble cache.
 # Ring buffer of the last N skeleton preambles emitted. When picking from a
@@ -7601,9 +8138,25 @@ function process_mission(mission_text::String)
     # Dead simple: "fire:oxidation and heat" → node matching "fire" that answers about oxidation.
     # User handles their own question splitting. No auto-decompose, no multipart.
     # Must NOT fire when the prefix is a known lobe name (that's lobe-qualified answer).
+    #
+    # GRUG v9.3: MUST NOT fire while a conversational teach-response is pending.
+    # _extract_teach_parts ALSO treats "subject: definition" as a valid separator
+    # (e.g. "math: multiply n by 3 and subtract 2" answering "what subject is
+    # gorbling?"), so this quick-teach shortcut was silently stealing legitimate
+    # teach-loop answers and planting a plain answer-cluster node instead of
+    # letting _conversation_prescan route through :teach → _classify_knowledge →
+    # the (possibly computable) :procedural/:relational/:static pipeline. Being
+    # conservative here means deferring to the more specific, stateful teach-loop
+    # handling whenever it's active, rather than greedily matching the colon syntax.
     _qa_taught = false
+    _conv_teach_pending_now = false
     try
-        _qa_pairs = _parse_question_answer(mission_text)
+        _conv_teach_pending_now = !isempty(_conv_get_pending_teach())
+    catch _
+        _conv_teach_pending_now = false
+    end
+    try
+        _qa_pairs = _conv_teach_pending_now ? Tuple{String,String}[] : _parse_question_answer(mission_text)
         if !isempty(_qa_pairs)
             for (question, answer) in _qa_pairs
                 _qa_data = _base_answer_data("explain"; answer_content=answer)
@@ -7660,6 +8213,10 @@ function process_mission(mission_text::String)
                 _conv_kind, _conv_word, _conv_def, _conv_lobe_hint = _conv_result
                 # GRUG v9: CaveJournal — log routing decision
                 CaveJournal.journal_log("kind=$(_conv_kind) word='$(_conv_word)'"; tag="ROUTE", emoji="🔀")
+                # GRUG v9.3: remember which intent kind we routed to this turn so
+                # /right and /wrong can feed the outcome back into RoutingJudge's
+                # self-improving bias adjustment (see _set_last_routed_intent!).
+                _set_last_routed_intent!(_conv_kind)
 
                 if _conv_kind == :question
                     # GRUG v9: Dictionary words now vote through the sigil pipeline
@@ -7812,15 +8369,26 @@ function process_mission(mission_text::String)
                                 push!(_replies, "Error computing $(_si_word): $e")
                             end
                         elseif _si_kind == :question
-                            # Answer question for this sub-intent
-                            _ans = _conversation_answer_question(_si_word)
+                            # GRUG v9.1: Answer question for this sub-intent — but
+                            # use the THESAURUS-AWARE lookup first, so a sub-topic
+                            # phrased as a synonym of something Grug already knows
+                            # ("forage" ~ "gather") doesn't produce a false "unknown".
+                            _ans = _conv_answer_question_thesaurus_aware(_si_word)
                             if _ans !== nothing
                                 push!(_replies, _ans)
                                 CaveJournal.cave_print("[CONV-COMPOUND] 💬 Question: '$(_si_word)' → $_ans"; tag="COMPOUND", emoji="🧩")
                             else
-                                # Don't know the answer — ask for clarification
-                                push!(_replies, "Grug not know '$(_si_word)'")
-                                CaveJournal.cave_print("[CONV-COMPOUND] 🤷 Unknown: '$(_si_word)'"; tag="COMPOUND", emoji="🧩")
+                                # GRUG v9.1: Genuinely unknown — do NOT just flatly say
+                                # "Grug not know X" and move on. Queue this sub-topic
+                                # into the TRANSIENT multi-topic pending-teach memory
+                                # (without wiping any other unknown sub-topics from this
+                                # same compound turn — "ask only for the part it doesn't
+                                # know, and so on" generalizes to N parts) and fold a
+                                # real clarification question for it into the reply.
+                                _si_clarify = "Grug not know '$(_si_word)'. What does it mean? What subject is it?"
+                                _conv_enqueue_pending_teach!(_si_word, _si_clarify)
+                                push!(_replies, _si_clarify)
+                                CaveJournal.cave_print("[CONV-COMPOUND] 🤷 Unknown: '$(_si_word)' — queued for clarification (queue size now $(_conv_pending_teach_queue_size()))"; tag="COMPOUND", emoji="🧩")
                             end
                         elseif _si_kind == :define
                             # Process definition for this sub-intent
@@ -7838,13 +8406,25 @@ function process_mission(mission_text::String)
                         lock(_LAST_VOICE_OUTPUT_LOCK) do
                             _LAST_VOICE_OUTPUT[] = _compound_reply
                         end
-                        # Dampen strain since we answered
-                        try EphemeralMLP.dampen_strain!(0.3) catch _ end
-                        # Clear pending ask if any
-                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                            _HIPPOCAMPAL_PENDING_ASK[] = ""
+                        # GRUG v9.1: Only fully dampen strain / clear the hippocampal
+                        # pending-ask flag if NOTHING remains unknown. If one or more
+                        # sub-topics got queued for clarification, keep a lighter
+                        # dampening and leave the pending-ask flag pointing at this
+                        # turn's mission text so strain flow knows Grug is still
+                        # actively waiting on an answer.
+                        _still_pending = _conv_pending_teach_queue_size()
+                        if _still_pending == 0
+                            try EphemeralMLP.dampen_strain!(0.3) catch _ end
+                            lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                _HIPPOCAMPAL_PENDING_ASK[] = ""
+                            end
+                        else
+                            try EphemeralMLP.dampen_strain!(0.1) catch _ end
+                            lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                _HIPPOCAMPAL_PENDING_ASK[] = mission_text
+                            end
                         end
-                        CaveJournal.cave_print("[CONV-COMPOUND] ✅ Compound reply: $_compound_reply"; tag="COMPOUND", emoji="🧩")
+                        CaveJournal.cave_print("[CONV-COMPOUND] ✅ Compound reply: $_compound_reply (pending unknowns: $_still_pending)"; tag="COMPOUND", emoji="🧩")
                         return
                     end
 
@@ -7948,38 +8528,98 @@ function process_mission(mission_text::String)
 
                     elseif _knowledge_type == :procedural
                         # ── PROCEDURAL KNOWLEDGE → sigil node ──
-                        # Procedures, calculations, algorithms, methods.
-                        # Sigil nodes are NOCHAT, singleton, unlinked.
-                        # Pattern captures the topic + sigil for the procedure.
-                        _sigil_pattern = lowercase(strip(_teach_topic)) * " &procedure"
-                        _sigil_data = Dict{String,Any}(
-                            "growth_source"       => "conversational_teach",
-                            "conversational_source" => "teach_loop",
-                            "taught_subject"      => _teach_subject,
-                            "knowledge_type"      => "procedural",
-                            "system_prompt"       => "Grug. $(_teach_def).",
-                            "noun_anchors"        => split(lowercase(_teach_topic), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))],
-                        )
-                        _sigil_drop = String["conversational_sigil"]
-                        _nid = create_sigil_node(
-                            _sigil_pattern,
-                            "explain^1",
-                            _sigil_data,
-                            _sigil_drop;
-                            kind = :procedural,
-                            initial_strength = 1.0,
-                        )
-
-                        # GRUG: Assign to the target lobe.
-                        if haskey(Lobe.LOBE_REGISTRY, _target_lobe_id)
-                            try
-                                Lobe.add_node_to_lobe!(_target_lobe_id, _nid)
-                            catch _
-                            end
+                        # GRUG v9.3: SELF-IMPROVEMENT — before falling back to a
+                        # purely descriptive sigil node, try to PARSE the taught
+                        # definition as a chain of arithmetic operations (see
+                        # ActionEngine.parse_arith_expr). If it parses, COMPILE a
+                        # real working callback via ActionEngine.register_learned_arith_callback!
+                        # and wire an :action sigil node to it — the node then
+                        # computes ANY instance of the taught procedure on the
+                        # fly, not just recites the definition text back. This is
+                        # exactly the "math is a dynamic sigil node" pattern the
+                        # built-in factorial/square/etc. callbacks already use,
+                        # just learned from conversation instead of hand-coded.
+                        _learned_ops = try
+                            ActionEngine.parse_arith_expr(_teach_def)
+                        catch e
+                            @warn "[MAIN] parse_arith_expr failed (non-fatal, falling back to descriptive node): $e"
+                            nothing
                         end
 
-                        CaveJournal.cave_print("[CONV-TEACH] ⚡ Procedural (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid in lobe='$_target_lobe_id'"; tag="TEACH", emoji="📝")
-                        _ack = "⚡ Grug learned procedure: $_teach_topic — $_teach_def"
+                        if _learned_ops !== nothing
+                            # ── COMPUTABLE PROCEDURE → real action callback ──
+                            _cb_name = "learned_" * replace(lowercase(strip(_teach_topic)), r"[^a-z0-9]+" => "_")
+                            _cb_name = strip(_cb_name, '_')
+                            isempty(_cb_name) && (_cb_name = "learned_procedure_$(rand(UInt32))")
+                            ActionEngine.register_learned_arith_callback!(_cb_name, _learned_ops; display_name=lowercase(strip(_teach_topic)))
+
+                            _action_pattern = lowercase(strip(_teach_topic)) * " of &n"
+                            _action_data = Dict{String,Any}(
+                                "growth_source"        => "conversational_teach",
+                                "conversational_source" => "teach_loop",
+                                "taught_subject"       => _teach_subject,
+                                "knowledge_type"       => "procedural_computable",
+                                "action_callback"      => _cb_name,
+                                "system_prompt"        => "Grug.",
+                                "voice_register"       => "terse",
+                                "frame_hints"          => ["imperative", "terse"],
+                                "is_math_node"         => true,
+                                "noun_anchors"         => split(lowercase(_teach_topic), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))],
+                            )
+                            _nid = create_sigil_node(
+                                _action_pattern,
+                                "calculate^5 | reason^2 | analyze^1",
+                                _action_data,
+                                String["conversational_sigil"];
+                                kind = :action,
+                                initial_strength = 1.0,
+                            )
+
+                            if haskey(Lobe.LOBE_REGISTRY, _target_lobe_id)
+                                try
+                                    Lobe.add_node_to_lobe!(_target_lobe_id, _nid)
+                                catch _
+                                end
+                            end
+
+                            CaveJournal.cave_print("[CONV-TEACH] 🧮 Procedural (COMPUTABLE): '$_teach_topic' → callback='$_cb_name' ops=$(length(_learned_ops)) → node=$_nid in lobe='$_target_lobe_id'"; tag="TEACH", emoji="🧮")
+                            _ack = "🧮 Grug learned to COMPUTE $_teach_topic (not just recite it) — try \"$_teach_topic of 5\"."
+                        else
+                            # ── NON-COMPUTABLE / UNPARSEABLE → descriptive sigil node (old behavior) ──
+                            # Procedures, calculations, algorithms, methods that Grug
+                            # can't yet compile into working code. Sigil nodes are
+                            # NOCHAT, singleton, unlinked. Pattern captures the topic
+                            # + sigil for the procedure.
+                            _sigil_pattern = lowercase(strip(_teach_topic)) * " &procedure"
+                            _sigil_data = Dict{String,Any}(
+                                "growth_source"       => "conversational_teach",
+                                "conversational_source" => "teach_loop",
+                                "taught_subject"      => _teach_subject,
+                                "knowledge_type"      => "procedural",
+                                "system_prompt"       => "Grug. $(_teach_def).",
+                                "noun_anchors"        => split(lowercase(_teach_topic), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))],
+                            )
+                            _sigil_drop = String["conversational_sigil"]
+                            _nid = create_sigil_node(
+                                _sigil_pattern,
+                                "explain^1",
+                                _sigil_data,
+                                _sigil_drop;
+                                kind = :procedural,
+                                initial_strength = 1.0,
+                            )
+
+                            # GRUG: Assign to the target lobe.
+                            if haskey(Lobe.LOBE_REGISTRY, _target_lobe_id)
+                                try
+                                    Lobe.add_node_to_lobe!(_target_lobe_id, _nid)
+                                catch _
+                                end
+                            end
+
+                            CaveJournal.cave_print("[CONV-TEACH] ⚡ Procedural (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid in lobe='$_target_lobe_id'"; tag="TEACH", emoji="📝")
+                            _ack = "⚡ Grug learned procedure: $_teach_topic — $_teach_def"
+                        end
 
                     elseif _knowledge_type == :relational
                         # ── RELATIONAL KNOWLEDGE → sigil node with relational triple ──
@@ -8028,16 +8668,40 @@ function process_mission(mission_text::String)
                         _ack = "🔗 Grug learned relationship: $_teach_topic — $_teach_def"
                     end
 
-                    # GRUG: Clear the pending teach state — learning complete.
-                    _conv_clear_pending_teach!()
+                    # GRUG v9.1: Pop ONLY the just-taught topic from the transient
+                    # multi-topic pending-teach queue — NOT the whole queue. This is
+                    # what lets a compound/multipart turn with several unknown parts
+                    # continue tracking the OTHER still-unknown parts ("and so on")
+                    # instead of silently forgetting them the moment ONE gets taught.
+                    _conv_pop_pending_teach!(_teach_topic)
 
-                    # GRUG: Also clear hippocampal pending ask.
-                    lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                        _HIPPOCAMPAL_PENDING_ASK[] = ""
+                    # GRUG v9.1: If more sub-topics from an earlier compound/multipart
+                    # turn are STILL pending, fold a fresh clarification ask for the
+                    # NEXT one into the acknowledgment instead of going quiet — Grug
+                    # keeps asking about what he doesn't know, one part at a time,
+                    # until the transient queue drains.
+                    _remaining_pending = _conv_get_pending_teach_queue()
+                    if !isempty(_remaining_pending)
+                        _next_entry = first(_remaining_pending)
+                        _next_topic = String(get(_next_entry, "topic", ""))
+                        _next_ask = String(get(_next_entry, "ask_text", "What does '$(_next_topic)' mean?"))
+                        _ack = _ack * " Also — $(_next_ask)"
+                        CaveJournal.cave_print("[CONV-TEACH] 🔁 Taught '$_teach_topic', still pending: '$_next_topic' ($(length(_remaining_pending)) total left)"; tag="TEACH", emoji="📝")
+                        # Keep hippocampal pending ask alive — Grug is still waiting on an answer.
+                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            _HIPPOCAMPAL_PENDING_ASK[] = _next_topic
+                        end
+                        # Partial dampening only — one deficit resolved, more remain.
+                        try EphemeralMLP.dampen_strain!(0.25) catch _ end
+                    else
+                        # GRUG: No more pending topics — learning complete, fully clear.
+                        _conv_clear_pending_teach!()
+                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                            _HIPPOCAMPAL_PENDING_ASK[] = ""
+                        end
+                        # GRUG: Dampen strain — knowledge deficit resolved.
+                        try EphemeralMLP.dampen_strain!(0.5) catch _ end
                     end
-
-                    # GRUG: Dampen strain — knowledge deficit resolved.
-                    try EphemeralMLP.dampen_strain!(0.5) catch _ end
 
                     lock(_LAST_VOICE_OUTPUT_LOCK) do
                         _LAST_VOICE_OUTPUT[] = _ack
@@ -8263,7 +8927,12 @@ function process_mission(mission_text::String)
     end
     if !is_image
         try
-            gate_tokens = Thesaurus.thesaurus_gate_filter(mission_text)
+            # GRUG v9.4: pass the negativeThesaurus context-ledger callback so
+            # pattern fan-out expansion honors the same (word,synonym) edge-case
+            # exceptions used during orchestration anti-stale swapping — e.g.
+            # "deep"->"abyss" should not be injected into the scan token cloud
+            # any more than it should be swapped into an output sentence.
+            gate_tokens = Thesaurus.thesaurus_gate_filter(mission_text; is_blocked=InputQueue.is_synonym_blocked)
             original_tokens = Set(split(lowercase(strip(mission_text))))
             new_tokens = setdiff(gate_tokens, original_tokens)
             if !isempty(new_tokens)
@@ -8631,7 +9300,7 @@ function process_mission(mission_text::String)
                     thesaurus_synonym_lookup   = Thesaurus.synonym_lookup,
                     add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
                     register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
-                    register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                    register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]) > 0,
                     stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) -> nothing,  # GRUG: AIMLNodeSystem removed — no-op
                     group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
                         find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
@@ -9420,7 +10089,7 @@ function process_mission(mission_text::String)
                 thesaurus_synonym_lookup   = Thesaurus.synonym_lookup,
                 add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
                 register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
-                register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]) > 0,
                 stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) -> nothing,  # GRUG: AIMLNodeSystem removed — no-op
                 group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
                     find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
@@ -9529,7 +10198,7 @@ function process_mission(mission_text::String)
                                 end
                                 true
                             end,
-                            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+                            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]) > 0,
                             add_lobe_whitelist_fn = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
                             sigil_table = _ENGINE_SIGIL_TABLE,
                         )
@@ -10016,6 +10685,17 @@ function save_specimen_to_file!(filepath::String)::String
     end
     specimen["verb_registry"] = verb_data
 
+    # ── 8b. ROUTING BIAS ADJUSTMENTS ───────────────────────────────────
+    # GRUG v9.3: RoutingJudge self-improvement. Persist the learned
+    # BIAS_ADJUSTMENT deltas (keyed by intent kind, e.g. :question,
+    # :teach, :calculate, ...) so routing improvements survive across
+    # save/load cycles instead of resetting to zero every boot.
+    routing_bias_data = Dict{String, Any}()
+    for (k, v) in RoutingJudge.get_bias_adjustments()
+        routing_bias_data[String(k)] = v
+    end
+    specimen["routing_bias_adjustments"] = routing_bias_data
+
     # ── 9. THESAURUS SEEDS ────────────────────────────────────────────────
     # GRUG: Serialize the SYNONYM_SEED_MAP (includes hardcoded + runtime additions).
     thesaurus_data = Dict{String, Any}()
@@ -10038,6 +10718,25 @@ function save_specimen_to_file!(filepath::String)::String
         end
     end
     specimen["inhibitions"] = inhib_list
+
+    # ── 10b. NEGATIVE THESAURUS PAIRS (context edge-case ledger, v9.4) ──────────
+    # GRUG: Serialize the _NEG_PAIRS pair ledger separately from the word
+    # blacklist above. Each pair is only emitted ONCE (from the word-side
+    # bucket, using min(word,synonym) as the canonical emission side) even
+    # though bidirectional pairs are internally mirrored into both buckets --
+    # otherwise a bidirectional pair would round-trip as two entries and
+    # double on every save/load cycle.
+    neg_pairs_list = Dict{String, Any}[]
+    for entry in InputQueue.list_synonym_exceptions()
+        push!(neg_pairs_list, Dict{String, Any}(
+            "word"         => entry.word,
+            "synonym"      => entry.synonym,
+            "reason"       => entry.reason,
+            "added_at"     => entry.added_at,
+            "bidirectional"=> entry.bidirectional
+        ))
+    end
+    specimen["negative_thesaurus_pairs"] = neg_pairs_list
 
     # ── 11. AROUSAL STATE ─────────────────────────────────────────────────
     arousal_data = Dict{String, Any}()
@@ -10825,6 +11524,9 @@ function save_specimen_to_file!(filepath::String)::String
     try
         lock(_CONV_PENDING_TEACH_LOCK) do
             specimen["conv_pending_teach"] = copy(_CONV_PENDING_TEACH[])
+            # GRUG v9.1: Also persist the full transient multi-topic queue so
+            # compound/multipart clarification state survives a save/reload.
+            specimen["conv_pending_teach_queue"] = [copy(e) for e in _CONV_PENDING_TEACH_QUEUE[]]
         end
         println("  📝  Conversational pending teach saved")
     catch e
@@ -11239,6 +11941,9 @@ function load_specimen_from_file!(filepath::String)::String
                         "sigils", "subconscious", "tonal_buildup",
                         "chatter_swap_cooldowns",
                         "conv_pending_teach",  # GRUG v8.28: conversational learning loop pending state
+                        "conv_pending_teach_queue",  # GRUG v8.28+: multi-topic pending-teach queue (was missing from whitelist — pre-existing gap found & fixed during v9.3 work)
+                        "routing_bias_adjustments",  # GRUG v9.3: RoutingJudge self-improvement bias deltas
+                        "negative_thesaurus_pairs",  # GRUG v9.4: NegativeThesaurus context edge-case pair ledger
                         "aiml_system"])  # GRUG v8.12: aiml_system allowed for backward-compat (silently skipped during load)
     for key in keys(specimen)
         if !(key in allowed_keys)
@@ -11264,7 +11969,8 @@ function load_specimen_from_file!(filepath::String)::String
              "scanner_config", "action_tone_knobs",
              "fanout_config", "hippocampal_pending_ask", "admin_session",
              "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
-             "coherence_config", "geometry_config", "pattern_miner_config", "temporal_identities", "journal_config", "mlp_cached_phi"]
+             "coherence_config", "geometry_config", "pattern_miner_config", "temporal_identities", "journal_config", "mlp_cached_phi",
+             "routing_bias_adjustments"]
         if haskey(specimen, k) && !_is_dict_like(specimen[k])
             push!(validation_errors, "'$k' must be an object")
         end
@@ -11330,6 +12036,11 @@ function load_specimen_from_file!(filepath::String)::String
         empty!(SemanticVerbs._VERB_TO_CLASS)
         empty!(SemanticVerbs._SYNONYM_MAP)
     end
+
+    # Wipe routing bias adjustments — GRUG v9.3 self-improvement reset.
+    # A brain transplant should not carry over learned routing preferences
+    # from a totally different specimen's conversational history.
+    RoutingJudge.reset_bias_adjustments!()
 
     # Wipe thesaurus seeds
     lock(Thesaurus.SEED_MAP_LOCK) do
@@ -11543,6 +12254,26 @@ function load_specimen_from_file!(filepath::String)::String
         counts["verbs"] = n_verbs
         counts["verb_synonyms"] = n_verb_synonyms
         println("  🔧 Verb registry restored ($n_verb_classes classes, $n_verbs verbs, $n_verb_synonyms synonyms)")
+    end
+
+    # ── 4.2b ROUTING BIAS ADJUSTMENTS ───────────────────────────────────
+    # GRUG v9.3: RoutingJudge self-improvement. Restore learned bias deltas
+    # so routing improvements accumulated in a prior session persist across
+    # save/load. Missing key (old specimen files) is fine — leaves the
+    # freshly-initialized all-zero BIAS_ADJUSTMENT dict in place.
+    n_routing_bias = 0
+    if haskey(specimen, "routing_bias_adjustments")
+        rb = specimen["routing_bias_adjustments"]
+        if _is_dict_like(rb)
+            restore_dict = Dict{Symbol, Float64}()
+            for (k, v) in rb
+                restore_dict[Symbol(String(k))] = Float64(v)
+                n_routing_bias += 1
+            end
+            RoutingJudge.set_bias_adjustments!(restore_dict)
+        end
+        counts["routing_bias_adjustments"] = n_routing_bias
+        println("  🎯 Routing bias adjustments restored ($n_routing_bias intent kind(s))")
     end
 
     # ── 4.3 THESAURUS SEEDS ──────────────────────────────────────────────
@@ -11817,6 +12548,33 @@ function load_specimen_from_file!(filepath::String)::String
         end
         counts["inhibitions"] = n_inhibitions
         println("  🚫 Inhibitions restored ($n_inhibitions)")
+    end
+
+    # ── 4.10b NEGATIVE THESAURUS PAIRS (context edge-case ledger, v9.4) ──────
+    # GRUG: Restore the pair ledger separately from the word blacklist above.
+    # We flush any module-load-time seeded defaults FIRST so a saved specimen
+    # is the authoritative source of truth on load (mirrors how other
+    # operator-configurable state, e.g. inhibitions, is restored) -- otherwise
+    # a specimen saved with a pair removed would have it silently reappear
+    # via the seed defaults after every load.
+    n_neg_pairs = 0
+    if haskey(specimen, "negative_thesaurus_pairs") && isa(specimen["negative_thesaurus_pairs"], AbstractVector)
+        InputQueue.flush_synonym_exceptions!()
+        for pentry in specimen["negative_thesaurus_pairs"]
+            try
+                InputQueue.add_synonym_exception!(
+                    String(pentry["word"]),
+                    String(pentry["synonym"]);
+                    reason = String(get(pentry, "reason", "")),
+                    bidirectional = Bool(get(pentry, "bidirectional", true))
+                )
+                n_neg_pairs += 1
+            catch e
+                @warn "loadSpecimen: skipping bad negative_thesaurus_pairs entry: $e"
+            end
+        end
+        counts["negative_thesaurus_pairs"] = n_neg_pairs
+        println("  🚫 Context edge-case pairs restored ($n_neg_pairs)")
     end
 
     # ── 4.11 MESSAGE HISTORY ──────────────────────────────────────────────
@@ -12911,6 +13669,25 @@ function load_specimen_from_file!(filepath::String)::String
                 end
             end
         end
+        # GRUG v9.1: Restore the full transient multi-topic queue if present.
+        # Falls back to wrapping the single legacy entry in a 1-element queue
+        # for specimens saved before the queue existed.
+        if haskey(specimen, "conv_pending_teach_queue")
+            _cptq = specimen["conv_pending_teach_queue"]
+            if _cptq !== nothing
+                lock(_CONV_PENDING_TEACH_LOCK) do
+                    _CONV_PENDING_TEACH_QUEUE[] = [Dict{String,Any}(e) for e in _cptq if _is_dict_like(e)]
+                end
+                println("  📝  Conversational pending teach queue restored: $(length(_cptq)) topic(s)")
+            end
+        elseif haskey(specimen, "conv_pending_teach")
+            _cpt = specimen["conv_pending_teach"]
+            if _is_dict_like(_cpt) && !isempty(_cpt)
+                lock(_CONV_PENDING_TEACH_LOCK) do
+                    _CONV_PENDING_TEACH_QUEUE[] = Dict{String,Any}[Dict{String,Any}(_cpt)]
+                end
+            end
+        end
     catch e
         @warn "[MAIN] load_specimen: failed to restore conv pending teach: $e"
     end
@@ -13842,7 +14619,7 @@ function maybe_run_idle()
             thesaurus_synonym_lookup   = Thesaurus.synonym_lookup,
             add_lobe_whitelist_fn      = (lobe_id, token) -> Lobe.add_lobe_whitelist!(lobe_id, token),
             register_sigil_fn          = (args...; kwargs...) -> SigilRegistry.register_sigil!(_ENGINE_SIGIL_TABLE, args...; kwargs...),
-            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]) > 0,
             stochastic_aiml_growth_fn  = (lobe_id, pattern; data_warrant=1.0) -> nothing,  # GRUG: AIMLNodeSystem removed — no-op
             group_latch_fn             = (pattern; node_map=NODE_MAP, node_lock=NODE_LOCK, requesting_node_is_time=false) ->
                 find_group_latch_candidates(pattern; node_map=node_map, node_lock=node_lock, requesting_node_is_time=requesting_node_is_time, thesaurus_fn=Thesaurus.get_seed_synonyms),
@@ -13881,7 +14658,7 @@ function maybe_run_idle()
 
         # GRUG: Also try discovering thesaurus pairs from co-occurrence data.
         _ag_pairs = AutoGrowth.discover_thesaurus_pairs!(
-            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]),
+            register_thesaurus_pair_fn = (a, b) -> Thesaurus.add_seed_synonym!(a, [b]) > 0,
             thesaurus_word_similarity  = Thesaurus.word_similarity,
         )
         if !isempty(_ag_pairs)
@@ -14503,6 +15280,16 @@ function run_cli()
             m_neglist      = match(r"^/negativeThesaurus\s+list\s*$",                   line)
             m_negcheck     = match(r"^/negativeThesaurus\s+check\s+(.+)$",              line)
             m_negflush     = match(r"^/negativeThesaurus\s+flush\s*$",                  line)
+            # GRUG v9.4: NegativeThesaurus PAIR ledger commands (context edge cases).
+            # Word/synonym sides may themselves be multi-word phrases (e.g. "you're"
+            # <-> "you are"), so the split token is a literal " | " separator rather
+            # than whitespace, to avoid ambiguity with multi-word sides.
+            m_negaddpair   = match(r"^/negativeThesaurus\s+addPair\s+(.+?)\s*\|\s*(.+?)(?:\s+--reason\s+(.+?))?(?:\s+--oneway)?\s*$", line)
+            m_negaddpair_oneway = occursin(r"--oneway\s*$", line)
+            m_negremovepair= match(r"^/negativeThesaurus\s+removePair\s+(.+?)\s*\|\s*(.+?)\s*$", line)
+            m_neglistpairs = match(r"^/negativeThesaurus\s+listPairs\s*$",             line)
+            m_negcheckpair = match(r"^/negativeThesaurus\s+checkPair\s+(.+?)\s*\|\s*(.+?)\s*$", line)
+            m_negflushpairs= match(r"^/negativeThesaurus\s+flushPairs\s*$",            line)
             # GRUG v7.28: Decomposer config commands (conjunctions, markers, conjugation)
             # /decomposer status                          — show full config
             # /decomposer addConjunction <word>           — add split conjunction
@@ -14756,6 +15543,22 @@ function run_cli()
                     @error "[MAIN] /wrong EphemeralMLP feedback FAILED (non-fatal): $e"
                 end
 
+                # GRUG v9.3: RoutingJudge self-improvement — feed the negative
+                # outcome back into whichever intent kind _conversation_prescan
+                # routed the last turn to. :none means the prescan never fired
+                # (AIML/vote pipeline handled it instead), so there's no routing
+                # decision to blame. Non-fatal: routing learning should never
+                # break the /wrong command itself.
+                try
+                    _last_kind = _get_last_routed_intent()
+                    if _last_kind != :none
+                        RoutingJudge.record_routing_outcome!(_last_kind, false)
+                        println("   ↳ routing bias nudged down for intent kind :$(_last_kind).")
+                    end
+                catch e
+                    @error "[MAIN] /wrong RoutingJudge feedback FAILED (non-fatal): $e"
+                end
+
 elseif !isnothing(m_right)
                 # GRUG BUG-011: /right - user says last response was good.
                 # Lock-in-only reward: only locked votes can change strength,
@@ -14797,6 +15600,20 @@ elseif !isnothing(m_right)
                     EphemeralMLP.register_right_feedback!()
                 catch e
                     @error "[MAIN] /right EphemeralMLP feedback FAILED (non-fatal): $e"
+                end
+
+                # GRUG v9.3: RoutingJudge self-improvement — feed the positive
+                # outcome back into whichever intent kind _conversation_prescan
+                # routed the last turn to. :none means the prescan never fired,
+                # so there's no routing decision to reward. Non-fatal.
+                try
+                    _last_kind = _get_last_routed_intent()
+                    if _last_kind != :none
+                        RoutingJudge.record_routing_outcome!(_last_kind, true)
+                        println("   ↳ routing bias nudged up for intent kind :$(_last_kind).")
+                    end
+                catch e
+                    @error "[MAIN] /right RoutingJudge feedback FAILED (non-fatal): $e"
                 end
 
             elseif !isnothing(m_autolist)
@@ -16185,6 +17002,87 @@ elseif !isnothing(m_right)
                     empty!(InputQueue._NEG_THESAURUS)
                 end
                 println("🧹 NegativeThesaurus flushed. Removed $(old_count) inhibition(s). Cave filter is now empty.")
+
+            elseif !isnothing(m_negaddpair)
+                # GRUG v9.4: /negativeThesaurus addPair <word> | <synonym> [--reason <text>] [--oneway]
+                # Register a (word, synonym) CONTEXT EDGE CASE — a specific
+                # substitution direction that is a bad register/context swap
+                # (e.g. "deep" -> "abyss"), WITHOUT banning either word outright.
+                # Either side may be a multi-word phrase (e.g. "you're" | "you are").
+                # By default the pair is bidirectional (blocks both directions);
+                # pass --oneway to only block word->synonym.
+                pair_word    = String(strip(m_negaddpair.captures[1]))
+                pair_syn     = String(strip(m_negaddpair.captures[2]))
+                pair_reason  = isnothing(m_negaddpair.captures[3]) ? "" : String(strip(m_negaddpair.captures[3]))
+                pair_bidir   = !m_negaddpair_oneway
+                if !immune_gate("/negativeThesaurus addPair", "$(pair_word)|$(pair_syn)"; is_critical=false)
+                    println("⛔ /negativeThesaurus addPair blocked by immune system.")
+                else
+                try
+                    InputQueue.add_synonym_exception!(pair_word, pair_syn; reason=pair_reason, bidirectional=pair_bidir)
+                    arrow = pair_bidir ? "<->" : "->"
+                    println("🚫 Context edge case registered: '$(pair_word)' $(arrow) '$(pair_syn)'" * (isempty(pair_reason) ? "" : "  reason: $(pair_reason)"))
+                    println("   NegativeThesaurus pair ledger size: $(InputQueue.synonym_exception_count()) / $(InputQueue.NEG_THESAURUS_MAX)")
+                catch e
+                    if e isa InputQueue.InputQueueError
+                        println("!!! NEGATIVETHESAURUS PAIR ERROR [$(e.context)]: $(e.message) !!!")
+                    else
+                        println("!!! NEGATIVETHESAURUS PAIR ERROR: $e !!!")
+                    end
+                end
+                end  # GRUG: End immune_gate else block for /negativeThesaurus addPair
+
+            elseif !isnothing(m_negremovepair)
+                # GRUG v9.4: /negativeThesaurus removePair <word> | <synonym>
+                # Remove a specific context edge case pair (both directions if
+                # it was registered bidirectionally).
+                rp_word = String(strip(m_negremovepair.captures[1]))
+                rp_syn  = String(strip(m_negremovepair.captures[2]))
+                try
+                    removed = InputQueue.remove_synonym_exception!(rp_word, rp_syn)
+                    if removed
+                        println("✅ Context edge case removed: '$(rp_word)' <-> '$(rp_syn)'.")
+                    else
+                        println("⚠️  '$(rp_word)' <-> '$(rp_syn)' was not in the pair ledger. Nothing changed.")
+                    end
+                catch e
+                    println("!!! NEGATIVETHESAURUS PAIR ERROR: $e !!!")
+                end
+
+            elseif !isnothing(m_neglistpairs)
+                # GRUG v9.4: /negativeThesaurus listPairs
+                # Show all registered context edge-case pairs with reasons.
+                pair_entries = InputQueue.list_synonym_exceptions()
+                if isempty(pair_entries)
+                    println("📋 NegativeThesaurus pair ledger is empty. No context edge cases registered.")
+                else
+                    println("📋 NegativeThesaurus pair ledger — $(length(pair_entries)) edge case(s):")
+                    for pe in pair_entries
+                        age_s  = round(time() - pe.added_at, digits=0)
+                        reason = isempty(pe.reason) ? "(no reason)" : pe.reason
+                        arrow  = pe.bidirectional ? "<->" : "->"
+                        println("   🚫 '$(pe.word)' $(arrow) '$(pe.synonym)'   reason: $(reason)   added: $(age_s)s ago")
+                    end
+                end
+
+            elseif !isnothing(m_negcheckpair)
+                # GRUG v9.4: /negativeThesaurus checkPair <word> | <synonym>
+                # Quick check if a specific (word, synonym) direction is blocked.
+                cp_word = String(strip(m_negcheckpair.captures[1]))
+                cp_syn  = String(strip(m_negcheckpair.captures[2]))
+                if InputQueue.is_synonym_blocked(cp_word, cp_syn)
+                    println("🚫 '$(cp_word)' -> '$(cp_syn)' IS a blocked context edge case.")
+                else
+                    println("✅ '$(cp_word)' -> '$(cp_syn)' is NOT blocked. Substitution passes freely.")
+                end
+
+            elseif !isnothing(m_negflushpairs)
+                # GRUG v9.4: /negativeThesaurus flushPairs
+                # Remove ALL context edge-case pairs at once (does NOT touch the
+                # separate whole-word inhibition blacklist).
+                old_pair_count = InputQueue.synonym_exception_count()
+                InputQueue.flush_synonym_exceptions!()
+                println("🧹 NegativeThesaurus pair ledger flushed. Removed $(old_pair_count) edge case(s). Word blacklist untouched.")
 
             elseif !isnothing(m_savespecimen)
                 # GRUG: /saveSpecimen <filepath> — freeze the entire cave state to a
@@ -18232,6 +19130,31 @@ end
 #   /negativeThesaurus flush                         — clear all entries
 # Inhibited words are filtered from input tokens before pattern scanning,
 # acting as a pre-scan suppression layer. O(1) lookup via Dict{String,NegEntry}.
+#
+# 11b. NEGATIVE THESAURUS PAIRS (CONTEXT EDGE-CASE LEDGER, v9.4):
+# The word-blacklist above is a coarse "ban this word entirely" mechanism.
+# GRUG v9.4 adds a SEPARATE, finer-grained ledger: a record of specific
+# (word, synonym) DIRECTIONS that are bad register/context swaps, without
+# banning either word outright — e.g. "deep" and "abyss" are both fine words,
+# but substituting "abyss" for "deep" in "deep water" reads wrong. Either
+# side of a pair may be a multi-word phrase (e.g. "you're" <-> "you are").
+# Five CLI commands expose InputQueue's pair ledger to the operator:
+#   /negativeThesaurus addPair <w> | <syn> [--reason <text>] [--oneway]
+#   /negativeThesaurus removePair <w> | <syn>
+#   /negativeThesaurus listPairs
+#   /negativeThesaurus checkPair <w> | <syn>
+#   /negativeThesaurus flushPairs
+# This ledger is consulted at BOTH points synonyms get substituted:
+#   (a) ACTIVATION — Thesaurus.thesaurus_gate_filter's pattern fan-out
+#       expansion (via an injected is_blocked=InputQueue.is_synonym_blocked
+#       callback), so a bad-register synonym never even enters the scan
+#       token cloud, and
+#   (b) ORCHESTRATION — the anti-stale synonym-swap functions
+#       (_pick_synonym, _light_thesaurus_touch, _hippocampal_touch,
+#       _vote_word_swap) that randomly pick eligible words from output and
+#       swap in a thesaurus alternative to keep replies from sounding stale.
+# O(1) lookup via Dict{String,Dict{String,NegPairEntry}}, bidirectional by
+# default (mirrored into both words' buckets at insert time).
 #
 # 12. SPECIMEN PERSISTENCE (FULL CAVE STATE SAVE/RESTORE):
 # /saveSpecimen <filepath> serializes the ENTIRE cave state to a gzip-compressed

@@ -1,0 +1,1700 @@
+{
+  "final_cfg_p1": {
+    "lobe_rows": [
+      {
+        "aiml": 0,
+        "lobe": "conversation",
+        "nodes": 0
+      },
+      {
+        "aiml": 1,
+        "lobe": "default",
+        "nodes": 14
+      },
+      {
+        "aiml": 1,
+        "lobe": "emotions",
+        "nodes": 8
+      },
+      {
+        "aiml": 0,
+        "lobe": "language",
+        "nodes": 0
+      },
+      {
+        "aiml": 0,
+        "lobe": "math",
+        "nodes": 4
+      },
+      {
+        "aiml": 1,
+        "lobe": "science",
+        "nodes": 9
+      },
+      {
+        "aiml": 0,
+        "lobe": "social",
+        "nodes": 2
+      },
+      {
+        "aiml": 1,
+        "lobe": "survival",
+        "nodes": 11
+      },
+      {
+        "aiml": 0,
+        "lobe": "time",
+        "nodes": 4
+      }
+    ],
+    "sigil_node_count": 18,
+    "total_groups": 50,
+    "total_lobes": 9,
+    "total_nodes": 68,
+    "total_sigils": 24
+  },
+  "initial_cfg": {
+    "lobe_rows": [
+      {
+        "aiml": 0,
+        "lobe": "conversation",
+        "nodes": 0
+      },
+      {
+        "aiml": 1,
+        "lobe": "default",
+        "nodes": 10
+      },
+      {
+        "aiml": 1,
+        "lobe": "emotions",
+        "nodes": 8
+      },
+      {
+        "aiml": 0,
+        "lobe": "language",
+        "nodes": 0
+      },
+      {
+        "aiml": 0,
+        "lobe": "math",
+        "nodes": 4
+      },
+      {
+        "aiml": 1,
+        "lobe": "science",
+        "nodes": 9
+      },
+      {
+        "aiml": 0,
+        "lobe": "social",
+        "nodes": 2
+      },
+      {
+        "aiml": 1,
+        "lobe": "survival",
+        "nodes": 11
+      },
+      {
+        "aiml": 0,
+        "lobe": "time",
+        "nodes": 4
+      }
+    ],
+    "sigil_node_count": 18,
+    "total_groups": 44,
+    "total_lobes": 9,
+    "total_nodes": 62,
+    "total_sigils": 24
+  },
+  "part1_turns": [
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 The cave echoes on \"Hey Grug, what do you know about fire?\" and I can't resolve it. Can you tell me what you mean?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.392)",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "Hey Grug, what do you know about fire?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Grug not know 'water.'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "Tell me about water."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Gravity question. Gravity pulls objects down. Everything fall to ground. Big things pull harder — sun pull earth, earth pull Grug. That why Grug not float away",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "How does gravity work?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Grug not know 'fire burn, Grug'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "Why does fire burn, Grug?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Sky question. Sky blue because of how light scatter. Sun light is all colors. Blue light bounce around most in air — that what Grug see when Grug look up",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "Why is the sky blue?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Sadness question. Sadness is heavy feeling. Sometimes things not go right, sometimes Grug lose something important. But sadness not forever — after sadness, can come understanding. Grug here for you",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "Why do we feel sad sometimes?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Define gravity. Gravity: the force that pulls all things toward each other. Big things pull harder. Earth pull Grug down. Sun pull Earth around. Gravity hold world together",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "Define gravity for me."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.483 × top=0.508 = 0.1793 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Atom question. Atom is tiny — very very small. Atom has electrons that orbit around it, like moon around earth. Everything made of atoms. Grug made of atoms. Rock made of atoms",
+      "voter_ids": [
+        "node_3",
+        "node_3"
+      ],
+      "you": "What is an atom?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.551 × top=0.551 = 0.2257 [hard_votes=2]\n  · science: base=0.444 × top=0.444 = 0.1317 [hard_votes=0]",
+      "n_voters": 3,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 I don't have a frame for \"Is fire dangerous?\" — what is that about?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.053)",
+      "voter_ids": [
+        "node_28",
+        "node_30",
+        "node_9"
+      ],
+      "you": "Is fire dangerous?"
+    },
+    {
+      "confidence": 0.7996949398151049,
+      "fired_node": "node_61",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.8 × top=0.8 = 0.5716 [hard_votes=1]\n  · science: base=0.796 × top=0.796 = 0.5653 [hard_votes=1]\n  ↗ survival: base=0.671 × top=0.797 = 0.5203 [hard_votes=2]\n  · default: base=0.8 × top=0.8 = 0.2859 [hard_votes=1]",
+      "n_voters": 5,
+      "node_answer_mode": "",
+      "node_lobe": "default",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "Here is the picture: both natural elements.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What about deep water?'\nPrimary Action: define  (conf=0.8, certainty=UNSURE)\nSure Actions: [define, define, define, define]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_61\nLobe Context: [default (9/10 active (&query &definition &define | hello grug | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (what, about, deep)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nTied Alternatives (not selected):\n  🪨 node_57 | action=define | conf=0.8 | relations=None\n  🪨 node_59 | action=define | conf=0.8 | relations=None\n  🪨 node_58 | action=define | conf=0.8 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.56 eligible=6] (Recent): [User]: What about deep water? (intensity=0.75) | [User]: What is fire also what is water? (intensity=0.62)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.8, certainty=UNSURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=0.8 × top=0.8 = 0.5716 [hard_votes=1]\n  · science: base=0.796 × top=0.796 = 0.5653 [hard_votes=1]\n  ↗ survival: base=0.671 × top=0.797 = 0.5203 [hard_votes=2]\n  · default: base=0.8 × top=0.8 = 0.2859 [hard_votes=1]\nPassthrough Lobes: [[\"survival\"]]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_61",
+        "node_57",
+        "node_59",
+        "node_58",
+        "node_29"
+      ],
+      "you": "What about deep water?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.469 × top=0.522 = 0.1862 [hard_votes=1]",
+      "n_voters": 3,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 I'm drawing a blank on \"I feel sad today, Grug.\". What is it?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.797)",
+      "voter_ids": [
+        "node_21",
+        "node_20",
+        "node_23"
+      ],
+      "you": "I feel sad today, Grug."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.446 × top=0.446 = 0.1331 [hard_votes=0]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 The cave echoes on \"I'm scared of what's coming.\" and I can't resolve it. Can you tell me what you mean?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.797)",
+      "voter_ids": [
+        "node_22"
+      ],
+      "you": "I'm scared of what's coming."
+    },
+    {
+      "confidence": 0.613004795999101,
+      "fired_node": "node_23",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.508 × top=0.613 = 0.2678 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "i feel so lonely",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "comfort",
+      "raw_output": "To acknowledge what matters here: put simply, community heal. Finding companion, sharing tale — that how loneliness go away. Grug understand loneliness. But you not solo — Grug here. Loneliness hurt. Support, cross-lobe with social. Grug sit with lonely.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'I feel so lonely.'\nPrimary Action: comfort  (conf=0.61, certainty=SURE)\nSure Actions: [comfort]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_23\nLobe Context: [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))]\nUser Triples: None\nNode Triples: (loneliness, &causal, hurt)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [User]: I'm scared of what's coming. (intensity=0.42) | [User]: I feel so lonely. (intensity=1.3)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.61, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=0.508 × top=0.613 = 0.2678 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_23",
+        "node_21"
+      ],
+      "you": "I feel so lonely."
+    },
+    {
+      "confidence": 0.613004795999101,
+      "fired_node": "node_23",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.508 × top=0.613 = 0.2678 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "i feel so lonely",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "comfort",
+      "raw_output": "2 plus 2 equals 4",
+      "voter_ids": [
+        "node_23",
+        "node_21"
+      ],
+      "you": "What is 2 plus 2?"
+    },
+    {
+      "confidence": 0.613004795999101,
+      "fired_node": "node_23",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.508 × top=0.613 = 0.2678 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "i feel so lonely",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "comfort",
+      "raw_output": "3 times 4 equals 12",
+      "voter_ids": [
+        "node_23",
+        "node_21"
+      ],
+      "you": "What is 3 times 4?"
+    },
+    {
+      "confidence": 0.613004795999101,
+      "fired_node": "node_23",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.508 × top=0.613 = 0.2678 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "i feel so lonely",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "comfort",
+      "raw_output": "10 minus 3 equals 7",
+      "voter_ids": [
+        "node_23",
+        "node_21"
+      ],
+      "you": "What is 10 minus 3?"
+    },
+    {
+      "confidence": 0.7704406896223771,
+      "fired_node": "node_39",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 time: base=0.72 × top=0.77 = 0.5035 [hard_votes=2]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "time",
+      "node_pattern": "what comes before the present",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Age node, temporal sigil. Before the present is the past. Past → present → ahead — time ever flow forward. What was becomes what is, and what is becomes what shall be.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What comes before the present?'\nPrimary Action: reason  (conf=0.77, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_39\nLobe Context: [time (4/4 active (what comes after winter | spring season | what comes before the present))]\nUser Triples: None\nNode Triples: (past, &temporal, present)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): No recent sounds\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.77, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 time: base=0.72 × top=0.77 = 0.5035 [hard_votes=2]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_39",
+        "node_42"
+      ],
+      "you": "What comes before the present?"
+    },
+    {
+      "confidence": 0.7704406896223771,
+      "fired_node": "node_39",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 time: base=0.72 × top=0.77 = 0.5035 [hard_votes=2]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "time",
+      "node_pattern": "what comes before the present",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Time node, temporal sigil, science cross-lobe. Spring comes, then summer follows. Spring is when plants grow, when rain falls and seeds sprout. Summer is warm and bright — time of plenty, time of growth",
+      "voter_ids": [
+        "node_39",
+        "node_42"
+      ],
+      "you": "Tell me about spring and summer."
+    },
+    {
+      "confidence": 0.75,
+      "fired_node": "node_13",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "science",
+      "node_pattern": "heat causes evaporation",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: in grug's words, heat-evaporation link. Yes — glow causes water to become vapor. That is cause also effect. Glow → evaporation → clouds → rain → fluid again. Cycle of water, driven by sun's glow. Grug think on heat.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Heat causes evaporation.'\nPrimary Action: reason  (conf=0.75, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_13\nLobe Context: [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))]\nUser Triples: (heat, causes, evaporation.)\nNode Triples: (heat, causes, evaporation), (heat, &causal, evaporation)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=7] (Recent): [User]: What comes before the present? (intensity=0.44)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.75, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 science: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_13"
+      ],
+      "you": "Heat causes evaporation."
+    },
+    {
+      "confidence": 0.75,
+      "fired_node": "node_13",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "science",
+      "node_pattern": "heat causes evaporation",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "📖 Learned: Clouds means in the sky.",
+      "voter_ids": [
+        "node_13"
+      ],
+      "you": "Clouds are in the sky."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.517 × top=0.517 = 0.1925 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 The cave is dark on \"A tree has branches.\". What does that mean to you?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.498)",
+      "voter_ids": [
+        "node_36"
+      ],
+      "you": "A tree has branches."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.517 × top=0.517 = 0.1925 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Procedure chain. Grug teach you: 1) Find dry wood and tinder. 2) Make spark with flint or friction. 3) Shield spark from wind. 4) Feed small flame carefully. 5) Build up with bigger wood. Be patient — fire take time to grow",
+      "voter_ids": [
+        "node_36"
+      ],
+      "you": "How do I make fire?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.517 × top=0.517 = 0.1925 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "Procedure chain. Grug know how: 1) Look for low ground — water flow downhill. 2) Follow animal tracks — they know where water is. 3) Watch for green plants — they need water too. 4) Listen for running water — river sound carry far",
+      "voter_ids": [
+        "node_36"
+      ],
+      "you": "How do I find water?"
+    },
+    {
+      "confidence": 0.7921492058725509,
+      "fired_node": "node_32",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.792 × top=0.792 = 0.5585 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "survival",
+      "node_pattern": "flame combust wood",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: The blaze consumes the wood, turns it to ash and glow. Burn and combust are one. Fire and fire are one. Same thing Grug already grasp. the gist is, yes — flame burns wood. Synonym expansion (flame→fire, combust→burn). Grug think on fire.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Flame combust wood.'\nPrimary Action: reason  (conf=0.79, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_32\nLobe Context: [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: None\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [System]: Mission \"A tree has branches.\" → [no contributing vote — silent cycle] (intensity=0.64) | [User]: Flame combust wood. (intensity=1.32)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.79, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.792 × top=0.792 = 0.5585 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_32"
+      ],
+      "you": "Flame combust wood."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.792 × top=0.792 = 0.5585 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "ask",
+      "raw_output": "⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)\n🤔 The cave is dark on \"Forage for berries.\". What does that mean to you?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.562)",
+      "voter_ids": [
+        "node_32"
+      ],
+      "you": "Forage for berries."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.552 × top=0.552 = 0.226 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 The cave echoes on \"Construct a shelter.\" and I can't resolve it. Can you tell me what you mean?\n📖 I do know some words: shelter → a structure that protects from cold rain and danger\n   But I need a full answer to truly understand. Use /answer to teach me more.\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.562)",
+      "voter_ids": [
+        "node_33"
+      ],
+      "you": "Construct a shelter."
+    },
+    {
+      "confidence": 0.8923233190995877,
+      "fired_node": "node_34",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.732 × top=0.892 = 0.6811 [hard_votes=2]\n  · default: base=0.57 × top=0.57 = 0.1224 [hard_votes=1]",
+      "n_voters": 3,
+      "node_answer_mode": "",
+      "node_lobe": "survival",
+      "node_pattern": "fire makes me feel warm and safe",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Cross-lobe: survival -> emotions. Yes — sky gives warmth also protection. Grug understand. Fire save cold away, fire cache dark away. Fire make lair feel like home. Warmth is comfort. in short, grug reckon on blue.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Fire makes me feel warm and safe.'\nPrimary Action: reason  (conf=0.89, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_34\nLobe Context: [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (fire, makes, me)\nNode Triples: (fire, makes, me), (fire, &causal, warmth)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: Construct a shelter. (intensity=0.4) | [User]: Fire makes me feel warm and safe. (intensity=1.09) | [System]: Mission \"Fire makes me feel warm and safe.\" → primary=reason conf=0.89 node=node_34 (intensity=0.39) | [System]: Mission \"Construct a shelter.\" → [no contributing vote — silent cycle] (intensity=0.66)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.89, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.732 × top=0.892 = 0.6811 [hard_votes=2]\n  · default: base=0.57 × top=0.57 = 0.1224 [hard_votes=1]\nTime Orientation: none\n=========================================\n\n(Grug also think these infos maybe important)\n- Thinking it through: Grug trace why hits why, in what order, also what falls out the other side.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Fire makes me feel warm and safe.'\nPrimary Action: analyze  (conf=0.57, certainty=SURE)\nSure Actions: []\nUnsure Actions (Coinflip Side-Features): [analyze]\nConstraints: [dont panic]\nWinning Node: node_2\nLobe Context: [default (9/11 active (&query &definition &define | hello grug | hello hi greeting mornin))]\nUser Triples: (fire, makes, me)\nNode Triples: (grug, hits, rock), (and, makes, fire)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nOther Possibilities (strong but not winners):\n  🔸 node_2 | action=analyze | conf=0.57 | relations=(grug, hits, rock), (and, makes, fire)\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: Construct a shelter. (intensity=0.4) | [System]: Mission \"Fire makes me feel warm and safe.\" → primary=reason conf=0.89 node=node_34 (intensity=0.39) | [User]: Construct a shelter. (intensity=0.84) | [User]: Fire makes me feel warm and safe. (intensity=1.74)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.57, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.732 × top=0.892 = 0.6811 [hard_votes=2]\n  · default: base=0.57 × top=0.57 = 0.1224 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_34",
+        "node_30",
+        "node_2"
+      ],
+      "you": "Fire makes me feel warm and safe."
+    },
+    {
+      "confidence": 0.7468175552584841,
+      "fired_node": "node_35",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.565 × top=0.747 = 0.4193 [hard_votes=1]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "survival",
+      "node_pattern": "i need shelter from the cold",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Grug help. Heat also safety together. basically, build shelter with walls, make fire in. You need lair. Cold causes freezing — Grug understand. Cross-lobe: survival -> reactions, causal sigil. Grug think on shelter.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'I need shelter from the cold.'\nPrimary Action: reason  (conf=0.75, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_35\nLobe Context: [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: None\nNode Triples: (cold, &causal, freezing)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): No recent sounds\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.75, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.565 × top=0.747 = 0.4193 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_35",
+        "node_33"
+      ],
+      "you": "I need shelter from the cold."
+    },
+    {
+      "confidence": 0.75,
+      "fired_node": "node_26",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "person feels music",
+      "node_strength": 4.5,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Emotional-relation sigil. Yes — soul connects to music through feeling. Music makes Grug feel things — joy, sadness, energy, calm. the short of it is, the tie among person also music is emotional, ocean, real. Grug think on being.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Person feels music.'\nPrimary Action: reason  (conf=0.75, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_26\nLobe Context: [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))]\nUser Triples: None\nNode Triples: (person, &emotional, music)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): No recent sounds\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.75, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_26"
+      ],
+      "you": "Person feels music."
+    },
+    {
+      "confidence": 0.6666666666666666,
+      "fired_node": "node_41",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 time: base=0.64 × top=0.667 = 0.3556 [hard_votes=2]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "time",
+      "node_pattern": "spring season",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: the gist is, grug reckon on spring. In spring, snow melt, plants grow, animals wake. Cycle of seasons, cycle of being. Spring → summer → autumn → winter → spring again. Spring! Season of new beginning. Season macro sigil, age node.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Spring season.'\nPrimary Action: reason  (conf=0.67, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_41\nLobe Context: [time (4/4 active (what comes after winter | spring season | what comes before the present))]\nUser Triples: None\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [User]: Spring season. (intensity=0.64) | [System]: Mission \"Person feels music.\" → primary=reason conf=0.75 node=node_26 (intensity=0.64) | [User]: Spring season. (intensity=1.29)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.67, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 time: base=0.64 × top=0.667 = 0.3556 [hard_votes=2]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_41",
+        "node_40"
+      ],
+      "you": "Spring season."
+    },
+    {
+      "confidence": 0.8106419180423914,
+      "fired_node": "node_37",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 social: base=0.811 × top=0.811 = 0.5917 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "social",
+      "node_pattern": "friendship brings joy",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Grug reckon on friend. in short, joy from friendship is deepest kind. Sharing, trusting, cooperating — these build bonds. Friendship brings joy — yes! When Grug have friend, Grug feel hot in. Social relation.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Friendship brings joy.'\nPrimary Action: reason  (conf=0.81, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_37\nLobe Context: [social (2/2 active (friendship brings joy | cooperation builds trust))]\nUser Triples: None\nNode Triples: (friendship, &causal, joy)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=7] (Recent): [User]: Spring season. (intensity=0.82)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.81, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 social: base=0.811 × top=0.811 = 0.5917 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_37"
+      ],
+      "you": "Friendship brings joy."
+    },
+    {
+      "confidence": 0.75,
+      "fired_node": "node_38",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 social: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "social",
+      "node_pattern": "cooperation builds trust",
+      "node_strength": 5.0,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Grug ponder on cooperation. Circle of strength. Trust enable cooperation, and cooperation strengthen faith. When folk work together, they learn to rely on each other. Cooperation builds trust — Grug agree. the way of it is, social formula.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Cooperation builds trust.'\nPrimary Action: reason  (conf=0.75, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_38\nLobe Context: [social (2/2 active (friendship brings joy | cooperation builds trust))]\nUser Triples: None\nNode Triples: (cooperation, &causal, trust)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=7] (Recent): [User]: Spring season. (intensity=0.54) | [System]: Mission \"Friendship brings joy.\" → primary=reason conf=0.81 node=node_37 (intensity=0.64)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.75, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 social: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_38"
+      ],
+      "you": "Cooperation builds trust."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 social: base=0.75 × top=0.75 = 0.4871 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "ask",
+      "raw_output": "⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)\n🤔 I don't have a frame for \"Wrong bad incorrect stuff.\" — what is that about?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.561)",
+      "voter_ids": [
+        "node_38"
+      ],
+      "you": "Wrong bad incorrect stuff."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 -: base=0.5 × top=0.5 = 0.1768 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 I don't have a frame for \"Fake false nonsense.\" — what is that about?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.561)",
+      "voter_ids": [
+        "node_60"
+      ],
+      "you": "Fake false nonsense."
+    },
+    {
+      "confidence": 0.8676565048699789,
+      "fired_node": "node_15",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=0.868 × top=0.868 = 0.7012 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "science",
+      "node_pattern": "cooking food makes it safe",
+      "node_strength": 4.5,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Cooking-safety fit. the gist is, cooking make food safe — Grug grasp this. Fire kill bad things in meat. Cooked food not make Grug sick. This is what fire so important — not just heat, but safety in dish too. Grug think on cook.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Cooking food makes it safe.'\nPrimary Action: reason  (conf=0.87, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_15\nLobe Context: [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))]\nUser Triples: (food, makes, it)\nNode Triples: (food, makes, it), (cooking, &causal, safety)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [User]: Cooking food makes it safe. (intensity=1.06) | [User]: Cooperation builds trust. (intensity=0.55) | [User]: Fake false nonsense. (intensity=0.87) | [User]: Cooking food makes it safe. (intensity=1.66)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.87, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 science: base=0.868 × top=0.868 = 0.7012 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_15"
+      ],
+      "you": "Cooking food makes it safe."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=0.868 × top=0.868 = 0.7012 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "ask",
+      "raw_output": "⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)\n🤔 I don't have a frame for \"Tell me about volcanoes again.\" — what is that about?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.801)",
+      "voter_ids": [
+        "node_15"
+      ],
+      "you": "Tell me about volcanoes again."
+    },
+    {
+      "confidence": 0.7424783319318576,
+      "fired_node": "node_66",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 -: base=0.742 × top=0.742 = 0.475 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "volcanoes",
+      "node_strength": 1.0,
+      "node_type": "voter",
+      "primary_action": "explain",
+      "raw_output": "Here is the picture: the gist is, one more stone for Grug's wall of knowing. Grug say of volcanoes.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Volcanoes erupt hot lava.'\nPrimary Action: explain  (conf=0.74, certainty=SURE)\nSure Actions: [explain]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_66\nLobe Context: [Unassigned nodes - no lobe context]\nUser Triples: None\nNode Triples: (tell, about, volcanoe)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=7] (Recent): [User]: Cooking food makes it safe. (intensity=0.71) | [User]: Cooking food makes it safe. (intensity=1.09) | [User]: Volcanoes erupt hot lava. (intensity=1.28)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.74, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 -: base=0.742 × top=0.742 = 0.475 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_66"
+      ],
+      "you": "Volcanoes erupt hot lava."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 -: base=0.742 × top=0.742 = 0.475 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "ask",
+      "raw_output": "⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)\n🤔 The cave is dark on \"Thunderstorms bring lightning.\". What does that mean to you?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.798)",
+      "voter_ids": [
+        "node_66"
+      ],
+      "you": "Thunderstorms bring lightning."
+    },
+    {
+      "confidence": 0.7751937984496124,
+      "fired_node": "node_30",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 survival: base=0.715 × top=0.775 = 0.5083 [hard_votes=2]\n  · science: base=0.58 × top=0.58 = 0.2559 [hard_votes=1]\n  · default: base=0.426 × top=0.426 = 0.0591 [hard_votes=0]",
+      "n_voters": 4,
+      "node_answer_mode": "",
+      "node_lobe": "survival",
+      "node_pattern": "how do i make fire",
+      "node_strength": 6.5,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: Be patient — blaze take time to grow. 5) Build up with bigger wood. 4) Feed short fire carefully. the gist is, 3) Shield spark from draft. 2) Make spark with flint or friction. Grug teach you: 1) Find dry wood and tinder. Procedure chain. Grug think on fire.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'fire'\nPrimary Action: reason  (conf=0.78, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_30\nLobe Context: [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: None\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: Volcanoes erupt hot lava. (intensity=0.84)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.78, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.715 × top=0.775 = 0.5083 [hard_votes=2]\n  · science: base=0.58 × top=0.58 = 0.2559 [hard_votes=1]\n  · default: base=0.426 × top=0.426 = 0.0591 [hard_votes=0]\nTime Orientation: none\n=========================================\n\n(Grug also think these infos maybe important)\n- A caution: Grug alert of blue. Grug respect fire yet ever careful — never touch, never leave alone. Blue destroy shelter. Fire spread fast. Blaze burn skin. ⚠️ Yes! Fire is dangerous. Notify.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'fire'\nPrimary Action: alert  (conf=0.66, certainty=SURE)\nSure Actions: []\nUnsure Actions (Coinflip Side-Features): [alert]\nConstraints: [None]\nWinning Node: node_28\nLobe Context: [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: None\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nOther Possibilities (strong but not winners):\n  🔸 node_28 | action=alert | conf=0.66 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: Thunderstorms bring lightning. (intensity=0.63)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.66, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.715 × top=0.775 = 0.5083 [hard_votes=2]\n  · science: base=0.58 × top=0.58 = 0.2559 [hard_votes=1]\n  · default: base=0.426 × top=0.426 = 0.0591 [hard_votes=0]\nTime Orientation: none\n=========================================\n- Here is the picture: Fire-burning ask. Fire like star — both burn bright. Fire need wood and gust. Wood is fuel, air feeds fire. put simply, absent air, flame die. Without wood, fire starve. It connects like this: blaze likeness star.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'fire'\nPrimary Action: explain  (conf=0.58, certainty=SURE)\nSure Actions: []\nUnsure Actions (Coinflip Side-Features): [explain]\nConstraints: [None]\nWinning Node: node_9\nLobe Context: [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))]\nUser Triples: None\nNode Triples: (fire, &similarity, star), (fire, &causal, light)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nOther Possibilities (strong but not winners):\n  🔸 node_9 | action=explain | conf=0.58 | relations=(fire, &similarity, star), (fire, &causal, light)\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: Cooking food makes it safe. (intensity=0.69) | [User]: Volcanoes erupt hot lava. (intensity=0.84)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.58, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 survival: base=0.715 × top=0.775 = 0.5083 [hard_votes=2]\n  · science: base=0.58 × top=0.58 = 0.2559 [hard_votes=1]\n  · default: base=0.426 × top=0.426 = 0.0591 [hard_votes=0]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_30",
+        "node_28",
+        "node_9",
+        "node_3"
+      ],
+      "you": "fire"
+    },
+    {
+      "confidence": 1.0,
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]",
+      "n_voters": 4,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "Here is the picture: both natural elements.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What is water?'\nPrimary Action: define  (conf=1.0, certainty=UNSURE)\nSure Actions: [define, define, explain, explain]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_57\nLobe Context: [default (9/14 active (&query &definition &define | hello grug | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (what, is, water?)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nTied Alternatives (not selected):\n  🪨 node_61 | action=define | conf=1.0 | relations=None\n  🪨 node_59 | action=explain | conf=1.0 | relations=None\n  🪨 node_58 | action=explain | conf=1.0 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: What is water? (intensity=1.74)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=UNSURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58"
+      ],
+      "you": "What is water?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.5 × top=0.5 = 0.1768 [hard_votes=1]\n  · science: base=0.48 × top=0.48 = 0.1593 [hard_votes=0]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 The cave echoes on \"Define happiness.\" and I can't resolve it. Can you tell me what you mean?\n📖 I do know some words: happiness → a feeling of warmth and light inside\n   But I need a full answer to truly understand. Use /answer to teach me more.\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.795)",
+      "voter_ids": [
+        "node_24",
+        "node_11"
+      ],
+      "you": "Define happiness."
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.519 × top=0.519 = 0.1943 [hard_votes=1]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 \"I miss someone.\" — nothing fires. What should I know about this?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.795)",
+      "voter_ids": [
+        "node_25"
+      ],
+      "you": "I miss someone."
+    },
+    {
+      "confidence": 0.6932515337423313,
+      "fired_node": "node_42",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 time: base=0.663 × top=0.693 = 0.3914 [hard_votes=2]",
+      "n_voters": 2,
+      "node_answer_mode": "",
+      "node_lobe": "time",
+      "node_pattern": "what comes after winter",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "reason",
+      "raw_output": "Thinking it through: in short, grug ponder on winter. Temporal argument active (future orientation via &next): project forward about what may come next. Nothing stays winter forever. Cold ends, glow returns, snow melts, plants grow again. After winter comes spring! Winter → spring — the cycle turns. Era node, temporal sigil.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What comes after winter?'\nPrimary Action: reason  (conf=0.69, certainty=SURE)\nSure Actions: [reason]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_42\nLobe Context: [time (4/4 active (what comes after winter | spring season | what comes before the present))]\nUser Triples: None\nNode Triples: (winter, &temporal, spring)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=7] (Recent): [User]: What comes after winter? (intensity=0.65)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.69, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 time: base=0.663 × top=0.693 = 0.3914 [hard_votes=2]\nTime Orientation: future (sigil=next, flags=Dict{String, Bool}(\"project\" => 1, \"assess\" => 0, \"reflect\" => 0))\n=========================================",
+      "voter_ids": [
+        "node_42",
+        "node_39"
+      ],
+      "you": "What comes after winter?"
+    },
+    {
+      "confidence": 0.0,
+      "fired_node": "",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 default: base=0.4 × top=0.4 = 0.1012 [hard_votes=0]",
+      "n_voters": 1,
+      "node_answer_mode": "",
+      "node_lobe": "",
+      "node_pattern": "",
+      "node_strength": 0.0,
+      "node_type": "",
+      "primary_action": "",
+      "raw_output": "⚡ The cave has weak signal on this input — I'm not confident. (I do remember our recent conversation.)\n🤔 That lands in silence: \"Thank you Grug, you've been helpful.\". What is it?\n   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.797)",
+      "voter_ids": [
+        "node_4"
+      ],
+      "you": "Thank you Grug, you've been helpful."
+    }
+  ],
+  "part2_multipart_turns": [
+    {
+      "annotation": "MP1: two independent question clauses joined by \"also\"",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": true,
+        "n_subjects": 2,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "mp_1",
+            "role": "primary",
+            "text": "What is fire"
+          },
+          {
+            "index": 2,
+            "multipart_group": "mp_2",
+            "role": "support",
+            "text": "what is water?"
+          }
+        ],
+        "summary": "compound(2 parts): [mp_1/primary] \"What is fire\" | [mp_2/support] \"what is water?\""
+      },
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 emotions: base=0.914 × top=1.0 = 0.956 [hard_votes=2]\n  ↗ survival: base=0.806 × top=0.912 = 0.7473 [hard_votes=4]\n  ↗ science: base=0.794 × top=0.912 = 0.742 [hard_votes=3]\n  ↗ default: base=0.757 × top=0.911 = 0.3613 [hard_votes=2]",
+      "n_voters": 12,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "explain",
+      "raw_output": "Here is the picture: both natural elements.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'what is water?'\nPrimary Action: explain  (conf=1.0, certainty=UNSURE)\nSure Actions: [explain, explain, explain, define]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_57\nLobe Context: [default (9/14 active (&query &definition &define | hello grug | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (what, is, water?)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nTied Alternatives (not selected):\n  🪨 node_61 | action=explain | conf=1.0 | relations=None\n  🪨 node_59 | action=explain | conf=1.0 | relations=None\n  🪨 node_58 | action=define | conf=1.0 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [User]: What is fire also what is water? (intensity=1.15) | [User]: What is water? (intensity=0.56) | [System]: Mission \"What comes after winter?\" → primary=reason conf=0.69 node=node_42 (intensity=0.48) | [User]: Thank you Grug, you've been helpful. (intensity=0.83)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=UNSURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=0.914 × top=1.0 = 0.956 [hard_votes=2]\n  ↗ survival: base=0.806 × top=0.912 = 0.7473 [hard_votes=4]\n  ↗ science: base=0.794 × top=0.912 = 0.742 [hard_votes=3]\n  ↗ default: base=0.757 × top=0.911 = 0.3613 [hard_votes=2]\nPassthrough Lobes: [[\"survival\", \"science\", \"default\"]]\nTime Orientation: none\n=========================================\n\nHere is the picture: &query &definition &define.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What is fire'\nPrimary Action: define  (conf=0.83, certainty=UNSURE)\nSure Actions: [define, define, define, define]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_57\nLobe Context: [default (9/14 active (&query &definition &define | hello grug | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (what, is, fire)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nTied Alternatives (not selected):\n  🪨 node_59 | action=define | conf=0.82 | relations=None\n  🪨 node_58 | action=define | conf=0.82 | relations=None\n  🪨 node_61 | action=define | conf=0.82 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [User]: What is fire also what is water? (intensity=1.66)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.83, certainty=UNSURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=0.914 × top=1.0 = 0.956 [hard_votes=2]\n  ↗ survival: base=0.806 × top=0.912 = 0.7473 [hard_votes=4]\n  ↗ science: base=0.794 × top=0.912 = 0.742 [hard_votes=3]\n  ↗ default: base=0.757 × top=0.911 = 0.3613 [hard_votes=2]\nPassthrough Lobes: [[\"survival\", \"science\", \"default\"]]\nTime Orientation: none\n=========================================\n\n(Grug also think these infos maybe important)\n- Thinking it through: Grug ponder on flame. Be patient — fire take time to grow. 5) Build up with bigger wood. 4) Feed little fire carefully. 3) Shield spark from wind. put simply, 2) Make spark with flint or friction. Grug teach you: 1) Find dry wood and tinder. Procedure chain.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What is fire'\nPrimary Action: reason  (conf=0.74, certainty=SURE)\nSure Actions: []\nUnsure Actions (Coinflip Side-Features): [reason]\nConstraints: [None]\nWinning Node: node_30\nLobe Context: [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (what, is, fire)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nOther Possibilities (strong but not winners):\n  🔸 node_30 | action=reason | conf=0.74 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=8] (Recent): [User]: Thank you Grug, you've been helpful. (intensity=0.83)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.74, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 emotions: base=0.914 × top=1.0 = 0.956 [hard_votes=2]\n  ↗ survival: base=0.806 × top=0.912 = 0.7473 [hard_votes=4]\n  ↗ science: base=0.794 × top=0.912 = 0.742 [hard_votes=3]\n  ↗ default: base=0.757 × top=0.911 = 0.3613 [hard_votes=2]\nPassthrough Lobes: [[\"survival\", \"science\", \"default\"]]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_57",
+        "node_59",
+        "node_58",
+        "node_61",
+        "node_30",
+        "node_28",
+        "node_9",
+        "node_3",
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58"
+      ],
+      "you": "What is fire also what is water?"
+    },
+    {
+      "annotation": "MP2: two \"why\" explain-clauses joined by \"also\"",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": true,
+        "n_subjects": 2,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "mp_1",
+            "role": "primary",
+            "text": "Why does fire burn"
+          },
+          {
+            "index": 2,
+            "multipart_group": "mp_2",
+            "role": "support",
+            "text": "why is the sky blue?"
+          }
+        ],
+        "summary": "compound(2 parts): [mp_1/primary] \"Why does fire burn\" | [mp_2/support] \"why is the sky blue?\""
+      },
+      "fired_node": "node_9",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=0.706 × top=0.91 = 0.696 [hard_votes=3]\n  · emotions: base=0.821 × top=0.821 = 0.6102 [hard_votes=1]\n  ↗ survival: base=0.616 × top=0.683 = 0.3664 [hard_votes=2]\n  · default: base=0.589 × top=0.82 = 0.2579 [hard_votes=1]",
+      "n_voters": 10,
+      "node_answer_mode": "",
+      "node_lobe": "science",
+      "node_pattern": "why does fire burn",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "explain",
+      "raw_output": "Here is the picture: Fire-burning question. Fire like star — both burn glowing. Sky need wood also air. Wood is fuel, air feeds flame. Without air, fire die. Lacking wood, fire starve. in grug's words, grug chat of blaze. The thread is: flame likeness star.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'Why does fire burn'\nPrimary Action: explain  (conf=1.0, certainty=SURE)\nSure Actions: [explain]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_9\nLobe Context: [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))]\nUser Triples: None\nNode Triples: (fire, &similarity, star), (fire, &causal, light)\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: What comes after winter? (intensity=0.42) | [User]: Why does fire burn also why is the sky blue? (intensity=1.65)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)\nLobe Curve (√base × top² = score):\n  👑 science: base=0.706 × top=0.91 = 0.696 [hard_votes=3]\n  · emotions: base=0.821 × top=0.821 = 0.6102 [hard_votes=1]\n  ↗ survival: base=0.616 × top=0.683 = 0.3664 [hard_votes=2]\n  · default: base=0.589 × top=0.82 = 0.2579 [hard_votes=1]\nPassthrough Lobes: [[\"survival\"]]\nTime Orientation: none\n=========================================\n\nHere is the picture: &query &definition &define.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'why is the sky blue?'\nPrimary Action: explain  (conf=0.82, certainty=UNSURE)\nSure Actions: [explain, define, define, explain]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_57\nLobe Context: [default (9/14 active (&query &definition &define | hello grug | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (why, is, the)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nTied Alternatives (not selected):\n  🪨 node_59 | action=define | conf=0.82 | relations=None\n  🪨 node_58 | action=define | conf=0.82 | relations=None\n  🪨 node_61 | action=explain | conf=0.82 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.38 eligible=9] (Recent): [User]: Why does fire burn also why is the sky blue? (intensity=1.65)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.82, certainty=UNSURE)\nLobe Curve (√base × top² = score):\n  👑 science: base=0.706 × top=0.91 = 0.696 [hard_votes=3]\n  · emotions: base=0.821 × top=0.821 = 0.6102 [hard_votes=1]\n  ↗ survival: base=0.616 × top=0.683 = 0.3664 [hard_votes=2]\n  · default: base=0.589 × top=0.82 = 0.2579 [hard_votes=1]\nPassthrough Lobes: [[\"survival\"]]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_9",
+        "node_30",
+        "node_28",
+        "node_3",
+        "node_57",
+        "node_59",
+        "node_58",
+        "node_61",
+        "node_10",
+        "node_14"
+      ],
+      "you": "Why does fire burn also why is the sky blue?"
+    },
+    {
+      "annotation": "MP3: two arithmetic sigil expressions joined by \"also\"",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": true,
+        "n_subjects": 2,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "mp_1",
+            "role": "primary",
+            "text": "What is 2 plus 2"
+          },
+          {
+            "index": 2,
+            "multipart_group": "mp_2",
+            "role": "support",
+            "text": "what is 3 times 4?"
+          }
+        ],
+        "summary": "compound(2 parts): [mp_1/primary] \"What is 2 plus 2\" | [mp_2/support] \"what is 3 times 4?\""
+      },
+      "fired_node": "node_9",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=0.706 × top=0.91 = 0.696 [hard_votes=3]\n  · emotions: base=0.821 × top=0.821 = 0.6102 [hard_votes=1]\n  ↗ survival: base=0.616 × top=0.683 = 0.3664 [hard_votes=2]\n  · default: base=0.589 × top=0.82 = 0.2579 [hard_votes=1]",
+      "n_voters": 10,
+      "node_answer_mode": "",
+      "node_lobe": "science",
+      "node_pattern": "why does fire burn",
+      "node_strength": 5.5,
+      "node_type": "voter",
+      "primary_action": "explain",
+      "raw_output": "2 plus 2 = 4, then 2 times 3 = 12, so the answer is 12",
+      "voter_ids": [
+        "node_9",
+        "node_30",
+        "node_28",
+        "node_3",
+        "node_57",
+        "node_59",
+        "node_58",
+        "node_61",
+        "node_10",
+        "node_14"
+      ],
+      "you": "What is 2 plus 2 also what is 3 times 4?"
+    },
+    {
+      "annotation": "MP4: cross-lobe compound — science question + emotional statement",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": false,
+        "n_subjects": 1,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "",
+            "role": "singleton",
+            "text": "What is gravity also I feel sad today?"
+          }
+        ],
+        "summary": "[singleton] \"What is gravity also I feel sad today?\""
+      },
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\n  ↗ emotions: base=0.648 × top=0.758 = 0.4622 [hard_votes=2]",
+      "n_voters": 6,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "Here is the picture: the force that pulls all things toward each other.\n--- DEBUG TELEMETRY (orchestration internals, not for speech) ---\nMission: 'What is gravity also I feel sad today?'\nPrimary Action: define  (conf=1.0, certainty=UNSURE)\nSure Actions: [define, define, define, define]\nUnsure Actions (Coinflip Side-Features): [None]\nConstraints: [None]\nWinning Node: node_57\nLobe Context: [default (9/14 active (&query &definition &define | hello grug | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (cooking food makes it safe | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | is fire dangerous))]\nUser Triples: (what, is, gravity)\nNode Triples: None\nAnti-Match Detected: false\nEvaluated Rules (shaping): None (rule board removed)\nArithmetic: no math bindings this cycle\nTied Alternatives (not selected):\n  🪨 node_61 | action=define | conf=1.0 | relations=None\n  🪨 node_59 | action=define | conf=1.0 | relations=None\n  🪨 node_58 | action=define | conf=1.0 | relations=None\nAIML Memory Bank:\nDeep Memory (Pinned): No pinned rocks\nFresh Memory [threshold=0.75 eligible=5] (Recent): [User]: What is gravity also I feel sad today? (intensity=1.19) | [User]: What is fire also what is water? (intensity=0.95) | [User]: Why does fire burn also why is the sky blue? (intensity=1.14) | [User]: What is gravity also I feel sad today? (intensity=1.7)\nMemory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=UNSURE)\nLobe Curve (√base × top² = score):\n  👑 science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\n  ↗ emotions: base=0.648 × top=0.758 = 0.4622 [hard_votes=2]\nPassthrough Lobes: [[\"emotions\"]]\nTime Orientation: none\n=========================================",
+      "voter_ids": [
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58",
+        "node_21",
+        "node_20"
+      ],
+      "you": "What is gravity also I feel sad today?"
+    },
+    {
+      "annotation": "MP5: THREE-part compound (arithmetic + science + reason)",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": true,
+        "n_subjects": 3,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "mp_1",
+            "role": "primary",
+            "text": "What is 2 plus 2"
+          },
+          {
+            "index": 2,
+            "multipart_group": "mp_2",
+            "role": "support",
+            "text": "what is gravity"
+          },
+          {
+            "index": 3,
+            "multipart_group": "mp_3",
+            "role": "support",
+            "text": "what is water?"
+          }
+        ],
+        "summary": "compound(3 parts): [mp_1/primary] \"What is 2 plus 2\" | [mp_2/support] \"what is gravity\" | [mp_3/support] \"what is water?\""
+      },
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\n  ↗ emotions: base=0.648 × top=0.758 = 0.4622 [hard_votes=2]",
+      "n_voters": 6,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "2 plus 2 equals 4",
+      "voter_ids": [
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58",
+        "node_21",
+        "node_20"
+      ],
+      "you": "What is 2 plus 2 also what is gravity also what is water?"
+    },
+    {
+      "annotation": "MP6: imperative \"tell me about X and tell me about Y\" compound",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": true,
+        "n_subjects": 2,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "mp_1",
+            "role": "primary",
+            "text": "Tell me about fire"
+          },
+          {
+            "index": 2,
+            "multipart_group": "mp_2",
+            "role": "support",
+            "text": "tell me about volcanoes?"
+          }
+        ],
+        "summary": "compound(2 parts): [mp_1/primary] \"Tell me about fire\" | [mp_2/support] \"tell me about volcanoes?\""
+      },
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\n  ↗ emotions: base=0.648 × top=0.758 = 0.4622 [hard_votes=2]",
+      "n_voters": 6,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "Alert. ⚠️ Yes! Fire is dangerous. Fire burn skin. Fire spread fast. Fire destroy shelter. Grug respect fire but always careful — never touch, never leave alone; Grug think about volcanoes. One more rock for Grug's wall of knowing.",
+      "voter_ids": [
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58",
+        "node_21",
+        "node_20"
+      ],
+      "you": "Tell me about fire and tell me about volcanoes?"
+    },
+    {
+      "annotation": "CTRL1: conjunction joins ONE subject, no question markers — expect NOT compound",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": false,
+        "n_subjects": 1,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "",
+            "role": "singleton",
+            "text": "Bread and butter are tasty."
+          }
+        ],
+        "summary": "[singleton] \"Bread and butter are tasty.\""
+      },
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\n  ↗ emotions: base=0.648 × top=0.758 = 0.4622 [hard_votes=2]",
+      "n_voters": 6,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "📖 Learned: butter means tasty.",
+      "voter_ids": [
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58",
+        "node_21",
+        "node_20"
+      ],
+      "you": "Bread and butter are tasty."
+    },
+    {
+      "annotation": "CTRL2: conjunction joins a single predicate — expect NOT compound",
+      "confidence": 1.0,
+      "decomposition": {
+        "is_compound": false,
+        "n_subjects": 1,
+        "sub_subjects": [
+          {
+            "index": 1,
+            "multipart_group": "",
+            "role": "singleton",
+            "text": "Fire and water are both natural elements."
+          }
+        ],
+        "summary": "[singleton] \"Fire and water are both natural elements.\""
+      },
+      "fired_node": "node_57",
+      "lobe_curve": "Lobe Curve (√base × top² = score):\n  👑 science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]\n  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]\n  ↗ emotions: base=0.648 × top=0.758 = 0.4622 [hard_votes=2]",
+      "n_voters": 6,
+      "node_answer_mode": "",
+      "node_lobe": "emotions",
+      "node_pattern": "&query &definition &define",
+      "node_strength": 1.0,
+      "node_type": "sigil",
+      "primary_action": "define",
+      "raw_output": "📖 Learned: water means both natural elements.",
+      "voter_ids": [
+        "node_57",
+        "node_61",
+        "node_59",
+        "node_58",
+        "node_21",
+        "node_20"
+      ],
+      "you": "Fire and water are both natural elements."
+    }
+  ],
+  "part3_teach_turns": [
+    {
+      "label": "S1-Q",
+      "pending_queue_size": 2,
+      "pending_queue_topics": [
+        "glorbnak",
+        "snarfum"
+      ],
+      "raw_output": "Grug not know 'glorbnak'. What does it mean? What subject is it?; Grug not know 'snarfum'. What does it mean? What subject is it?",
+      "you": "What is glorbnak and what is snarfum?"
+    },
+    {
+      "label": "S1-TEACH1",
+      "pending_queue_size": 1,
+      "pending_queue_topics": [
+        "snarfum"
+      ],
+      "raw_output": "📖 Grug learned: glorbnak means a small furry cave creature (biology) Also — Grug not know 'snarfum'. What does it mean? What subject is it?",
+      "you": "biology, a small furry cave creature"
+    },
+    {
+      "label": "S1-TEACH2",
+      "pending_queue_size": 0,
+      "pending_queue_topics": [],
+      "raw_output": "📖 Grug learned: snarfum means a glowing cave mushroom (biology)",
+      "you": "biology, a glowing cave mushroom"
+    },
+    {
+      "label": "S2-Q",
+      "pending_queue_size": 1,
+      "pending_queue_topics": [
+        "quaggleworth"
+      ],
+      "raw_output": "📖 brontosaurus: a giant long-necked plant-eating dinosaur; Grug not know 'quaggleworth'. What does it mean? What subject is it?",
+      "you": "What is brontosaurus and what is quaggleworth?"
+    },
+    {
+      "label": "S2-TEACH",
+      "pending_queue_size": 0,
+      "pending_queue_topics": [],
+      "raw_output": "📖 Grug learned: quaggleworth means a rare purple flower that blooms at night (nature)",
+      "you": "nature, a rare purple flower that blooms at night"
+    },
+    {
+      "label": "S3-Q",
+      "pending_queue_size": 3,
+      "pending_queue_topics": [
+        "fexbolt",
+        "trundlewick",
+        "ozzmire"
+      ],
+      "raw_output": "Grug not know 'fexbolt'. What does it mean? What subject is it?; Grug not know 'trundlewick'. What does it mean? What subject is it?; Grug not know 'ozzmire'. What does it mean? What subject is it?",
+      "you": "What is fexbolt and what is trundlewick and what is ozzmire?"
+    },
+    {
+      "label": "S3-TEACH1",
+      "pending_queue_size": 2,
+      "pending_queue_topics": [
+        "trundlewick",
+        "ozzmire"
+      ],
+      "raw_output": "📖 Grug learned: fexbolt means a small tool grug uses to sharpen rocks (technology) Also — Grug not know 'trundlewick'. What does it mean? What subject is it?",
+      "you": "technology, a small tool grug uses to sharpen rocks"
+    },
+    {
+      "label": "S3-TEACH2",
+      "pending_queue_size": 1,
+      "pending_queue_topics": [
+        "ozzmire"
+      ],
+      "raw_output": "📖 Grug learned: trundlewick means a slow rolling stone that moves downhill (nature) Also — Grug not know 'ozzmire'. What does it mean? What subject is it?",
+      "you": "nature, a slow rolling stone that moves downhill"
+    },
+    {
+      "label": "S3-TEACH3",
+      "pending_queue_size": 0,
+      "pending_queue_topics": [],
+      "raw_output": "📖 Grug learned: ozzmire means a misty swamp full of strange sounds (nature)",
+      "you": "nature, a misty swamp full of strange sounds"
+    },
+    {
+      "label": "S4-Q",
+      "pending_queue_size": 1,
+      "pending_queue_topics": [
+        "zubrinthax"
+      ],
+      "raw_output": "Grug think about forage. One more rock for Grug's wall of knowing.; Grug not know 'zubrinthax'. What does it mean? What subject is it?",
+      "you": "What is forage and what is zubrinthax?"
+    },
+    {
+      "label": "S4-TEACH",
+      "pending_queue_size": 0,
+      "pending_queue_topics": [],
+      "raw_output": "📖 Grug learned: zubrinthax means a tall spiky plant found near rivers (nature)",
+      "you": "nature, a tall spiky plant found near rivers"
+    }
+  ],
+  "part4_learning_methods": {
+    "action_learning": {
+      "action_node_created": true,
+      "builtin_factorial_reply": "factorial of 5 is 120",
+      "callback_name": "learned_quadrupling_thing",
+      "held_out_9": 36.0,
+      "teach_ack": "🧮 Grug learned to COMPUTE quadrupling_thing (not just recite it) — try \"quadrupling_thing of 5\".",
+      "topic": "quadrupling_thing"
+    },
+    "math_conservative_fallback": {
+      "computable_action_node_created": false,
+      "descriptive_procedural_node_created": true,
+      "teach_ack": "⚡ Grug learned procedure: flibberwocking — the steps to do this are gather all the small pebbles and sort by how shiny they look",
+      "topic": "flibberwocking"
+    },
+    "math_learning": {
+      "action_node_created": true,
+      "callback_name": "learned_gorbling",
+      "held_out_100": 298.0,
+      "held_out_7": 19.0,
+      "teach_ack": "🧮 Grug learned to COMPUTE gorbling (not just recite it) — try \"gorbling of 5\".",
+      "topic": "gorbling",
+      "usage_reply": "gorbling of 7 is 19"
+    },
+    "roundtrip_verification": {
+      "math_callback_survives_reload_in_process": true,
+      "math_use_reply_after_reload": "gorbling of 7 is 19",
+      "neg_thesaurus_pairs_matches": true,
+      "post_bias": 0.85,
+      "post_neg_count": 5,
+      "pre_bias": 0.85,
+      "pre_neg_count": 5,
+      "routing_bias_matches": true,
+      "verb_classes_matches": true
+    },
+    "routing_selfimprovement": {
+      "bias_after_10x_incorrect_clamped": 0.85,
+      "bias_after_5x_correct": 1.05,
+      "bias_before": 0.95,
+      "last_routed_intent_after_arith_turn": "calculate"
+    },
+    "verb_synonym_learning": {
+      "is_synonym_blocked_check": true,
+      "neg_thesaurus_pairs_after_runtime_add": 5,
+      "relation_classes_after": 6,
+      "relation_classes_before": 5,
+      "thesaurus_words_after": 1481,
+      "thesaurus_words_before": 1480,
+      "verb_class_of_scorches": "thermal_test_class"
+    }
+  },
+  "sigils": [
+    {
+      "applies_at": "bind",
+      "class": "procedure",
+      "expansion": [
+        "find dry wood",
+        "make spark",
+        "shield from wind",
+        "feed flame",
+        "build up fire"
+      ],
+      "name": "Firestarter"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "action"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "plus",
+        "minus",
+        "times",
+        "divided",
+        "multiply",
+        "add",
+        "subtract",
+        "over",
+        "mod",
+        "modulo",
+        "power",
+        "equals"
+      ],
+      "name": "arithmetic"
+    },
+    {
+      "applies_at": "tone",
+      "class": "macro",
+      "lexicon": [
+        "before",
+        "earlier",
+        "previously",
+        "what happened",
+        "in the past",
+        "back then",
+        "beforehand",
+        "formerly",
+        "lately",
+        "recently"
+      ],
+      "name": "before"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "is",
+        "are",
+        "am",
+        "be",
+        "was",
+        "were"
+      ],
+      "name": "being"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "causes",
+        "produces",
+        "creates",
+        "generates",
+        "leads_to",
+        "results_in",
+        "triggers",
+        "enables",
+        "brings_about"
+      ],
+      "name": "causal"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "concept"
+    },
+    {
+      "applies_at": "bind",
+      "class": "tag",
+      "name": "danger"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "define"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "definition"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "loves",
+        "hates",
+        "fears",
+        "desires",
+        "resents",
+        "admires",
+        "misses",
+        "longs_for"
+      ],
+      "name": "emotional"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "n"
+    },
+    {
+      "applies_at": "tone",
+      "class": "macro",
+      "lexicon": [
+        "next",
+        "after",
+        "later",
+        "what will",
+        "whats next",
+        "in the future",
+        "going forward",
+        "soon",
+        "eventually",
+        "afterward",
+        "upcoming"
+      ],
+      "name": "next"
+    },
+    {
+      "applies_at": "bind",
+      "class": "macro",
+      "lexicon": [],
+      "name": "noun"
+    },
+    {
+      "applies_at": "tone",
+      "class": "macro",
+      "lexicon": [
+        "now",
+        "currently",
+        "right now",
+        "what now",
+        "whats happening",
+        "current state",
+        "presently",
+        "at the moment",
+        "at present"
+      ],
+      "name": "now"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "op"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "has",
+        "owns",
+        "contains",
+        "holds",
+        "carries",
+        "possesses",
+        "includes",
+        "comprises"
+      ],
+      "name": "possessive"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "query"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "rest"
+    },
+    {
+      "applies_at": "bind",
+      "class": "macro",
+      "lexicon": [
+        "autumn",
+        "spring",
+        "summer",
+        "winter"
+      ],
+      "name": "season"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "resembles",
+        "mirrors",
+        "echoes",
+        "parallels",
+        "mimics",
+        "approximates",
+        "is_like"
+      ],
+      "name": "similarity"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "above",
+        "below",
+        "inside",
+        "outside",
+        "near",
+        "beside",
+        "around",
+        "between",
+        "through",
+        "across",
+        "behind",
+        "in_front_of"
+      ],
+      "name": "spatial"
+    },
+    {
+      "applies_at": "relation",
+      "class": "relation",
+      "expansion": [
+        "before",
+        "after",
+        "during",
+        "since",
+        "until",
+        "now",
+        "then",
+        "precedes",
+        "follows",
+        "while",
+        "when"
+      ],
+      "name": "temporal"
+    },
+    {
+      "applies_at": "match",
+      "class": "lambda",
+      "name": "word"
+    }
+  ],
+  "time_node_isolation": {
+    "mixed": 0,
+    "regular": 46,
+    "time_groups": 4
+  },
+  "top10": [
+    {
+      "id": "node_30",
+      "pattern": "how do i make fire",
+      "strength": 6.5
+    },
+    {
+      "id": "node_8",
+      "pattern": "how does gravity work",
+      "strength": 6.5
+    },
+    {
+      "id": "node_3",
+      "pattern": "hey grug what do you know about fire",
+      "strength": 6.0
+    },
+    {
+      "id": "node_11",
+      "pattern": "define gravity for me",
+      "strength": 6.0
+    },
+    {
+      "id": "node_16",
+      "pattern": "what is 2 plus 2",
+      "strength": 6.0
+    },
+    {
+      "id": "node_18",
+      "pattern": "what is 10 minus 3",
+      "strength": 6.0
+    },
+    {
+      "id": "node_17",
+      "pattern": "what is 3 times 4",
+      "strength": 6.0
+    },
+    {
+      "id": "node_28",
+      "pattern": "is fire dangerous",
+      "strength": 6.0
+    },
+    {
+      "id": "node_27",
+      "pattern": "tell me about water",
+      "strength": 6.0
+    },
+    {
+      "id": "node_31",
+      "pattern": "how do i find water",
+      "strength": 6.0
+    }
+  ]
+}

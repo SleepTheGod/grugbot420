@@ -1,6 +1,6 @@
 # V9 Math Routing Test Log
 
-_Generated: 2026-06-25T03:44:27.678_
+_Generated: 2026-07-08T22:34:51.295_
 
 ## 1. Token-level arithmetic detection
 
@@ -61,19 +61,9 @@ _Generated: 2026-06-25T03:44:27.678_
 
 ## 8. Compound question end-to-end
 
-- ❌ **compound "what is 5+5 and what is love" → has 10** — voice='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 No structure catches "what is 5+5 and what is love". Help me out — what are you getting at?
-📖 I do know some words: love → a deep affection
-   But I need a full answer to truly understand. Use /answer to teach me more.
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.0)'
-- ✅ **compound "what is 5+5 and what is love" → has love info** — voice='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 No structure catches "what is 5+5 and what is love". Help me out — what are you getting at?
-📖 I do know some words: love → a deep affection
-   But I need a full answer to truly understand. Use /answer to teach me more.
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.0)'
-- ❌ **compound "what is 3 times 2 and why is grass green" → has 6** — voice='⚡ Nothing in the cave matches this input. (I do remember our recent conversation.)
-🤔 I've got nothing for "what is 3 times 2 and why is grass green". Can you break it down for me?
-   → Use /answer [@lobe_id] [:mode] <text> to teach me. Modes: reason, explain, define, alert, comfort, math, multi, relate, proc, json. Or /define <word> = <definition> for quick definitions. (strain=0.0)'
+- ✅ **compound "what is 5+5 and what is love" → has 10** — voice='5 plus 5 equals 10; 📖 love: a deep affection'
+- ✅ **compound "what is 5+5 and what is love" → has love info** — voice='5 plus 5 equals 10; 📖 love: a deep affection'
+- ✅ **compound "what is 3 times 2 and why is grass green" → has 6** — voice='3 times 2 equals 6; Grug not know 'grass green'. What does it mean? What subject is it?'
 
 ## 9. Edge cases
 
@@ -84,5 +74,5 @@ _Generated: 2026-06-25T03:44:27.678_
 
 ---
 
-**Total:** 43  **Passed:** 41  **Failed:** 2
+**Total:** 43  **Passed:** 43  **Failed:** 0
 

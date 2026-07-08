@@ -599,7 +599,16 @@ function temporal_identity_status()::Dict{String,Any}
     lock(_PROPOSALS_LOCK)
     try
         n_cont = length(_CONTINUANTS)
-        n_stages = sum(length(c.stages) for c in values(_CONTINUANTS))
+        # GRUG v9.4: COHERENCE FIX — sum() over an empty generator throws
+        # ArgumentError("reducing over an empty collection is not allowed;
+        # consider supplying `init` to the reducer") in Julia. Specimens with
+        # zero temporal continuants (a perfectly normal, common state — most
+        # specimens haven't grown any temporal identity continuants yet) used
+        # to crash every single call to temporal_identity_status() (and thus
+        # every specimen load, since load logs this status right after
+        # restoring). Supplying init=0 makes the empty case correctly yield 0
+        # instead of throwing, with identical behavior for the non-empty case.
+        n_stages = sum((length(c.stages) for c in values(_CONTINUANTS)); init=0)
         n_prop_pending = count(p -> p.status == :pending, values(_PROPOSALS))
         n_prop_approved = count(p -> p.status == :approved, values(_PROPOSALS))
         n_prop_rejected = count(p -> p.status == :rejected, values(_PROPOSALS))

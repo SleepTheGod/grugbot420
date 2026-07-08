@@ -1335,7 +1335,7 @@ end
 GRUG v8.2: Restore the inverse table from a specimen snapshot.
 Overwrites any existing data. Called during /loadSpecimen.
 """
-function load_table_snapshot!(data::Dict{String, Any})
+function load_table_snapshot!(data)
     lock(_INVERSE_LOCK) do
         empty!(_INVERSE_TABLE)
         entries_data = get(data, "entries", Dict{String, Any}())

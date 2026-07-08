@@ -1035,14 +1035,25 @@ end
 # ============================================================================
 
 """
-thesaurus_gate_filter(input_text) -> Set{String}
+thesaurus_gate_filter(input_text; is_blocked=nothing) -> Set{String}
 
 GRUG: Pre-scan gate expansion. Turns input tokens into a rich synonym cloud.
 Used by process_mission gate before scan_and_expand runs.
 Each token expands to at most GATE_MAX_EXPANSIONS_PER_TOKEN synonyms (sorted by seed priority).
 Returns combined set of original tokens + expansions (all lowercase).
+
+GRUG v9.4: `is_blocked` is an optional `(word, synonym) -> Bool` callback.
+Thesaurus.jl itself has no knowledge of InputQueue's context ledger (that
+would be a circular module dependency — InputQueue is included AFTER
+Thesaurus), so the caller (Main.jl) injects `InputQueue.is_synonym_blocked`
+here. When provided, any (tok, syn) pair the callback flags as a known-bad
+register/context edge case ("deep"->"abyss" activating an ocean-flavoured
+node from an unrelated "deep water is dangerous" input, etc.) is skipped
+during expansion — the edge case is honoured at ACTIVATION time, not just
+at output time.
 """
-function thesaurus_gate_filter(input_text::AbstractString)::Set{String}
+function thesaurus_gate_filter(input_text::AbstractString;
+                                is_blocked::Union{Function, Nothing} = nothing)::Set{String}
     if isempty(strip(input_text))
         throw_thesaurus_error("Cannot filter empty input", "thesaurus_gate_filter")
     end
@@ -1053,6 +1064,8 @@ function thesaurus_gate_filter(input_text::AbstractString)::Set{String}
     # This ensures gate expansion matches work even before synonym lookup.
     expanded = normalize_tokens(tokens)
 
+    _blocked(w, s) = is_blocked !== nothing && is_blocked(w, s)
+
     for tok in tokens
         syns = get_seed_synonyms(tok)
         # GRUG: Take up to GATE_MAX_EXPANSIONS_PER_TOKEN synonyms.
@@ -1061,6 +1074,7 @@ function thesaurus_gate_filter(input_text::AbstractString)::Set{String}
         count = 0
         for syn in syns
             count >= GATE_MAX_EXPANSIONS_PER_TOKEN && break
+            _blocked(tok, syn) && continue  # GRUG v9.4: context-ledger edge case — skip
             push!(expanded, syn)
             # GRUG v8.17: Also add the stemmed form of each synonym.
             stemmed = stem_token(syn)
@@ -1076,6 +1090,7 @@ function thesaurus_gate_filter(input_text::AbstractString)::Set{String}
             count2 = 0
             for syn in stemmed_syns
                 count2 >= GATE_MAX_EXPANSIONS_PER_TOKEN && break
+                _blocked(stemmed_tok, syn) && continue  # GRUG v9.4
                 push!(expanded, syn)
                 count2 += 1
             end

@@ -73,6 +73,7 @@ _get_NODE_MAP()   = _parent_binding(:NODE_MAP)
 _get_NODE_LOCK()  = _parent_binding(:NODE_LOCK)
 _get_dict_lookup() = _parent_binding(:_dict_lookup_word)
 _get_pending_teach() = _parent_binding(:_conv_get_pending_teach)
+_get_pending_teach_turn() = _parent_binding(:_conv_pending_teach_turn)
 
 # ── Knobs ────────────────────────────────────────────────────────────────────
 
@@ -82,13 +83,128 @@ const LAZY_ENTROPY_THRESHOLD = 0.15  # bits — roughly 85%+ confidence on one i
 # Conservative bias per intent kind. Higher = more conservative (safer).
 # This is the "snap-back target" — when jitter fires, it pushes toward higher bias.
 const CONSERVATIVE_BIAS = Dict{Symbol, Float64}(
-    :nothing   => 1.00,   # Do nothing is always safest
-    :calculate => 0.95,   # Arithmetic is deterministic — very safe, nearly as safe as :nothing
-    :question  => 0.80,   # Asking is safe — bot just queries its own knowledge
-    :correct   => 0.50,   # Correcting modifies existing knowledge — moderate risk
-    :define    => 0.25,   # Defining creates new knowledge — risky
-    :teach     => 0.10,   # Teaching creates persistent sigil nodes — riskiest
+    :nothing       => 1.00,   # Do nothing is always safest
+    :calculate     => 0.95,   # Arithmetic is deterministic — very safe, nearly as safe as :nothing
+    :question      => 0.80,   # Asking is safe — bot just queries its own knowledge
+    :correct       => 0.50,   # Correcting modifies existing knowledge — moderate risk
+    :define        => 0.25,   # Defining creates new knowledge — risky
+    :teach         => 0.10,   # Teaching creates persistent sigil nodes — riskiest
+    :teach_synonym => 0.15,   # Conversational synonym registration — narrow, low-risk
+    :teach_verb    => 0.15,   # Conversational verb/class registration — narrow, low-risk
 )
+
+# ==============================================================================
+# GRUG v9.3: ROUTING SELF-IMPROVEMENT — adaptive bias adjustment
+# ==============================================================================
+# The CONSERVATIVE_BIAS dict above is a fixed PRIOR — grug's starting opinion
+# about how safe each intent kind is. But grug should get BETTER at routing
+# over time, not stay frozen forever. BIAS_ADJUSTMENT is a small persistent
+# delta layered on top of CONSERVATIVE_BIAS, nudged by real /right and /wrong
+# feedback from the user. If :teach routing keeps producing /right outcomes,
+# its effective bias creeps up (grug trusts that path a little more next
+# time there's a close call). If :question routing keeps producing /wrong,
+# its effective bias creeps down.
+#
+# This is intentionally SLOW and BOUNDED (small learn rate, clamped range) —
+# routing bias adaptation should never override the conservative hierarchy
+# wholesale, only nudge close calls over time. It persists across specimen
+# save/load (see Main.jl save_specimen_to_file!/load_specimen_from_file!).
+# ==============================================================================
+
+const _BIAS_ADJUSTMENT_LOCK = ReentrantLock()
+
+# Per-kind persistent delta, added to CONSERVATIVE_BIAS at resolve time.
+const BIAS_ADJUSTMENT = Dict{Symbol, Float64}(k => 0.0 for k in keys(CONSERVATIVE_BIAS))
+
+# How much a single /right or /wrong nudges the bias for that intent kind.
+const BIAS_LEARN_RATE = 0.02
+
+# Adjustment is clamped to +/- this value — routing bias can drift, but
+# never enough to invert the conservative hierarchy by itself.
+const BIAS_ADJUSTMENT_CLAMP = 0.30
+
+"""
+    effective_bias(kind::Symbol)::Float64
+
+Return the CURRENT effective conservative bias for an intent kind — the
+static prior (CONSERVATIVE_BIAS) plus whatever has been learned so far
+(BIAS_ADJUSTMENT), clamped to a sane range. This is what `resolve` actually
+uses for scoring, instead of the raw static dict.
+"""
+function effective_bias(kind::Symbol)::Float64
+    base = get(CONSERVATIVE_BIAS, kind, 0.0)
+    adj = lock(_BIAS_ADJUSTMENT_LOCK) do
+        get(BIAS_ADJUSTMENT, kind, 0.0)
+    end
+    return clamp(base + adj, 0.0, 1.5)
+end
+
+"""
+    record_routing_outcome!(kind::Symbol, success::Bool)
+
+GRUG v9.3: The self-improvement hook. Call this when the user gives explicit
+feedback (/right or /wrong) about the last response, passing the intent kind
+that `_conversation_prescan` routed to for that turn. On success, the kind's
+bias nudges UP by BIAS_LEARN_RATE (grug trusts this routing path a little
+more). On failure, it nudges DOWN. Adjustment is clamped so routing can drift
+but never invert the conservative hierarchy on its own.
+
+Non-fatal by design — an unknown kind just gets a fresh 0.0 entry instead of
+erroring, since new intent kinds may be added over time.
+"""
+function record_routing_outcome!(kind::Symbol, success::Bool)
+    lock(_BIAS_ADJUSTMENT_LOCK) do
+        current = get(BIAS_ADJUSTMENT, kind, 0.0)
+        delta = success ? BIAS_LEARN_RATE : -BIAS_LEARN_RATE
+        updated = clamp(current + delta, -BIAS_ADJUSTMENT_CLAMP, BIAS_ADJUSTMENT_CLAMP)
+        BIAS_ADJUSTMENT[kind] = updated
+    end
+    return nothing
+end
+
+"""
+    get_bias_adjustments()::Dict{Symbol, Float64}
+
+Snapshot of all learned bias adjustments, for specimen serialization.
+"""
+function get_bias_adjustments()::Dict{Symbol, Float64}
+    lock(_BIAS_ADJUSTMENT_LOCK) do
+        return copy(BIAS_ADJUSTMENT)
+    end
+end
+
+"""
+    set_bias_adjustments!(d::AbstractDict)
+
+Bulk-restore learned bias adjustments (e.g. from a loaded specimen). Values
+are clamped defensively in case of hand-edited/corrupted specimen data.
+Keys not present in `d` keep their current value (usually 0.0 on fresh boot).
+"""
+function set_bias_adjustments!(d::AbstractDict)
+    lock(_BIAS_ADJUSTMENT_LOCK) do
+        for (k, v) in d
+            kk = k isa Symbol ? k : Symbol(String(k))
+            BIAS_ADJUSTMENT[kk] = clamp(Float64(v), -BIAS_ADJUSTMENT_CLAMP, BIAS_ADJUSTMENT_CLAMP)
+        end
+    end
+    return nothing
+end
+
+"""
+    reset_bias_adjustments!()
+
+Zero out all learned routing bias adjustments. Used on full cave wipe
+(specimen reload) so stale learning from a previous specimen doesn't bleed
+into a freshly loaded one.
+"""
+function reset_bias_adjustments!()
+    lock(_BIAS_ADJUSTMENT_LOCK) do
+        for k in keys(BIAS_ADJUSTMENT)
+            BIAS_ADJUSTMENT[k] = 0.0
+        end
+    end
+    return nothing
+end
 
 # Graph backing weight — how much existing knowledge boosts :question score.
 const GRAPH_BACKING_WEIGHT = 0.30
@@ -668,8 +784,10 @@ function resolve(candidates::Vector{IntentCandidate};
         base = c.match_quality
         base += compute_graph_backing(c.topic, c.kind)
 
-        # Conservative bias
-        bias = get(CONSERVATIVE_BIAS, c.kind, 0.0)
+        # Conservative bias — GRUG v9.3: use the LEARNED effective bias
+        # (static prior + accumulated /right//wrong adjustment), not the
+        # raw static dict. This is the routing self-improvement hook.
+        bias = effective_bias(c.kind)
 
         # Pre-jitter final score = base * bias + pending_teach_backing
         # NOTE: pending_teach_backing is applied ADDITIVELY after bias multiplication.
@@ -770,46 +888,47 @@ function collect_intents(text::String)::Vector{IntentCandidate}
         return candidates
     end
 
-    # ── Pending teach ─────────────────────────────────────────────────────
+    # ── Pending teach ──────────────────────────────────────────────────
+    # GRUG v9.3: Delegate to the SAME shared classifier the greedy-waterfall
+    # fallback uses (`_conv_pending_teach_turn`, in Main.jl) via the lazy
+    # `_parent_binding` pattern, instead of maintaining an independent
+    # reimplementation here. The two copies had drifted apart (missing
+    # ack-words like "idk"/"dunno", no bare-subject-word follow-up, no
+    # carried-forward subject) — a single source of truth eliminates that
+    # class of bug permanently, and any future improvement to the
+    # teach-response heuristics automatically benefits both paths.
     _pending = _get_pending_teach()()
     if !isempty(_pending)
-        # Check for topic shift (question word or question mark)
-        _looks_like_question = match(r"^(?:what|who|where|when|why|how|which)\b"i, t) !== nothing || occursin('?', t)
-        # Check for acknowledgment (standalone yes/no) — these should NOT be :teach.
-        # They fall through to :nothing so the main conversation handler processes them.
-        _is_ack = match(r"^(?:yes|no|yep|nope|yeah|nah|ok|okay|sure|right)\s*$"i, t) !== nothing
-        # Check for topic mismatch: if input is "X is/are Y" and X doesn't relate
-        # to the pending topic, the user is defining a NEW topic.
-        # But "math, factorial is..." with pending "factorial" is a MATCH (lobe hint prefix).
-        _define_match = match(r"^([^\s]+(?:\s+[^\s]+){0,2})\s+(?:is|are|means|refers\s+to)\s+"i, t)
-        _is_topic_mismatch = false
-        if _define_match !== nothing
-            _input_topic = lowercase(String(strip(_define_match.captures[1])))
-            _pending_topic = lowercase(String(get(_pending, "topic", "")))
-            if !isempty(_pending_topic)
-                # If pending topic is contained in input topic (or vice versa),
-                # it's the same topic (possibly with lobe hint prefix like "math, factorial")
-                _topics_related = occursin(_pending_topic, _input_topic) || occursin(_input_topic, _pending_topic)
-                _is_topic_mismatch = !_topics_related
-            end
+        _status, _payload = _get_pending_teach_turn()(t)
+        if _status === :teach
+            # `_payload` is (:teach, topic, def, subj). This is a VERY
+            # OBVIOUS teach-response case — we explicitly asked a
+            # clarification question last turn and this input clearly
+            # answers it. Being "lazy conservative" here means NOT
+            # second-guessing that with generic single-utterance patterns
+            # further down (e.g. the answer text happening to look
+            # arithmetic-shaped, like "multiply n by 3 and subtract 2",
+            # would otherwise spawn a competing :calculate candidate whose
+            # bias, 0.95, is high enough to crush :teach's deliberately-low
+            # 0.1 bias even with the pending-teach backing bonus — silently
+            # hijacking the answer as an immediate calculation instead of
+            # teaching the procedure). Return immediately with just the
+            # :teach candidate.
+            _tk, _ttopic, _tdef, _tsubj = _payload
+            push!(candidates, IntentCandidate(:teach, _ttopic, _tdef, _tsubj, 0.8, "pending-teach-active"))
+            return candidates
+        elseif _status === :declined
+            # Acknowledgment/decline already fully handled (side effects
+            # applied inside _conv_pending_teach_turn). Not a teach, not a
+            # question — let it fall to :nothing so the caller doesn't
+            # double-process this turn.
+            push!(candidates, IntentCandidate(:nothing, "", "", "", 1.0, "pending-teach-declined"))
+            return candidates
         end
-        if _looks_like_question
-            # Topic shift — pending teach is NOT the right intent.
-            # The question patterns below will add :question candidates.
-            # Don't add :teach here — the judge will see :question candidates
-            # and the conservative bias will snap toward :question.
-        elseif _is_ack
-            # Acknowledgment — not a teach, not a question. Let it fall to :nothing.
-        elseif _is_topic_mismatch
-            # User is defining a different topic — don't add pending :teach.
-            # The define/teach patterns below will handle the new topic.
-        else
-            # Might be a teach response — add as candidate
-            _topic = String(get(_pending, "topic", ""))
-            push!(candidates, IntentCandidate(:teach, _topic, t, "", 0.8, "pending-teach-active"))
-        end
+        # :fall_through / :unparsed / :no_pending → fall through to the
+        # ordinary pattern candidates below (topic shift, mismatch, or an
+        # unparseable reply that should be treated as a fresh utterance).
     end
-
     # ── Question patterns ─────────────────────────────────────────────────
     _question_topic = ""
 
@@ -1060,6 +1179,9 @@ export RoutingJudge, IntentCandidate, ScoredIntent, SubIntent,
        shannon_entropy, compute_graph_backing,
        _split_compound_question, _classify_sub_text,
        _has_arithmetic_tokens, _has_math_bindings_in_topic,
-       CONSERVATIVE_BIAS, LAZY_ENTROPY_THRESHOLD, JITTER_SNAP_STRENGTH
+       CONSERVATIVE_BIAS, LAZY_ENTROPY_THRESHOLD, JITTER_SNAP_STRENGTH,
+       BIAS_ADJUSTMENT, BIAS_LEARN_RATE, BIAS_ADJUSTMENT_CLAMP,
+       effective_bias, record_routing_outcome!,
+       get_bias_adjustments, set_bias_adjustments!, reset_bias_adjustments!
 
 end # module RoutingJudge

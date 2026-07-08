@@ -1,6 +1,6 @@
 # GrugBot420 Comprehensive Test Log v8.28e
 
-**Date:** 2026-06-24T05:20:12.361
+**Date:** 2026-07-08T21:01:28.457
 **Specimen:** /workspace/grugbot420_repo/grug_v828_post_test.specimen
 **Chatter:** DISABLED
 **Capture method:** _LAST_VOICE_OUTPUT (application internals)
@@ -10,7 +10,7 @@
 
 ## Specimen Loaded
 
-**Nodes in memory:** 285
+**Nodes in memory:** 287
 
 **Dictionary definitions after load:** 5
 
@@ -68,7 +68,7 @@
 **Bad pattern:** r"\bFire\b.*\b(sit|via|feel)\b"i
 **Description:** "Fire sit via sad" — thesaurus swapped Grug→Fire
 
-**Output:** To acknowledge what matters here: Sad is the color of a gray sky inside. Grug does not talk you to cheer up. the way of it is, grug sits along you in the gray. The sun shall come back but for now it is okay to be sad. Grug sit with sad.
+**Output:** To acknowledge what matters here: Sad is the color of a gray sky within. Grug does not talk you to cheer up. Grug sits by you in the gray. The sun will come back but for now it is okay to be sad.
 **Verdict:** ✅ No false-winner pattern detected
 
 ---
@@ -79,7 +79,7 @@
 **Bad pattern:** r"\busing\b.*\bsad\b|\bvia\b.*\bsad\b|\bsit\s+using\b|\bsit\s+via\b"i
 **Description:** "Grug sit using sad" — thesaurus swapped with→using/via
 
-**Output:** To acknowledge what matters here: sad signals emotional need, so The sun shall come back but for now it is okay to be sad. Grug sits by you in the gray. Grug does not talk you to cheer up. Sad is the color of a gray sky inside. Grug sit with sad.
+**Output:** To acknowledge what matters here: The sun shall come back yet for now it is okay to be sad. Grug sits beside you in the gray. Grug does not tell you to cheer up. the way of it is, sad is the color of a gray sky within. Grug sit with sad.
 **Verdict:** ✅ No false-winner pattern detected
 
 ---
@@ -269,14 +269,14 @@
 
 **Input:** "math, factorial is multiply all numbers from 1 to n"
 **Pending:** topic='factorial'
-**Result:** :teach word='factorial' def='math, factorial is multiply all numbers from 1 to n' hint=''
+**Result:** :teach word='factorial' def='factorial is multiply all numbers from 1 to n' hint='math'
 **Verdict:** ✅ Detected as :teach
 ---
 
 ## Prescan Teach: Subject-Only Answer
 
 **Input:** "math"
-**Result:** :teach word='factorial' def='math' hint=''
+**Result:** :teach word='factorial' def='' hint='math'
 **Verdict:** ✅ Subject-only detected
 ---
 
@@ -684,7 +684,7 @@
 
 **Step 1 — Ask:** "what is fluorosis"
 
-**Answer 1:** 📖 fluorosis: fluorosis is a dental condition from excess fluoride
+**Answer 1:** Here is the picture: fluorosis is a dental condition from excess fluoride.
 **Step 1 result:** ⚠️ No clarification (maybe known)
 
 **Step 2 — Teach:** "science, fluorosis is a dental condition from excess fluoride"
@@ -707,7 +707,7 @@
 
 **Step 2 — Teach:** "math, bogosort is how to sort by randomly shuffling until correct"
 
-**Answer 2:** ⚡ Grug learned procedure: bogosort — math, bogosort is how to sort by randomly shuffling until correct
+**Answer 2:** ⚡ Grug learned procedure: bogosort — bogosort is how to sort by randomly shuffling until correct
 
 - ✅ Procedural knowledge acknowledged
 - ✅ Lobe 'mathematics' exists
@@ -727,7 +727,7 @@
 
 **Step 2 — Teach:** "physics, orogeny causes mountains to rise from tectonic collision"
 
-**Answer 2:** 🔗 Grug learned relationship: orogeny — physics, orogeny causes mountains to rise from tectonic collision
+**Answer 2:** 🔗 Grug learned relationship: orogeny — orogeny causes mountains to rise from tectonic collision
 
 - ✅ Relational knowledge acknowledged
 - ✅ Lobe 'science' exists
@@ -742,7 +742,7 @@
 
 **Step 1 — Ask:** "what is keratin"
 
-**Answer 1:** 📖 keratin: keratin is a structural protein in hair and nails
+**Answer 1:** Here is the picture: Nails and keratin is a structural protein in hair.
 **Step 1 result:** ⚠️ No clarification (maybe known)
 
 **Step 2 — Teach:** "biology, keratin is a structural protein in hair and nails"
@@ -778,7 +778,7 @@
 
 ## TeachExpiry: expiry-basic
 
-**Step 1:** Ask "what is qwertyuiop" → 📖 qwertyuiop: hello there
+**Step 1:** Ask "what is qwertyuiop" → Here is the picture: hello there.
 
 ⚠️ No clarification asked (topic may be known) — skipping expiry test
 ---
@@ -797,7 +797,7 @@
 
 **User:** hello
 
-> Hello — here is what matters: You are safe here with Grug. the short of it is, grug smile huge. Grug welcome friend to den.
+> Hello — here is what matters: in short, you are safe here with Grug. Grug smile vast. Grug welcome friend to lair. Grug turn to greeting.
 
 **Verdict:** ✅ OK
 
@@ -807,7 +807,7 @@
 
 **User:** 3 + 5
 
-> Thinking it through: 3 plus 5 equals 8.
+> 3 plus 5 equals 8
 
 **Verdict:** ✅ OK
 
@@ -817,7 +817,7 @@
 
 **User:** 10 - 4
 
-> Thinking it through: 10 minus 4 equals 6.
+> 10 minus 4 equals 6
 
 **Verdict:** ✅ OK
 
@@ -827,7 +827,7 @@
 
 **User:** 6 * 7
 
-> Thinking it through: 6 times 7 equals 42.
+> 6 times 7 equals 42
 
 **Verdict:** ✅ OK
 
@@ -925,7 +925,7 @@
 **Bad pattern:** r"\bFire\b.*\b(sit|via|feel)\b"i
 **Description:** "Fire sit via sad" — thesaurus swapped Grug→Fire
 
-**Output:** To acknowledge what matters here: The sun shall come back but for now it is okay to be sad. Grug sits along you in the gray. Grug does not tell you to cheer up. Sad is the hue of a gray sky inside.; Here's the connection: sad signals emotional need.
+**Output:** Here is the picture: Grug say of sense. basically, one more stone for Grug's wall of knowing.
 **Verdict:** ✅ No false-winner pattern detected
 
 ---
@@ -965,7 +965,7 @@
 
 **User:** hello
 
-> Hello — here is what matters: You are safe here with Grug. in short, grug smile vast. Grug welcome friend to den.
+> Hello — here is what matters: in grug's words, you are safe here with Grug. Grug smile huge. Grug welcome friend to den.
 
 **Verdict:** ✅ OK
 
@@ -1003,7 +1003,7 @@
 
 **User:** 3 + 5
 
-> Thinking it through: 3 plus 5 equals 8.
+> 3 plus 5 equals 8
 
 **Verdict:** ✅ OK
 
@@ -1013,7 +1013,7 @@
 
 **User:** 10 - 4
 
-> Thinking it through: 10 minus 4 equals 6.
+> 10 minus 4 equals 6
 
 **Verdict:** ✅ OK
 
@@ -1023,7 +1023,7 @@
 
 **User:** 6 * 7
 
-> Thinking it through: 6 times 7 equals 42.
+> 6 times 7 equals 42
 
 **Verdict:** ✅ OK
 
@@ -1043,7 +1043,7 @@
 
 **User:** 2 + 3 * 4
 
-> Thinking it through: 2 plus 3 = 5, then 3 times 4 = 20, so the answer is 20.
+> 2 plus 3 = 5, then 3 times 4 = 20, so the answer is 20
 
 **Verdict:** ✅ OK
 
@@ -1055,8 +1055,8 @@
 
 | Kind | Count | IDs |
 |------|-------|-----|
-| procedural | 2 | node_278, node_281 |
-| relational | 2 | node_282, node_279 |
+| procedural | 2 | node_278, node_284 |
+| relational | 2 | node_285, node_279 |
 | any | 18 | — |
 
 **Procedural sigil verification:** ✅ All 2 procedural sigils verified
@@ -1078,8 +1078,8 @@
 
 ## Full Specimen Round-Trip
 
-**Save:** ✅ Saved with 296 nodes, 8 definitions
-**Reload:** 296 nodes, 8 definitions
+**Save:** ✅ Saved with 300 nodes, 8 definitions
+**Reload:** 300 nodes, 8 definitions
 **Result:** ✅ Node count and dict count match
 ---
 
@@ -1115,10 +1115,9 @@
 
 **Pending:** topic='factorial'
 **Input:** "math, factorial is multiply all numbers from 1 to n"
-**Candidates:** 2
+**Candidates:** 1
 - :teach topic='factorial' src=pending-teach-active
-- :define topic='math, factorial' src=X-is-Y
-**Resolved:** (:teach, "factorial", "math, factorial is multiply all numbers from 1 to n", "")
+**Resolved:** (:teach, "factorial", "factorial is multiply all numbers from 1 to n", "math")
 **Verdict:** ✅ :teach wins for matching topic (with lobe hint)
 ---
 
@@ -1127,16 +1126,16 @@
 **Pending:** topic='orogeny'
 **Input:** "yes"
 **Candidates:** 1
-- :nothing topic='' src=default-no-match
+- :nothing topic='' src=pending-teach-declined
 **Verdict:** ✅ 'yes' not treated as :teach
 ---
 
 ## RoutingJudge: feedback-loop-graph-backing-increase
 
-**Topic:** grugtest_1782278491
+**Topic:** grugtest_1783544569
 **Graph backing BEFORE:** 0.0
-**Step 1 — Ask:** Grug not know 'grugtest_1782278491'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)
-**Step 2 — Teach:** 📖 Grug learned: grugtest_1782278491 means science, grugtest_1782278491 is a rare mineral found in volcanic deposits
+**Step 1 — Ask:** Grug not know 'grugtest_1783544569'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)
+**Step 2 — Teach:** 📖 Grug learned: grugtest_1783544569 means grugtest_1783544569 is a rare mineral found in volcanic deposits (science)
 **Graph backing AFTER:** 0.18
 **Verdict:** ✅ Feedback loop verified
 ---
@@ -1212,14 +1211,14 @@
 ## QualityAudit: greeting-friendly
 
 **Input:** "hello"
-**Output:** Hello — here is what matters: You are safe here with Grug. Grug smile huge. Grug welcome friend to den.
+**Output:** Hello — here is what matters: You are safe here with Grug. Grug smile huge. Grug welcome friend to lair.
 **Verdict:** ✅ Response quality OK
 ---
 
 ## QualityAudit: math-correctness
 
 **Input:** "3 + 5"
-**Output:** Thinking it through: 3 plus 5 equals 8.
+**Output:** 3 plus 5 equals 8
 **Verdict:** ✅ Response quality OK
 ---
 
@@ -1233,8 +1232,8 @@
 ## QualityAudit: define-then-ask
 
 **Input:** "what is sintering"
-**Output:** 📖 sintering: a process of heating powder to just below melting point
-**Verdict:** ✅ Response quality OK
+**Output:** Here is the picture: a process of heating powder to just below melting point.
+**Issue:** ❌ Missing expected content: 'sintering'
 ---
 
 ## QualityAudit: where-question-no-def
@@ -1253,7 +1252,7 @@
 
 # Final Summary
 
-**Completed:** 2026-06-24T05:21:31.409
+**Completed:** 2026-07-08T21:02:49.260
 
 ## Results by Section
 
@@ -1268,13 +1267,15 @@
 | Pending Teach Expiry (S7) | 2 | 0 | 2 |
 | Save/Load Round-Trip (S14) | 1 | 0 | 1 |
 | RoutingJudge (S15) | 9 | 0 | 9 |
-| Response Quality (S16) | 12 | 0 | 12 |
+| Response Quality (S16) | 11 | 1 | 12 |
 
-| **TOTAL** | **129** | **0** | **129** |
+| **TOTAL** | **128** | **1** | **129** |
 
-## ✅ All Tests Passed!
+## ❌ Failures
+
+- [Response Quality (S16)] define-then-ask
 
 ---
 
-**Overall pass rate:** 100.0%
+**Overall pass rate:** 99.2%
 
