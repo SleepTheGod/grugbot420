@@ -47,6 +47,7 @@ include("../src/EyeSystem.jl");             using .EyeSystem;            println
 include("../src/ChatterMode.jl");           using .ChatterMode;          println("  ✓ ChatterMode")
 include("../src/SemanticVerbs.jl");         using .SemanticVerbs;        println("  ✓ SemanticVerbs")
 include("../src/ActionTonePredictor.jl");   using .ActionTonePredictor;  println("  ✓ ActionTonePredictor")
+include("../src/Thesaurus.jl");             using .Thesaurus;            println("  ✓ Thesaurus")
 include("../src/ImmuneSystem.jl");          using .ImmuneSystem;         println("  ✓ ImmuneSystem")
 include("../src/engine.jl")
 println("  ✓ Engine (full chain including ImmuneSystem)")
@@ -172,39 +173,14 @@ solo_certainty = isempty(solo_alts) ? "SURE" : "UNSURE"
 println("  ✓ Solo winner → SURE")
 
 # ==============================================================================
-# 7. AIML RULE TAGS — ALL TAGS VALIDATE
+# 7. AIML RULE TAGS — REMOVED (v9-removal)
 # ==============================================================================
-println("\n[7] AIML RULE TAGS")
-
-expected_tags = [
-    "{MISSION}", "{PRIMARY_ACTION}", "{SURE_ACTIONS}", "{UNSURE_ACTIONS}",
-    "{ALL_ACTIONS}", "{CONFIDENCE}", "{NODE_ID}", "{MEMORY}", "{LOBE_CONTEXT}",
-    "{VOTE_CERTAINTY}", "{TIED_ALTERNATIVES}"
-]
-for tag in expected_tags
-    @assert tag in ALLOWED_RULE_TAGS "FAIL: $tag missing from ALLOWED_RULE_TAGS!"
-end
-println("  ✓ All $(length(expected_tags)) AIML tags registered in ALLOWED_RULE_TAGS")
-
-# Add and retrieve a rule using new tags
-empty!(ORCHESTRATION_RULES)
-result1 = add_orchestration_rule!("Certainty: {VOTE_CERTAINTY}. Alternatives: {TIED_ALTERNATIVES} [prob=0.9]")
-result2 = add_orchestration_rule!("Primary: {PRIMARY_ACTION}. Mission: {MISSION} [prob=1.0]")
-@assert length(ORCHESTRATION_RULES) == 2 "FAIL: Expected 2 rules, got $(length(ORCHESTRATION_RULES))!"
-@assert ORCHESTRATION_RULES[1].fire_probability == 0.9 "FAIL: Rule 1 prob should be 0.9!"
-@assert ORCHESTRATION_RULES[2].fire_probability == 1.0 "FAIL: Rule 2 prob should be 1.0!"
-println("  ✓ Rules with {VOTE_CERTAINTY} and {TIED_ALTERNATIVES} added and stored correctly")
-
-# Confirm fake tag still rejected
-# GRUG: Use Ref to avoid Julia top-level soft scope issue with catch block assignment.
-_threw_ref = Ref(false)
-try
-    add_orchestration_rule!("Bad tag: {FAKE_TAG}")
-catch e
-    _threw_ref[] = true  # any error = rejection worked
-end
-@assert _threw_ref[] "FAIL: Fake AIML tag {FAKE_TAG} should have been rejected!"
-println("  ✓ Fake tag {FAKE_TAG} correctly rejected")
+# GRUG v9-removal: The /addRule stochastic rule board (ORCHESTRATION_RULES,
+# StochasticRule, ALLOWED_RULE_TAGS, add_orchestration_rule!) was deleted from
+# engine.jl. Investigation confirmed its evaluated output never shaped
+# conversational_reply -- only debug telemetry -- so this test section (which
+# validated tag registration/rejection for that board) no longer applies.
+println("\n[7] AIML RULE TAGS — SKIPPED (rule board removed v9)")
 
 # ==============================================================================
 # 8. IMMUNE SYSTEM — STRUCT AND STATE
@@ -423,41 +399,13 @@ EyeSystem.set_arousal!(0.0)
 println("  ✓ EyeSystem arousal reset to 0.0")
 
 # ==============================================================================
-# 19. STOCHASTIC RULE SYSTEM — FIRE PROBABILITY
+# 19. STOCHASTIC RULE SYSTEM — REMOVED (v9-removal)
 # ==============================================================================
-println("\n[19] STOCHASTIC RULE FIRE PROBABILITY")
-
-empty!(ORCHESTRATION_RULES)
-
-# Prob=1.0 rule must ALWAYS fire
-add_orchestration_rule!("Always fires [prob=1.0]")
-# GRUG: Use Ref to avoid Julia top-level soft scope issue.
-_fires_ref = Ref(0)
-for _ in 1:50
-    if rand() <= ORCHESTRATION_RULES[1].fire_probability
-        _fires_ref[] += 1
-    end
-end
-@assert _fires_ref[] == 50 "FAIL: prob=1.0 rule should fire all 50 times, fired $(_fires_ref[])!"
-println("  ✓ prob=1.0 rule fires all 50/50 times")
-
-# Prob=0.0 rule must NEVER fire
-add_orchestration_rule!("Never fires [prob=0.0]")
-# GRUG: Use Ref to avoid Julia top-level soft scope issue.
-_never_ref = Ref(0)
-for _ in 1:50
-    if rand() <= ORCHESTRATION_RULES[2].fire_probability
-        _never_ref[] += 1
-    end
-end
-@assert _never_ref[] == 0 "FAIL: prob=0.0 rule should never fire, fired $(_never_ref[])!"
-println("  ✓ prob=0.0 rule fires 0/50 times")
-
-# Prob=0.5 rule fires roughly half
-add_orchestration_rule!("Half fires [prob=0.5]")
-half_fires = sum(rand() <= ORCHESTRATION_RULES[3].fire_probability for _ in 1:500)
-@assert 150 < half_fires < 350 "FAIL: prob=0.5 rule fired $half_fires/500 — suspicious!"
-println("  ✓ prob=0.5 rule fires $(half_fires)/500 times (expected ~250)")
+# GRUG v9-removal: The /addRule stochastic rule board (ORCHESTRATION_RULES)
+# was deleted from engine.jl -- its fire_probability coinflip logic only ever
+# fed debug telemetry, never conversational_reply. This section no longer
+# applies.
+println("\n[19] STOCHASTIC RULE FIRE PROBABILITY — SKIPPED (rule board removed v9)")
 
 # ==============================================================================
 # 20. NODE ATTACHMENT SYSTEM

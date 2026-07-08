@@ -5,6 +5,7 @@ authors = ["marshalldavidson61-arch"]
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
@@ -18,6 +19,13 @@ JSON = "0.21"
 KernelAbstractions = "0.9"
 SHA = "0.7.0"
 julia = "1.9"
+
+# GRUG v9: Dates is used by TemporalIdentity.jl (unix2datetime, datetime2unix,
+# now) and CaveJournal.jl (now, format) but was never declared here -- a
+# pre-existing bug, unrelated to the AIML rule-board removal, discovered
+# while verifying test/runtests.jl. Declaring it here (it's a zero-cost
+# stdlib, same as Base64/Random) fixes "Package GrugBot420 does not have
+# Dates in its dependencies" errors for every test that does `using GrugBot420`.
 
 # GRUG 7.12: Test-only deps. Statistics is a stdlib used by
 # test_relational_jitter.jl and test_aiml_jitter.jl for mean/std assertions on

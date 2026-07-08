@@ -1508,6 +1508,58 @@ function _is_concept_duplicate(pattern::String, node_map, node_lock;
 end
 
 # ==============================================================================
+# GRUG new: EXACT NODE COPY GUARD (Cycle Solver Ledger companion check)
+# ==============================================================================
+# GRUG: This is DELIBERATELY separate from _is_concept_duplicate above.
+# _is_concept_duplicate blocks growth on SEMANTIC/FUZZY similarity (synonyms,
+# trigram overlap) — "big" blocks "large". That's desired and stays as-is.
+#
+# THIS guard blocks growth ONLY on BYTE-IDENTICAL full-node copies: same
+# pattern AND same action_packet AND same drop_table (structure), all
+# identical to an existing alive node. Two nodes with the SAME pattern/bind
+# sites but DIFFERENT structure/wording elsewhere are explicitly ALLOWED —
+# multiple nodes solving the same concept with different structure is the
+# desired anti-staleness mechanism the thesaurus alone can't provide. Only a
+# truly exact clone (pattern + action_packet + drop_table all identical) is
+# redundant enough to block outright.
+# ==============================================================================
+
+"""
+    _is_exact_node_duplicate(pattern, action_packet, drop_table, node_map, node_lock) -> Bool
+
+Return `true` if any alive (non-grave) node in `node_map` is a BYTE-IDENTICAL
+copy of the candidate: same `pattern`, same `action_packet`, AND same
+`drop_table` contents (order-insensitive — same set of drop entries).
+
+This is a much stricter/lighter check than `_is_concept_duplicate`. It does
+NOT consider semantic similarity, and it does NOT block nodes that merely
+share a pattern/bind site with different action_packet or drop_table — those
+are explicitly welcome (anti-staleness via structural diversity).
+"""
+function _is_exact_node_duplicate(pattern::String, action_packet::String,
+                                   drop_table::Vector{String}, node_map, node_lock)::Bool
+    candidate_pattern = lowercase(strip(pattern))
+    candidate_action  = strip(action_packet)
+    candidate_drops   = Set(strip.(drop_table))
+
+    all_nodes = lock(node_lock) do
+        collect(values(node_map))
+    end
+
+    for node in all_nodes
+        node.is_grave && continue
+        if lowercase(strip(node.pattern)) == candidate_pattern &&
+           strip(node.action_packet) == candidate_action &&
+           Set(strip.(node.drop_table)) == candidate_drops
+            @debug "[AutoGrowth] Exact node duplicate blocked: '$pattern' is a byte-identical copy of existing node $(node.id)"
+            return true
+        end
+    end
+
+    return false
+end
+
+# ==============================================================================
 # NODE GROWTH — internal helper for match/time/antimatch node creation
 # ==============================================================================
 
@@ -1571,6 +1623,34 @@ function _grow_node!(pattern::String, growth_type::Symbol, lobe_hint::String;
         catch e
             return ("", "Immune gate error for '$pattern': $e")
         end
+    end
+
+    # GRUG new: EXACT NODE COPY GUARD. Byte-identical clones (same pattern
+    # AND same action_packet AND same drop_table) are blocked outright — a
+    # perfect duplicate contributes nothing a sibling doesn't already provide.
+    # This is SEPARATE from the semantic CONCEPT DEDUP GUARD above: nodes
+    # sharing a pattern/bind site with DIFFERENT action_packet or drop_table
+    # sail through untouched (desired — structural diversity fights
+    # orchestration staleness).
+    if _is_exact_node_duplicate(pattern, action_packet, String[], node_map, node_lock)
+        stats = AutoGrowthStats(
+            pattern,
+            string(growth_type),
+            best_record.accumulated_intensity,
+            best_record.frequency,
+            p_grow,
+            false,
+            "",
+            lobe_hint,
+            join(best_record.sources, ","),
+            "Exact node duplicate: '$pattern' is a byte-identical copy of an existing node",
+            (time() - t0) * 1000,
+        )
+        _log_growth!(stats)
+        lock(_EVIDENCE_LOCK) do
+            delete!(_EVIDENCE, best_key)
+        end
+        return stats
     end
 
     # GRUG: CREATE THE NODE!

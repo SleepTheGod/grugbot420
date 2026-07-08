@@ -48,8 +48,15 @@ const ALL_TESTS = [
     "test_full_lobe_scanner.jl",
     "test_vote_ties.jl",
     "test_comprehensive.jl",
-    "test_aiml_node_system.jl",
+    # GRUG v9: test_aiml_node_system.jl is disabled - it includes
+    # "../src/AIMLNodeSystem.jl", a file that no longer exists (AIMLNodeSystem
+    # was removed in v8.12, pre-dating this session's rule-board removal).
+    # This is a pre-existing dangling test reference, unrelated to the v9
+    # /addRule rule-board removal. Re-enable only if AIMLNodeSystem is
+    # reintroduced or this test is rewritten against current modules.
+    # "test_aiml_node_system.jl",
     "test_vote_orchestrator.jl",
+    "test_duplicate_solver_cap.jl",
     "test_relational_strict.jl",
     "test_relational_jitter.jl",
     "test_aiml_jitter.jl",

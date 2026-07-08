@@ -676,6 +676,13 @@ function _try_lambda_promote(
         # :action — action verbs (explain, describe, tell, define, etc.)
         # The promote_predicate already gates the closed set. Return canonical.
         return canonical
+    elseif st === :define
+        # GRUG v9: :define — dictionary-defined word placeholder.
+        # The promote_predicate (via _DICT_WORD_CHECKER) already gated that
+        # this token has a dictionary entry. Return the canonical string —
+        # the binding's .surface field preserves the original word for
+        # dictionary lookup at vote time.
+        return canonical
     else
         # GRUG v8.19: user-registered sigils (via /sigil add) may carry
         # custom sigil_types that have no hardcoded shape branch here.

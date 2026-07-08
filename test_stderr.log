@@ -1,0 +1,453 @@
+WARNING: Imported binding GrugBot420.RelationalTriple was undeclared at import time during import to AutoGrowth.
+┌ Error: [SelfObserver v8.22] Invariant self-check FAILED on module load (non-fatal): FieldError(Method, :return_type)
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/SelfObserver.jl:1152
+┌ Warning: [MAIN] load_specimen: failed to restore inverse sigil table: MethodError(Main.GrugBot420.InverseSigil.load_table_snapshot!, (JSON.Object{String, Any}("entries" => JSON.Object{String, Any}("concept" => JSON.Object{String, Any}("cluster_density" => 0.0, "concretes" => JSON.Object{String, Any}("hello" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231068491301e9, "is_user_directive" => false, "last_seen" => 1.782231068491301e9, "observation_count" => 1, "token" => "hello")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "pseudononlinear", "sigil_name" => "concept", "total_observations" => 1, "user_directive_count" => 0), "noun" => JSON.Object{String, Any}("cluster_density" => 5.0, "concretes" => JSON.Object{String, Any}("ceiling" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510914e9, "is_user_directive" => false, "last_seen" => 1.782231051510914e9, "observation_count" => 1, "token" => "ceiling"), "floor" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510915e9, "is_user_directive" => false, "last_seen" => 1.782231051510915e9, "observation_count" => 1, "token" => "floor"), "grows" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510915e9, "is_user_directive" => false, "last_seen" => 1.782231051510915e9, "observation_count" => 1, "token" => "grows"), "hangs" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510913e9, "is_user_directive" => false, "last_seen" => 1.782231051510913e9, "observation_count" => 1, "token" => "hangs"), "stalactite" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.78223105151091e9, "is_user_directive" => false, "last_seen" => 1.78223105151091e9, "observation_count" => 1, "token" => "stalactite")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "linear", "sigil_name" => "noun", "total_observations" => 5, "user_directive_count" => 0), "word" => JSON.Object{String, Any}("cluster_density" => 0.5, "concretes" => JSON.Object{String, Any}("ceiling" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510937e9, "is_user_directive" => false, "last_seen" => 1.782231051510937e9, "observation_count" => 1, "token" => "ceiling"), "floor" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510939e9, "is_user_directive" => false, "last_seen" => 1.782231051510939e9, "observation_count" => 1, "token" => "floor"), "grows" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510938e9, "is_user_directive" => false, "last_seen" => 1.782231051510938e9, "observation_count" => 1, "token" => "grows"), "hangs" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510937e9, "is_user_directive" => false, "last_seen" => 1.782231051510937e9, "observation_count" => 1, "token" => "hangs"), "stalactite" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782231051510932e9, "is_user_directive" => false, "last_seen" => 1.782231051510932e9, "observation_count" => 1, "token" => "stalactite")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "pseudononlinear", "sigil_name" => "word", "total_observations" => 5, "user_directive_count" => 0)), "last_decay" => 1.782231012092216e9),), 0x000000000000bd66)
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:12333
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 10 (+7 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='I feel sad dejected deject downcast notice intuit gloomy experience' pre_exp='I feel sad' using_promotion_source='I feel sad'
+[ Info: [ENGINE v8.19] scan_and_expand: input='hello' pre_exp='hello' using_promotion_source='hello'
+[ Info: [ENGINE v8.19] scan_and_expand: input='3 + 5' pre_exp='3 + 5' using_promotion_source='3 + 5'
+[ Info: [MAIN Stage 2] Arithmetic computed: 3 + 5 = 8
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'equals' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:2925
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: double(3) = double of 3 is 6
+[ Info: [MAIN Stage 2] Arithmetic computed: 3 + 5 = 8
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_8 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "double &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: factorial(3) = factorial of 3 is 6
+[ Info: [MAIN Stage 2] Arithmetic computed: 3 + 5 = 8
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_5 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "factorial of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: half(3) = half of 3 is 1.5
+[ Info: [MAIN Stage 2] Arithmetic computed: 3 + 5 = 8
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_9 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "half of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [ENGINE v8.19] scan_and_expand: input='10 - 4' pre_exp='10 - 4' using_promotion_source='10 - 4'
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'equals' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:2925
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: 1/10 = reciprocal of 10 is 0.1
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_12 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "reciprocal of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: cube(10) = 10 cubed is 1000
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_10 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "cube of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: half(10) = half of 10 is 5
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_9 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "half of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [ENGINE v8.19] scan_and_expand: input='6 * 7' pre_exp='6 * 7' using_promotion_source='6 * 7'
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'equals' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:2925
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: double(6) = double of 6 is 12
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_8 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "double &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: 1/6 = reciprocal of 6 is 0.166667
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_12 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "reciprocal of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: square(6) = 6 squared is 36
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_6 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "square of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: fibonacci(6) = fibonacci of 6 is 8
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_13 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "fibonacci of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: factorial(6) = factorial of 6 is 720
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_5 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "factorial of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [ENGINE v8.19] scan_and_expand: input='factorial of 5' pre_exp='factorial of 5' using_promotion_source='factorial of 5'
+[ Info: [MAIN Stage 2b] Action computed: factorial(5) = factorial of 5 is 120
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_5 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "factorial of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: cube(5) = 5 cubed is 125
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_10 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "cube of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: square(5) = 5 squared is 25
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_6 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "square of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 10 (+7 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='I feel sad dejected deject downcast notice intuit gloomy experience' pre_exp='I feel sad' using_promotion_source='I feel sad'
+[ Info: [ENGINE v8.19] scan_and_expand: input='hello' pre_exp='hello' using_promotion_source='hello'
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 8 tokens → 15 (+7 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='no, stalactite hangs from ceiling not grows from floor ceil derived from grow th' pre_exp='no, stalactite hangs from ceiling not grows from floor' using_promotion_source='no, stalactite hangs from ceiling not grows from floor'
+[ Info: [ENGINE v8.19] scan_and_expand: input='3 + 5' pre_exp='3 + 5' using_promotion_source='3 + 5'
+[ Info: [MAIN Stage 2] Arithmetic computed: 3 + 5 = 8
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'equals' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:2925
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: 1/3 = reciprocal of 3 is 0.333333
+[ Info: [MAIN Stage 2] Arithmetic computed: 3 + 5 = 8
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_12 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "reciprocal of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 4 (+1 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='10 - 4 *' pre_exp='10 - 4' using_promotion_source='10 - 4'
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'equals' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:2925
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: double(10) = double of 10 is 20
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_8 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "double &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: 1/10 = reciprocal of 10 is 0.1
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_12 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "reciprocal of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: half(10) = half of 10 is 5
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_9 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "half of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: factorial(10) = factorial of 10 is 3628800
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_5 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "factorial of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: square(10) = 10 squared is 100
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_6 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "square of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: fibonacci(10) = fibonacci of 10 is 55
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_13 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "fibonacci of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: cube(10) = 10 cubed is 1000
+[ Info: [MAIN Stage 2] Arithmetic computed: 10 - 4 = 6
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_10 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "cube of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 3 tokens → 5 (+2 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='6 * 7 - +' pre_exp='6 * 7' using_promotion_source='6 * 7'
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: [MAIN v7.16 synthesis] Every synonym of 'equals' is inhibited (neg thesaurus or node drop_table). Emitting original to preserve content.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:2925
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: double(6) = double of 6 is 12
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_8 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "double &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: 1/6 = reciprocal of 6 is 0.166667
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_12 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "reciprocal of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: fibonacci(6) = fibonacci of 6 is 8
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_13 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "fibonacci of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: cube(6) = 6 cubed is 216
+[ Info: [MAIN Stage 2] Arithmetic computed: 6 × 7 = 42
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_10 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "cube of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [ENGINE v8.19] scan_and_expand: input='factorial of 5' pre_exp='factorial of 5' using_promotion_source='factorial of 5'
+[ Info: [MAIN Stage 2b] Action computed: factorial(5) = factorial of 5 is 120
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_5 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "factorial of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: square(5) = 5 squared is 25
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_6 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "square of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: fibonacci(5) = fibonacci of 5 is 5
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_13 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "fibonacci of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: double(5) = double of 5 is 10
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_8 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "double &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 6 (+1 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='2 + 3 * 4 -' pre_exp='2 + 3 * 4' using_promotion_source='2 + 3 * 4'
+[ Info: [MAIN Stage 2] Arithmetic computed: 2 + 3 × 4 = 20
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_0 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "&n &op &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: 1/2 = reciprocal of 2 is 0.5
+[ Info: [MAIN Stage 2] Arithmetic computed: 2 + 3 × 4 = 20
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_12 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "reciprocal of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: square(2) = 2 squared is 4
+[ Info: [MAIN Stage 2] Arithmetic computed: 2 + 3 × 4 = 20
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_6 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "square of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: factorial(2) = factorial of 2 is 2
+[ Info: [MAIN Stage 2] Arithmetic computed: 2 + 3 × 4 = 20
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_5 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "factorial of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+[ Info: [MAIN Stage 2b] Action computed: cube(2) = 2 cubed is 8
+[ Info: [MAIN Stage 2] Arithmetic computed: 2 + 3 × 4 = 20
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_sigil_10 has 1 relational triple(s) and ALL are circular pattern echoes!
+│ Pattern = "cube of &n" — the triples are just pattern keywords rearranged.
+│ Support will be EMPTY for this node. That means no "The link is clear:" clause.
+│ FIX: Seed meaningful triples that relate this node's TOPIC to other concepts,
+│ not just re-state its trigger keywords. E.g. for a "fire" node, add
+│ (wood, burns, ash) or (fire, produces, heat) — NOT (describe, targets, explain).
+│ YOU NEED MEANINGFUL TRIPLES OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4336
+┌ Warning: [MAIN] load_specimen: failed to restore inverse sigil table: MethodError(Main.GrugBot420.InverseSigil.load_table_snapshot!, (JSON.Object{String, Any}("entries" => JSON.Object{String, Any}("concept" => JSON.Object{String, Any}("cluster_density" => 1.25, "concretes" => JSON.Object{String, Any}("feel" => JSON.Object{String, Any}("accumulated_weight" => 2.0, "first_seen" => 1.782265819213419e9, "is_user_directive" => false, "last_seen" => 1.782265827433477e9, "observation_count" => 2, "token" => "feel"), "hello" => JSON.Object{String, Any}("accumulated_weight" => 2.0, "first_seen" => 1.7822658262809e9, "is_user_directive" => false, "last_seen" => 1.782265827534827e9, "observation_count" => 2, "token" => "hello"), "i" => JSON.Object{String, Any}("accumulated_weight" => 2.0, "first_seen" => 1.782265819213413e9, "is_user_directive" => false, "last_seen" => 1.782265827433473e9, "observation_count" => 2, "token" => "i"), "sad" => JSON.Object{String, Any}("accumulated_weight" => 2.0, "first_seen" => 1.782265819213421e9, "is_user_directive" => false, "last_seen" => 1.782265827433478e9, "observation_count" => 2, "token" => "sad")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "pseudononlinear", "sigil_name" => "concept", "total_observations" => 8, "user_directive_count" => 0), "n" => JSON.Object{String, Any}("cluster_density" => 5.0, "concretes" => JSON.Object{String, Any}("10" => JSON.Object{String, Any}("accumulated_weight" => 12.0, "first_seen" => 1.782265826893252e9, "is_user_directive" => false, "last_seen" => 1.782265828319223e9, "observation_count" => 12, "token" => "10"), "2" => JSON.Object{String, Any}("accumulated_weight" => 5.0, "first_seen" => 1.782265828586224e9, "is_user_directive" => false, "last_seen" => 1.782265828587285e9, "observation_count" => 5, "token" => "2"), "3" => JSON.Object{String, Any}("accumulated_weight" => 11.0, "first_seen" => 1.782265826422055e9, "is_user_directive" => false, "last_seen" => 1.782265828587286e9, "observation_count" => 11, "token" => "3"), "4" => JSON.Object{String, Any}("accumulated_weight" => 17.0, "first_seen" => 1.782265826893258e9, "is_user_directive" => false, "last_seen" => 1.782265828587287e9, "observation_count" => 17, "token" => "4"), "5" => JSON.Object{String, Any}("accumulated_weight" => 15.0, "first_seen" => 1.782265826422066e9, "is_user_directive" => false, "last_seen" => 1.782265828493643e9, "observation_count" => 15, "token" => "5"), "6" => JSON.Object{String, Any}("accumulated_weight" => 11.0, "first_seen" => 1.782265827070128e9, "is_user_directive" => false, "last_seen" => 1.782265828408827e9, "observation_count" => 11, "token" => "6"), "7" => JSON.Object{String, Any}("accumulated_weight" => 11.0, "first_seen" => 1.782265827070136e9, "is_user_directive" => false, "last_seen" => 1.782265828408828e9, "observation_count" => 11, "token" => "7")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "pseudononlinear", "sigil_name" => "n", "total_observations" => 82, "user_directive_count" => 0), "noun" => JSON.Object{String, Any}("cluster_density" => 5.0, "concretes" => JSON.Object{String, Any}("ceiling" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828062978e9, "is_user_directive" => false, "last_seen" => 1.782265828062978e9, "observation_count" => 1, "token" => "ceiling"), "feel" => JSON.Object{String, Any}("accumulated_weight" => 2.0, "first_seen" => 1.782265823762796e9, "is_user_directive" => false, "last_seen" => 1.782265827447894e9, "observation_count" => 2, "token" => "feel"), "grows" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828062978e9, "is_user_directive" => false, "last_seen" => 1.782265828062978e9, "observation_count" => 1, "token" => "grows"), "hangs" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828062978e9, "is_user_directive" => false, "last_seen" => 1.782265828062978e9, "observation_count" => 1, "token" => "hangs"), "stalactite" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828062975e9, "is_user_directive" => false, "last_seen" => 1.782265828062975e9, "observation_count" => 1, "token" => "stalactite")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "linear", "sigil_name" => "noun", "total_observations" => 6, "user_directive_count" => 0), "op" => JSON.Object{String, Any}("cluster_density" => 5.0, "concretes" => JSON.Object{String, Any}("*" => JSON.Object{String, Any}("accumulated_weight" => 16.0, "first_seen" => 1.782265827070134e9, "is_user_directive" => false, "last_seen" => 1.782265828587287e9, "observation_count" => 16, "token" => "*"), "+" => JSON.Object{String, Any}("accumulated_weight" => 11.0, "first_seen" => 1.782265826422064e9, "is_user_directive" => false, "last_seen" => 1.782265828587286e9, "observation_count" => 11, "token" => "+"), "-" => JSON.Object{String, Any}("accumulated_weight" => 12.0, "first_seen" => 1.782265826893257e9, "is_user_directive" => false, "last_seen" => 1.782265828319224e9, "observation_count" => 12, "token" => "-")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "pseudononlinear", "sigil_name" => "op", "total_observations" => 39, "user_directive_count" => 0), "word" => JSON.Object{String, Any}("cluster_density" => 0.75, "concretes" => JSON.Object{String, Any}("ceiling" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828063e9, "is_user_directive" => false, "last_seen" => 1.782265828063e9, "observation_count" => 1, "token" => "ceiling"), "feel" => JSON.Object{String, Any}("accumulated_weight" => 2.0, "first_seen" => 1.782265823762814e9, "is_user_directive" => false, "last_seen" => 1.782265827447903e9, "observation_count" => 2, "token" => "feel"), "grows" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828063001e9, "is_user_directive" => false, "last_seen" => 1.782265828063001e9, "observation_count" => 1, "token" => "grows"), "hangs" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828063e9, "is_user_directive" => false, "last_seen" => 1.782265828063e9, "observation_count" => 1, "token" => "hangs"), "stalactite" => JSON.Object{String, Any}("accumulated_weight" => 1.0, "first_seen" => 1.782265828062996e9, "is_user_directive" => false, "last_seen" => 1.782265828062996e9, "observation_count" => 1, "token" => "stalactite")), "last_routed_growth_type" => "none", "lobe_hint" => "", "magnet_mode" => "pseudononlinear", "sigil_name" => "word", "total_observations" => 6, "user_directive_count" => 0)), "last_decay" => 1.78226576784628e9),), 0x000000000000bdaa)
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:12333
+┌ Warning: [MAIN] load_specimen: failed to restore inverse sigil table: MethodError(Main.GrugBot420.InverseSigil.load_table_snapshot!, (JSON.Object{String, Any}("entries" => JSON.Object{String, Any}(), "last_decay" => 1.782265836427707e9),), 0x000000000000bdaf)
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:12333

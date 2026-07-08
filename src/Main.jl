@@ -242,7 +242,9 @@ if !isdefined(@__MODULE__, :RelationalJitter)
 end
 
 # GRUG: AIMLNodeSystem removed in v8.12 — scaffold tracking layer had no output actuator.
-# The stochastic rule board (ORCHESTRATION_RULES, formerly AIML_DROP_TABLE) remains.
+# The stochastic rule board (ORCHESTRATION_RULES, formerly AIML_DROP_TABLE) was
+# itself removed (v9-removal) -- it only ever affected debug telemetry, never
+# the user-visible reply structure.
 
 # GRUG: TonalJudge needed for tonal_judge_knobs save/load.
 # When loaded via GrugBot420.jl (which includes it inside engine.jl), it's already in scope.
@@ -813,11 +815,13 @@ function add_message_to_history!(role::String, text::String, pinned::Bool=false)
 end
 
 # ==============================================================================
-# DYNAMIC ORCHESTRATION RULES & MAGIC WORD TEMPLATES
+# DYNAMIC ORCHESTRATION RULES & MAGIC WORD TEMPLATES -- REMOVED (v9-removal)
 # ==============================================================================
-# GRUG: ORCHESTRATION_RULES, StochasticRule, ALLOWED_RULE_TAGS, and add_orchestration_rule!
-# are defined in Engine.jl so they are available to both Main.jl and the test runner.
-# Nothing to re-define here. Grug just uses them directly!
+# GRUG: ORCHESTRATION_RULES, StochasticRule, ALLOWED_RULE_TAGS, and
+# add_orchestration_rule! were DELETED from engine.jl. Investigation confirmed
+# this board's evaluated output was only ever printed into debug telemetry --
+# never woven into the actual spoken reply. /addRule, the "rules" specimen
+# section, and the /status rule count were removed alongside it.
 
 # ==============================================================================
 # EPHEMERAL VOICE ORCHESTRATOR
@@ -1184,7 +1188,7 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
             if length(_sub_tuples) >= 2
                 # Store all sub-intents in the compound Ref for the handler to process
                 _COMPOUND_SUB_INTENTS[] = _sub_tuples
-                println("[CONV-PRESCAN] 🧩 Compound question detected: $(length(_sub_tuples)) sub-intents")
+                CaveJournal.cave_print("[CONV-PRESCAN] 🧩 Compound question detected: $(length(_sub_tuples)) sub-intents"; tag="PRESCAN", emoji="🔬")
                 return (:compound, "", "", "")
             end
         end
@@ -1200,7 +1204,7 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
                     _pending_check = _conv_get_pending_teach()
                     if !isempty(_pending_check)
                         _conv_clear_pending_teach!()
-                        println("[CONV-PRESCAN] 🔄 RoutingJudge: question won over pending teach — clearing")
+                        CaveJournal.cave_print("[CONV-PRESCAN] 🔄 RoutingJudge: question won over pending teach — clearing"; tag="PRESCAN", emoji="🔬")
                     end
                 end
                 return _rj_result
@@ -1214,7 +1218,7 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
         end
     catch e
         # Routing judge failed — fall through to greedy waterfall
-        println("[CONV-PRESCAN] ⚠️ RoutingJudge error: $e — falling back to greedy waterfall")
+        CaveJournal.cave_print("[CONV-PRESCAN] ⚠️ RoutingJudge error: $e — falling back to greedy waterfall"; tag="PRESCAN", emoji="🔬")
     end
 
     # ── GREEDY WATERFALL (fallback) ──────────────────────────────────────
@@ -1244,7 +1248,7 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
         # GRUG: Check if the pending state has expired.
         if _conv_pending_teach_is_expired()
             _conv_clear_pending_teach!()
-            println("[CONV-TEACH] ⏰ Pending teach state expired — clearing")
+            CaveJournal.cave_print("[CONV-TEACH] ⏰ Pending teach state expired — clearing"; tag="TEACH", emoji="📝")
         else
             # GRUG v8.28d: TOPIC SHIFT DETECTION — if the user's input is itself
             # a question (starts with a question word or contains a question mark),
@@ -1256,7 +1260,7 @@ function _conversation_prescan(text::String)::Union{Nothing, Tuple{Symbol, Strin
             _looks_like_question = match(r"^(?:what|who|where|when|why|how|which)\b"i, t) !== nothing || occursin('?', t)
             if _looks_like_question
                 _conv_clear_pending_teach!()
-                println("[CONV-TEACH] 🔄 User asked new question — clearing pending teach state")
+                CaveJournal.cave_print("[CONV-TEACH] 🔄 User asked new question — clearing pending teach state"; tag="TEACH", emoji="📝")
                 # Fall through to normal question processing below
             else
                 # GRUG: The user is responding to our clarification question.
@@ -2055,17 +2059,17 @@ function immune_gate(cmd_name::String, input_text::String; is_critical::Bool=tru
     try
         status, sig = ImmuneSystem.immune_scan!(input_text, node_count; is_critical=is_critical)
         if status == :deleted
-            println("[IMMUNE] ⛔ $cmd_name REJECTED by immune system (sig=0x$(string(sig, base=16)))")
+            CaveJournal.cave_print("[IMMUNE] ⛔ $cmd_name REJECTED by immune system (sig=0x$(string(sig, base=16)))"; tag="IMMUNE", emoji="🛡")
             add_message_to_history!("System", "⛔ $cmd_name input rejected by immune system: deleted", false)
             return false
         end
         if status != :immature
-            println("[IMMUNE] 🛡  $cmd_name scan: $status (sig=0x$(string(sig, base=16)))")
+            CaveJournal.cave_print("[IMMUNE] 🛡  $cmd_name scan: $status (sig=0x$(string(sig, base=16)))"; tag="IMMUNE", emoji="🛡")
         end
         return true
     catch e
         if e isa ImmuneSystem.ImmuneError
-            println("[IMMUNE] ⛔ $cmd_name REJECTED by immune system: $(e.info)")
+            CaveJournal.cave_print("[IMMUNE] ⛔ $cmd_name REJECTED by immune system: $(e.info)"; tag="IMMUNE", emoji="🛡")
             add_message_to_history!("System", "⛔ $cmd_name input rejected by immune system: $(e.kind)", false)
             return false
         else
@@ -2330,11 +2334,53 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
                 is_relay          = is_relay,
                 grave_shadow_multiplier = grave_shadow,
                 multipart_group   = _vote_group,
+                action            = v.action,
                 # recency_bonus left NaN — Node struct lacks last_fire_cycle
                 # so we can't compute honest recency without adding tracking.
                 # Knob is plumbed; fill in when the field exists.
             ))
             candidate_to_vote[(v.node_id, _vote_group)] = v
+        end
+    end
+
+    # GRUG: CYCLE SOLVER LEDGER — DUPLICATE SOLVER CAP.
+    # Multiple nodes solving the SAME concept with DIFFERENT structure/wording
+    # is GOOD (identical pattern/bind sites across nodes are allowed — that's
+    # what fights orchestration staleness the thesaurus alone can't catch).
+    # But if MORE THAN DUPLICATE_SOLVER_CAP nodes cast the SAME action for the
+    # SAME objective (multipart_group, action) in one cycle, they'd dominate
+    # the board. Evict the weakest strength*confidence solver(s) down to the
+    # cap — stochastic tie-break among tied-lowest — then grave the evicted
+    # nodes (feeds the existing GRAVE_RECYCLER drop-table salvage, same as
+    # any other node death). A strength*confidence-biased winner is also
+    # picked per capped bucket; that pick is preferred over a flat coinflip
+    # when this cycle's tie-breaking happens below.
+    _dup_winner_map = Dict{Tuple{String,String}, String}()
+    if !isempty(vote_candidates)
+        try
+            _kept_vcs, _evicted_ids, _dup_winner_map, _dup_stats = VoteOrchestrator.enforce_duplicate_solver_cap!(vote_candidates)
+            if !isempty(_evicted_ids)
+                vote_candidates = _kept_vcs
+                lock(NODE_LOCK) do
+                    for nid in _evicted_ids
+                        node = get(NODE_MAP, nid, nothing)
+                        if !isnothing(node) && !node.is_grave
+                            try
+                                mark_node_grave!(node, "DUPLICATE_SOLVER_CAP")
+                            catch e
+                                @warn "[ORCHESTRATOR] DUPLICATE_SOLVER_CAP grave failed for $nid: $e"
+                            end
+                        end
+                    end
+                end
+                for st in _dup_stats
+                    CaveJournal.cave_print(
+                        "[ORCHESTRATOR] 🪦 DUPLICATE_SOLVER_CAP: group='$(st.multipart_group)' action='$(st.action)' $(st.total_candidates)→$(length(st.survivor_node_ids)) (evicted $(join(st.evicted_node_ids, ",")), tie_break=$(st.tie_break_used), winner=$(st.winner_node_id))";
+                        tag="ORCH", emoji="🪦")
+                end
+            end
+        catch e
+            @warn "[ORCHESTRATOR] enforce_duplicate_solver_cap! failed (non-fatal, continuing unfiltered): $e"
         end
     end
 
@@ -2378,7 +2424,7 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
             append!(subtop_tier, sst)
             append!(rejected_tier, srj)
         end
-        println("[ORCHESTRATOR] 📊 Per-group selection: $(length(_mp_groups_in_candidates)) groups, top_tier=$(length(top_tier)), subtop=$(length(subtop_tier))")
+        CaveJournal.cave_print("[ORCHESTRATOR] 📊 Per-group selection: $(length(_mp_groups_in_candidates)) groups, top_tier=$(length(top_tier)), subtop=$(length(subtop_tier))"; tag="ORCH", emoji="📊")
     else
         # GRUG: Singleton path — old global selection, unchanged behavior.
         top_tier, subtop_tier, rejected_tier = VoteOrchestrator.select_aiml_votes(
@@ -2428,16 +2474,28 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
         else
             primary_vote = sure_votes[1]
         end
-        println("[ORCHESTRATOR] 📋 Per-group primaries: ", join(["$grp→$(v.node_id)@$(round(v.confidence,digits=3))" for (grp,v) in _group_primaries], ", "))
+        CaveJournal.cave_print("[ORCHESTRATOR] 📋 Per-group primaries: ", join(["$grp→$(v.node_id)@$(round(v.confidence,digits=3))" for (grp,v) in _group_primaries], ", "); tag="ORCH", emoji="📊")
     else
         # GRUG: Old tie-breaking for singleton inputs.
         if length(sure_votes) > 1
             top_conf = sure_votes[1].confidence
             tied_votes = Vote[v for v in sure_votes if abs(v.confidence - top_conf) < 1e-9]
             if length(tied_votes) > 1
-                shuffle!(tied_votes)
-                primary_vote = tied_votes[1]
-                println("[ORCHESTRATOR] 🎲  TIE DETECTED! $(length(tied_votes)) rocks at confidence $(round(top_conf, digits=3)). Random winner: $(primary_vote.node_id)")
+                # GRUG: DUPLICATE_SOLVER_CAP already stochastically picked a
+                # strength*confidence-biased winner for any (group, action)
+                # bucket that got capped this cycle. If one of the tied votes
+                # IS that pre-picked winner, honor it instead of a fresh flat
+                # shuffle — it already went through the biased pick upstream.
+                _dup_key(v) = (getfield(v, :multipart_group), v.action)
+                _dup_pick = Vote[v for v in tied_votes if haskey(_dup_winner_map, _dup_key(v)) && _dup_winner_map[_dup_key(v)] == v.node_id]
+                if !isempty(_dup_pick)
+                    primary_vote = _dup_pick[1]
+                    CaveJournal.cave_print("[ORCHESTRATOR] 🎲🪦 TIE DETECTED! $(length(tied_votes)) rocks at confidence $(round(top_conf, digits=3)). DUPLICATE_SOLVER_CAP biased winner: $(primary_vote.node_id)"; tag="ORCH", emoji="📊")
+                else
+                    shuffle!(tied_votes)
+                    primary_vote = tied_votes[1]
+                    CaveJournal.cave_print("[ORCHESTRATOR] 🎲  TIE DETECTED! $(length(tied_votes)) rocks at confidence $(round(top_conf, digits=3)). Random winner: $(primary_vote.node_id)"; tag="ORCH", emoji="📊")
+                end
             else
                 primary_vote = sure_votes[1]
             end
@@ -2496,7 +2554,7 @@ function ephemeral_voice_orchestrator(mission::String, votes::Vector{Vote})::Tup
         HippocampalModulator.modulate_objectives!(action_log, objectives;
             nonwinner_votes = nonwinner_votes,
             scoped_text_of = get_multipart_scoped_text)
-        println("[HIPPOCAMPAL] Action log built:\n$(HippocampalModulator.log_summary(action_log))")
+        CaveJournal.cave_print("[HIPPOCAMPAL] Action log built:\n$(HippocampalModulator.log_summary(action_log))"; tag="HIPPO", emoji="🧠")
 
         # GRUG v7.47: Execute entries from the log one at a time, dispatched
         # by confidence (highest first). Each entry writes to its own reserved
@@ -2753,75 +2811,15 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
         memory_ctx.pinned * "\nFresh Memory: <withheld — $(pull_fresh_reason)>"
     end
 
-    # GRUG: Read rule board. Swap shape-shifter words for real context chunks.
-    # NOW STOCHASTIC: each rule fires based on its fire_probability.
-    # This is where Grug JIT-compiles math into human language with natural variation!
-    #
-    # v7.24-coherence-fix: rules now ALSO filter by leading action tag. A rule
-    # like `[describe "Grug paint picture..."]` is only allowed to fire when
-    # `describe` is the primary_vote.action OR is in sure_votes. Without this
-    # filter, every rule on the board got concatenated into the AIML output
-    # which produced a wall of `[describe ...]; [explain ...]; [comfort ...];
-    # [calculate ...]; [alert ...]; [ponder ...]` directives even when only
-    # `describe` actually won. That dilutes coherence.
-    #
-    # Rules with NO leading [action] prefix (legacy / structural rules) are
-    # always considered. Rules with a leading [action] tag must match a
-    # locked-in action to fire. Untagged rules and matching rules then run
-    # the existing fire_probability coinflip.
-    sure_action_set = Set{String}([lowercase(primary_vote.action)])
-    for v in sure_votes
-        push!(sure_action_set, lowercase(v.action))
-    end
-
-    evaluated_rules = String[]
-    try
-        for rule in lock(_DROP_TABLE_LOCK) do; copy(ORCHESTRATION_RULES) end
-            # Parse a leading [action_name "..."] tag, if present.
-            # Pattern: optional whitespace, '[', action_name (word chars +
-            # hyphen/underscore), at least one space, then a quote. This is
-            # tolerant of the existing rule shape produced by /addRule.
-            tag_match = match(r"^\s*\[([A-Za-z_][A-Za-z0-9_\-]*)\s+\"", rule.text)
-            if tag_match !== nothing
-                rule_action = lowercase(tag_match.captures[1])
-                if !(rule_action in sure_action_set)
-                    # Tagged rule whose action did not lock in this cycle.
-                    # Skip it — its directive would just dilute the response.
-                    continue
-                end
-            end
-            # else: untagged / structural rule, always considered.
-
-            # GRUG: Roll a coinflip against the rule's fire probability.
-            # prob=1.0 rules always fire. prob=0.5 rules fire ~half the time.
-            if rand() > rule.fire_probability
-                # GRUG: This rule lost its coinflip this round. Skip it!
-                continue
-            end
-
-            processed = rule.text
-            processed = replace(processed, "{MISSION}"        => mission)
-            processed = replace(processed, "{PRIMARY_ACTION}" => primary_vote.action)
-            processed = replace(processed, "{SURE_ACTIONS}"   => sure_str)
-            processed = replace(processed, "{UNSURE_ACTIONS}" => unsure_str)
-            processed = replace(processed, "{ALL_ACTIONS}"    => join([v.action for v in all_votes], ", "))
-            processed = replace(processed, "{CONFIDENCE}"     => string(round(primary_vote.confidence, digits=2)))
-            processed = replace(processed, "{NODE_ID}"        => primary_vote.node_id)
-            processed = replace(processed, "{MEMORY}"         => memory_str_for_speech)
-            # GRUG v7.15: strip the "Lobe Context: " prefix so rules that
-            # say "Stay inside the {LOBE_CONTEXT} frame" don't render as
-            # "Stay inside the Lobe Context: [cooking...] frame".
-            _lobe_display = startswith(lobe_str, "Lobe Context: ") ? lobe_str[length("Lobe Context: ")+1:end] : lobe_str
-            processed = replace(processed, "{LOBE_CONTEXT}"   => _lobe_display)
-            processed = replace(processed, "{VOTE_CERTAINTY}"     => vote_certainty)
-            processed = replace(processed, "{TIED_ALTERNATIVES}"  => tied_alt_str)
-            push!(evaluated_rules, processed)
-        end
-    catch e
-        error("!!! FATAL: Grug failed to swap shape-shifter words in dynamic rules: $e !!!")
-    end
-
-    rules_str = isempty(evaluated_rules) ? "None" : join(evaluated_rules, " | ")
+    # GRUG v9-removal: The /addRule stochastic rule board (ORCHESTRATION_RULES)
+    # was DELETED. Its evaluated output (rules_str) was ONLY ever printed into
+    # DEBUG TELEMETRY -- never concatenated into conversational_reply. It never
+    # shaped output structure, just tag-templated debug text. Real orchestration
+    # is HippocampalModulator's ActionLog; staleness prevention is the
+    # thesaurus/synonym swap pipeline below (_vote_word_swap, _pick_synonym,
+    # _hippocampal_rephrase). rules_str kept as a constant for backward
+    # compat with the telemetry line further down.
+    rules_str = "None (rule board removed)"
 
     # GRUG: Put relation verb-noun sandwiches into the prompt to provide grammar context.
     u_triples = isempty(primary_vote.user_triples) ? "None" : join(["($(t.subject), $(t.relation), $(t.object))" for t in primary_vote.user_triples], ", ")
@@ -4073,6 +4071,32 @@ function synthesize_voice_reply(mission::String, primary_vote::Vote, sure_votes:
                         @info "[MAIN Stage 2b] Action computed: $(action_compute_result.expression) = $(action_compute_result.answer_str)"
                     else
                         @warn "[MAIN Stage 2b] Action computation failed: $(action_compute_result.error)"
+                        # GRUG v9: Dict sigil node fallback — if the winning node is a
+                        # dict sigil node whose action callback failed (word not in its
+                        # lobe's dictionary), try other sure_votes for a dict sigil node
+                        # whose callback succeeds. This handles the case where the wrong
+                        # lobe's dict node wins the vote (e.g., science dict node wins for
+                        # "stalactite" but stalactite is in the "default" dictionary).
+                        _is_dict_node = get(_winning_node.json_data, "is_dict_node", false)
+                        if _is_dict_node !== nothing && _is_dict_node === true
+                            for _alt_vote in sure_votes
+                                _alt_node = lock(() -> get(NODE_MAP, _alt_vote.node_id, nothing), NODE_LOCK)
+                                if _alt_node !== nothing
+                                    _alt_is_dict = get(_alt_node.json_data, "is_dict_node", false)
+                                    _alt_cb = get(_alt_node.json_data, "action_callback", "")
+                                    if _alt_is_dict !== nothing && _alt_is_dict === true && !isempty(_alt_cb)
+                                        _alt_result = ActionEngine.compute_action(String(_alt_cb), _act_bindings)
+                                        if _alt_result.error === nothing
+                                            action_compute_result = _alt_result
+                                            action_compute_reply = ActionEngine.format_action_reply(_alt_result)
+                                            _winning_action_callback = String(_alt_cb)
+                                            @info "[MAIN Stage 2b] Dict sigil fallback: node $(_alt_vote.node_id) callback '$_alt_cb' succeeded"
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
                     end
                 end
             end
@@ -5051,7 +5075,7 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
                         if other_src != "" && !startswith(other_src, "hippocampal_")
                             other_node.is_grave = true
                             other_node.grave_reason = "superseded_by_hippocampal_answer"
-                            println("[MAIN] ⚰  Node '$other_id' (pattern='$(_pat_key)') graved: superseded by hippocampal answer node '$nid'")
+                            CaveJournal.cave_print("[MAIN] ⚰  Node '$other_id' (pattern='$(_pat_key)') graved: superseded by hippocampal answer node '$nid'"; tag="MAIN", emoji="⚡")
                         end
                     end
                 end
@@ -5082,7 +5106,7 @@ function _create_answer_node(pattern_text::AbstractString, action_packet::Abstra
                             if other_src != "" && !startswith(other_src, "hippocampal_")
                                 other_node.is_grave = true
                                 other_node.grave_reason = "superseded_by_hippocampal_answer_resolved_ask"
-                                println("[MAIN] ⚰  Node '$other_id' (pattern='$(other_pat)') graved: matches resolved ask, superseded by hippocampal answer node '$nid'")
+                                CaveJournal.cave_print("[MAIN] ⚰  Node '$other_id' (pattern='$(other_pat)') graved: matches resolved ask, superseded by hippocampal answer node '$nid'"; tag="MAIN", emoji="⚡")
                             end
                         end
                     end
@@ -5150,15 +5174,15 @@ function _dict_define_word!(lobe_id::String, word::String, definition::String)
     _d = strip(definition)
     _question_words = Set(["how", "why", "when", "where", "who", "what", "which"])
     if _w in _question_words
-        println("[DICT-GATE] ⛔ Rejected definition of question word '$_w' → '$_d'")
+        CaveJournal.cave_print("[DICT-GATE] ⛔ Rejected definition of question word '$_w' → '$_d'"; tag="DICT", emoji="⛔")
         return nothing
     end
     if isempty(_w) || isempty(_d)
-        println("[DICT-GATE] ⛔ Rejected empty word or definition")
+        CaveJournal.cave_print("[DICT-GATE] ⛔ Rejected empty word or definition"; tag="DICT", emoji="⛔")
         return nothing
     end
     if length(_d) < 3
-        println("[DICT-GATE] ⛔ Rejected too-short definition: '$_w' → '$_d'")
+        CaveJournal.cave_print("[DICT-GATE] ⛔ Rejected too-short definition: '$_w' → '$_d'"; tag="DICT", emoji="⛔")
         return nothing
     end
     lock(_LOBE_DICTIONARIES_LOCK) do
@@ -5173,17 +5197,24 @@ end
 """
     _dict_lookup_word(word::String; lobe_hint::String="") -> Union{String, Nothing}
 
-Look up a word definition across all lobe dictionaries (or a specific one if
-lobe_hint is given). Returns the definition string or nothing if not found.
+Look up a word definition in lobe dictionaries. When lobe_hint is provided,
+ONLY looks in that specific lobe's dictionary — no fallback to other lobes.
+Returns nothing if the lobe has no dictionary or the word isn't found there.
 When lobe_hint is empty, searches all dictionaries and returns the first match.
 """
 function _dict_lookup_word(word::String; lobe_hint::String="")::Union{String, Nothing}
     _w = lowercase(strip(word))
     lock(_LOBE_DICTIONARIES_LOCK) do
-        if !isempty(lobe_hint) && haskey(_LOBE_DICTIONARIES, lobe_hint)
-            return get(_LOBE_DICTIONARIES[lobe_hint], _w, nothing)
+        if !isempty(lobe_hint)
+            # Per-lobe lookup: ONLY look in the specified lobe's dictionary.
+            # If the lobe has no dictionary or the word isn't there, return nothing.
+            # No fallback to all-dict search — this is the per-lobe contract.
+            if haskey(_LOBE_DICTIONARIES, lobe_hint)
+                return get(_LOBE_DICTIONARIES[lobe_hint], _w, nothing)
+            end
+            return nothing
         end
-        # Search all dictionaries — first match wins
+        # No lobe_hint: search all dictionaries — first match wins
         for (_lid, dict) in _LOBE_DICTIONARIES
             if haskey(dict, _w)
                 return dict[_w]
@@ -5237,6 +5268,79 @@ Total number of word definitions across all lobes.
 function _dict_definitions_count()::Int
     lock(_LOBE_DICTIONARIES_LOCK) do
         return sum(length(d) for d in values(_LOBE_DICTIONARIES); init=0)
+    end
+end
+
+"""
+    _dict_has_word(word::String) -> Bool
+
+Check whether any lobe dictionary contains the given word. Returns true
+if the word exists in any lobe's dictionary, false otherwise. Used by the
+&define sigil's promote_predicate to decide whether a token should be
+promoted to &define (i.e., "this word is known — it has a dictionary entry").
+Thread-safe via _LOBE_DICTIONARIES_LOCK.
+"""
+function _dict_has_word(word::String)::Bool
+    _w = lowercase(strip(word))
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        for (_lid, dict) in _LOBE_DICTIONARIES
+            if haskey(dict, _w)
+                return true
+            end
+        end
+        return false
+    end
+end
+
+"""
+    _dict_all_words() -> Set{String}
+
+Return the set of ALL defined words across ALL lobe dictionaries.
+Used by the &define sigil promote_predicate for efficient batch lookup.
+Thread-safe via _LOBE_DICTIONARIES_LOCK.
+"""
+function _dict_all_words()::Set{String}
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        words = Set{String}()
+        for (_lid, dict) in _LOBE_DICTIONARIES
+            for w in keys(dict)
+                push!(words, w)
+            end
+        end
+        return words
+    end
+end
+
+"""
+    _dict_has_word_for_lobe(word::String, lobe_id::String) -> Bool
+
+Check whether a specific lobe's dictionary contains the given word.
+Thread-safe via _LOBE_DICTIONARIES_LOCK.
+"""
+function _dict_has_word_for_lobe(word::String, lobe_id::String)::Bool
+    _w = lowercase(strip(word))
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        return haskey(_LOBE_DICTIONARIES, lobe_id) && haskey(_LOBE_DICTIONARIES[lobe_id], _w)
+    end
+end
+
+"""
+    _dict_lobes_with_word(word::String) -> Vector{String}
+
+Return the list of lobe_ids whose dictionaries contain the given word.
+A word can exist in multiple lobes (e.g., "force" in physics and in common usage).
+Thread-safe via _LOBE_DICTIONARIES_LOCK.
+"""
+function _dict_lobes_with_word(word::String)::Vector{String}
+    _w = lowercase(strip(word))
+    lock(_LOBE_DICTIONARIES_LOCK) do
+        result = String[]
+        for (lid, dict) in _LOBE_DICTIONARIES
+            if haskey(dict, _w)
+                push!(result, lid)
+            end
+        end
+        return result
     end
 end
 
@@ -6588,7 +6692,7 @@ function maybe_convert_image_input(input_text::String)::Tuple{Bool, Vector{Float
         return (false, Float64[])
     end
 
-    println("[IMAGE] 🖼  Image binary detected (format: $fmt). Running JIT SDF conversion...")
+    CaveJournal.cave_print("[IMAGE] 🖼  Image binary detected (format: $fmt). Running JIT SDF conversion..."; tag="IMAGE", emoji="🖼")
 
     try
         # GRUG: Decode raw image bytes based on detected format
@@ -6648,7 +6752,7 @@ function maybe_convert_image_input(input_text::String)::Tuple{Bool, Vector{Float
         # GRUG: Convert to flat signal vector for PatternScanner compatibility
         signal = ImageSDF.sdf_to_signal(jittered_params; max_samples=256)
 
-        println("[IMAGE] ✅  JIT SDF conversion complete. Signal length: $(length(signal)).")
+        CaveJournal.cave_print("[IMAGE] ✅  JIT SDF conversion complete. Signal length: $(length(signal))."; tag="IMAGE", emoji="🖼")
         return (true, signal)
 
     catch e
@@ -6677,9 +6781,6 @@ Grow     : /grow <lobe_id> <json_packet>      (plant node(s) into a lobe)
          :   • Single node: {"pattern":"...","action_packet":"...","data":{...}}
          :   • Multi node:  {"nodes":[{...},{...}]}
          :   • `data.system_prompt` defaults to "Grug speaks plainly." if absent
-Rules    : /addRule <rule text> [prob=0.0-1.0]
-           Tags: {MISSION}, {PRIMARY_ACTION}, {SURE_ACTIONS}, {UNSURE_ACTIONS},
-                 {ALL_ACTIONS}, {CONFIDENCE}, {NODE_ID}, {MEMORY}, {LOBE_CONTEXT}
 Memory   : /pin <text>
 Nodes    : /nodes                              (show node map status)
 Status   : /status                             (show chatter + system status)
@@ -6769,7 +6870,6 @@ const HELP_MSG = """
  │  /right                     Reward last contributors         │
 ║  /explicit <cmd> [<id>] <t> Force a specific command+node    ║
 ║  /grow <json>               Plant nodes from JSON packet     ║
-║  /addRule <rule>            Add stochastic orchestration rule║
 ║  /pin <text>                Pin text to memory cave wall     ║
 ║                                                              ║
 ║  STATUS                                                      ║
@@ -6970,6 +7070,15 @@ const HELP_MSG = """
 │  /identity config [k v]       View/set identity config       │
 │  /identity delete <id>        Delete a continuant             │
 │                                                              │
+│  CAVE JOURNAL (v9 — auto-logging to markdown)               │
+│  /journal                    Show journal status              │
+│  /journal on                 Turn on auto-logging            │
+│  /journal off                Turn off auto-logging           │
+│  /journal path <dir>         Set journal directory           │
+│  /journal filename <name>    Set journal filename            │
+│  /journal clear              Delete the journal file         │
+│  /journal rotate [lines]     Rotate journal (keep last N)    │
+│                                                              │
 │                                                              │
 ║  FLASHCARD (v10 — math fact lookup table)                   ║
 ║  /flashcard                 Show flashcard status (per lobe) ║
@@ -6996,7 +7105,7 @@ const HELP_MSG = """
 ║  /quit (or /exit)           Close cave and exit CLI loop    ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  🛡  IMMUNE SYSTEM (auto-gates all structure-storing cmds)  ║
-║  Gated: /grow /lobeGrow /addRule /pin /addVerb              ║
+║  Gated: /grow /lobeGrow /pin /addVerb                        ║
 ║         /addRelationClass /addSynonym /addSeedSynonym        ║
 ║         /addRelRelation /newLobe /nameLobe                   ║
 ║         /connectLobes /setLobeHint                           ║
@@ -7442,9 +7551,13 @@ Measures response time and records it on the winning nodes for big-O ledger.
 """
 function process_mission(mission_text::String)
 # REMINDER: ANTIMATCH REMOVED. SIGILS IN TRIPLES. HOPFIELD REMOVED.
+    # GRUG: helper to safely truncate strings for journal detail fields
+    _truncate_str(s::String, maxlen::Int) = length(s) ≤ maxlen ? s : s[1:maxlen] * "…"
     if strip(mission_text) == ""
         error("!!! FATAL: process_mission got empty mission text! !!!")
     end
+    # GRUG v9: CaveJournal — log mission entry if journal is active
+    CaveJournal.journal_log(mission_text; tag="MISSION", emoji="🎯")
     # GRUG: InverseSigil user directive pre-scan.
     # Detects patterns like "X is a &noun" or "X is a &verb" or "teach &noun X"
     # and feeds them into the inverse sigil table as user directives,
@@ -7500,7 +7613,7 @@ function process_mission(mission_text::String)
                 _qa_data["frame_hints"] = ["plain", "exploratory"]
                 _pat = lowercase(strip(question))
                 _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _qa_data, nothing, "explain")
-                println("[QA-TEACH] 📝 Taught: question='$question' answer='$answer' → node=$_nid shadows=$(_sids)")
+                CaveJournal.cave_print("[QA-TEACH] 📝 Taught: question='$question' answer='$answer' → node=$_nid shadows=$(_sids)"; tag="QA-TEACH", emoji="📝")
             end
             _qa_taught = true
             # GRUG: After teaching, produce a brief acknowledgment and skip normal scan.
@@ -7545,53 +7658,75 @@ function process_mission(mission_text::String)
             _conv_result = _conversation_prescan(mission_text)
             if _conv_result !== nothing
                 _conv_kind, _conv_word, _conv_def, _conv_lobe_hint = _conv_result
+                # GRUG v9: CaveJournal — log routing decision
+                CaveJournal.journal_log("kind=$(_conv_kind) word='$(_conv_word)'"; tag="ROUTE", emoji="🔀")
 
                 if _conv_kind == :question
-                    # GRUG v8.27: Organic question answering — bypass AIML voting.
-                    # Look up the topic directly from dictionary → answer clusters.
-                    # If we know the answer, respond from the system immediately.
-                    # If we don't, let the normal AIML scan proceed (graceful fallback).
-                    _answer = _conversation_answer_question(_conv_word)
-                    if _answer !== nothing
-                        println("[CONV-QUESTION] 💬 Answered: '$_conv_word' → $_answer")
-                        lock(_LAST_VOICE_OUTPUT_LOCK) do
-                            _LAST_VOICE_OUTPUT[] = _answer
-                        end
-                        # Dampen strain since we're providing an answer
-                        try EphemeralMLP.dampen_strain!(0.3) catch _ end
-                        # Clear pending ask if any
-                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                            _HIPPOCAMPAL_PENDING_ASK[] = ""
-                        end
-                        return
+                    # GRUG v9: Dictionary words now vote through the sigil pipeline
+                    # instead of being side-channeled. If the topic has a dictionary
+                    # entry, fall through to AIML scan — SigilPromoter will promote
+                    # the word to &define, the dictionary sigil node will match, and
+                    # the action callback will look up the definition. This makes
+                    # dictionary definitions participate in the normal voting/
+                    # orchestration pipeline like any other node.
+                    # Non-dictionary questions (cave node search) still use the
+                    # organic side-channel since they don't have a sigil path.
+                    # GRUG v9 fix: Strip articles from _conv_word before checking
+                    # dictionary. The prescan may return "a stalactite" as the
+                    # topic, but the dictionary key is just "stalactite".
+                    _conv_word_stripped = replace(lowercase(strip(_conv_word)), r"^(?:a|an|the)\s+" => "")
+                    if _dict_has_word(_conv_word_stripped)
+                        CaveJournal.cave_print("[CONV-QUESTION] 📖 Dict word '$(_conv_word_stripped)' — falling through to sigil voting pipeline"; tag="QUESTION", emoji="📖")
+                        # Fall through to AIML scan below — do NOT return here.
+                        # The sigil pipeline will handle: promote → &define →
+                        # sigil node match → vote → action callback → definition.
                     else
-                        # GRUG v8.28: We don't know this topic organically.
-                        # Instead of just falling through to AIML, ask the user
-                        # for clarification — what does it mean, and what subject
-                        # does it belong to? This starts the conversational learning
-                        # loop. The user's next input will be matched as a teaching
-                        # response (see :teach handler below).
-                        println("[CONV-QUESTION] 🤷 Unknown topic '$(_conv_word)' — asking for clarification")
+                        # GRUG v8.27: Non-dictionary question answering — bypass AIML.
+                        # Look up the topic in answer clusters / cave node search.
+                        # If we know the answer, respond from the system immediately.
+                        # If we don't, let the normal AIML scan proceed (fallback).
+                        _answer = _conversation_answer_question(_conv_word)
+                        if _answer !== nothing
+                            CaveJournal.cave_print("[CONV-QUESTION] 💬 Answered: '$_conv_word' → $_answer"; tag="QUESTION", emoji="💬")
+                            lock(_LAST_VOICE_OUTPUT_LOCK) do
+                                _LAST_VOICE_OUTPUT[] = _answer
+                            end
+                            # Dampen strain since we're providing an answer
+                            try EphemeralMLP.dampen_strain!(0.3) catch _ end
+                            # Clear pending ask if any
+                            lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                _HIPPOCAMPAL_PENDING_ASK[] = ""
+                            end
+                            return
+                        else
+                            # GRUG v8.28: We don't know this topic organically.
+                            # Instead of just falling through to AIML, ask the user
+                            # for clarification — what does it mean, and what subject
+                            # does it belong to? This starts the conversational learning
+                            # loop. The user's next input will be matched as a teaching
+                            # response (see :teach handler below).
+                            CaveJournal.cave_print("[CONV-QUESTION] 🤷 Unknown topic '$(_conv_word)' — asking for clarification"; tag="QUESTION", emoji="💬")
 
-                        # GRUG: Build a clarification question.
-                        _clarify = "Grug not know '$(_conv_word)'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)"
+                            # GRUG: Build a clarification question.
+                            _clarify = "Grug not know '$(_conv_word)'. What does it mean? What subject is it? (like: math, science, physics — then the meaning)"
 
-                        # GRUG: Set pending teach state so the next input is
-                        # matched as a teaching response.
-                        _conv_set_pending_teach!(_conv_word, _clarify)
+                            # GRUG: Set pending teach state so the next input is
+                            # matched as a teaching response.
+                            _conv_set_pending_teach!(_conv_word, _clarify)
 
-                        # GRUG: Also store in hippocampal pending ask for strain flow.
-                        lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
-                            _HIPPOCAMPAL_PENDING_ASK[] = mission_text
+                            # GRUG: Also store in hippocampal pending ask for strain flow.
+                            lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
+                                _HIPPOCAMPAL_PENDING_ASK[] = mission_text
+                            end
+
+                            lock(_LAST_VOICE_OUTPUT_LOCK) do
+                                _LAST_VOICE_OUTPUT[] = _clarify
+                            end
+                            # Dampen strain slightly — we're actively seeking knowledge
+                            try EphemeralMLP.dampen_strain!(0.1) catch _ end
+                            return
                         end
-
-                        lock(_LAST_VOICE_OUTPUT_LOCK) do
-                            _LAST_VOICE_OUTPUT[] = _clarify
-                        end
-                        # Dampen strain slightly — we're actively seeking knowledge
-                        try EphemeralMLP.dampen_strain!(0.1) catch _ end
-                        return
-                    end
+                    end  # close dict-has-word vs non-dict-question branch
 
                 elseif _conv_kind == :calculate
                     # GRUG v9: Arithmetic computation from routing judge.
@@ -7600,7 +7735,7 @@ function process_mission(mission_text::String)
                     # _conv_word = the arithmetic expression (e.g., "5+5", "3 plus 4")
                     # We promote it through SigilPromoter to get sigil bindings,
                     # then compute via ArithmeticEngine and return the result.
-                    println("[CONV-CALCULATE] 🔢 Computing: '$_conv_word'")
+                    CaveJournal.cave_print("[CONV-CALCULATE] 🔢 Computing: '$_conv_word'"; tag="CALC", emoji="🔢")
                     try
                         _sigil_table = _ENGINE_SIGIL_TABLE
                         _, _calc_bindings = SigilPromoter.promote_input(_sigil_table, _conv_word)
@@ -7608,7 +7743,7 @@ function process_mission(mission_text::String)
                             _calc_result = ArithmeticEngine.compute_arithmetic(_calc_bindings)
                             if _calc_result.error === nothing
                                 _calc_reply = ArithmeticEngine.format_arithmetic_reply(_calc_result)
-                                println("[CONV-CALCULATE] ✅ Result: $(_calc_result.expression) = $(_calc_result.answer_str)")
+                                CaveJournal.cave_print("[CONV-CALCULATE] ✅ Result: $(_calc_result.expression) = $(_calc_result.answer_str)"; tag="CALC", emoji="🔢")
                                 # GRUG: Auto-write arithmetic result to flashcard for future instant lookup
                                 try
                                     _arith_lobe = "math"
@@ -7635,13 +7770,13 @@ function process_mission(mission_text::String)
                                 end
                                 return
                             else
-                                println("[CONV-CALCULATE] ❌ Computation error: $(_calc_result.error)")
+                                CaveJournal.cave_print("[CONV-CALCULATE] ❌ Computation error: $(_calc_result.error)"; tag="CALC", emoji="🔢")
                             end
                         else
-                            println("[CONV-CALCULATE] ⚠️ No math bindings in promoted form of '$_conv_word'")
+                            CaveJournal.cave_print("[CONV-CALCULATE] ⚠️ No math bindings in promoted form of '$_conv_word'"; tag="CALC", emoji="🔢")
                         end
                     catch e
-                        println("[CONV-CALCULATE] ❌ Error computing arithmetic: $e")
+                        CaveJournal.cave_print("[CONV-CALCULATE] ❌ Error computing arithmetic: $e"; tag="CALC", emoji="🔢")
                     end
                     # GRUG: If arithmetic computation failed, fall through to normal scan
                     # (don't return — let process_mission continue)
@@ -7653,7 +7788,7 @@ function process_mission(mission_text::String)
                     # Process each sub-intent independently and compose the reply.
                     _sub_intents = copy(_COMPOUND_SUB_INTENTS[])
                     _COMPOUND_SUB_INTENTS[] = Vector{Tuple{Symbol, String, String, String}}()  # Clear
-                    println("[CONV-COMPOUND] 🧩 Processing $(length(_sub_intents)) sub-intents")
+                    CaveJournal.cave_print("[CONV-COMPOUND] 🧩 Processing $(length(_sub_intents)) sub-intents"; tag="COMPOUND", emoji="🧩")
 
                     _replies = String[]
                     for (_si_kind, _si_word, _si_def, _si_hint) in _sub_intents
@@ -7666,7 +7801,7 @@ function process_mission(mission_text::String)
                                     _cr = ArithmeticEngine.compute_arithmetic(_cb)
                                     if _cr.error === nothing
                                         push!(_replies, ArithmeticEngine.format_arithmetic_reply(_cr))
-                                        println("[CONV-COMPOUND] 🔢 Calculate: $(_cr.expression) = $(_cr.answer_str)")
+                                        CaveJournal.cave_print("[CONV-COMPOUND] 🔢 Calculate: $(_cr.expression) = $(_cr.answer_str)"; tag="COMPOUND", emoji="🧩")
                                     else
                                         push!(_replies, "Could not compute $(_si_word): $(_cr.error)")
                                     end
@@ -7681,18 +7816,18 @@ function process_mission(mission_text::String)
                             _ans = _conversation_answer_question(_si_word)
                             if _ans !== nothing
                                 push!(_replies, _ans)
-                                println("[CONV-COMPOUND] 💬 Question: '$(_si_word)' → $_ans")
+                                CaveJournal.cave_print("[CONV-COMPOUND] 💬 Question: '$(_si_word)' → $_ans"; tag="COMPOUND", emoji="🧩")
                             else
                                 # Don't know the answer — ask for clarification
                                 push!(_replies, "Grug not know '$(_si_word)'")
-                                println("[CONV-COMPOUND] 🤷 Unknown: '$(_si_word)'")
+                                CaveJournal.cave_print("[CONV-COMPOUND] 🤷 Unknown: '$(_si_word)'"; tag="COMPOUND", emoji="🧩")
                             end
                         elseif _si_kind == :define
                             # Process definition for this sub-intent
                             _target_lobe = isempty(_si_hint) ? "default" : _si_hint
                             _dict_define_word!(_target_lobe, _si_word, _si_def)
                             push!(_replies, "📖 Learned: $_si_word means $_si_def")
-                            println("[CONV-COMPOUND] 📖 Define: '$_si_word' → '$_si_def'")
+                            CaveJournal.cave_print("[CONV-COMPOUND] 📖 Define: '$_si_word' → '$_si_def'"; tag="COMPOUND", emoji="🧩")
                         else
                             push!(_replies, "(unhandled sub-intent: $_si_kind)")
                         end
@@ -7709,7 +7844,7 @@ function process_mission(mission_text::String)
                         lock(_HIPPOCAMPAL_PENDING_ASK_LOCK) do
                             _HIPPOCAMPAL_PENDING_ASK[] = ""
                         end
-                        println("[CONV-COMPOUND] ✅ Compound reply: $_compound_reply")
+                        CaveJournal.cave_print("[CONV-COMPOUND] ✅ Compound reply: $_compound_reply"; tag="COMPOUND", emoji="🧩")
                         return
                     end
 
@@ -7730,7 +7865,7 @@ function process_mission(mission_text::String)
                     if isempty(_teach_def)
                         _followup = "What does '$(_teach_topic)' mean?"
                         _conv_set_pending_teach!(_teach_topic, _followup)
-                        println("[CONV-TEACH] 📝 Got subject '$_teach_subject' for '$_teach_topic' — asking for definition")
+                        CaveJournal.cave_print("[CONV-TEACH] 📝 Got subject '$_teach_subject' for '$_teach_topic' — asking for definition"; tag="TEACH", emoji="📝")
                         lock(_LAST_VOICE_OUTPUT_LOCK) do
                             _LAST_VOICE_OUTPUT[] = _followup
                         end
@@ -7757,14 +7892,14 @@ function process_mission(mission_text::String)
                         if !isempty(_new_lobe_id) && !haskey(Lobe.LOBE_REGISTRY, _new_lobe_id)
                             Lobe.create_lobe!(_new_lobe_id, lowercase(_teach_subject);
                                               name="$(titlecase(_teach_subject)) Lobe")
-                            println("[CONV-TEACH] 🧠 Created new lobe '$_new_lobe_id' for subject '$_teach_subject'")
+                            CaveJournal.cave_print("[CONV-TEACH] 🧠 Created new lobe '$_new_lobe_id' for subject '$_teach_subject'"; tag="TEACH", emoji="📝")
                             _target_lobe_id = _new_lobe_id
                         elseif haskey(Lobe.LOBE_REGISTRY, _new_lobe_id)
                             _target_lobe_id = _new_lobe_id
                         end
                     end
 
-                    println("[CONV-TEACH] 📝 Teaching: topic='$_teach_topic' subject='$_teach_subject' type=$_knowledge_type lobe='$_target_lobe_id' def='$_teach_def'")
+                    CaveJournal.cave_print("[CONV-TEACH] 📝 Teaching: topic='$_teach_topic' subject='$_teach_subject' type=$_knowledge_type lobe='$_target_lobe_id' def='$_teach_def'"; tag="TEACH", emoji="📝")
 
                     if _knowledge_type == :static
                         # ── STATIC KNOWLEDGE → dictionary entry or voter node ──
@@ -7790,7 +7925,7 @@ function process_mission(mission_text::String)
                                 end
                             end
                             _dict_define_word!(_target_lobe_id, _teach_topic, _clean_def)
-                            println("[CONV-TEACH] 📖 Static (dictionary): '$_teach_topic' → '$_clean_def' in lobe '$_target_lobe_id'")
+                            CaveJournal.cave_print("[CONV-TEACH] 📖 Static (dictionary): '$_teach_topic' → '$_clean_def' in lobe '$_target_lobe_id'"; tag="TEACH", emoji="📝")
                             _ack = "📖 Grug learned: $_teach_topic means $_clean_def"
                             if !isempty(_teach_subject)
                                 _ack = "📖 Grug learned: $_teach_topic means $_clean_def ($_teach_subject)"
@@ -7807,7 +7942,7 @@ function process_mission(mission_text::String)
                             _pat = lowercase(strip(_teach_topic))
                             _target_lobe_obj = haskey(Lobe.LOBE_REGISTRY, _target_lobe_id) ? _target_lobe_id : nothing
                             _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _ans_data, _target_lobe_obj, "explain")
-                            println("[CONV-TEACH] 📝 Static (cluster): '$_teach_topic' → '$_teach_def' → node=$_nid shadows=$(_sids)")
+                            CaveJournal.cave_print("[CONV-TEACH] 📝 Static (cluster): '$_teach_topic' → '$_teach_def' → node=$_nid shadows=$(_sids)"; tag="TEACH", emoji="📝")
                             _ack = "📝 Grug learned: $_teach_topic → $_teach_def"
                         end
 
@@ -7843,7 +7978,7 @@ function process_mission(mission_text::String)
                             end
                         end
 
-                        println("[CONV-TEACH] ⚡ Procedural (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid in lobe='$_target_lobe_id'")
+                        CaveJournal.cave_print("[CONV-TEACH] ⚡ Procedural (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid in lobe='$_target_lobe_id'"; tag="TEACH", emoji="📝")
                         _ack = "⚡ Grug learned procedure: $_teach_topic — $_teach_def"
 
                     elseif _knowledge_type == :relational
@@ -7889,7 +8024,7 @@ function process_mission(mission_text::String)
                             end
                         end
 
-                        println("[CONV-TEACH] 🔗 Relational (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid triples=$(_rel_triples) in lobe='$_target_lobe_id'")
+                        CaveJournal.cave_print("[CONV-TEACH] 🔗 Relational (sigil): '$_teach_topic' → '$_teach_def' → node=$_nid triples=$(_rel_triples) in lobe='$_target_lobe_id'"; tag="TEACH", emoji="📝")
                         _ack = "🔗 Grug learned relationship: $_teach_topic — $_teach_def"
                     end
 
@@ -7920,6 +8055,8 @@ function process_mission(mission_text::String)
                     _target_lobe = isempty(_conv_lobe_hint) ? "default" : _conv_lobe_hint
                     _dict_define_word!(_target_lobe, _conv_word, _conv_def)
                     println("[CONV-DEFINE] 📖 Learned: '$_conv_word' → '$_conv_def' in lobe '$_target_lobe'")
+                    # GRUG v9: CaveJournal — log definition learned
+                    CaveJournal.journal_info("define: '$_conv_word'"; detail=_conv_def)
                     _ack = "📖 Learned: $_conv_word means $_conv_def"
                     lock(_LAST_VOICE_OUTPUT_LOCK) do
                         _LAST_VOICE_OUTPUT[] = _ack
@@ -7937,7 +8074,7 @@ function process_mission(mission_text::String)
                     _target_lobe = isempty(_conv_lobe_hint) ? nothing : (haskey(Lobe.LOBE_REGISTRY, _conv_lobe_hint) ? _conv_lobe_hint : nothing)
                     _pat = lowercase(strip(_conv_word))
                     _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _ans_data, _target_lobe, "explain")
-                    println("[CONV-ANSWER] 📝 Taught: '$_conv_word' → '$_conv_def' → node=$_nid shadows=$(_sids)")
+                    CaveJournal.cave_print("[CONV-ANSWER] 📝 Taught: '$_conv_word' → '$_conv_def' → node=$_nid shadows=$(_sids)"; tag="ANSWER", emoji="📝")
                     _ack = "Grug learned: $_conv_word → $_conv_def"
                     lock(_LAST_VOICE_OUTPUT_LOCK) do
                         _LAST_VOICE_OUTPUT[] = _ack
@@ -7979,10 +8116,10 @@ function process_mission(mission_text::String)
                         _ans_data["noun_anchors"] = split(lowercase(_conv_word), r"[\s,.;]+") |> xs -> filter(w -> length(w) > 2, xs) |> xs -> xs[1:min(3, length(xs))]
                         _pat = lowercase(strip(_conv_word))
                         _nid, _sids, _lt = _plant_answer_cluster(_pat, "explain^1", _ans_data, nothing, "explain")
-                        println("[CONV-CORRECT] ✏️ Corrected: '$_conv_word' → '$_conv_def' → node=$_nid (old weakened)")
+                        CaveJournal.cave_print("[CONV-CORRECT] ✏️ Corrected: '$_conv_word' → '$_conv_def' → node=$_nid (old weakened)"; tag="CORRECT", emoji="✏️")
                         _ack = "✏️ Corrected: $_conv_word → $_conv_def"
                     else
-                        println("[CONV-CORRECT] ✏️ Correction signal — last response weakened")
+                        CaveJournal.cave_print("[CONV-CORRECT] ✏️ Correction signal — last response weakened"; tag="CORRECT", emoji="✏️")
                         _ack = "✏️ Got it, I'll remember that correction"
                     end
                     lock(_LAST_VOICE_OUTPUT_LOCK) do
@@ -8172,7 +8309,7 @@ function process_mission(mission_text::String)
 
     is_compound_input = length(sub_subjects) > 1
     if is_compound_input
-        println("[MULTIPART] Compound input detected: $(InputDecomposer.summarize_decomposition(sub_subjects))")
+        CaveJournal.cave_print("[MULTIPART] Compound input detected: $(InputDecomposer.summarize_decomposition(sub_subjects))"; tag="MULTI", emoji="🧩")
     end
 
     # GRUG: Build the DONE channel for this cycle. One slot per "lobe" unit of
@@ -8197,7 +8334,7 @@ function process_mission(mission_text::String)
     # inputs, chunk boundaries are computed from the full mission text.
     all_specimens = if is_image
         # GRUG: Image inputs don't decompose — single scan path.
-        println("[IMAGE] 🔍  Routing to image node scan path...")
+        CaveJournal.cave_print("[IMAGE] 🔍  Routing to image node scan path..."; tag="IMAGE", emoji="🖼")
         scan_task_name, scan_task = VoteOrchestrator.dispatch_task_with_timeout(
             () -> _scan_image_specimens(img_signal),
             "scan_cycle",
@@ -8349,7 +8486,7 @@ function process_mission(mission_text::String)
                                           something(_singleton_raw, ""))
             end
             if !isempty(_chunk_groups)
-                println("   [BINDING-PROP] Singleton bindings propagated to chunk groups: $(join(_chunk_groups, ","))")
+                CaveJournal.cave_print("   [BINDING-PROP] Singleton bindings propagated to chunk groups: $(join(_chunk_groups, ","))"; tag="BIND", emoji="🔗")
             end
         end
     end
@@ -8635,7 +8772,7 @@ function process_mission(mission_text::String)
         lobe_tokens = String[strip(t) for t in split(lowercase(mission_text)) if !isempty(strip(t))]
         LobeOrchestrator.score_lobes(lobe_entries, Lobe.find_lobe_for_node; input_tokens=lobe_tokens)
         _ls, _lw, _lp = LobeOrchestrator.get_last_state()
-        println("   [LOBE-ORCH] Global Winner=$_lw  Passthrough=$(join(_lp, ","))  Scored=$(length(_ls)) lobes")
+        CaveJournal.cave_print("   [LOBE-ORCH] Global Winner=$_lw  Passthrough=$(join(_lp, ","))  Scored=$(length(_ls)) lobes"; tag="LOBE", emoji="🎯")
 
         # Per-group scoring for multipart inputs
         _mp_groups = unique([v.multipart_group for v in cast_votes if !isempty(v.multipart_group)])
@@ -8648,7 +8785,7 @@ function process_mission(mission_text::String)
                 LobeOrchestrator.score_lobes(grp_entries, Lobe.find_lobe_for_node; input_tokens=grp_tokens)
                 grp_ls, grp_lw, grp_lp = LobeOrchestrator.get_last_state()
                 stash_multipart_lobe_state!(grp, grp_ls, grp_lw, grp_lp)
-                println("   [LOBE-ORCH] Group '$grp' Winner=$grp_lw  Passthrough=$(join(grp_lp, ","))  Scored=$(length(grp_ls)) lobes")
+                CaveJournal.cave_print("   [LOBE-ORCH] Group '$grp' Winner=$grp_lw  Passthrough=$(join(grp_lp, ","))  Scored=$(length(grp_ls)) lobes"; tag="LOBE", emoji="🎯")
             end
             # Restore global state so ephemeral_voice_orchestrator's initial
             # get_last_state() call still gets the global picture for the
@@ -8932,7 +9069,7 @@ function process_mission(mission_text::String)
                     if length(_mlp_sub) > 1
                         sub_subjects = _mlp_sub
                         is_compound_input = true
-                        println("[MULTIPART] MLP-assisted decomposition: $(InputDecomposer.summarize_decomposition(sub_subjects))")
+                        CaveJournal.cave_print("[MULTIPART] MLP-assisted decomposition: $(InputDecomposer.summarize_decomposition(sub_subjects))"; tag="MULTI", emoji="🧩")
                     end
                     _mlp_decomposition_done = true
                 catch e
@@ -9324,7 +9461,7 @@ function process_mission(mission_text::String)
             )
 
             if _ag_result !== nothing && _ag_result.won_coinflip
-                println("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_prob, digits=3)))")
+                CaveJournal.cave_print("[AUTOGROWTH] 🌱  Grew $(_ag_result.growth_type) node for '$(_ag_result.pattern)' in $(_ag_result.lobe_hint) (intensity=$(round(_ag_result.evidence_intensity, digits=2)), p=$(round(_ag_result.coinflip_prob, digits=3)))"; tag="GROWTH", emoji="🌱")
             end
 
             # ── GRUG v10: PETTY LEARNER FAST-PATH ──────────────────────
@@ -9361,7 +9498,7 @@ function process_mission(mission_text::String)
                             arithmetic_compute_fn = (bindings) -> ArithmeticEngine.compute_arithmetic(bindings),
                             arithmetic_bindings = _petty_bindings,
                         )
-                        println("[PETTY] ⚡  Petty fast-path: $(_petty_dispatched.detail)")
+                        CaveJournal.cave_print("[PETTY] ⚡  Petty fast-path: $(_petty_dispatched.detail)"; tag="PETTY", emoji="⚡")
                     end
                 end
             catch e
@@ -9397,7 +9534,7 @@ function process_mission(mission_text::String)
                             sigil_table = _ENGINE_SIGIL_TABLE,
                         )
                         if !isempty(_inv_result)
-                            println("[INVSIGIL] ⚡ Petty dispatch: $_inv_result")
+                            CaveJournal.cave_print("[INVSIGIL] ⚡ Petty dispatch: $_inv_result"; tag="INVSIG", emoji="⚡")
                         end
                     end
                 end
@@ -9416,7 +9553,7 @@ function process_mission(mission_text::String)
                         _HIPPOCAMPAL_PENDING_ASK[] = _cur_overflow
                     end
                     _cur_status = AutoGrowth.get_curiosity_status()
-                    println("[CURIOSITY] 🔥  Curiosity overflow! intensity=$(_cur_status["intensity"]) → pending ask: $(repr(_cur_overflow))")
+                    CaveJournal.cave_print("[CURIOSITY] 🔥  Curiosity overflow! intensity=$(_cur_status["intensity"]) → pending ask: $(repr(_cur_overflow))"; tag="CURIOS", emoji="🔥")
                     # GRUG: Quench after overflow so it doesn't fire again immediately.
                     AutoGrowth.quench_curiosity!()
                 end
@@ -9548,7 +9685,7 @@ function process_mission(mission_text::String)
 
             if _al_result !== nothing && _al_result.won_coinflip
                 cross_tag = _al_result.is_cross_lobe ? "CROSS-LOBE" : "same-lobe"
-                println("[AUTOLINKER] 🔗  Bridged $(_al_result.node_a) ↔ $(_al_result.node_b) [$cross_tag] (intensity=$(round(_al_result.evidence_intensity, digits=2)), p=$(round(_al_result.coinflip_p, digits=3)), source=$(_al_result.source))")
+                CaveJournal.cave_print("[AUTOLINKER] 🔗  Bridged $(_al_result.node_a) ↔ $(_al_result.node_b) [$cross_tag] (intensity=$(round(_al_result.evidence_intensity, digits=2)), p=$(round(_al_result.coinflip_p, digits=3)), source=$(_al_result.source))"; tag="LINK", emoji="🔗")
             end
         end
     catch e
@@ -9660,7 +9797,6 @@ Use .json extension for plain JSON (cross-platform, no gzip needed) or .gz for c
 Captures ALL mutable state across all modules:
   - nodes       (full Node struct: strengths, patterns, neighbors, graves, etc.)
   - hopfield    (HOPFIELD_CACHE + hit counts)
-  - rules       (ORCHESTRATION_RULES stochastic rules)
   - messages    (up to 10k message history with pin flags)
   - lobes       (LOBE_REGISTRY: fire/inhibit counts, connections, node assignments, whitelists)
   - lobe_tables (LOBE_TABLE_REGISTRY: all chunks with NodeRef objects)
@@ -9784,12 +9920,11 @@ function save_specimen_to_file!(filepath::String)::String
     end
     specimen["hopfield_cache"] = hopfield_entries
 
-    # ── 3. RULES (ORCHESTRATION_RULES) ────────────────────────────────────────
-    # GRUG: r.text and r.fire_probability are the actual struct field names.
-    # Academic: Previously used r.rule_text / r.fire_prob which would cause a
-    # Julia field access error at runtime. Fixed in v2.1.
-    rule_list = [Dict{String, Any}("text" => r.text, "prob" => r.fire_probability) for r in lock(_DROP_TABLE_LOCK) do; copy(ORCHESTRATION_RULES) end]
-    specimen["rules"] = rule_list
+    # ── 3. RULES (ORCHESTRATION_RULES) -- REMOVED ──────────────────────────────
+    # GRUG v9-removal: the /addRule stochastic rule board is gone. Specimens
+    # saved from now on simply have no "rules" key. Old specimens that still
+    # have one are silently skipped on load (see /loadSpecimen below), same
+    # backward-compat pattern as the removed AIMLNodeSystem's "aiml_system" key.
 
     # ── 4. MESSAGE HISTORY ────────────────────────────────────────────────
     # GRUG: Serialize the full message cave (up to 10k entries). Pins are preserved.
@@ -10849,7 +10984,15 @@ function save_specimen_to_file!(filepath::String)::String
         @warn "[MAIN] save_specimen: FAILED to serialize temporal identities: $e"
     end
 
-    # ── 27. LOBE DICTIONARIES ──────────────────────────────────────────────
+    # ── 26b. CAVE JOURNAL CONFIG ──────────────────────────────────────────────
+    # GRUG v9: Save journal config (directory + filename) so next boot picks up same file.
+    # active is NOT saved — journal starts OFF on every boot (no surprise activations).
+    try
+        specimen["journal_config"] = CaveJournal.journal_config_to_dict()
+        println("  📖 CaveJournal config saved")
+    catch e
+        @warn "[MAIN] save_specimen: FAILED to serialize journal config: $e"
+    end
     # GRUG v8.26i: Save the per-lobe word dictionaries. These are lightweight
     # Dict{String,String} maps — one per lobe — so they serialize trivially.
     try
@@ -10913,7 +11056,6 @@ function save_specimen_to_file!(filepath::String)::String
     push!(lines, "  💎  Phase Accumulator      : $(try Int(get(EphemeralAutomaton.phase_pull_status(), "crystal_size", 0)) catch _ 0 end) snapshots")
     push!(lines, "  📋  Lobe tables      : $(length(lobe_table_list))")
     push!(lines, "  ⚡  Hopfield entries  : $(length(hopfield_entries))")
-    push!(lines, "  ⚙️   Rules            : $(length(rule_list))")
     push!(lines, "  💬  Messages         : $(length(msg_list))")
     push!(lines, "  🔧  Verb classes     : $(length(get(verb_data, "classes", Dict())))")
     push!(lines, "  🔤  Thesaurus words  : $(length(thesaurus_data))")
@@ -11086,6 +11228,7 @@ function load_specimen_from_file!(filepath::String)::String
                         "pattern_miner_config",  # GRUG v9: PatternMiner genesis thresholds
                         "pattern_miner_data",    # GRUG v9: PatternMiner instances + proposals
                         "temporal_identities",   # GRUG v9: TemporalIdentity continuants
+                        "journal_config",        # GRUG v9: CaveJournal directory/filename
                         "autogrowth_evidence", "autogrowth_co_occur",
                         "autolink_evidence",
                         "inverse_table",
@@ -11121,7 +11264,7 @@ function load_specimen_from_file!(filepath::String)::String
              "scanner_config", "action_tone_knobs",
              "fanout_config", "hippocampal_pending_ask", "admin_session",
              "lobe_orch_last", "chatter_cursor", "answer_mode_config", "time_orientation_config",
-             "coherence_config", "geometry_config", "pattern_miner_config", "temporal_identities", "mlp_cached_phi"]
+             "coherence_config", "geometry_config", "pattern_miner_config", "temporal_identities", "journal_config", "mlp_cached_phi"]
         if haskey(specimen, k) && !_is_dict_like(specimen[k])
             push!(validation_errors, "'$k' must be an object")
         end
@@ -11163,8 +11306,7 @@ function load_specimen_from_file!(filepath::String)::String
         empty!(HOPFIELD_HIT_COUNTS)
     end
 
-    # Wipe AIML rules
-    lock(_DROP_TABLE_LOCK) do; empty!(ORCHESTRATION_RULES) end
+    # Wipe AIML rules -- REMOVED (rule board no longer exists, nothing to wipe)
 
     # A brain transplant must clear executive memory too, not just cave nodes.
 
@@ -11648,22 +11790,12 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚡ Hopfield cache restored ($n_hopfield entries)")
     end
 
-    # ── 4.9 RULES ─────────────────────────────────────────────────────────
-    n_rules = 0
-    if haskey(specimen, "rules") && isa(specimen["rules"], AbstractVector)
-        for rentry in specimen["rules"]
-            try
-                rtext = String(rentry["text"])
-                rprob = Float64(get(rentry, "prob", 1.0))
-                push!(lock(_DROP_TABLE_LOCK) do; ORCHESTRATION_RULES end, StochasticRule(rtext, rprob))
-                n_rules += 1
-            catch e
-                error("!!! FATAL: /loadSpecimen failed to restore rule: $e !!!")
-            end
-        end
-        counts["rules"] = n_rules
-        println("  ⚙️  Rules restored ($n_rules)")
-    end
+    # ── 4.9 RULES -- REMOVED ────────────────────────────────────────────────
+    # GRUG v9-removal: the /addRule stochastic rule board (ORCHESTRATION_RULES,
+    # StochasticRule, _DROP_TABLE_LOCK) was deleted from engine.jl. Old
+    # specimens that still have a "rules" key are silently skipped here --
+    # same backward-compat pattern used for the removed AIMLNodeSystem's
+    # "aiml_system" key. Nothing to restore.
 
     # ── 4.10 INHIBITIONS ──────────────────────────────────────────────────
     n_inhibitions = 0
@@ -13037,6 +13169,22 @@ function load_specimen_from_file!(filepath::String)::String
         println("  ⚠️  TemporalIdentity: FAILED to load (defaults will apply)")
     end
 
+    # ── 26c. CAVE JOURNAL CONFIG ──────────────────────────────────────────────
+    # GRUG v9: Restore journal directory/filename from specimen.
+    # active is NOT restored — journal starts OFF on every boot.
+    try
+        if haskey(specimen, "journal_config")
+            _jc = specimen["journal_config"]
+            if _is_dict_like(_jc)
+                CaveJournal.journal_config_from_dict!(_jc)
+                println("  📖 CaveJournal config loaded (path=$(CaveJournal.journal_get_path()))")
+            end
+        end
+    catch e
+        @warn "[MAIN] load_specimen: failed to restore journal config: $e"
+        println("  ⚠️  CaveJournal: FAILED to load config (defaults will apply)")
+    end
+
     # ── 27b. LOBE DICTIONARIES ──────────────────────────────────────────────
     # GRUG v8.26i: Restore per-lobe word dictionaries from specimen.
     try
@@ -13044,6 +13192,97 @@ function load_specimen_from_file!(filepath::String)::String
             _dict_load_state!(specimen["lobe_dictionaries"])
             _dc = _dict_definitions_count()
             println("  📖 Lobe dictionaries loaded ($_dc definitions)")
+            # GRUG v9: Wire the dictionary word checker into the sigil promoter
+            # so &define's promote_predicate can test "does this word have a
+            # dictionary entry?" at promote time. Must happen AFTER dictionaries
+            # are loaded so _dict_has_word actually has data to check.
+            SigilRegistry.set_dict_word_checker!(_dict_has_word)
+
+            # GRUG v9: Register per-lobe dict_define action callbacks.
+            # Dictionaries are lobe-specific — each lobe has its own
+            # Dict{String,String}. Each per-lobe dict sigil node has
+            # action_callback="dict_define_<lobe_id>" which looks up the
+            # word in THAT lobe's dictionary. This way, the correct lobe's
+            # dict node wins the vote via lobe_alignment scoring.
+            # IMPORTANT: We iterate over _LOBE_DICTIONARIES keys, NOT LOBE_REGISTRY.
+            # Some dictionaries (like "default") are for general knowledge and
+            # don't correspond to a lobe in LOBE_REGISTRY. They still need a
+            # callback so their dict sigil node can find definitions.
+            lock(_LOBE_DICTIONARIES_LOCK) do
+                for _cb_lid in keys(_LOBE_DICTIONARIES)
+                    _cb_lobe_id = _cb_lid  # capture for closure (Julia loop variable scoping)
+                    ActionEngine.register_action_callback!("dict_define_$(_cb_lobe_id)",
+                        function(bindings::Vector{SigilPromoter.SigilBinding})
+                            # Find the &define binding — it carries the original word
+                            # in its .surface field (e.g., binding for "dog" has
+                            # name="define", surface="dog").
+                            _word = "?"
+                            for b in bindings
+                                if b.name == "define"
+                                    _word = isempty(b.surface) ? String(b.value) : b.surface
+                                    break
+                                end
+                            end
+                            _def = _dict_lookup_word(_word; lobe_hint=_cb_lobe_id)
+                            if _def !== nothing
+                                return ActionEngine.ActionResult(
+                                    "dict_define_$(_cb_lobe_id)",
+                                    _def,
+                                    _def,
+                                    "define_$(_cb_lobe_id)($_word)",
+                                    ActionEngine.ActionComputationStep[],
+                                    nothing
+                                )
+                            else
+                                return ActionEngine.ActionResult(
+                                    "dict_define_$(_cb_lobe_id)",
+                                    nothing,
+                                    "",
+                                    "define_$(_cb_lobe_id)($_word)",
+                                    ActionEngine.ActionComputationStep[],
+                                    "no dictionary entry for '$_word' in lobe '$(_cb_lobe_id)'"
+                                )
+                            end
+                        end
+                    )
+                end
+            end
+
+            # GRUG v9: Also register a generic "dict_define" fallback callback
+            # for backward compatibility with old specimens whose dict nodes
+            # still have action_callback="dict_define" (the pre-per-lobe name).
+            # This searches all lobes (first match wins), same as the old behavior.
+            ActionEngine.register_action_callback!("dict_define",
+                function(bindings::Vector{SigilPromoter.SigilBinding})
+                    _word = "?"
+                    for b in bindings
+                        if b.name == "define"
+                            _word = isempty(b.surface) ? String(b.value) : b.surface
+                            break
+                        end
+                    end
+                    _def = _dict_lookup_word(_word)
+                    if _def !== nothing
+                        return ActionEngine.ActionResult(
+                            "dict_define",
+                            _def,
+                            _def,
+                            "define($_word)",
+                            ActionEngine.ActionComputationStep[],
+                            nothing
+                        )
+                    else
+                        return ActionEngine.ActionResult(
+                            "dict_define",
+                            nothing,
+                            "",
+                            "define($_word)",
+                            ActionEngine.ActionComputationStep[],
+                            "no dictionary entry for '$_word'"
+                        )
+                    end
+                end
+            )
         end
     catch e
         @warn "[MAIN] load_specimen: failed to restore lobe dictionaries: $e"
@@ -13143,6 +13382,175 @@ function load_specimen_from_file!(filepath::String)::String
         else
             println("  🎯 @sigil:action nodes already present ($(length(act_ids))), skipping seed")
         end
+
+        # GRUG v9: Per-lobe dictionary definition sigil nodes. Dictionaries are
+        # lobe-specific — each lobe has its own Dict{String,String} of word→definition.
+        # When user asks "what is a dog", SigilPromoter rewrites to
+        # "&query &definition &define". Each lobe that has a dictionary gets its own
+        # sigil node with pattern "&query &definition &define". The node's
+        # action_callback is "dict_define_<lobe_id>" (registered per-lobe), which
+        # looks up the word in THAT lobe's dictionary. Lobe_alignment scoring ensures
+        # the correct lobe's dict node wins the vote. This is common sense: "stalactite"
+        # belongs to geology/science, "factorial" belongs to math.
+        local dict_ids = list_sigil_node_ids(:define)
+        if isempty(dict_ids)
+            # Create one dict sigil node per lobe that has dictionary entries.
+            # IMPORTANT: We iterate over _LOBE_DICTIONARIES keys, NOT LOBE_REGISTRY.
+            # Some dictionaries (like "default") are for general knowledge and
+            # don't correspond to a lobe in LOBE_REGISTRY. They still need a
+            # sigil node so their words can be looked up via the sigil pipeline.
+            # For lobe_ids in LOBE_REGISTRY, the node gets assigned to that lobe
+            # (lobe_alignment bonus). For others (e.g., "default"), the node
+            # floats unassigned — still competes in votes, just without alignment bonus.
+            _dict_node_count = 0
+            lock(_LOBE_DICTIONARIES_LOCK) do
+                for _lid in keys(_LOBE_DICTIONARIES)
+                    _lobe_dict = _LOBE_DICTIONARIES[_lid]
+                    if isempty(_lobe_dict)
+                        continue  # skip empty dictionaries
+                    end
+                    dict_ctx = Dict{String, Any}(
+                        "action_callback" => "dict_define_$(_lid)",
+                        "system_prompt"   => "Dictionary definition voice — state the definition clearly and concisely",
+                        "voice_register"  => "terse",
+                        "frame_hints"     => ["imperative", "terse"],
+                        "sigil_kind"      => "define",
+                        "is_dict_node"    => true,
+                        "dict_lobe_id"    => _lid,
+                    )
+                    _nid = create_sigil_node("&query &definition &define", "define^5 | explain^3", dict_ctx, String[]; kind = :define)
+                    # Assign the node to its lobe if the lobe exists in LOBE_REGISTRY.
+                    # For "default" or other pseudo-lobes not in LOBE_REGISTRY, the
+                    # node floats unassigned — it still votes but without lobe_alignment bonus.
+                    if haskey(Lobe.LOBE_REGISTRY, _lid)
+                        try
+                            Lobe.add_node_to_lobe!(_lid, _nid)
+                        catch e
+                            @warn "[MAIN] Failed to assign dict sigil node $_nid to lobe '$_lid': $e"
+                        end
+                    end
+                    _dict_node_count += 1
+                end
+            end
+            if _dict_node_count > 0
+                println("  📖 @sigil:define seed nodes created ($(_dict_node_count) per-lobe dict nodes)")
+            else
+                println("  📖 @sigil:define no lobes with dictionary entries — skipping dict node creation")
+            end
+        else
+            # GRUG v9: Existing :define sigil nodes found — migrate old
+            # single dict_define callback to per-lobe callbacks if needed.
+            # Old nodes have action_callback="dict_define"; new ones have
+            # action_callback="dict_define_<lobe_id>". If we find old-style
+            # nodes, migrate them: delete the old global node and create
+            # per-lobe ones in its place.
+            _old_dict_nodes = String[]
+            _new_dict_nodes = String[]
+            for _dnid in dict_ids
+                _dn = lock(() -> get(NODE_MAP, _dnid, nothing), NODE_LOCK)
+                if _dn !== nothing
+                    _dcb = get(_dn.json_data, "action_callback", "")
+                    if _dcb == "dict_define"
+                        push!(_old_dict_nodes, _dnid)
+                    else
+                        push!(_new_dict_nodes, _dnid)
+                    end
+                end
+            end
+            if !isempty(_old_dict_nodes)
+                # Migrate: grave the old global nodes, create per-lobe ones.
+                for _old_nid in _old_dict_nodes
+                    _old_n = lock(() -> get(NODE_MAP, _old_nid, nothing), NODE_LOCK)
+                    if _old_n !== nothing
+                        _old_n.is_grave = true
+                        _old_n.grave_reason = "v9 migration: replaced by per-lobe dict sigil node"
+                        println("  📖 @sigil:define migrated old global node $_old_nid → per-lobe")
+                    end
+                end
+                # Create per-dict sigil nodes to replace the graved ones.
+                # Iterate over _LOBE_DICTIONARIES (not LOBE_REGISTRY) so "default"
+                # and other pseudo-lobes also get dict sigil nodes.
+                _dict_node_count = 0
+                lock(_LOBE_DICTIONARIES_LOCK) do
+                    for _lid in keys(_LOBE_DICTIONARIES)
+                        _lobe_dict = _LOBE_DICTIONARIES[_lid]
+                        if isempty(_lobe_dict)
+                            continue
+                        end
+                        dict_ctx = Dict{String, Any}(
+                            "action_callback" => "dict_define_$(_lid)",
+                            "system_prompt"   => "Dictionary definition voice — state the definition clearly and concisely",
+                            "voice_register"  => "terse",
+                            "frame_hints"     => ["imperative", "terse"],
+                            "sigil_kind"      => "define",
+                            "is_dict_node"    => true,
+                            "dict_lobe_id"    => _lid,
+                        )
+                        _nid = create_sigil_node("&query &definition &define", "define^5 | explain^3", dict_ctx, String[]; kind = :define)
+                        if haskey(Lobe.LOBE_REGISTRY, _lid)
+                            try
+                                Lobe.add_node_to_lobe!(_lid, _nid)
+                            catch e
+                                @warn "[MAIN] Failed to assign dict sigil node $_nid to lobe '$_lid': $e"
+                            end
+                        end
+                        _dict_node_count += 1
+                    end
+                end
+                println("  📖 @sigil:define migrated $(length(_old_dict_nodes)) old node(s) → $(_dict_node_count) per-lobe dict nodes")
+            else
+                # All existing nodes are already per-lobe style — no migration needed.
+                # But check if any dictionaries lack a dict sigil node and fill gaps.
+                # Iterate over _LOBE_DICTIONARIES (not LOBE_REGISTRY) so "default"
+                # and other pseudo-lobes also get covered.
+                _lobe_ids_with_dict_node = Set{String}()
+                for _dnid in dict_ids
+                    _dn = lock(() -> get(NODE_MAP, _dnid, nothing), NODE_LOCK)
+                    if _dn !== nothing
+                        _dlid = get(_dn.json_data, "dict_lobe_id", "")
+                        if !isempty(_dlid)
+                            push!(_lobe_ids_with_dict_node, _dlid)
+                        end
+                    end
+                end
+                _gap_count = 0
+                lock(_LOBE_DICTIONARIES_LOCK) do
+                    for _lid in keys(_LOBE_DICTIONARIES)
+                        if _lid in _lobe_ids_with_dict_node
+                            continue
+                        end
+                        _lobe_dict = _LOBE_DICTIONARIES[_lid]
+                        if isempty(_lobe_dict)
+                            continue
+                        end
+                        # This dictionary has entries but no dict sigil node — create one.
+                        dict_ctx = Dict{String, Any}(
+                            "action_callback" => "dict_define_$(_lid)",
+                            "system_prompt"   => "Dictionary definition voice — state the definition clearly and concisely",
+                            "voice_register"  => "terse",
+                            "frame_hints"     => ["imperative", "terse"],
+                            "sigil_kind"      => "define",
+                            "is_dict_node"    => true,
+                            "dict_lobe_id"    => _lid,
+                        )
+                        _nid = create_sigil_node("&query &definition &define", "define^5 | explain^3", dict_ctx, String[]; kind = :define)
+                        if haskey(Lobe.LOBE_REGISTRY, _lid)
+                            try
+                                Lobe.add_node_to_lobe!(_lid, _nid)
+                            catch e
+                                @warn "[MAIN] Failed to assign dict sigil node $_nid to lobe '$_lid': $e"
+                            end
+                        end
+                        _gap_count += 1
+                    end
+                end
+                if _gap_count > 0
+                    println("  📖 @sigil:define filled $(_gap_count) gap(s) — new per-lobe dict nodes for lobes missing one")
+                else
+                    println("  📖 @sigil:define nodes already present ($(length(dict_ids))), skipping seed")
+                end
+            end
+        end
     end
 
     # PHASE 5: BUILD SUMMARY SCROLL
@@ -13165,7 +13573,6 @@ function load_specimen_from_file!(filepath::String)::String
     push!(lines, "  🧠  Lobes            : $(get(counts, "lobes", 0))")
     push!(lines, "  📋  Lobe tables      : $(get(counts, "lobe_tables", 0))")
     push!(lines, "  ⚡  Hopfield entries  : $(get(counts, "hopfield_entries", 0))")
-    push!(lines, "  ⚙️   Rules            : $(get(counts, "rules", 0))")
     push!(lines, "  💬  Messages         : $(get(counts, "messages", 0)) ($n_pinned pinned)")
     push!(lines, "  🔧  Verb classes     : $(get(counts, "verb_classes", 0)) ($(get(counts, "verbs", 0)) verbs)")
     push!(lines, "  🔤  Thesaurus words  : $(get(counts, "thesaurus_words", 0))")
@@ -13665,7 +14072,7 @@ function maybe_run_idle()
         # GRUG (v8.0): ChatterMode now takes group maps directly instead of
         # a snapshot. Group-based dispatch: sample random groups, pair
         # strong+weak nodes, steal+remix votes, swap patterns.
-        println("[IDLE] 🧬  Coinflip → CHATTER. Starting group-based gossip round...")
+        CaveJournal.cave_print("[IDLE] 🧬  Coinflip → CHATTER. Starting group-based gossip round..."; tag="IDLE", emoji="🧬")
 
         try
             session = ChatterMode.start_chatter_session!(
@@ -13707,7 +14114,7 @@ function maybe_run_idle()
     else
         # ── TAILS: PHAGY ──────────────────────────────────────────────────
         # GRUG: Phagy fires for mature specimens (1000+ nodes, gated above).
-        println("[IDLE] 🧬  Coinflip → PHAGY. Running maintenance automaton...")
+        CaveJournal.cave_print("[IDLE] 🧬  Coinflip → PHAGY. Running maintenance automaton..."; tag="IDLE", emoji="🧬")
 
         try
             # GRUG v7.30: Pass all system references so new automata 8-12 can
@@ -13880,11 +14287,11 @@ function _maybe_save_specimen_on_exit()
         answer = lowercase(strip(readline()))
         if startswith(answer, "y")
             # Save to the same path it was loaded from
-            println("[GRUG] Saving specimen to: $last_path")
+            CaveJournal.cave_print("[GRUG] Saving specimen to: $last_path"; tag="GRUG", emoji="🦴")
             result = save_specimen_to_file!(last_path)
-            println("[GRUG] $result")
+            CaveJournal.cave_print("[GRUG] $result"; tag="GRUG", emoji="🦴")
         else
-            println("[GRUG] Specimen not saved. Goodbye.")
+            CaveJournal.cave_print("[GRUG] Specimen not saved. Goodbye."; tag="GRUG", emoji="🦴")
         end
     catch
         # readline may fail if stdin is already closed (scripted exit)
@@ -13962,7 +14369,7 @@ function run_cli()
         # we print a visible shutdown banner so operators can see the REPL
         # terminated on its own, not via a /quit command.
         if eof(stdin)
-            println("\n[GRUG] ☁ stdin closed (EOF). Cave goes quiet. Shutting down CLI loop.")
+            CaveJournal.cave_print("\n[GRUG] ☁ stdin closed (EOF). Cave goes quiet. Shutting down CLI loop."; tag="GRUG", emoji="🦴")
             # GRUG v7.58: Try to save specimen before EOF exit (may fail if stdin is closed).
             _maybe_save_specimen_on_exit()
             break
@@ -13983,7 +14390,7 @@ function run_cli()
         # Julia exits with code 0 and log capture tools see a clean close.
         # NO SILENT FAILURE: always print a shutdown banner before returning.
         if line == "/quit" || line == "/exit"
-            println("[GRUG] 👋 /quit received. Cave closes. Goodbye.")
+            CaveJournal.cave_print("[GRUG] 👋 /quit received. Cave closes. Goodbye."; tag="GRUG", emoji="🦴")
             # GRUG: Stop the InputLedger background thread before exit.
             # It's a @async task — signal it to stop so it doesn't linger.
             try
@@ -14011,7 +14418,7 @@ function run_cli()
         # BRIDGE_MAP, and other shared structures. User input also reads
         # and writes them. No interleaving. User input waits for idle.
         if _IDLE_ACTIVE[]
-            println("[MAIN] ⏳  Idle process active — waiting for it to finish...")
+            CaveJournal.cave_print("[MAIN] ⏳  Idle process active — waiting for it to finish..."; tag="MAIN", emoji="⚡")
             while _IDLE_ACTIVE[]
                 sleep(0.05)  # GRUG: 50ms poll. Not spin-burning CPU.
             end
@@ -14023,7 +14430,7 @@ function run_cli()
         status = ChatterMode.get_chatter_status()
         if status.is_running
             ChatterMode.enqueue_input!(line)
-            println("[MAIN] ⏳  Input queued (chatter active). Will process after chatter ends.")
+            CaveJournal.cave_print("[MAIN] ⏳  Input queued (chatter active). Will process after chatter ends."; tag="MAIN", emoji="⚡")
             continue
         end
 
@@ -14058,7 +14465,6 @@ function run_cli()
             m_autolinkstatus = match(r"^/autoLinkStatus\s*$", line)
             m_explicit    = match(r"^/explicit\s+([a-zA-Z0-9_]+)\s+\[(.+?)\]\s+(.+)", line)
             m_grow        = match(r"^/grow\s+(\S+)\s+(.+)"s,      line)
-            m_rule        = match(r"^/addRule\s+(.+)"s,   line)
             m_pin         = match(r"^/pin\s+(.+)"s,       line)
             m_nodes       = match(r"^/nodes\s*$",          line)
             m_status      = match(r"^/status\s*$",         line)
@@ -14250,6 +14656,14 @@ function run_cli()
             m_identity_config   = match(r"^/identity\s+config(?:\s+(\S+)\s+(.+))?\s*$",            line)
             m_identity_delete   = match(r"^/identity\s+delete\s+(\S+)\s*$",                        line)
             m_identity_rule     = match(r"^/identity\s+rule\s+(\S+)\s+(\S+)\s+(\S+)\s*$",          line)
+            # GRUG v9: CaveJournal — auto-logging to markdown
+            m_journal           = match(r"^/journal\s*$",                                         line)
+            m_journal_on        = match(r"^/journal\s+on\s*$",                                    line)
+            m_journal_off       = match(r"^/journal\s+off\s*$",                                   line)
+            m_journal_path      = match(r"^/journal\s+path\s+(.+)\s*$",                           line)
+            m_journal_filename  = match(r"^/journal\s+filename\s+(\S+)\s*$",                      line)
+            m_journal_clear     = match(r"^/journal\s+clear\s*$",                                  line)
+            m_journal_rotate    = match(r"^/journal\s+rotate(?:\s+(\d+))?\s*$",                    line)
             m_errors            = match(r"^/errors(?:\s+(clear))?\s*$",                       line)
             m_help         = match(r"^/help\s*$",                                       line)
             
@@ -14626,7 +15040,7 @@ elseif !isnothing(m_right)
                         # If pattern field has image binary, flag it as image node automatically.
                         is_img, img_sig = maybe_convert_image_input(json_text)
                         if is_img
-                            println("[GROW] 🖼  Image binary detected in /grow packet. Image node path active.")
+                            CaveJournal.cave_print("[GROW] 🖼  Image binary detected in /grow packet. Image node path active."; tag="GROW", emoji="🖼")
                         end
 
                         try
@@ -14673,17 +15087,6 @@ elseif !isnothing(m_right)
                             println("!!! ERROR in /grow: $e !!!")
                         end
                     end
-                end
-
-            elseif !isnothing(m_rule)
-                # GRUG: /addRule - add a stochastic orchestration rule.
-                # Optional [prob=X.XX] suffix sets fire probability (default 1.0).
-                rule_text = String(m_rule.captures[1])
-                # GRUG: IMMUNE GATE — rules are stored structure!
-                if !immune_gate("/addRule", rule_text; is_critical=false)
-                    println("⛔ /addRule blocked by immune system.")
-                else
-                    println("⚙️ ", add_orchestration_rule!(rule_text))
                 end
 
             elseif !isnothing(m_pin)
@@ -17601,6 +18004,43 @@ elseif !isnothing(m_right)
                     println("⚠  /identity rule: $e")
                 end
 
+            elseif !isnothing(m_journal)
+                # /journal — show journal status
+                println(CaveJournal.journal_status())
+
+            elseif !isnothing(m_journal_on)
+                # /journal on — turn on auto-logging
+                msg = CaveJournal.journal_on!()
+                println(msg)
+
+            elseif !isnothing(m_journal_off)
+                # /journal off — turn off auto-logging
+                msg = CaveJournal.journal_off!()
+                println(msg)
+
+            elseif !isnothing(m_journal_path)
+                # /journal path <dir> — set journal directory
+                dir = String(strip(m_journal_path.captures[1]))
+                msg = CaveJournal.journal_set_path!(dir)
+                println(msg)
+
+            elseif !isnothing(m_journal_filename)
+                # /journal filename <name> — set journal filename
+                name = String(strip(m_journal_filename.captures[1]))
+                msg = CaveJournal.journal_set_filename!(name)
+                println(msg)
+
+            elseif !isnothing(m_journal_clear)
+                # /journal clear — delete the journal file
+                msg = CaveJournal.journal_clear!()
+                println(msg)
+
+            elseif !isnothing(m_journal_rotate)
+                # /journal rotate [lines] — rotate journal, keeping last N lines
+                keep = m_journal_rotate.captures[1] !== nothing ? parse(Int, String(m_journal_rotate.captures[1])) : 1000
+                msg = CaveJournal.journal_rotate!(keep_lines=keep)
+                println(msg)
+
             elseif !isnothing(m_errors)
                 # /errors [clear] — show or clear the error journal
                 # GRUG: The main catch block writes errors to SelfObserver with tag :error
@@ -17804,7 +18244,8 @@ end
 #                       strength, neighbors, graves, drop_table, response_times,
 #                       hopfield_key, relational_patterns, etc.)
 #   2. hopfield_cache — familiar input fast-path cache + hit counts
-#   3. rules          — ORCHESTRATION_RULES stochastic orchestration rules
+#   3. rules          — REMOVED (was ORCHESTRATION_RULES); "rules" key in old
+#                       specimens is silently skipped for backward compat
 #   4. message_history— up to 10k ChatMessage entries with pin flags
 #   5. lobes          — LOBE_REGISTRY (subject, node_ids, connections, fire/inhibit)
 #   6. node_to_lobe_idx — NODE_TO_LOBE_IDX reverse index

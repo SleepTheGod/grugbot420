@@ -43,6 +43,7 @@ include("../src/EyeSystem.jl");              using .EyeSystem;             print
 include("../src/ChatterMode.jl");            using .ChatterMode;           println("  ✓ ChatterMode")
 include("../src/SemanticVerbs.jl");          using .SemanticVerbs;         println("  ✓ SemanticVerbs")
 include("../src/ActionTonePredictor.jl");    using .ActionTonePredictor;   println("  ✓ ActionTonePredictor")
+include("../src/Thesaurus.jl");              using .Thesaurus;             println("  ✓ Thesaurus")
 include("../src/engine.jl")
 println("  ✓ Engine (full chain)")
 
@@ -328,29 +329,13 @@ drained = ChatterMode.drain_input_queue!()
 println("  ✓ drain_input_queue!: drained $(length(drained)) item(s) correctly")
 
 # ==============================================================================
-# 12. STOCHASTIC AIML RULES (fire probability)
+# 12. STOCHASTIC AIML RULES — REMOVED (v9-removal)
 # ==============================================================================
-println("\n[12] STOCHASTIC AIML RULES")
-
-# Add a rule with 100% fire probability
-add_orchestration_rule!("Always fire: {MISSION}")
-@assert length(ORCHESTRATION_RULES) >= 1 "FAIL: Rule not added!"
-@assert ORCHESTRATION_RULES[end].fire_probability == 1.0 "FAIL: Default prob should be 1.0!"
-println("  ✓ Default rule fire_probability = $(ORCHESTRATION_RULES[end].fire_probability)")
-
-# Add a rule with explicit 50% probability
-add_orchestration_rule!("Sometimes fire: {PRIMARY_ACTION} [prob=0.5]")
-@assert ORCHESTRATION_RULES[end].fire_probability == 0.5 "FAIL: Prob should be 0.5!"
-@assert !contains(ORCHESTRATION_RULES[end].text, "[prob=") "FAIL: Prob suffix should be stripped from rule text!"
-println("  ✓ Stochastic rule fire_probability = $(ORCHESTRATION_RULES[end].fire_probability), text stripped cleanly")
-
-# Bad prob should throw
-try
-    add_orchestration_rule!("Bad rule [prob=99.9]")
-    println("  ✗ FAIL: Should have thrown for prob=99.9!")
-catch e
-    println("  ✓ Correctly rejected invalid prob=99.9")
-end
+# GRUG v9-removal: The /addRule stochastic rule board (ORCHESTRATION_RULES,
+# add_orchestration_rule!) was deleted from engine.jl. Investigation confirmed
+# its evaluated output never shaped conversational_reply -- only debug
+# telemetry -- so this section no longer applies.
+println("\n[12] STOCHASTIC AIML RULES — SKIPPED (rule board removed v9)")
 
 # ==============================================================================
 # 13. NODE STATUS SUMMARY

@@ -120,6 +120,35 @@ const AIML_SUBTOP_BASE_PROB  = 0.50
 const AIML_SUBTOP_BONUS_PROB = 0.00
 
 # ============================================================================
+# CYCLE SOLVER LEDGER — DUPLICATE SOLVER CAP
+# ============================================================================
+# GRUG: Multiple nodes solving the SAME concept with DIFFERENT structure/
+# wording is GOOD — it's the other half of the orchestration staleness
+# problem that the thesaurus alone can't solve (thesaurus catches synonym
+# duplication at GROWTH time via CONCEPT_DEDUP_FLOOR; this cap catches
+# VOTE/ACTION pile-ups at ORCHESTRATION time). Identical pattern/bind sites
+# across different nodes are explicitly ALLOWED and encouraged.
+#
+# BUT: if too many nodes vote the SAME action for the SAME objective in one
+# cycle, they dominate the board and drown out other legitimate voices. Cap
+# duplicate solvers (same multipart_group + same action) at
+# DUPLICATE_SOLVER_CAP per cycle. Anything past the cap gets evicted —
+# weakest strength*confidence first, using the same "drop table" grave
+# mechanism as any other node death (GRAVE_RECYCLER salvages the evicted
+# node's drop_table donations downstream, same as any other grave).
+#
+# Tie-breaking: if two or more nodes share the SAME lowest strength*confidence
+# value (a fluke tie at the bottom of the pool), stochastically pick ONE of
+# those tied-lowest to evict — do not just take array order (that would be a
+# silent, unfair bias).
+#
+# After capping to <= DUPLICATE_SOLVER_CAP survivors, a single "acting winner"
+# is stochastically chosen from the survivors, BIASED by strength*confidence
+# (higher strength*confidence = more likely to be picked), then business as
+# usual continues using that pick.
+const DUPLICATE_SOLVER_CAP = 4
+
+# ============================================================================
 # COMPOSITE VOTE-SCORING KNOBS (vote-pick stage matching dimensions)
 # ============================================================================
 # GRUG: The vote orchestrator used to rank candidates on raw confidence alone
@@ -711,6 +740,18 @@ struct VoteCandidate
     # When compound queries split into mp_1, mp_2 etc, each group should
     # select its own winner independently, not compete globally.
     multipart_group::String
+    # ---- v-new: Cycle Solver Ledger — duplicate solver cap ----------------
+    # GRUG: The action/vote this candidate is casting. Used ONLY to group
+    # candidates for DUPLICATE_SOLVER_CAP enforcement (how many nodes may
+    # simultaneously push the SAME action for the SAME objective this
+    # cycle). This is explicitly NOT the pattern — identical pattern/bind
+    # sites across different nodes are allowed and encouraged (fights
+    # orchestration staleness). Only identical votes/actions get capped.
+    # Empty string = caller didn't plumb it through; such candidates all
+    # group together under "" per multipart_group, same as before this
+    # field existed (back-compat no-op unless enforce_duplicate_solver_cap!
+    # is actually called).
+    action::String
 end
 
 function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
@@ -724,7 +765,8 @@ function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
                        frame_match_multiplier::Float64 = 1.0,
                        is_relay::Bool = false,
                        grave_shadow_multiplier::Float64 = 1.0,
-                       multipart_group::String = "")
+                       multipart_group::String = "",
+                       action::String = "")
     if isempty(strip(node_id))
         throw_vo_error("VoteCandidate node_id cannot be empty", "VoteCandidate")
     end
@@ -741,7 +783,7 @@ function VoteCandidate(node_id::String, confidence::Float64, strength::Float64;
                          lobe_alignment, relational_match, recency_bonus,
                          action_tone_align, anti_match_score, peak_dominance,
                          frame_match_multiplier, is_relay, grave_shadow_multiplier,
-                         multipart_group)
+                         multipart_group, action)
 end
 
 """
@@ -915,6 +957,215 @@ function select_aiml_votes(candidates::Vector{VoteCandidate};
 end
 
 # ==============================================================================
+# CYCLE SOLVER LEDGER — DUPLICATE SOLVER CAPPING
+# ==============================================================================
+
+"""
+    DuplicateSolverStats — diagnostic record of one duplicate-solver-cap eviction
+
+GRUG: One record is produced per (multipart_group, action) bucket that
+EXCEEDED DUPLICATE_SOLVER_CAP this cycle (buckets at or under the cap are
+left untouched and produce no record — nothing happened, nothing to log).
+Exposed via LAST_DUPLICATE_SOLVER_LOG so tests/diagnostics can verify
+eviction + winner-pick behavior from PROGRAM VARIABLES, not stdout scraping.
+"""
+struct DuplicateSolverStats
+    multipart_group::String
+    action::String
+    total_candidates::Int             # how many solvers competed for (group, action) before capping
+    evicted_node_ids::Vector{String}  # nodes evicted this cycle for exceeding the cap
+    survivor_node_ids::Vector{String} # node_ids remaining after capping (== DUPLICATE_SOLVER_CAP)
+    tie_break_used::Bool              # true if eviction needed a stochastic tie-break among tied-lowest
+    winner_node_id::String            # stochastically-chosen (strength*confidence-biased) acting winner among survivors
+end
+
+# GRUG: Last cycle's duplicate-solver-cap decisions. Ref + lock, same pattern
+# as ActionTonePredictor.LAST_PREDICTION / LobeOrchestrator.LAST_LOBE_SCORES.
+const LAST_DUPLICATE_SOLVER_LOG = Ref{Vector{DuplicateSolverStats}}(DuplicateSolverStats[])
+const _DUP_SOLVER_LOG_LOCK = ReentrantLock()
+
+"""
+    get_last_duplicate_solver_log() -> Vector{DuplicateSolverStats}
+
+GRUG: Read the most recent enforce_duplicate_solver_cap! results. Empty
+vector means either no cycle has run yet, or nothing exceeded the cap.
+"""
+function get_last_duplicate_solver_log()::Vector{DuplicateSolverStats}
+    lock(_DUP_SOLVER_LOG_LOCK) do
+        LAST_DUPLICATE_SOLVER_LOG[]
+    end
+end
+
+"""
+    _weighted_stochastic_pick(node_ids::Vector{String}, weights::Vector{Float64})::String
+
+GRUG: Pick one node_id at random, biased by weight (strength*confidence —
+higher weight, more likely to be picked). If every weight is <= 0 (e.g. all
+survivors sit at 0 strength or 0 confidence), falls back to a flat uniform
+pick — we can't bias toward "more of nothing", but every survivor should
+still be pickable.
+"""
+function _weighted_stochastic_pick(node_ids::Vector{String}, weights::Vector{Float64})::String
+    if length(node_ids) != length(weights)
+        throw_vo_error("_weighted_stochastic_pick: node_ids/weights length mismatch", "_weighted_stochastic_pick")
+    end
+    if isempty(node_ids)
+        throw_vo_error("_weighted_stochastic_pick received zero candidates", "_weighted_stochastic_pick")
+    end
+    total = sum(max(0.0, w) for w in weights)
+    if !isfinite(total) || total <= 0.0
+        return node_ids[rand(1:length(node_ids))]
+    end
+    r = rand() * total
+    cum = 0.0
+    for (nid, w) in zip(node_ids, weights)
+        cum += max(0.0, w)
+        if r <= cum
+            return nid
+        end
+    end
+    return node_ids[end]  # floating point edge-case fallback
+end
+
+"""
+    enforce_duplicate_solver_cap!(candidates::Vector{VoteCandidate};
+                                  cap::Int = DUPLICATE_SOLVER_CAP)
+    -> (Vector{VoteCandidate}, Vector{String}, Dict{Tuple{String,String},String}, Vector{DuplicateSolverStats})
+
+GRUG: Cycle Solver Ledger — Duplicate Solver Capping.
+
+Groups candidates by (multipart_group, action) — deliberately NOT by
+pattern. Identical pattern/bind sites across DIFFERENT nodes are ALLOWED
+and encouraged (multiple nodes solving the same concept with different
+structure/wording obliterates orchestration staleness that plain thesaurus
+dedup can't touch). Only identical VOTES/ACTIONS competing for the same
+objective get capped — because those actually dominate the board.
+
+For any (multipart_group, action) bucket with MORE than `cap` members:
+  1. Evict the weakest strength*confidence member, one at a time.
+  2. If two or more members are TIED at the current lowest strength*
+     confidence value, stochastically pick ONE of those tied-lowest to
+     evict (never a deterministic array-order pick — that would be a
+     silent bias).
+  3. Repeat until exactly `cap` members remain.
+  4. Stochastically pick one acting "winner" from the survivors, BIASED
+     by strength*confidence (higher = more likely), then business
+     continues as usual using that winner as the group's designated pick
+     downstream.
+
+Buckets at or under `cap` are passed through completely untouched — no
+eviction, no winner, no stats record.
+
+Returns:
+  kept_candidates  — original `candidates`, minus evicted ones, in the
+                      ORIGINAL relative order (order-preserving filter).
+  evicted_node_ids — node_ids evicted this cycle. Caller should grave these
+                      via mark_node_grave!(node, "DUPLICATE_SOLVER_CAP") so
+                      the existing GRAVE_RECYCLER can salvage their
+                      drop_table entries, same as any other node death.
+  winner_map       — (multipart_group, action) => winning node_id, for every
+                      bucket that exceeded the cap. Caller may use this to
+                      prefer the strength*confidence-biased pick over a
+                      flat coinflip when breaking downstream ties.
+  stats            — one DuplicateSolverStats per capped bucket. Also
+                      stashed in LAST_DUPLICATE_SOLVER_LOG for diagnostics.
+
+Throws on cap < 1. Does NOT throw on empty candidates (returns empties) —
+this runs on an already-nonempty vote_candidates list upstream, but being
+called with an empty pool isn't itself an error condition worth screaming
+about.
+"""
+function enforce_duplicate_solver_cap!(candidates::Vector{VoteCandidate};
+                                        cap::Int = DUPLICATE_SOLVER_CAP)::Tuple{Vector{VoteCandidate}, Vector{String}, Dict{Tuple{String,String}, String}, Vector{DuplicateSolverStats}}
+    if cap < 1
+        throw_vo_error("enforce_duplicate_solver_cap! cap must be >= 1, got $cap", "enforce_duplicate_solver_cap!")
+    end
+    if isempty(candidates)
+        lock(_DUP_SOLVER_LOG_LOCK) do
+            LAST_DUPLICATE_SOLVER_LOG[] = DuplicateSolverStats[]
+        end
+        return (VoteCandidate[], String[], Dict{Tuple{String,String}, String}(), DuplicateSolverStats[])
+    end
+
+    # GRUG: Bucket candidates by (multipart_group, action). Same node_id can
+    # legitimately appear in more than one bucket (e.g. contributes to two
+    # different multipart groups), so we track evictions by full
+    # (node_id, multipart_group, action) identity, not bare node_id, to avoid
+    # accidentally filtering the wrong instance of a repeated node_id.
+    buckets = Dict{Tuple{String,String}, Vector{VoteCandidate}}()
+    order   = Tuple{String,String}[]
+    for vc in candidates
+        key = (vc.multipart_group, vc.action)
+        if !haskey(buckets, key)
+            buckets[key] = VoteCandidate[]
+            push!(order, key)
+        end
+        push!(buckets[key], vc)
+    end
+
+    evicted_identities = Set{Tuple{String,String,String}}()  # (node_id, multipart_group, action)
+    evicted_node_ids    = String[]
+    winner_map = Dict{Tuple{String,String}, String}()
+    stats      = DuplicateSolverStats[]
+
+    for key in order
+        group = buckets[key]
+        total_before = length(group)
+
+        if total_before <= cap
+            continue  # GRUG: within cap — untouched, no stats, no winner.
+        end
+
+        # GRUG: Evict weakest strength*confidence, one at a time, with
+        # stochastic tie-break among tied-lowest, until exactly `cap` remain.
+        pool = copy(group)
+        evicted_here = String[]
+        tie_break_used = false
+        while length(pool) > cap
+            scored  = [vc.strength * vc.confidence for vc in pool]
+            min_val = minimum(scored)
+            tied_idx = [i for (i, sc) in enumerate(scored) if abs(sc - min_val) < 1e-9]
+            victim_idx = if length(tied_idx) > 1
+                tie_break_used = true
+                tied_idx[rand(1:length(tied_idx))]
+            else
+                tied_idx[1]
+            end
+            victim = pool[victim_idx]
+            push!(evicted_here, victim.node_id)
+            push!(evicted_identities, (victim.node_id, victim.multipart_group, victim.action))
+            deleteat!(pool, victim_idx)
+        end
+
+        # GRUG: Stochastic acting-winner pick among survivors, biased by
+        # strength*confidence — "business as usual" resumes using this pick.
+        surv_ids     = String[vc.node_id for vc in pool]
+        surv_weights = Float64[vc.strength * vc.confidence for vc in pool]
+        winner_id = _weighted_stochastic_pick(surv_ids, surv_weights)
+        winner_map[key] = winner_id
+
+        push!(stats, DuplicateSolverStats(
+            key[1], key[2], total_before, evicted_here,
+            surv_ids, tie_break_used, winner_id,
+        ))
+        append!(evicted_node_ids, evicted_here)
+    end
+
+    # GRUG: Order-preserving filter — kept_candidates mirrors the ORIGINAL
+    # relative order of `candidates`, minus exactly the evicted instances.
+    kept_candidates = VoteCandidate[
+        vc for vc in candidates
+        if !((vc.node_id, vc.multipart_group, vc.action) in evicted_identities)
+    ]
+
+    lock(_DUP_SOLVER_LOG_LOCK) do
+        LAST_DUPLICATE_SOLVER_LOG[] = stats
+    end
+
+    return (kept_candidates, evicted_node_ids, winner_map, stats)
+end
+
+# ==============================================================================
 # EXPORTS
 # ==============================================================================
 
@@ -944,5 +1195,10 @@ export parallel_fire_batches
 
 # AIML vote selection
 export VoteCandidate, select_aiml_votes, strength_biased_vote_coinflip
+
+# Cycle Solver Ledger — duplicate solver cap
+export DUPLICATE_SOLVER_CAP, DuplicateSolverStats
+export enforce_duplicate_solver_cap!, get_last_duplicate_solver_log
+export LAST_DUPLICATE_SOLVER_LOG
 
 end # module VoteOrchestrator

@@ -201,21 +201,15 @@ for uv in unsure_candidates
 end
 
 # ==============================================================================
-# 9. AIML RULE TAGS — VOTE_CERTAINTY AND TIED_ALTERNATIVES
+# 9. AIML RULE TAGS — REMOVED (v9-removal)
 # ==============================================================================
-println("\n[9] AIML RULE TAGS")
-
-@assert "{VOTE_CERTAINTY}" in ALLOWED_RULE_TAGS "FAIL: {VOTE_CERTAINTY} not in ALLOWED_RULE_TAGS!"
-@assert "{TIED_ALTERNATIVES}" in ALLOWED_RULE_TAGS "FAIL: {TIED_ALTERNATIVES} not in ALLOWED_RULE_TAGS!"
-println("  ✓ {VOTE_CERTAINTY} registered in ALLOWED_RULE_TAGS")
-println("  ✓ {TIED_ALTERNATIVES} registered in ALLOWED_RULE_TAGS")
-
-# Test rule addition with new tags
-empty!(ORCHESTRATION_RULES)
-result = add_orchestration_rule!("When {VOTE_CERTAINTY} is UNSURE, consider: {TIED_ALTERNATIVES} [prob=0.8]")
-@assert contains(result, "Rule tied to tree") "FAIL: Rule addition failed!"
-@assert ORCHESTRATION_RULES[1].fire_probability == 0.8 "FAIL: Rule fire_probability should be 0.8!"
-println("  ✓ AIML rule with {VOTE_CERTAINTY} and {TIED_ALTERNATIVES} accepted")
+# GRUG v9-removal: The /addRule stochastic rule board (ORCHESTRATION_RULES,
+# ALLOWED_RULE_TAGS, add_orchestration_rule!) was deleted from engine.jl.
+# Investigation confirmed its evaluated output never shaped
+# conversational_reply -- only debug telemetry -- so this section no longer
+# applies. vote_certainty/tied_alternatives themselves are still computed
+# and tested above (section 8); only the rule-board tag plumbing is gone.
+println("\n[9] AIML RULE TAGS — SKIPPED (rule board removed v9)")
 
 # ==============================================================================
 # 10. EDGE CASE — ALL VOTES IDENTICAL

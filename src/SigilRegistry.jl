@@ -90,6 +90,33 @@ export resolve_sigils_in_pattern, parse_sigil_token
 export default_registry, merge_registry!
 export SIGIL_CLASSES, SIGIL_APPLIES_AT, SIGIL_PREFIX
 export SIGIL_NAME_REGEX, SIGIL_TOKEN_REGEX
+export set_dict_word_checker!, get_dict_word_checker
+
+# GRUG v9: Dictionary word checker Ref — set by Main.jl after dictionaries load.
+# The &define sigil's promote_predicate reads this Ref at promote time.
+# Initially returns false (no dictionary words known). Main.jl sets this
+# to _dict_has_word once _LOBE_DICTIONARIES is populated.
+const _DICT_WORD_CHECKER::Ref{Function} = Ref{Function}((_ -> false))
+
+"""
+    set_dict_word_checker!(fn::Function)
+
+Set the dictionary word checker function used by &define sigil's
+promote_predicate. Call this after dictionaries are loaded so the
+sigil can promote tokens that have dictionary entries.
+"""
+function set_dict_word_checker!(fn::Function)
+    _DICT_WORD_CHECKER[] = fn
+end
+
+"""
+    get_dict_word_checker() -> Function
+
+Return the current dictionary word checker function.
+"""
+function get_dict_word_checker()::Function
+    return _DICT_WORD_CHECKER[]
+end
 
 # ==============================================================================
 # ERROR TYPES — GRUG: NO SILENT FAILURES on programmer errors.
@@ -1048,7 +1075,13 @@ function default_registry()::SigilTable
                     "yet","both","either","neither","each","every","all","any",
                     "few","more","most","other","some","such","no","only","own",
                     "same","than","too","very","just","because","if","this",
-                    "that","these","those","it","its"])
+                    "that","these","those","it","its"]) &&
+            # GRUG v9: Not a dictionary word (let &define catch these).
+            # Without this exclusion, "dog" → &concept and the dictionary
+            # sigil node never fires. By excluding dict words from &concept,
+            # they fall through to &define which has the dictionary-check
+            # predicate and routes them to the definition voting pipeline.
+            !_DICT_WORD_CHECKER[](t)
         )))
 
     register_sigil!(t;
@@ -1071,6 +1104,24 @@ function default_registry()::SigilTable
         promote_predicate=(t -> t in ["is","are","means","refers","represents",
                                      "defines","denotes","signifies","embodies",
                                      "constitutes","characterizes"]))
+
+    # GRUG v9: &define — dictionary-defined word placeholder.
+    # promote_predicate checks if the token has a dictionary entry via
+    # the _DICT_WORD_CHECKER Ref (set by Main.jl after dictionaries load).
+    # This sigil captures the WORD BEING DEFINED (e.g., "dog" → &define),
+    # not the definition verb (that's &definition). Alphabetical promotion
+    # order ensures &definition (d-e-f-i) is checked before &define (d-e-f),
+    # so definition verbs like "is" are caught first, then the target word
+    # falls through to &define. Also, &concept's predicate now excludes
+    # dictionary words so they don't get swallowed by &concept either.
+    register_sigil!(t;
+        name="define",
+        class=:lambda,
+        applies_at=:match,
+        sigil_type=:define,
+        provenance="engine-default",
+        promote_at_tokenize=true,
+        promote_predicate=(t -> _DICT_WORD_CHECKER[](t)))
 
     register_sigil!(t;
         name="action",

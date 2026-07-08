@@ -690,28 +690,30 @@ function compact_drop_tables!(node_map::Dict, node_lock::ReentrantLock)::PhagySt
                 isempty(node.drop_table) && continue
                 examined += 1
 
-                # GRUG: Collect keys to trim (below floor probability)
-                trim_candidates = String[]
-                for (response_text, probability) in node.drop_table
-                    if probability < DROP_TABLE_TRIM_FLOOR
-                        push!(trim_candidates, response_text)
+                # GRUG: drop_table is Vector{String} — no probability data.
+                # Deduplicate exact string matches instead.
+                seen = Set{String}()
+                deduped = String[]
+                for entry in node.drop_table
+                    if entry ∉ seen
+                        push!(seen, entry)
+                        push!(deduped, entry)
+                    else
+                        trimmed += 1
                     end
                 end
 
                 # GRUG: Apply "last entry" protection - never empty a drop_table
-                if length(trim_candidates) >= length(node.drop_table)
-                    # GRUG: Would empty the table. Protect by keeping the highest-prob entry.
-                    keep_key = argmax(node.drop_table)
-                    filter!(k -> k != keep_key, trim_candidates)
+                if isempty(deduped) && !isempty(node.drop_table)
+                    # Keep the last entry as fallback
+                    deduped = [node.drop_table[end]]
                     protected += 1
-                    @debug "[PHAGY:COMPACT] Node $id: last-entry protection applied, kept $keep_key"
+                    @debug "[PHAGY:COMPACT] Node $id: last-entry protection applied"
                 end
 
-                # GRUG: Delete trim candidates
-                for key in trim_candidates
-                    delete!(node.drop_table, key)
-                    trimmed += 1
-                    @debug "[PHAGY:COMPACT] Node $id: trimmed '$key' (below floor $DROP_TABLE_TRIM_FLOOR)"
+                # GRUG: Replace drop_table with deduplicated version
+                if length(deduped) < length(node.drop_table)
+                    node.drop_table = deduped
                 end
             end
         end

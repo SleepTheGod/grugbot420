@@ -1,0 +1,835 @@
+WARNING: Imported binding GrugBot420.RelationalTriple was undeclared at import time during import to AutoGrowth.
+[BOOT] Loading GrugBot420 module …
+ℹ️  Default specimen auto-load DISABLED (v7.24-restore). Use /loadSpecimen to restore state.
+Growing initial map seeds with Stochastic Emotion Packets & Relational Gating...
+  + lobe `default` created (subject: general thinking reasoning conversation greeting)
+  + lobe `conversation` created (ConversationLobe: auto-routes teaching/corrections)
+  + 3 boot seeds registered into `default` lobe
+[BOOT] GrugBot420 module loaded.
+[BOOT] Loading specimen: /workspace/grugbot420_repo/grug_threadC_final.specimen
+  🧹 Wiping current cave state...
+  ✅ Cave wiped clean. Beginning restore...
+  🔢 ID counters restored (node=61, msg=46)
+  🗳  Last voters restored (1 IDs)
+  👁  Eye state restored
+  🔧 Verb registry restored (5 classes, 29 verbs, 1 synonyms)
+  🖤 Thesaurus restored (1475 words, merged with built-in curation)
+  🧠 Lobes restored (9)
+  📋 Lobe tables restored (9)
+  🌱 Nodes restored (61)
+  ⚡ Hopfield cache restored (0 entries)
+  🚫 Inhibitions restored (3)
+  💬 Messages restored (46 total, 0 pinned)
+  👁  Arousal restored (level=0.5)
+  🧬 BrainStem state restored
+  🌉 Bridges restored (0)
+  🗣  Chatter groups restored (44)
+  🔮 Trajectory restored (0 entries)
+  🕐 Temporal coherence restored (0 entries)
+  ⏳ Morph cooldowns restored (0 active)
+  🛡 Immune system restored (0 signatures, 0 ledger entries)
+  🪄 Sigils restored (4 specimen-specific)
+  ⚠️  Phase accumulator: EMPTY (no crystal data) — HARD WARN
+  🎭 TonalJudge knobs restored (lift=1.2, inhibit=0.85)
+  🧠 EphemeralMLP restored (transforms=13, rules=0)
+  👁  MLP Observer Store: 17 entries, 17 distinct keys (store starts fresh; MLP gate counter restored)
+  🧠 MLP cached Phi restored (last_phi=0.0)
+  ✂️  Decomposer config loaded (FIRST-CLASS):
+      Split conjunctions: 24 | Compound pairs: 4 leaders | Context: 'and'
+      Question markers: 22 | Command stems: 24 → 95 expanded | Conjugation rules: 24
+  👁  Vigilance config loaded (cap=6, enabled=true)
+  📊  Injector stats loaded
+  🎲  Relational jitter config loaded (ratio=0.03, coin=0.01, enabled=true)
+  🧠  BrainStem config: matches code defaults
+  ⚙️  Engine config: matches code defaults
+  🏛️  Lobe orchestrator knobs: match code defaults
+  🗳️  Vote orchestrator knobs: match code defaults
+  🧬  Mitosis config: loaded (baseline reference)
+  🌱  Growth automaton config: loaded (baseline reference)
+  🦠  Phagy config: loaded (baseline reference)
+  💬  Chatter config: loaded (baseline reference)
+  🛡️  Immune config: loaded (baseline reference)
+  🔭  Scanner config: loaded (baseline reference)
+  🎯  ActionTone knobs: loaded (baseline reference)
+  🔗  Co-activation accumulator loaded (7 pairs)
+  📝  Input ledger loaded (0 consumed hashes)
+  🔮  Chatter residuals loaded (0 consumed hashes)
+  🌱  AutoGrowth evidence loaded (52 records)
+  🌱  AutoGrowth co-occurrence loaded (1 pairs)
+  🔗  AutoLinker evidence loaded (7 records)
+  ⚠️  InverseSigil table: FAILED to load (starting fresh)
+  📇  Flashcards loaded (3 cards)
+  🔥  Curiosity accumulator loaded (intensity=1.0)
+  🪭  Fan-out config loaded (enabled=true, max=4, modes=8)
+  🧠  Hippocampal pending ask restored: 'Thank you Grug, you've been helpful.'
+  📝  Conversational pending teach: empty (no pending clarification)
+  🔐  Admin session: not logged in (clean)
+  🎭  Lobe orchestrator last state loaded (winner=default, scores=1)
+  🔖  Chatter cursor loaded (pos=0)
+  📋  Answer mode config loaded (11 modes)
+  🦠  Phagy rules ref loaded (0 rules)
+  ⏳  Time orientation config loaded (global=none, no active orientation)
+  ⏳  Time node orientation index: 4/4 nodes verified
+  🔗  CoherenceField config loaded (weight=0.0)
+  📐  GeometryKit config loaded (default_space=phase)
+  ⛏  PatternMiner config loaded (T=10, C=5, S=5)
+  ⛏  PatternMiner data loaded (0 instances, 0 proposals)
+  ⚠️  TemporalIdentity: FAILED to load (defaults will apply)
+  📖 CaveJournal config loaded (path=/workspace/grugbot420_repo/cave_journal.md)
+  📖 Lobe dictionaries loaded (6 definitions)
+  🔢 @sigil:math nodes already present (2), skipping seed
+  🔗 @sigil:multipart nodes already present (1), skipping seed
+  ⚡ @sigil:doaction nodes already present (2), skipping seed
+  🎯 @sigil:action nodes already present (9), skipping seed
+  📖 @sigil:define filled 1 gap(s) — new per-lobe dict nodes for lobes missing one
+[BOOT] Specimen loaded: ╔══════════════════════════════════════════════════════════════╗
+║            🧬 SPECIMEN LOADED SUCCESSFULLY                   ║
+╠══════════════════════════════════════════════════════════════╣
+  📁  File             : /workspace/grugbot420_repo/grug_threadC_final.specimen
+  📄  File size        : 8180233 bytes
+  📦  JSON size        : 8180233 bytes
+  ⏱️   Time             : 7.3s
+  ─────────────────────────────────────────────
+  🌱  Nodes            : 61
+  🧠  Lobes            : 9
+  📋  Lobe tables      : 9
+  ⚡  Hopfield entries  : 0
+  💬  Messages         : 46 (0 pinned)
+  🔧  Verb classes     : 5 (29 verbs)
+  🔤  Thesaurus words  : 1475
+  🚫  Inhibitions      : 3
+  🔗  Attachments      : 0
+  ⏳  Time orientation  : none
+  👁   Arousal          : 0.5
+  🔢  ID counters      : node=62, msg=46
+  ─────────────────────────────────────────────
+  🧹  Previous state   : WIPED (full brain transplant)
+╚══════════════════════════════════════════════════════════════╝
+
+[MPTURN 1] YOU: What is fire also what is water?
+[MPTURN 1] DECOMP: compound(2 parts): [mp_1/primary] "What is fire" | [mp_2/support] "what is water?"
+--> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(2 parts): [mp_1/primary] "What is fire" | [mp_2/support] "what is water?"
+--> 12 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=emotions  Passthrough=survival,science,default  Scored=4 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=emotions  Passthrough=science,survival  Scored=4 lobes
+   [LOBE-ORCH] Group 'mp_2' Winner=science  Passthrough=  Scored=4 lobes
+[ORCHESTRATOR] 📊 Per-group selection: 2 groups, top_tier=2, subtop=4
+[ORCHESTRATOR] 📋 Per-group primaries: mp_2→node_58@0.824, mp_1→node_57@0.824
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 6 entries]
+  [1] mp_1_chk_1 | votes=5 (sure=4 unsure=0) conf=0.825 step=1 | ENTRY_PENDING scoped="What is fire"
+  [2] mp_2_chk_1 | votes=4 (sure=4 unsure=0) conf=0.824 step=2 | ENTRY_PENDING deps=[1] scoped="what is water?"
+  [3] mp_1 | votes=1 (sure=0 unsure=1) conf=0.738 step=3 [ENTRY_ADDITIVE] | ENTRY_PENDING deps=[1] scoped="What is fire"
+  [4] mp_2 | votes=1 (sure=0 unsure=1) conf=0.821 step=4 [ENTRY_ADDITIVE] | ENTRY_PENDING deps=[1] scoped="what is water?"
+  [5] mp_1 | votes=1 (sure=0 unsure=1) conf=0.66 step=5 [ENTRY_ADDITIVE] | ENTRY_PENDING scoped="What is fire"
+  [6] mp_1 | votes=1 (sure=0 unsure=1) conf=0.559 step=6 [ENTRY_ADDITIVE] | ENTRY_PENDING scoped="What is fire"
+[ENGINE] 🐢  Node node_61 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_57 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_58 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_59 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_28 slow telemetry only (avg: 6.36s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_9 slow telemetry only (avg: 6.36s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_3 slow telemetry only (avg: 9.85s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_58 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_57 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_59 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_61 slow telemetry only (avg: 18.75s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=1.0 | quality=0.499 | semantic=0.482 | relevance=0.519 | disambig=0.489 | strain=0.8 | rules=0 | adj=ON
+
+🤖 Voice Output Scaffold:
+Here is the picture: &query &definition &define.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: define  (conf=0.83, certainty=UNSURE)
+Sure Actions: [define, explain, explain, explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_61
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, fire)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_57 | action=explain | conf=0.82 | relations=None
+  🪨 node_58 | action=explain | conf=0.82 | relations=None
+  🪨 node_59 | action=explain | conf=0.82 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.83, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+
+Here is the picture: &query &definition &define.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is water?'
+Primary Action: define  (conf=0.82, certainty=UNSURE)
+Sure Actions: [define, define, define, define]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_58
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, water?)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_57 | action=define | conf=0.82 | relations=None
+  🪨 node_59 | action=define | conf=0.82 | relations=None
+  🪨 node_61 | action=define | conf=0.82 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.82, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+
+(Grug also think these infos maybe important)
+- Thinking it through: Be patient — fire grab time to grow. 5) Build up with bigger wood. 4) Feed little flame carefully. 3) Shield spark from wind. 2) Make spark with flint or friction. Grug teach you: 1) Find dry wood also tinder. here is the thing, procedure chain. Grug think on flame.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: reason  (conf=0.74, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [reason]
+Constraints: [None]
+Winning Node: node_30
+Lobe Context: [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, fire)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_30 | action=reason | conf=0.74 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: What comes after winter? (intensity=0.61) | [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.74, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+- A caution: Grug respect blaze but always careful — never touch, never enable solo. Fire destroy shelter. Flame reach brisk. Fire burn skin. ⚠️ Yes! Fire is dangerous. Alert.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: alert  (conf=0.66, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [alert]
+Constraints: [None]
+Winning Node: node_28
+Lobe Context: [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, fire)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_28 | action=alert | conf=0.66 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: fire (intensity=0.49) | [User]: Thank you Grug, you've been helpful. (intensity=0.87) | [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.66, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+- Thinking it through: Fire-burning question. Flame like star — both burn radiant. basically, fire need wood and air. Wood is fuel, air feeds flame. Absent air, fire die. Lacking wood, blaze starve. Grug reason on fire. This ties together: blaze likeness star.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: reason  (conf=0.56, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [reason]
+Constraints: [None]
+Winning Node: node_9
+Lobe Context: [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))]
+User Triples: (what, is, fire)
+Node Triples: (fire, &similarity, star), (fire, &causal, light)
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_9 | action=reason | conf=0.56 | relations=(fire, &similarity, star), (fire, &causal, light)
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [System]: Mission "What comes after winter?" → primary=reason conf=0.69 node=node_42 (intensity=0.48) | [User]: Thank you Grug, you've been helpful. (intensity=0.87) | [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.56, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+[CURIOSITY] 🔥  Curiosity overflow! intensity=1.0 → pending ask: "safe."
+[MPTURN 1] RAW: Here is the picture: &query &definition &define.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: define  (conf=0.83, certainty=UNSURE)
+Sure Actions: [define, explain, explain, explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_61
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, fire)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_57 | action=explain | conf=0.82 | relations=None
+  🪨 node_58 | action=explain | conf=0.82 | relations=None
+  🪨 node_59 | action=explain | conf=0.82 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.83, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+
+Here is the picture: &query &definition &define.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'what is water?'
+Primary Action: define  (conf=0.82, certainty=UNSURE)
+Sure Actions: [define, define, define, define]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_58
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, water?)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_57 | action=define | conf=0.82 | relations=None
+  🪨 node_59 | action=define | conf=0.82 | relations=None
+  🪨 node_61 | action=define | conf=0.82 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.82, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+
+(Grug also think these infos maybe important)
+- Thinking it through: Be patient — fire grab time to grow. 5) Build up with bigger wood. 4) Feed little flame carefully. 3) Shield spark from wind. 2) Make spark with flint or friction. Grug teach you: 1) Find dry wood also tinder. here is the thing, procedure chain. Grug think on flame.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: reason  (conf=0.74, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [reason]
+Constraints: [None]
+Winning Node: node_30
+Lobe Context: [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, fire)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_30 | action=reason | conf=0.74 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: What comes after winter? (intensity=0.61) | [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.74, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+- A caution: Grug respect blaze but always careful — never touch, never enable solo. Fire destroy shelter. Flame reach brisk. Fire burn skin. ⚠️ Yes! Fire is dangerous. Alert.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: alert  (conf=0.66, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [alert]
+Constraints: [None]
+Winning Node: node_28
+Lobe Context: [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, fire)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_28 | action=alert | conf=0.66 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [User]: fire (intensity=0.49) | [User]: Thank you Grug, you've been helpful. (intensity=0.87) | [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.66, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+- Thinking it through: Fire-burning question. Flame like star — both burn radiant. basically, fire need wood and air. Wood is fuel, air feeds flame. Absent air, fire die. Lacking wood, blaze starve. Grug reason on fire. This ties together: blaze likeness star.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is fire'
+Primary Action: reason  (conf=0.56, certainty=SURE)
+Sure Actions: []
+Unsure Actions (Coinflip Side-Features): [reason]
+Constraints: [None]
+Winning Node: node_9
+Lobe Context: [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))]
+User Triples: (what, is, fire)
+Node Triples: (fire, &similarity, star), (fire, &causal, light)
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Other Possibilities (strong but not winners):
+  🔸 node_9 | action=reason | conf=0.56 | relations=(fire, &similarity, star), (fire, &causal, light)
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=6] (Recent): [System]: Mission "What comes after winter?" → primary=reason conf=0.69 node=node_42 (intensity=0.48) | [User]: Thank you Grug, you've been helpful. (intensity=0.87) | [User]: What is fire also what is water? (intensity=1.75)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.56, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 emotions: base=0.823 × top=0.824 = 0.6154 [hard_votes=2]
+  ↗ survival: base=0.76 × top=0.821 = 0.5883 [hard_votes=4]
+  ↗ science: base=0.735 × top=0.823 = 0.5805 [hard_votes=3]
+  ↗ default: base=0.698 × top=0.823 = 0.2831 [hard_votes=2]
+Passthrough Lobes: [["survival", "science", "default"]]
+Time Orientation: none
+=========================================
+[MPTURN 1] voters=["node_61", "node_57", "node_58", "node_59", "node_30", "node_28", "node_9", "node_3", "node_58", "node_57", "node_59", "node_61"] fired=node_61 conf=0.8250010047896564
+
+[MPTURN 2] YOU: Why does fire burn also why is the sky blue?
+[MPTURN 2] DECOMP: compound(2 parts): [mp_1/primary] "Why does fire burn" | [mp_2/support] "why is the sky blue?"
+--> Scanning specimens & looking for dialectical relations...
+[MULTIPART] Compound input detected: compound(2 parts): [mp_1/primary] "Why does fire burn" | [mp_2/support] "why is the sky blue?"
+--> 10 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=science  Passthrough=survival  Scored=4 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=science  Passthrough=  Scored=3 lobes
+   [LOBE-ORCH] Group 'mp_2' Winner=emotions  Passthrough=science  Scored=4 lobes
+[ORCHESTRATOR] 📊 Per-group selection: 2 groups, top_tier=2, subtop=0
+[ORCHESTRATOR] 📋 Per-group primaries: mp_2→node_57@0.823, mp_1→node_9@1.0
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 6 entries]
+  [1] mp_1_chk_1 | votes=1 (sure=1 unsure=0) conf=1.0 step=1 | ENTRY_PENDING scoped="Why does fire burn"
+  [2] mp_2_chk_1 | votes=4 (sure=4 unsure=0) conf=0.823 step=2 | ENTRY_PENDING deps=[1] scoped="why is the sky blue?"
+  [3] mp_2 | votes=1 (sure=0 unsure=1) conf=0.82 step=3 [ENTRY_ADDITIVE] | ENTRY_PENDING deps=[2] scoped="why is the sky blue?"
+  [4] mp_2 | votes=1 (sure=0 unsure=1) conf=0.818 step=4 [ENTRY_ADDITIVE] | ENTRY_PENDING deps=[2] scoped="why is the sky blue?"
+  [5] mp_2 | votes=1 (sure=0 unsure=1) conf=0.817 step=5 [ENTRY_ADDITIVE] | ENTRY_PENDING deps=[2] scoped="why is the sky blue?"
+  [6] mp_2 | votes=1 (sure=0 unsure=1) conf=0.595 step=6 [ENTRY_ADDITIVE] | ENTRY_PENDING scoped="why is the sky blue?"
+[ENGINE] 🐢  Node node_3 slow telemetry only (avg: 7.89s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_57 slow telemetry only (avg: 12.51s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_58 slow telemetry only (avg: 12.51s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_61 slow telemetry only (avg: 12.51s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_59 slow telemetry only (avg: 12.51s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=1.0 | quality=0.5 | semantic=0.477 | relevance=0.51 | disambig=0.487 | strain=0.801 | rules=0 | adj=ON
+
+🤖 Voice Output Scaffold:
+Here is the picture: Fire-burning doubt. Fire like star — both burn bright. Fire need wood and gust. Wood is fuel, air feeds fire. Without wind, fire die. Lacking wood, fire starve. Grug chat of fire. The link is clear: flame likeness star.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'Why does fire burn'
+Primary Action: explain  (conf=1.0, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_9
+Lobe Context: [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))]
+User Triples: None
+Node Triples: (fire, &similarity, star), (fire, &causal, light)
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: What comes after winter? (intensity=0.4) | [System]: Mission "What is fire also what is water?" → primary=define conf=0.83 node=node_61 (intensity=0.76) | [User]: Why does fire burn also why is the sky blue? (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 science: base=0.707 × top=0.91 = 0.6959 [hard_votes=3]
+  · emotions: base=0.823 × top=0.823 = 0.6139 [hard_votes=1]
+  ↗ survival: base=0.615 × top=0.682 = 0.3643 [hard_votes=2]
+  · default: base=0.588 × top=0.818 = 0.2569 [hard_votes=1]
+Passthrough Lobes: [["survival"]]
+Time Orientation: none
+=========================================
+
+Here is the picture: &query &definition &define.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'why is the sky blue?'
+Primary Action: define  (conf=0.82, certainty=UNSURE)
+Sure Actions: [define, define, define, explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_57
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (why, is, the)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_58 | action=define | conf=0.82 | relations=None
+  🪨 node_61 | action=define | conf=0.82 | relations=None
+  🪨 node_59 | action=explain | conf=0.82 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: What comes after winter? (intensity=0.4) | [User]: Why does fire burn also why is the sky blue? (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.82, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 science: base=0.707 × top=0.91 = 0.6959 [hard_votes=3]
+  · emotions: base=0.823 × top=0.823 = 0.6139 [hard_votes=1]
+  ↗ survival: base=0.615 × top=0.682 = 0.3643 [hard_votes=2]
+  · default: base=0.588 × top=0.818 = 0.2569 [hard_votes=1]
+Passthrough Lobes: [["survival"]]
+Time Orientation: none
+=========================================
+[INVSIGIL] ⚡ Petty dispatch: Thesaurus pair dispatch failed: TypeError(:typeassert, "", Bool, 1)
+[INVSIGIL] ⚡ Petty dispatch: Thesaurus pair dispatch failed: TypeError(:typeassert, "", Bool, 1)
+┌ Error: [SelfObserver v8.22] Invariant self-check FAILED on module load (non-fatal): FieldError(Method, :return_type)
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/SelfObserver.jl:1152
+┌ Warning: [MAIN] load_specimen: failed to restore inverse sigil table: MethodError(Main.GrugBot420.InverseSigil.load_table_snapshot!, (JSON.Object{String, Any}("last_decay" => 1.783515134544577e9, "entries" => JSON.Object{String, Any}("now" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 2.0, "sigil_name" => "now", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("fire?" => JSON.Object{String, Any}("token" => "fire?", "last_seen" => 1.783515134689575e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515134689575e9), "grug," => JSON.Object{String, Any}("token" => "grug,", "last_seen" => 1.783515134689571e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515134689571e9)), "total_observations" => 2, "magnet_mode" => "linear"), "define" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 0.0, "sigil_name" => "define", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("shelter" => JSON.Object{String, Any}("token" => "shelter", "last_seen" => 1.78351514495528e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351514495528e9)), "total_observations" => 1, "magnet_mode" => "pseudononlinear"), "next" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 0.0, "sigil_name" => "next", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("after" => JSON.Object{String, Any}("token" => "after", "last_seen" => 1.78351514624716e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351514624716e9)), "total_observations" => 1, "magnet_mode" => "pseudononlinear"), "concept" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 5.0, "sigil_name" => "concept", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("present" => JSON.Object{String, Any}("token" => "present", "last_seen" => 1.783515144163929e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.783515144151482e9), "feels" => JSON.Object{String, Any}("token" => "feels", "last_seen" => 1.783515144979303e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144979303e9), "food" => JSON.Object{String, Any}("token" => "food", "last_seen" => 1.783515145090976e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145090976e9), "makes" => JSON.Object{String, Any}("token" => "makes", "last_seen" => 1.783515145090978e9, "accumulated_weight" => 4.0, "is_user_directive" => false, "observation_count" => 4, "first_seen" => 1.783515144894298e9), "cooking" => JSON.Object{String, Any}("token" => "cooking", "last_seen" => 1.783515145090971e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145090971e9), "brings" => JSON.Object{String, Any}("token" => "brings", "last_seen" => 1.783515145026766e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145026766e9), "fire" => JSON.Object{String, Any}("token" => "fire", "last_seen" => 1.783515146201071e9, "accumulated_weight" => 6.0, "is_user_directive" => false, "observation_count" => 6, "first_seen" => 1.783515144894293e9), "cold" => JSON.Object{String, Any}("token" => "cold", "last_seen" => 1.783515144955282e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144955282e9), "friendship" => JSON.Object{String, Any}("token" => "friendship", "last_seen" => 1.783515145026762e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145026762e9), "music" => JSON.Object{String, Any}("token" => "music", "last_seen" => 1.783515144979304e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144979304e9), "lonely" => JSON.Object{String, Any}("token" => "lonely", "last_seen" => 1.783515143602148e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515143602148e9), "joy" => JSON.Object{String, Any}("token" => "joy", "last_seen" => 1.783515145026768e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145026768e9), "season" => JSON.Object{String, Any}("token" => "season", "last_seen" => 1.783515145003149e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145003149e9), "evaporation" => JSON.Object{String, Any}("token" => "evaporation", "last_seen" => 1.783515144204148e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144204148e9), "i" => JSON.Object{String, Any}("token" => "i", "last_seen" => 1.783515144955268e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.783515143602141e9), "wood" => JSON.Object{String, Any}("token" => "wood", "last_seen" => 1.783515144325813e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144325813e9), "need" => JSON.Object{String, Any}("token" => "need", "last_seen" => 1.783515144955277e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144955277e9), "spring" => JSON.Object{String, Any}("token" => "spring", "last_seen" => 1.783515145003145e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145003145e9), "winter" => JSON.Object{String, Any}("token" => "winter", "last_seen" => 1.783515146247163e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146247163e9), "causes" => JSON.Object{String, Any}("token" => "causes", "last_seen" => 1.783515144204147e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144204147e9), "me" => JSON.Object{String, Any}("token" => "me", "last_seen" => 1.783515144931067e9, "accumulated_weight" => 3.0, "is_user_directive" => false, "observation_count" => 3, "first_seen" => 1.783515144894299e9), "feel" => JSON.Object{String, Any}("token" => "feel", "last_seen" => 1.783515144931068e9, "accumulated_weight" => 4.0, "is_user_directive" => false, "observation_count" => 4, "first_seen" => 1.783515143602147e9), "warm" => JSON.Object{String, Any}("token" => "warm", "last_seen" => 1.783515144931068e9, "accumulated_weight" => 3.0, "is_user_directive" => false, "observation_count" => 3, "first_seen" => 1.783515144894302e9), "person" => JSON.Object{String, Any}("token" => "person", "last_seen" => 1.783515144979298e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144979298e9), "before" => JSON.Object{String, Any}("token" => "before", "last_seen" => 1.783515144163928e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.783515144151481e9), "comes" => JSON.Object{String, Any}("token" => "comes", "last_seen" => 1.783515146247155e9, "accumulated_weight" => 3.0, "is_user_directive" => false, "observation_count" => 3, "first_seen" => 1.783515144151479e9), "heat" => JSON.Object{String, Any}("token" => "heat", "last_seen" => 1.783515144204142e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144204142e9), "cooperation" => JSON.Object{String, Any}("token" => "cooperation", "last_seen" => 1.783515145051042e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145051042e9), "builds" => JSON.Object{String, Any}("token" => "builds", "last_seen" => 1.783515145051047e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145051047e9), "combust" => JSON.Object{String, Any}("token" => "combust", "last_seen" => 1.783515144325809e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144325809e9), "trust" => JSON.Object{String, Any}("token" => "trust", "last_seen" => 1.783515145051048e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145051048e9), "flame" => JSON.Object{String, Any}("token" => "flame", "last_seen" => 1.783515144325804e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144325804e9), "safe" => JSON.Object{String, Any}("token" => "safe", "last_seen" => 1.783515145090981e9, "accumulated_weight" => 4.0, "is_user_directive" => false, "observation_count" => 4, "first_seen" => 1.783515144894303e9)), "total_observations" => 56, "magnet_mode" => "pseudononlinear"), "query" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 0.0, "sigil_name" => "query", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("what" => JSON.Object{String, Any}("token" => "what", "last_seen" => 1.783515146247148e9, "accumulated_weight" => 3.0, "is_user_directive" => false, "observation_count" => 3, "first_seen" => 1.783515144151472e9)), "total_observations" => 3, "magnet_mode" => "pseudononlinear"), "noun" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 33.0, "sigil_name" => "noun", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("wood." => JSON.Object{String, Any}("token" => "wood.", "last_seen" => 1.783515144334991e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144334991e9), "trust." => JSON.Object{String, Any}("token" => "trust.", "last_seen" => 1.783515145060208e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145060208e9), "stuff." => JSON.Object{String, Any}("token" => "stuff.", "last_seen" => 1.783515145068868e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145068868e9), "thunderstorms" => JSON.Object{String, Any}("token" => "thunderstorms", "last_seen" => 1.783515146174706e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146174706e9), "dangerous?" => JSON.Object{String, Any}("token" => "dangerous?", "last_seen" => 1.783515136869565e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136869565e9), "branches." => JSON.Object{String, Any}("token" => "branches.", "last_seen" => 1.783515144282116e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144282116e9), "water?" => JSON.Object{String, Any}("token" => "water?", "last_seen" => 1.783515136891811e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136891811e9), "incorrect" => JSON.Object{String, Any}("token" => "incorrect", "last_seen" => 1.783515145068867e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145068867e9), "nonsense." => JSON.Object{String, Any}("token" => "nonsense.", "last_seen" => 1.783515145076612e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145076612e9), "season." => JSON.Object{String, Any}("token" => "season.", "last_seen" => 1.783515145012231e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145012231e9), "fake" => JSON.Object{String, Any}("token" => "fake", "last_seen" => 1.783515145076609e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145076609e9), "false" => JSON.Object{String, Any}("token" => "false", "last_seen" => 1.783515145076611e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145076611e9), "berries." => JSON.Object{String, Any}("token" => "berries.", "last_seen" => 1.783515144838391e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144838391e9), "fire?" => JSON.Object{String, Any}("token" => "fire?", "last_seen" => 1.783515134723941e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515134723941e9), "lonely." => JSON.Object{String, Any}("token" => "lonely.", "last_seen" => 1.783515143908815e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515143908815e9), "winter?" => JSON.Object{String, Any}("token" => "winter?", "last_seen" => 1.783515146362427e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146362427e9), "grug," => JSON.Object{String, Any}("token" => "grug,", "last_seen" => 1.783515146385951e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.783515134723937e9), "joy." => JSON.Object{String, Any}("token" => "joy.", "last_seen" => 1.783515145035831e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145035831e9), "safe." => JSON.Object{String, Any}("token" => "safe.", "last_seen" => 1.783515145100331e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.783515144940162e9), "forage" => JSON.Object{String, Any}("token" => "forage", "last_seen" => 1.783515144838387e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144838387e9), "today," => JSON.Object{String, Any}("token" => "today,", "last_seen" => 1.783515136913868e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136913868e9), "music." => JSON.Object{String, Any}("token" => "music.", "last_seen" => 1.783515144988549e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144988549e9), "coming." => JSON.Object{String, Any}("token" => "coming.", "last_seen" => 1.783515136936158e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136936158e9), "lightning." => JSON.Object{String, Any}("token" => "lightning.", "last_seen" => 1.783515146174709e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146174709e9), "grug." => JSON.Object{String, Any}("token" => "grug.", "last_seen" => 1.78351513691387e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351513691387e9), "cold." => JSON.Object{String, Any}("token" => "cold.", "last_seen" => 1.783515144964464e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144964464e9), "what's" => JSON.Object{String, Any}("token" => "what's", "last_seen" => 1.783515136936156e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136936156e9), "evaporation." => JSON.Object{String, Any}("token" => "evaporation.", "last_seen" => 1.783515144214353e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144214353e9), "you've" => JSON.Object{String, Any}("token" => "you've", "last_seen" => 1.783515146385954e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146385954e9), "helpful." => JSON.Object{String, Any}("token" => "helpful.", "last_seen" => 1.783515146385955e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146385955e9), "shelter." => JSON.Object{String, Any}("token" => "shelter.", "last_seen" => 1.78351514487897e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351514487897e9), "present?" => JSON.Object{String, Any}("token" => "present?", "last_seen" => 1.7835151441889e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.7835151441889e9), "wrong" => JSON.Object{String, Any}("token" => "wrong", "last_seen" => 1.783515145068864e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145068864e9)), "total_observations" => 35, "magnet_mode" => "linear"), "word" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 5.0, "sigil_name" => "word", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("wood." => JSON.Object{String, Any}("token" => "wood.", "last_seen" => 1.783515144335003e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144335003e9), "trust." => JSON.Object{String, Any}("token" => "trust.", "last_seen" => 1.783515145060223e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145060223e9), "stuff." => JSON.Object{String, Any}("token" => "stuff.", "last_seen" => 1.783515145068885e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145068885e9), "thunderstorms" => JSON.Object{String, Any}("token" => "thunderstorms", "last_seen" => 1.783515146174729e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146174729e9), "dangerous?" => JSON.Object{String, Any}("token" => "dangerous?", "last_seen" => 1.783515136869584e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136869584e9), "branches." => JSON.Object{String, Any}("token" => "branches.", "last_seen" => 1.78351514428213e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351514428213e9), "water?" => JSON.Object{String, Any}("token" => "water?", "last_seen" => 1.783515136891824e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136891824e9), "incorrect" => JSON.Object{String, Any}("token" => "incorrect", "last_seen" => 1.783515145068884e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145068884e9), "nonsense." => JSON.Object{String, Any}("token" => "nonsense.", "last_seen" => 1.783515145076627e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145076627e9), "season." => JSON.Object{String, Any}("token" => "season.", "last_seen" => 1.783515145012241e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145012241e9), "fake" => JSON.Object{String, Any}("token" => "fake", "last_seen" => 1.783515145076624e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145076624e9), "false" => JSON.Object{String, Any}("token" => "false", "last_seen" => 1.783515145076626e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145076626e9), "berries." => JSON.Object{String, Any}("token" => "berries.", "last_seen" => 1.783515144838414e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144838414e9), "fire?" => JSON.Object{String, Any}("token" => "fire?", "last_seen" => 1.783515134723962e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515134723962e9), "lonely." => JSON.Object{String, Any}("token" => "lonely.", "last_seen" => 1.78351514390883e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351514390883e9), "winter?" => JSON.Object{String, Any}("token" => "winter?", "last_seen" => 1.783515146362445e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146362445e9), "grug," => JSON.Object{String, Any}("token" => "grug,", "last_seen" => 1.783515146385972e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.78351513472396e9), "joy." => JSON.Object{String, Any}("token" => "joy.", "last_seen" => 1.783515145035849e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145035849e9), "safe." => JSON.Object{String, Any}("token" => "safe.", "last_seen" => 1.783515145100345e9, "accumulated_weight" => 2.0, "is_user_directive" => false, "observation_count" => 2, "first_seen" => 1.783515144940177e9), "forage" => JSON.Object{String, Any}("token" => "forage", "last_seen" => 1.783515144838411e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144838411e9), "today," => JSON.Object{String, Any}("token" => "today,", "last_seen" => 1.78351513691388e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.78351513691388e9), "music." => JSON.Object{String, Any}("token" => "music.", "last_seen" => 1.783515144988563e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144988563e9), "coming." => JSON.Object{String, Any}("token" => "coming.", "last_seen" => 1.783515136936169e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136936169e9), "lightning." => JSON.Object{String, Any}("token" => "lightning.", "last_seen" => 1.783515146174732e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146174732e9), "grug." => JSON.Object{String, Any}("token" => "grug.", "last_seen" => 1.783515136913882e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136913882e9), "cold." => JSON.Object{String, Any}("token" => "cold.", "last_seen" => 1.783515144964478e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144964478e9), "what's" => JSON.Object{String, Any}("token" => "what's", "last_seen" => 1.783515136936167e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515136936167e9), "evaporation." => JSON.Object{String, Any}("token" => "evaporation.", "last_seen" => 1.783515144214372e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144214372e9), "you've" => JSON.Object{String, Any}("token" => "you've", "last_seen" => 1.783515146385975e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146385975e9), "helpful." => JSON.Object{String, Any}("token" => "helpful.", "last_seen" => 1.783515146385977e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515146385977e9), "shelter." => JSON.Object{String, Any}("token" => "shelter.", "last_seen" => 1.783515144878984e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144878984e9), "present?" => JSON.Object{String, Any}("token" => "present?", "last_seen" => 1.783515144188916e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144188916e9), "wrong" => JSON.Object{String, Any}("token" => "wrong", "last_seen" => 1.783515145068881e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145068881e9)), "total_observations" => 35, "magnet_mode" => "pseudononlinear"), "season" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 1.0, "sigil_name" => "season", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("season." => JSON.Object{String, Any}("token" => "season.", "last_seen" => 1.783515145012208e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515145012208e9)), "total_observations" => 1, "magnet_mode" => "linear"), "before" => JSON.Object{String, Any}("last_routed_growth_type" => "none", "cluster_density" => 1.0, "sigil_name" => "before", "user_directive_count" => 0, "lobe_hint" => "", "concretes" => JSON.Object{String, Any}("present?" => JSON.Object{String, Any}("token" => "present?", "last_seen" => 1.783515144188931e9, "accumulated_weight" => 1.0, "is_user_directive" => false, "observation_count" => 1, "first_seen" => 1.783515144188931e9)), "total_observations" => 1, "magnet_mode" => "linear"))),), 0x000000000000c0e0)
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:12807
+┌ Warning: [MAIN] load_specimen: failed to restore temporal identities: ArgumentError("reducing over an empty collection is not allowed; consider supplying `init` to the reducer")
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:13168
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 5 tokens → 11 (+6 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='What is fire' pre_exp='What is fire' using_promotion_source='What is fire'
+[ Info: [ENGINE v8.19] scan_and_expand: input='what is water?' pre_exp='what is water?' using_promotion_source='what is water?'
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_61 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'default'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_58 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'science'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_59 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'survival'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 9 tokens → 26 (+17 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='Why does fire burn' pre_exp='Why does fire burn' using_promotion_source='Why does fire burn'
+[ Info: [ENGINE v8.19] scan_and_expand: input='why is the sky blue?' pre_exp='why is the sky blue?' using_promotion_source='why is the sky blue?'
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_57 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'emotions'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_58 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'science'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_61 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'default'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_59 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for '?' in lobe 'survival'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+[ Info: [MAIN] 🔬 Thesaurus gate expanded 8 tokens → 19 (+11 synonyms)
+[ Info: [ENGINE v8.19] scan_and_expand: input='What is gravity also I feel sad today? deject notice and dejected why furthermor' pre_exp='What is gravity also I feel sad today?' using_promotion_source='What is gravity also I feel sad today?'
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_57 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for 'gravity' in lobe 'emotions'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+[ Info: [MAIN Stage 2b] Dict sigil fallback: node node_58 callback 'dict_define_science' succeeded
+┌ Warning: ⚠️  COHERENCE WARNING: Node node_61 has NO voice_body AND NO noun_anchors!
+│ system_prompt = "Dictionary definition voice — state the definition clearly and concisely"
+│ The claim will fall back to the raw pattern — this produces pattern-echo garbage.
+│ FIX: Add a multi-sentence system_prompt (sentence 1 = persona tag, rest = grug voice)
+│ OR add noun_anchors to this node's json_data. YOU NEED THIS OR NO CAN DO.
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:3789
+┌ Warning: [MAIN Stage 2b] Action computation failed: no dictionary entry for 'gravity' in lobe 'default'
+└ @ Main.GrugBot420 /workspace/grugbot420_repo/src/Main.jl:4073
+[INVSIGIL] ⚡ Petty dispatch: Added 2 concretes to &noun lexicon
+[INVSIGIL] ⚡ Petty dispatch: Governance: added 1 whitelist entries from &definition
+[MPTURN 2] RAW: Here is the picture: Fire-burning doubt. Fire like star — both burn bright. Fire need wood and gust. Wood is fuel, air feeds fire. Without wind, fire die. Lacking wood, fire starve. Grug chat of fire. The link is clear: flame likeness star.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'Why does fire burn'
+Primary Action: explain  (conf=1.0, certainty=SURE)
+Sure Actions: [explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_9
+Lobe Context: [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))]
+User Triples: None
+Node Triples: (fire, &similarity, star), (fire, &causal, light)
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: What comes after winter? (intensity=0.4) | [System]: Mission "What is fire also what is water?" → primary=define conf=0.83 node=node_61 (intensity=0.76) | [User]: Why does fire burn also why is the sky blue? (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=SURE)
+Lobe Curve (√base × top² = score):
+  👑 science: base=0.707 × top=0.91 = 0.6959 [hard_votes=3]
+  · emotions: base=0.823 × top=0.823 = 0.6139 [hard_votes=1]
+  ↗ survival: base=0.615 × top=0.682 = 0.3643 [hard_votes=2]
+  · default: base=0.588 × top=0.818 = 0.2569 [hard_votes=1]
+Passthrough Lobes: [["survival"]]
+Time Orientation: none
+=========================================
+
+Here is the picture: &query &definition &define.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'why is the sky blue?'
+Primary Action: define  (conf=0.82, certainty=UNSURE)
+Sure Actions: [define, define, define, explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_57
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (why, is, the)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_58 | action=define | conf=0.82 | relations=None
+  🪨 node_61 | action=define | conf=0.82 | relations=None
+  🪨 node_59 | action=explain | conf=0.82 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=7] (Recent): [User]: What comes after winter? (intensity=0.4) | [User]: Why does fire burn also why is the sky blue? (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=0.82, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  👑 science: base=0.707 × top=0.91 = 0.6959 [hard_votes=3]
+  · emotions: base=0.823 × top=0.823 = 0.6139 [hard_votes=1]
+  ↗ survival: base=0.615 × top=0.682 = 0.3643 [hard_votes=2]
+  · default: base=0.588 × top=0.818 = 0.2569 [hard_votes=1]
+Passthrough Lobes: [["survival"]]
+Time Orientation: none
+=========================================
+[MPTURN 2] voters=["node_9", "node_30", "node_28", "node_3", "node_57", "node_58", "node_61", "node_59", "node_10", "node_14"] fired=node_9 conf=1.0
+
+[MPTURN 3] YOU: What is 2 plus 2 also what is 3 times 4?
+[MPTURN 3] DECOMP: compound(2 parts): [mp_1/primary] "What is 2 plus 2" | [mp_2/support] "what is 3 times 4?"
+[CONV-CALCULATE] 🔢 Computing: 'What is 2 plus 2 also what is 3 times 4?'
+[CONV-CALCULATE] ✅ Result: 2 + 2 × 3 = 12
+[MPTURN 3] RAW: 2 plus 2 = 4, then 2 times 3 = 12, so the answer is 12
+[MPTURN 3] voters=["node_9", "node_30", "node_28", "node_3", "node_57", "node_58", "node_61", "node_59", "node_10", "node_14"] fired=node_9 conf=1.0
+
+[MPTURN 4] YOU: What is gravity also I feel sad today?
+[MPTURN 4] DECOMP: [singleton] "What is gravity also I feel sad today?"
+--> Scanning specimens & looking for dialectical relations...
+   [BINDING-PROP] Singleton bindings propagated to chunk groups: mp_1
+--> 6 valid votes passed gate... compiling JIT superposition...
+   [LOBE-ORCH] Global Winner=survival  Passthrough=emotions  Scored=4 lobes
+   [LOBE-ORCH] Group 'mp_1' Winner=science  Passthrough=emotions  Scored=4 lobes
+[ORCHESTRATOR] 📊 Per-group selection: 1 groups, top_tier=1, subtop=2
+[ORCHESTRATOR] 📋 Per-group primaries: mp_1→node_58@1.0
+[HIPPOCAMPAL] Action log built:
+[ActionLog: 2 entries]
+  [1] mp_1_chk_1 | votes=4 (sure=4 unsure=0) conf=1.0 step=1 | ENTRY_PENDING
+  [2] mp_1 | votes=1 (sure=0 unsure=1) conf=1.0 step=2 [ENTRY_ADDITIVE] | ENTRY_PENDING deps=[1]
+[ENGINE] 🐢  Node node_57 slow telemetry only (avg: 9.44s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_61 slow telemetry only (avg: 9.44s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_59 slow telemetry only (avg: 9.44s > 5.0s); not graving.
+[ENGINE] 🐢  Node node_58 slow telemetry only (avg: 9.44s > 5.0s); not graving.
+  🧠 MLP: relu | novelty=1.0 | quality=0.506 | semantic=0.483 | relevance=0.512 | disambig=0.488 | strain=0.799 | rules=0 | adj=ON
+
+🤖 Voice Output Scaffold:
+Here is the picture: the force that pulls all things toward each other.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is gravity also I feel sad today?'
+Primary Action: define  (conf=1.0, certainty=UNSURE)
+Sure Actions: [define, define, define, explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_57
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, gravity)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_61 | action=define | conf=1.0 | relations=None
+  🪨 node_59 | action=define | conf=1.0 | relations=None
+  🪨 node_58 | action=explain | conf=1.0 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [System]: Mission "What is fire also what is water?" → primary=define conf=0.83 node=node_61 (intensity=0.59) | [System]: Mission "Why does fire burn also why is the sky blue?" → primary=explain conf=1.0 node=node_9 (intensity=0.69) | [User]: What is gravity also I feel sad today? (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  · science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]
+  👑 survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]
+  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]
+  ↗ emotions: base=0.643 × top=0.758 = 0.4606 [hard_votes=2]
+Passthrough Lobes: [["emotions"]]
+Time Orientation: none
+=========================================
+[INVSIGIL] ⚡ Petty dispatch: Thesaurus pair dispatch failed: TypeError(:typeassert, "", Bool, 1)
+[INVSIGIL] ⚡ Petty dispatch: Added 3 concretes to &noun lexicon
+[INVSIGIL] ⚡ Petty dispatch: Governance: added 1 whitelist entries from &definition
+[MPTURN 4] RAW: Here is the picture: the force that pulls all things toward each other.
+--- DEBUG TELEMETRY (orchestration internals, not for speech) ---
+Mission: 'What is gravity also I feel sad today?'
+Primary Action: define  (conf=1.0, certainty=UNSURE)
+Sure Actions: [define, define, define, explain]
+Unsure Actions (Coinflip Side-Features): [None]
+Constraints: [None]
+Winning Node: node_57
+Lobe Context: [default (9/10 active (grug hits rock and makes fire | &query &definition &define | hello hi greeting mornin))] | [emotions (8/8 active (define happiness | why do we feel sad sometimes | i miss someone))] | [science (9/9 active (why is the sky blue | why does fire burn | clouds are in the sky))] | [survival (11/11 active (flame combust wood | how do i make fire | tell me about water))]
+User Triples: (what, is, gravity)
+Node Triples: None
+Anti-Match Detected: false
+Evaluated Rules (shaping): None (rule board removed)
+Arithmetic: no math bindings this cycle
+Tied Alternatives (not selected):
+  🪨 node_61 | action=define | conf=1.0 | relations=None
+  🪨 node_59 | action=define | conf=1.0 | relations=None
+  🪨 node_58 | action=explain | conf=1.0 | relations=None
+AIML Memory Bank:
+Deep Memory (Pinned): No pinned rocks
+Fresh Memory [threshold=0.38 eligible=5] (Recent): [System]: Mission "What is fire also what is water?" → primary=define conf=0.83 node=node_61 (intensity=0.59) | [System]: Mission "Why does fire burn also why is the sky blue?" → primary=explain conf=1.0 node=node_9 (intensity=0.69) | [User]: What is gravity also I feel sad today? (intensity=1.73)
+Memory-Pull Policy: pull_fresh=false — no winning node requested context — fresh memory withheld (confidence=1.0, certainty=UNSURE)
+Lobe Curve (√base × top² = score):
+  · science: base=1.0 × top=1.0 = 1.0 [hard_votes=1]
+  👑 survival: base=1.0 × top=1.0 = 1.0 [hard_votes=1]
+  · default: base=1.0 × top=1.0 = 0.5 [hard_votes=1]
+  ↗ emotions: base=0.643 × top=0.758 = 0.4606 [hard_votes=2]
+Passthrough Lobes: [["emotions"]]
+Time Orientation: none
+=========================================
+[MPTURN 4] voters=["node_57", "node_61", "node_59", "node_58", "node_21", "node_20"] fired=node_57 conf=1.0
+
+[MPTURN 5] YOU: What is 2 plus 2 also what is gravity also what is water?
+[MPTURN 5] DECOMP: compound(3 parts): [mp_1/primary] "What is 2 plus 2" | [mp_2/support] "what is gravity" | [mp_3/support] "what is water?"
+[CONV-CALCULATE] 🔢 Computing: 'What is 2 plus 2 also what is gravity also what is water?'
+[CONV-CALCULATE] ✅ Result: 2 + 2 = 4
+[MPTURN 5] RAW: 2 plus 2 equals 4
+[MPTURN 5] voters=["node_57", "node_61", "node_59", "node_58", "node_21", "node_20"] fired=node_57 conf=1.0
+
+[MPTURN 6] YOU: Tell me about fire and tell me about volcanoes?
+[MPTURN 6] DECOMP: compound(2 parts): [mp_1/primary] "Tell me about fire" | [mp_2/support] "tell me about volcanoes?"
+[CONV-PRESCAN] 🧩 Compound question detected: 2 sub-intents
+[CONV-COMPOUND] 🧩 Processing 2 sub-intents
+[CONV-COMPOUND] 💬 Question: 'fire' → Alert. ⚠️ Yes! Fire is dangerous. Fire burn skin. Fire spread fast. Fire destroy shelter. Grug respect fire but always careful — never touch, never leave alone
+[CONV-COMPOUND] 🤷 Unknown: 'volcanoes'
+[CONV-COMPOUND] ✅ Compound reply: Alert. ⚠️ Yes! Fire is dangerous. Fire burn skin. Fire spread fast. Fire destroy shelter. Grug respect fire but always careful — never touch, never leave alone; Grug not know 'volcanoes'
+[MPTURN 6] RAW: Alert. ⚠️ Yes! Fire is dangerous. Fire burn skin. Fire spread fast. Fire destroy shelter. Grug respect fire but always careful — never touch, never leave alone; Grug not know 'volcanoes'
+[MPTURN 6] voters=["node_57", "node_61", "node_59", "node_58", "node_21", "node_20"] fired=node_57 conf=1.0
+
+[MPTURN 7] YOU: Bread and butter are tasty.
+[MPTURN 7] DECOMP: [singleton] "Bread and butter are tasty."
+[CONV-DEFINE] 📖 Learned: 'butter' → 'tasty.' in lobe 'default'
+[MPTURN 7] RAW: 📖 Learned: butter means tasty.
+[MPTURN 7] voters=["node_57", "node_61", "node_59", "node_58", "node_21", "node_20"] fired=node_57 conf=1.0
+
+[MPTURN 8] YOU: Fire and water are both natural elements.
+[MPTURN 8] DECOMP: [singleton] "Fire and water are both natural elements."
+[CONV-DEFINE] 📖 Learned: 'water' → 'both natural elements.' in lobe 'default'
+[MPTURN 8] RAW: 📖 Learned: water means both natural elements.
+[MPTURN 8] voters=["node_57", "node_61", "node_59", "node_58", "node_21", "node_20"] fired=node_57 conf=1.0
+
+[SAVED] Multipart raw telemetry JSON -> /workspace/grugbot420_repo/threadC_multipart_telemetry.json
+  💎 Phase accumulator saved: 0 snapshots in crystal
+  ✂️  Decomposer config saved: 72 total entries across 6 fields
+  👁  Vigilance config saved (cap=6)
+  📊  Injector stats saved
+  🎲  Relational jitter config saved (ratio=0.03, coin=0.01, enabled=true)
+  🧠  BrainStem config saved
+  ⚙️  Engine config saved
+  🏛️  Lobe orchestrator knobs saved
+  🗳️  Vote orchestrator knobs saved
+  🧬  Mitosis config saved
+  🌱  Growth automaton config saved
+  🦠  Phagy config saved
+  💬  Chatter config saved
+  🛡️  Immune config saved
+  🔭  Scanner config saved
+  🎯  ActionTone knobs saved
+  🔗  Co-activation accumulator saved
+  📝  Input ledger saved
+  🔮  Chatter residuals saved
+  🌱  AutoGrowth evidence saved (evidence=39, co-occur=1)
+  🧲  InverseSigil table saved (6 entries)
+  🔗  AutoLinker evidence saved (link_evidence=30)
+  📇  Flashcards saved (4 cards across 1 lobes)
+  🔥  Curiosity saved (intensity=0.26, buffer=2)
+  🪭  Fan-out config saved (enabled=true, max=4, modes=8)
+  🧠  Hippocampal pending ask saved
+  📝  Conversational pending teach saved
+  🔐  Admin session saved
+  🎭  Lobe orchestrator last state saved (winner=survival)
+  🔖  Chatter cursor saved (pos=0)
+  📋  Answer mode config saved (11 modes)
+  🦠  Phagy rules ref saved (0 rules)
+  ⏳  Time orientation config saved (global=none, 4 oriented time nodes)
+  🔗  CoherenceField config saved (weight=0.0)
+  📐 GeometryKit config saved (default_space=phase)
+  ⛏  PatternMiner config saved (T=10, C=5, S=5)
+  ⛏  PatternMiner data saved (0 instances, 0 proposals)
+  🕐 TemporalIdentity saved (0 continuants)
+  📖 CaveJournal config saved
+  📖 Lobe dictionaries saved (8 definitions across 4 lobes)
+[SAVED] Final specimen -> /workspace/grugbot420_repo/grug_threadC_multipart_final.specimen
+
+[DONE] run_multipart_test_c.jl complete.

@@ -5242,81 +5242,23 @@ function get_node_status_summary()::String
 end
 
 # ==============================================================================
-# AIML RULE TABLE (STOCHASTIC ORCHESTRATION RULES)
+# AIML RULE TABLE (STOCHASTIC ORCHESTRATION RULES) -- REMOVED
 # ==============================================================================
-# GRUG: Rule table lives here so Engine and test runner can both access it.
-# Main.jl uses add_orchestration_rule! to populate it at runtime.
-
-# GRUG: AIML rules are STOCHASTIC! Each rule has a fire probability [0.0, 1.0].
-# At evaluation time, Grug rolls a coinflip against the probability.
-# Rules with prob=1.0 always fire (deterministic). prob=0.5 fires half the time.
-struct StochasticRule
-    text::String               # GRUG: Rule template text (with magic word placeholders)
-    fire_probability::Float64  # GRUG: [0.0, 1.0] - how often this rule fires
-end
-
-const ORCHESTRATION_RULES = StochasticRule[]
-const _DROP_TABLE_LOCK = ReentrantLock()
-
-# GRUG: Allowed magic word tags. Fake tags are rejected loudly!
-const ALLOWED_RULE_TAGS = Set([
-    "{MISSION}",
-    "{PRIMARY_ACTION}",
-    "{SURE_ACTIONS}",
-    "{UNSURE_ACTIONS}",
-    "{ALL_ACTIONS}",
-    "{CONFIDENCE}",
-    "{NODE_ID}",
-    "{MEMORY}",
-    "{LOBE_CONTEXT}",
-    "{VOTE_CERTAINTY}",
-    "{TIED_ALTERNATIVES}"
-])
-
-"""
-add_orchestration_rule!(rule_input::String)::String
-
-GRUG: Add a stochastic rule to the AIML rule board.
-Optional [prob=X.XX] suffix sets fire probability (default 1.0).
-Validates all magic word tags. Throws loudly on invalid input.
-"""
-function add_orchestration_rule!(rule_input::String)::String
-    if strip(rule_input) == ""
-        error("!!! FATAL: Grug cannot add empty air to rule board! !!!")
-    end
-
-    # GRUG: Parse optional stochastic probability suffix [prob=X.XX]
-    prob_match = match(r"\[prob=([0-9.]+)\]\s*$", rule_input)
-    fire_prob  = 1.0
-    rule_text  = rule_input
-
-    if !isnothing(prob_match)
-        parsed_prob = tryparse(Float64, prob_match.captures[1])
-        if isnothing(parsed_prob) || parsed_prob < 0.0 || parsed_prob > 1.0
-            error("!!! FATAL: /addRule [prob=X] value is invalid: '$(prob_match.captures[1])'. Must be 0.0-1.0 !!!")
-        end
-        fire_prob = parsed_prob
-        # GRUG: Strip the [prob=...] suffix from the rule text before storing
-        rule_text = strip(replace(rule_input, r"\[prob=[0-9.]+\]\s*$" => ""))
-    end
-
-    if strip(rule_text) == ""
-        error("!!! FATAL: Rule text is empty after stripping probability suffix! !!!")
-    end
-
-    # GRUG: Strict Tag Validation. If tag not in allowed list, throw big rock error!
-    for m in eachmatch(r"\{[A-Z_]+\}", rule_text)
-        tag = m.match
-        if !(tag in ALLOWED_RULE_TAGS)
-            error("!!! FATAL: Grug see fake magic rock: $tag! Allowed rocks are: $(join(ALLOWED_RULE_TAGS, ", ")) !!!")
-        end
-    end
-
-    lock(_DROP_TABLE_LOCK) do
-        push!(ORCHESTRATION_RULES, StochasticRule(rule_text, fire_prob))
-    end
-    return "Rule tied to tree: [$rule_text] (fire_prob=$(round(fire_prob, digits=2)))"
-end
+# GRUG v9-removal: The /addRule stochastic rule board (StochasticRule,
+# ORCHESTRATION_RULES, ALLOWED_RULE_TAGS, add_orchestration_rule!) was DELETED.
+# Investigation confirmed this board's evaluated output (rules_str) was ONLY
+# ever printed into the DEBUG TELEMETRY section of the reply payload -- it was
+# NEVER concatenated into conversational_reply (the actual user-visible
+# output). It added tag-templated debug text and nothing else; it never
+# shaped the structure of what Grug says. The real orchestration/sequencing
+# is HippocampalModulator's ActionLog (reserved_step, confidence-ordered
+# dispatch), and staleness-prevention is handled by the thesaurus/synonym
+# swap pipeline in Main.jl (_vote_word_swap, _pick_synonym,
+# _hippocampal_rephrase). Neither of those depended on this rule board.
+# /addRule, /loadSpecimen "rules" restore, and specimen "rules" save were
+# removed alongside it (see Main.jl). Old specimens with a "rules" key still
+# load fine -- the key is recognized and silently skipped, same backward-compat
+# pattern used for the removed AIMLNodeSystem's "aiml_system" key.
 
 # ==============================================================================
 # ARCHITECTURAL SPECIFICATION: KERNEL LAYER (UPDATED)

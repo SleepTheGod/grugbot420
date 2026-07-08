@@ -758,7 +758,7 @@ function run_growth_automaton!(;
     message_snapshots = Tuple{String, String, Float64}[]
     lock(history_lock) do
         for msg in message_history
-            push!(message_snapshots, (msg.role, msg.text, msg.context_intensity))
+            push!(message_snapshots, (msg.role, msg.text, msg.intensity))
         end
     end
     data_energy = _compute_data_energy(message_snapshots)

@@ -212,7 +212,10 @@ include("RelationalJitter.jl")
 using .RelationalJitter
 
 # GRUG: AIMLNodeSystem removed in v8.12 — scaffold tracking layer had no
-# output actuator. The stochastic rule board (ORCHESTRATION_RULES) remains.
+# output actuator. The stochastic rule board (ORCHESTRATION_RULES / /addRule)
+# was itself removed in v9 — its output never shaped conversational_reply,
+# only debug telemetry. Real orchestration is HippocampalModulator's ActionLog;
+# staleness prevention is the thesaurus/synonym swap pipeline.
 
 # GRUG: Vote orchestrator — parallel 1000-cap fire + DONE signalling + threshold vote pick.
 # Must load BEFORE engine.jl so engine can call parallel_fire_batches and FireCounter.
@@ -300,6 +303,9 @@ using .EphemeralMLP
 
 include("RoutingJudge.jl")
 using .RoutingJudge
+
+include("CaveJournal.jl")     # v9: Auto-logging to markdown — before engine/Main so they can use it
+using .CaveJournal
 
 include("engine.jl")
 include("Main.jl")
