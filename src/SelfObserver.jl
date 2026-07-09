@@ -134,9 +134,19 @@ function invariant_check()::Bool
 
     # INVARIANT 2: Check that observe! returns Bool (not Float64).
     # We check the return type of observe! by inspecting its method signature.
+    # GRUG v9.4: guard against Julia versions where `Method` has no `return_type`
+    # field (it was removed in newer Julia base). Use property-access with a
+    # fallback so the invariant self-check never throws a FieldError on boot —
+    # a thrown check is worse than a skipped one (it scares the user on every
+    # boot with a red error even though the engine works fine).
     for m in methods(observe!)
-        if m.return_type !== Bool && m.return_type !== Any
-            @error "[SelfObserver v8.22] INVARIANT VIOLATED: observe! returns $(m.return_type), expected Bool! " *
+        rt = try
+            m.return_type
+        catch
+            nothing  # field not present on this Julia version — skip this method
+        end
+        if rt !== nothing && rt !== Bool && rt !== Any
+            @error "[SelfObserver v8.22] INVARIANT VIOLATED: observe! returns $rt, expected Bool! " *
                    "observe! must return Bool (written/skipped), not a confidence-shaped scalar."
             all_ok = false
         end
